@@ -7,7 +7,7 @@ self.onmessage = function(e) {
 		self.postMessage('initialized');
     return;
   }
-	self.postMessage('echo '+e.data);
+	self.postMessage(e.data, [e.data]);
 	/*
   var uInt8View = new Uint8Array(e.data);
   if (true) { // Transferable
