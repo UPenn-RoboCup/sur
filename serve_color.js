@@ -6,9 +6,9 @@
 /**
 * Load configuration values
 */
-var ipc_name = 'rgbd_depth'
-var udp_port = 43230
-var ws_port = 9002
+var ipc_name = 'rgbd_color'
+var udp_port = 43231
+var ws_port = 9001
 
 /* NOTE: Everything after this is the same for each port forward */
 
@@ -96,4 +96,3 @@ wss.on('connection', function(ws) {
 	});
 	
 });
-
