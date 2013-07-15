@@ -1,26 +1,20 @@
-// Configuration
+// Configuration and globals
 var ws_port = 9002
 var ww_script = "depth_worker"
 var fr_width = 320
 var fr_height = 240
 var fr_id = 'depth'
-var fr_fps = 2
+var fr_fps = 30
+var fr_ws;
 
-/* Global Variables */
-// Checksum to identify the right frame
-var fr_sz_checksum;
-var fr_metadata;
-
-// Websocket
-var ws_k;
+// Animation
 var stream = 0;
-// Assume animation frames come in at 60 fps
-var skip_cnt = Math.floor(60 / fr_fps);
+var skip_cnt = Math.floor(60 / fr_fps); // Animation: 60 fps
 var nskips = 0;
 var get_frame = function(){
 	nskips = nskips + 1
 	if(nskips==skip_cnt){
-		ws_k.send('data')
+		fr_ws.send('data')
 		nskips = 0;
 	}
 	// Automatically request frames
@@ -49,22 +43,27 @@ document.addEventListener( "DOMContentLoaded", function(){
 	var URL = window.URL || window.webkitURL;
 
 	// Connect to the websocket server
-	ws_k = new WebSocket('ws://' + host + ':' + ws_port);
-	//ws_k.binaryType = "arraybuffer";
-	ws_k.binaryType = "blob";
+	fr_ws = new WebSocket('ws://' + host + ':' + ws_port);
+	//fr_ws.binaryType = "arraybuffer";
+	fr_ws.binaryType = "blob";
 	
 	// WebWorker
 	var frame_worker = new Worker("js/"+ww_script+".js");
-	frame_worker.onmessage = function(oEvent) {
-		//console.log("Worker said : " + oEvent.data);
+	frame_worker.onmessage = function(e) {
+		//console.log("Worker:");
+		//console.log(e.data)
 	};
 	frame_worker.postMessage('Start!');
 	
 	// Canvas
 	var myCanvas = document.getElementById('depth');
 	
+	// Checksum and metadata
+	var fr_sz_checksum;
+	var fr_metadata;
+	
 	// Send data to the webworker
-	ws_k.onmessage = function(e){
+	fr_ws.onmessage = function(e){
 		//console.log(e)
 		//if(e.data instanceof Blob)
 		if(typeof e.data === "string"){
@@ -87,18 +86,24 @@ document.addEventListener( "DOMContentLoaded", function(){
 		img.height = fr_height;
 		// Put received JPEG data into the image
 		img.src = URL.createObjectURL( e.data );
+		
+		// Trigger processing once the image is fully loaded
 		img.onload = function(e) {
-			// Revoke the objectURL for good memory management
-			URL.revokeObjectURL(this.src);
+			
 			// Set the canvas to the pixel data of the image
-			//var myCanvas = document.getElementById('depth');
 			myCanvas.width = fr_width;
 			myCanvas.height = fr_height;
 			var myCanvasCtx = myCanvas.getContext('2d')
 			myCanvasCtx.drawImage( this, 0, 0 );
+			
+			// Remove the image for memory management reasons
+			URL.revokeObjectURL(this.src);
+			this.src = '';
+			
 			// Send the pixel data to the worker for processing
 			var myCanvasData = myCanvasCtx.getImageData(0, 0, fr_width, fr_height).data.buffer;
 			frame_worker.postMessage(myCanvasData, [myCanvasData]);
+
 		}
 	};
 }, false );
