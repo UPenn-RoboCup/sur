@@ -1,10 +1,46 @@
+/***
+* SUR: Data forwarding
+* (c) Stephen McGill, 2013
+*/
+
+/**
+* Load configuration values
+*/
+var ipc_name = 'leap'
+
+/***
+* Establish ZMQ connection
+*/
+var zmq = require('zmq');
+var zmq_skt = zmq.socket('pub');
+zmq_skt.bind('ipc:///tmp/'+ipc_name);
+
+/***
+* Metadata is messagepack'd
+*/
+var mp = require('msgpack');
+
+/***
+* Instantiate to the leap object
+*/
 var Leap = require('leapjs')
 //console.log(Leap)
-
 var controller = new Leap.Controller()
 
 controller.on("frame", function(frame) {
-  console.log("Frame: " + frame.id + " @ " + frame.timestamp);
+  //console.log("Frame: " + frame.id + " @ " + frame.timestamp);
+  //console.log(frame)
+  if(frame.hands!==undefined){
+    for(var i=0;i<frame.hands.length;i++){
+      console.log( frame.hands[i].sphereRadius )
+      // Send the frame data over zmq
+      var myframe = {};
+      myframe.timestamp = frame.timestamp
+      myframe.sphereRadius = frame.hands[i].sphereRadius
+      zmq_skt.send( mp.pack(myframe) );
+    }
+  }
+  
 });
 
 var frameCount = 0;
