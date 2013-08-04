@@ -6,7 +6,7 @@
 /**
 * Load configuration values
 */
-var ipc_name = 'rgbd_depth'
+var ipc_name = 'chest_mesh'
 var udp_port = 43230
 var ws_port = 9002
 
@@ -59,11 +59,11 @@ zmq_skt.on('message', function(metadata,payload){
 	meta = upacked_meta
 	raw = payload
 	/* Provide Debugging information */
-	/*
+
 	console.log('Robot | ');
 	console.log(meta);
 	console.log(payload.length);
-	*/
+
 });
 
 /***************
@@ -96,4 +96,3 @@ wss.on('connection', function(ws) {
 	});
 	
 });
-
