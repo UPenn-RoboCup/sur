@@ -1,7 +1,7 @@
 // Animation
 var stream = 0;
 var get_frame = function(){
-  var request = {type: 'chest', quality: 90, range: [.05,2] }
+  var request = {type: 'chest', quality: 90, range: [.1,2] }
 	fr_ws.send( JSON.stringify(request) );
   console.log('Requesting frame...');
 	// Automatically request frames

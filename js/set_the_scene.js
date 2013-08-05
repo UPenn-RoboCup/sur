@@ -31,7 +31,6 @@ function init_scene() {
   camera.position.z = -1000; // in millimeters
   
   // add the controls to look around the scene
-
   controls = new THREE.TrackballControls( camera );
 
   controls.rotateSpeed = 5.0;
@@ -44,7 +43,6 @@ function init_scene() {
   controls.staticMoving = true;
   controls.dynamicDampingFactor = 0.3;
 
-  
 
   // add light
 
@@ -219,7 +217,6 @@ function onWindowResize() {
 function animate() {
 
   requestAnimationFrame( animate );
-
   controls.update();
   renderer.render( scene, camera );
 
@@ -228,22 +225,8 @@ function animate() {
 }
 
 function update_particles(positions){
-  console.log('Updating particles from mesh!')
-  /*
-  console.log(data)
-  console.log(data[1])
-  var data_idx = 0;
-  var positions = new Float32Array( nparticles * 3 )
-  for ( var i = 0; i < positions.length; i += 3 ) {
-    positions[ i ]     = 1000*data[data_idx];
-    positions[ i + 1 ] = 1000*data[data_idx+1];
-    positions[ i + 2 ] = 1000*data[data_idx+2];
-    // data is from the rgba, converted to xyza, with a not used: color?
-    data_idx+=4;
-  }
-  */
   // We need an update!
-  console.log(positions);
+  console.log('update particle positions',positions);
   particleSystem.geometry.attributes.position.array = positions;
   particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
 }

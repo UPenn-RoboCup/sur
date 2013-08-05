@@ -14,9 +14,10 @@ div#scene {
   margin: auto;
   */
   /*padding: 40px;*/
+  /*display: none;*/
 }
 
 
 div#canvases {
-  visibility: hidden;
+  /*display: none;*/
 }

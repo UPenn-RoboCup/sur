@@ -23,16 +23,12 @@ document.addEventListener( "DOMContentLoaded", function(){
 	// WebWorker
 	var frame_worker = new Worker("js/"+ww_script+".js");
   frame_worker.onmessage = function(e) {
-    //console.log("Worker done!");
-    //console.log(e.data)
     if(e.data=='initialized'){
       console.log('WW initialized!')
     } else {
       var positions = new Float32Array(e.data);
-      console.log(positions)
       update_particles(positions);
     }
-    //console.log("Done updating the particles!");
   };
 	frame_worker.postMessage('Start!');
 	
@@ -45,14 +41,11 @@ document.addEventListener( "DOMContentLoaded", function(){
 	
 	// Send data to the webworker
 	fr_ws.onmessage = function(e){
-		console.log(e)
-		//if(e.data instanceof Blob)
 		if(typeof e.data === "string"){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
 			console.log('Latency: '+latency*1000+'ms')
-      console.log(fr_metadata)
       /*
       fr_width = fr_metadata.w
       fr_height = fr_metadata.h
