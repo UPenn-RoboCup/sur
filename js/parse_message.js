@@ -5,19 +5,6 @@ var fr_ws;
 var fr_width = 480
 var fr_height = 500
 
-// Animation
-var stream = 0;
-var get_frame = function(){
-	fr_ws.send('mesh_request');
-  console.log('Requesting frame...')
-	// Automatically request frames
-  //stream = 1-stream;
-	//if(stream==1){ requestAnimationFrame( get_frame ); }
-}
-document.addEventListener( "DOMContentLoaded", function(){
-	$('#req_btn').bind("click",get_frame);
-}, false );
-
 // Setup the WebSocket connection and callbacks
 document.addEventListener( "DOMContentLoaded", function(){
 
@@ -58,13 +45,14 @@ document.addEventListener( "DOMContentLoaded", function(){
 	
 	// Send data to the webworker
 	fr_ws.onmessage = function(e){
-		//console.log(e)
+		console.log(e)
 		//if(e.data instanceof Blob)
 		if(typeof e.data === "string"){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
 			console.log('Latency: '+latency*1000+'ms')
+      console.log(fr_metadata)
       /*
       fr_width = fr_metadata.w
       fr_height = fr_metadata.h
@@ -75,7 +63,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 		// Use the size as a sort of checksum
 		fr_sz_checksum = e.data.size;
 		if(fr_metadata.sz!==fr_sz_checksum){
-			console.log('Checksum fail!')
+			console.log('Checksum fail!',fr_metadata.sz,fr_sz_checksum)
 			return
 		}
 
