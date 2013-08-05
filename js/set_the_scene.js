@@ -20,10 +20,8 @@ function init_scene() {
   
   scene = new THREE.Scene();
   
-  /*
-  width = window.innerWidth;
-  height = window.innerHeight;
-  */
+  width = window.innerWidth - 2*40;
+  height = window.innerHeight - 2*40;
   
   // add the camera
 
@@ -182,7 +180,7 @@ function init_scene() {
   
   stats = new Stats();
   stats.domElement.style.position = 'absolute';
-  stats.domElement.style.top = '0px';
+  stats.domElement.style.top = '40px';
   
   // add to the HTML page
   
@@ -201,10 +199,8 @@ function init_scene() {
 
 function onWindowResize() {
 
-  /*
-  width = window.innerWidth;
-  height = window.innerHeight;
-  */
+  width = window.innerWidth - 2*40;
+  height = window.innerHeight - 2*40;
 
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
