@@ -226,8 +226,9 @@ function animate() {
 
 }
 
-function update_particles(data){
+function update_particles(positions){
   console.log('Updating particles from mesh!')
+  /*
   console.log(data)
   console.log(data[1])
   var data_idx = 0;
@@ -239,10 +240,11 @@ function update_particles(data){
     // data is from the rgba, converted to xyza, with a not used: color?
     data_idx+=4;
   }
+  */
   // We need an update!
   console.log(positions);
   particleSystem.geometry.attributes.position.array = positions;
-  //particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
+  particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
 }
 
 // add document on load

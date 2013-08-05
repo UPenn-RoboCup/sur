@@ -30,8 +30,7 @@ self.onmessage = function(e) {
 		return;
 	}
 	var pixels = new Uint8Array(e.data);
-  //self.postMessage(pixels.length);
-  
+  var positions = new Float32Array( fr_width * fr_height * 3 )
   //return;
 	var pixel_idx = 0;
   var position_idx = 0;
@@ -44,17 +43,16 @@ self.onmessage = function(e) {
 		  x = z * hlut[i];
 		  y = z * tmp_vlut;
       // Post into the array
-      pixels[pixel_idx] = x;
-      pixels[pixel_idx+1] = y;
-      pixels[pixel_idx+2] = z;
+      positions[position_idx]   = x;
+      positions[position_idx+1] = y;
+      positions[position_idx+2] = z;
       // Increment the pixel idx for the next mesh pixel
       pixel_idx = pixel_idx+4;
+      position_idx = position_idx + 3;
 		}
 	}
-  //self.postMessage(pixels[1]);
-  //return;
-	//self.postMessage(e.data, [e.data]);
-  self.postMessage(pixels.buffer,[pixels.buffer]);
+  //self.postMessage(pixels.buffer,[pixels.buffer]);
+  self.postMessage(positions.buffer,[positions.buffer]);
 };
 
 self.onerror = function(message) {

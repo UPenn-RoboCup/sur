@@ -41,9 +41,9 @@ document.addEventListener( "DOMContentLoaded", function(){
     if(e.data=='initialized'){
       console.log('WW initialized!')
     } else {
-      var pixels = new Uint8Array(e.data);
-      console.log(pixels)
-      //update_particles(e.data);
+      var positions = new Float32Array(e.data);
+      console.log(positions)
+      update_particles(positions);
     }
     //console.log("Done updating the particles!");
   };
