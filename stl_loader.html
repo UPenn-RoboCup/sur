@@ -51,7 +51,9 @@
 			function init() {
 
 				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.01, 1e10 );
-				camera.position.z = 0.2;
+        camera.position.x = 50;
+        camera.position.y = 10;
+				camera.position.z = -500; // in millimeters
 
 				controls = new THREE.TrackballControls( camera );
 
@@ -72,7 +74,7 @@
 				// light
 
 				var dirLight = new THREE.DirectionalLight( 0xffffff );
-				dirLight.position.set( 200, 200, 1000 ).normalize();
+				dirLight.position.set( 2000, 2000, 1000 ).normalize();
 
 				camera.add( dirLight );
 				camera.add( dirLight.target );
@@ -90,6 +92,8 @@
 
 				} );
 				loader.load( "models/LEFT_ARM.stl" );
+        loader.load( "models/LEFT_ELBOW.stl" );
+        loader.load( "models/LEFT_GRIPPER.stl" );
 
 				// renderer
 

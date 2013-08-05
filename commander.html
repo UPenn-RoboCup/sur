@@ -5,10 +5,27 @@
 <head>
   <title>SUR Commander</title>
   <meta charset="utf-8">
+  
+  <!-- CSS for Styling the page -->
+  <link rel="stylesheet" type="text/css" href="css/command.css">
     
-  <!-- Application Specific JS -->
+  <!-- Application Frameworks -->
+	<script src="lib/three.min.js"></script>
   <script src="lib/appframework.min.js"></script>
+  
+  <!--Models helpers-->
+  <script src="lib/STLLoader.js"></script>
+  
+  <!--GUI helpers-->
+	<script src="lib/TrackballControls.js"></script>
+  
+  <!--Debug helpers-->
+	<script src="lib/Detector.js"></script>
+	<script src="lib/stats.min.js"></script>
+  
+  <!-- SUR JS -->
   <script src="js/parse_message.js"></script>
+  <script src="js/set_the_scene.js"></script>
 </head>
 
 <body>
@@ -16,6 +33,7 @@
   <a id="req_btn">Get frame!</a>
   <canvas id="depth"></canvas>
   <canvas id="color"></canvas>
+  <div id="scene"></div>
 </body>
 
 </html>

@@ -1,33 +1,23 @@
 // Configuration and globals
 var ws_port = 9002
 var ww_script = "depth_worker"
-var fr_width = 320
-var fr_height = 240
 var fr_id = 'depth'
 var fr_fps = 30
 var fr_ws;
+var fr_width = 480
+var fr_height = 500
 
 // Animation
 var stream = 0;
-var skip_cnt = Math.floor(60 / fr_fps); // Animation: 60 fps
-var nskips = 0;
 var get_frame = function(){
-	nskips = nskips + 1
-	if(nskips==skip_cnt){
-		fr_ws.send('data')
-		nskips = 0;
-	}
+	fr_ws.send('mesh_request');
+  console.log('Requesting frame...')
 	// Automatically request frames
-	if(stream==1){
-		requestAnimationFrame( get_frame );
-	}
+  //stream = 1-stream;
+	//if(stream==1){ requestAnimationFrame( get_frame ); }
 }
 document.addEventListener( "DOMContentLoaded", function(){
-	$('#req_btn').bind("click",function(){
-		// Toggle Streaming
-		stream = 1-stream
-		get_frame()
-	});
+	$('#req_btn').bind("click",get_frame);
 }, false );
 
 // Setup the WebSocket connection and callbacks
@@ -35,9 +25,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 
 	// Find the right host
 	var host = window.document.location.host.replace(/:.*/, '');
-	if( host.length==0 ){
-		host = "localhost";
-	}
+	if( host.length==0 ){ host = "localhost"; }
 	
 	// Compatibility layer for URL
 	var URL = window.URL || window.webkitURL;
@@ -67,10 +55,14 @@ document.addEventListener( "DOMContentLoaded", function(){
 		//console.log(e)
 		//if(e.data instanceof Blob)
 		if(typeof e.data === "string"){
-			fr_metadata = JSON.parse(e.data)
-			var recv_time = e.timeStamp/1e6;
-			var latency = recv_time - fr_metadata.t
-			//console.log('Latency: '+latency*1000+'ms')
+      fr_metadata   = JSON.parse(e.data)
+      var recv_time = e.timeStamp/1e6;
+      var latency   = recv_time - fr_metadata.t
+			console.log('Latency: '+latency*1000+'ms')
+      /*
+      fr_width = fr_metadata.w
+      fr_height = fr_metadata.h
+      */
 			return
 		}
 		
@@ -83,7 +75,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 
 		// Make the image
 		var img = new Image()
-		img.height = fr_height;
+		//img.height = fr_height;
 		// Put received JPEG data into the image
 		img.src = URL.createObjectURL( e.data );
 		
@@ -91,7 +83,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 		img.onload = function(e) {
 			
 			// Set the canvas to the pixel data of the image
-			myCanvas.width = fr_width;
+			myCanvas.width  = fr_width;
 			myCanvas.height = fr_height;
 			var myCanvasCtx = myCanvas.getContext('2d')
 			myCanvasCtx.drawImage( this, 0, 0 );
