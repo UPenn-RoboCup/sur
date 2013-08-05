@@ -9,6 +9,7 @@ var cross;
 var width, height;
 width = 600;
 height = 400;
+var nparticles = fr_width * fr_height;
 
 function init_scene() {
   
@@ -118,8 +119,7 @@ function init_scene() {
   loader.load( "models/LEFT_GRIPPER.stl" );
   
   // particles from the mesh at first
-  var nparticles = fr_width * fr_height;
-  // TODO: Ensure npartciles does not exceed 65000
+  // TODO: Ensure nparticles does not exceed 65000
   // TODO: Use the index attribute to overcome the limit
   // as documented in buffer triangles
 	var geometry = new THREE.BufferGeometry();
@@ -224,6 +224,25 @@ function animate() {
 
   stats.update();
 
+}
+
+function update_particles(data){
+  console.log('Updating particles from mesh!')
+  console.log(data)
+  console.log(data[1])
+  var data_idx = 0;
+  var positions = new Float32Array( nparticles * 3 )
+  for ( var i = 0; i < positions.length; i += 3 ) {
+    positions[ i ]     = 1000*data[data_idx];
+    positions[ i + 1 ] = 1000*data[data_idx+1];
+    positions[ i + 2 ] = 1000*data[data_idx+2];
+    // data is from the rgba, converted to xyza, with a not used: color?
+    data_idx+=4;
+  }
+  // We need an update!
+  console.log(positions);
+  particleSystem.geometry.attributes.position.array = positions;
+  //particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
 }
 
 // add document on load

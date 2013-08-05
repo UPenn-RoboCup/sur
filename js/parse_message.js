@@ -1,8 +1,6 @@
 // Configuration and globals
 var ws_port = 9002
-var ww_script = "depth_worker"
-var fr_id = 'depth'
-var fr_fps = 30
+var ww_script = "mesh_worker"
 var fr_ws;
 var fr_width = 480
 var fr_height = 500
@@ -37,10 +35,18 @@ document.addEventListener( "DOMContentLoaded", function(){
 	
 	// WebWorker
 	var frame_worker = new Worker("js/"+ww_script+".js");
-	frame_worker.onmessage = function(e) {
-		//console.log("Worker:");
-		//console.log(e.data)
-	};
+  frame_worker.onmessage = function(e) {
+    //console.log("Worker done!");
+    //console.log(e.data)
+    if(e.data=='initialized'){
+      console.log('WW initialized!')
+    } else {
+      var pixels = new Uint8Array(e.data);
+      console.log(pixels)
+      //update_particles(e.data);
+    }
+    //console.log("Done updating the particles!");
+  };
 	frame_worker.postMessage('Start!');
 	
 	// Canvas
