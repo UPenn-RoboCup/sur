@@ -73,7 +73,6 @@ wss.on('connection', function(ws) {
     console.log('Commander | ',msg);
     var mp_msg = mp.pack(msg)
     zmq_req_skt.send(mp_msg);
-    //(buf, offset, length, port, address, [callback])
     udp_req_skt.send( mp_msg, 0 , mp_msg.length, udp_port, udp_addr );
     
 	});//onmessage
@@ -93,11 +92,10 @@ wss.on('connection', function(ws) {
 var server = dgram.createSocket("udp4");
 server.bind(udp_port);
 server.on("message", function (msg, rinfo) {
-	//var raw = msg;
   var tbl = mp.unpack(msg)
+  // the jpeg is right after the messagepacked metadata (concatenated)
   var raw_offset = msg.length - tbl.sz
   raw = msg.slice(raw_offset)
-  //console.log('mp',tbl.sz,msg.length,raw.length)
   var str = JSON.stringify(tbl)
   
   /* Send data to active users */
@@ -105,8 +103,6 @@ server.on("message", function (msg, rinfo) {
     var ws = client_list[i]
     // check if active
     if(ws!=null){
-      console.log('JSON str:',str)
-      console.log('raw length:',raw.length)
       ws.send(str,ws_error)
       ws.send(raw,{binary: true},ws_error)
     }

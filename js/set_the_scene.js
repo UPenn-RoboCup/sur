@@ -99,7 +99,7 @@ function init_scene() {
   scene.add(z_floor);
 
   // stl files
-  
+  /*
   var stl_material = new THREE.MeshLambertMaterial( { color:0xffffff, side: THREE.DoubleSide } );
 
   var loader = new THREE.STLLoader();
@@ -116,7 +116,10 @@ function init_scene() {
   loader.load( "models/LEFT_ELBOW.stl" );
   loader.load( "models/LEFT_GRIPPER.stl" );
   
+  */
+  
   // particles from the mesh at first
+  
   // TODO: Ensure nparticles does not exceed 65000
   // TODO: Use the index attribute to overcome the limit
   // as documented in buffer triangles
@@ -150,12 +153,14 @@ function init_scene() {
     positions[ i + 2 ] = z;
 
     // colors
-
+    /*
     var vx = ( x / n ) + 0.5;
     var vy = ( y / n ) + 0.5;
     var vz = ( z / n ) + 0.5;
 
     color.setRGB( vx, vy, vz );
+    */
+    color.setRGB( .5, .5, .5 );
 
     colors[ i ]     = color.r;
     colors[ i + 1 ] = color.g;
@@ -164,8 +169,8 @@ function init_scene() {
   }
 
   geometry.computeBoundingSphere();
-  
-  var material = new THREE.ParticleBasicMaterial( { size: 15, vertexColors: true } );
+  // default size: 15
+  var material = new THREE.ParticleBasicMaterial( { size: 2, vertexColors: true } ); 
 
   particleSystem = new THREE.ParticleSystem( geometry, material );
   scene.add( particleSystem );
