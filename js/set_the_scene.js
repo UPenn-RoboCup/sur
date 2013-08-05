@@ -26,9 +26,9 @@ function init_scene() {
   // add the camera
 
   camera = new THREE.PerspectiveCamera( 60, width / height, 0.01, 1e10 );
-  camera.position.x = -1000;
-  camera.position.y = 1000;
-  camera.position.z = -1000; // in millimeters
+  camera.position.x = 0;
+  camera.position.y = 0;
+  camera.position.z = 1000; // in millimeters
   
   // add the controls to look around the scene
   controls = new THREE.TrackballControls( camera );
@@ -71,24 +71,24 @@ function init_scene() {
   // 1 sq. meter
   var x_floor_color  = new THREE.MeshBasicMaterial( 
     { color:0xff0000, side: THREE.DoubleSide } );
-  var x_floor_geom   = new THREE.PlaneGeometry(1000, 1000, 10, 10)
+  var x_floor_geom   = new THREE.PlaneGeometry(2000, 2000, 1, 1);
   x_floor_geom.applyMatrix(m2); // rotate around y
   var x_floor        = new THREE.Mesh( x_floor_geom, x_floor_color );
-  x_floor.position.x = 500;
+  x_floor.position.x = 1000;
   
   var y_floor_color  = new THREE.MeshBasicMaterial( 
     { color:0x00ff00, side: THREE.DoubleSide } );
-  var y_floor_geom   = new THREE.PlaneGeometry(1000, 1000, 10, 10)
+  var y_floor_geom   = new THREE.PlaneGeometry(2000, 2000, 1, 1);
   var y_floor        = new THREE.Mesh( y_floor_geom, y_floor_color );
   y_floor.applyMatrix(m1);
-  y_floor.position.y = -500;
+  y_floor.position.y = 1000;
   
   var z_floor_color  = new THREE.MeshBasicMaterial( 
     { color:0x0000ff, side: THREE.DoubleSide } );
-  var z_floor_geom   = new THREE.PlaneGeometry(1000, 1000, 10, 10)
+  var z_floor_geom   = new THREE.PlaneGeometry(2000, 2000, 1, 1);
   var z_floor        = new THREE.Mesh( z_floor_geom, z_floor_color );
   //z_floor.applyMatrix(m3);
-  z_floor.position.z = 500;
+  z_floor.position.z = 1000;
   
   // add the floors to the scene
   
@@ -151,14 +151,14 @@ function init_scene() {
     positions[ i + 2 ] = z;
 
     // colors
-    /*
+    
     var vx = ( x / n ) + 0.5;
     var vy = ( y / n ) + 0.5;
     var vz = ( z / n ) + 0.5;
 
     color.setRGB( vx, vy, vz );
-    */
-    color.setRGB( .5, .5, .5 );
+    
+    //color.setRGB( .5, .5, .5 );
 
     colors[ i ]     = color.r;
     colors[ i + 1 ] = color.g;

@@ -36,7 +36,6 @@ self.onmessage = function(e) {
   for(var j=0; j<fr_height; j++ ){
 		var tmp_vlut = vlut[j];
     for (var i = 0; i<fr_width; i++ ){
-      //fdx = j*fr_width+i;
       pixel_idx = pixel_idx+4;
 			z = pixels[pixel_idx]
 		  x = z*hlut[i];
