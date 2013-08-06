@@ -33,7 +33,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 	frame_worker.postMessage('Start!');
 	
 	// Canvas
-	var myCanvas = document.getElementById('depth');
+	//var myCanvas = document.getElementById('depth');
 	
 	// Checksum and metadata
 	var fr_sz_checksum;
@@ -65,24 +65,39 @@ document.addEventListener( "DOMContentLoaded", function(){
 		//img.height = fr_height;
 		// Put received JPEG data into the image
 		img.src = URL.createObjectURL( e.data );
-		
+    
+		var tmp_canvas = document.createElement('canvas');
+    //document.getElementById('depth');
 		// Trigger processing once the image is fully loaded
 		img.onload = function(e) {
 			
 			// Set the canvas to the pixel data of the image
-			myCanvas.width  = fr_width;
-			myCanvas.height = fr_height;
-			var myCanvasCtx = myCanvas.getContext('2d')
-			myCanvasCtx.drawImage( this, 0, 0 );
+      var canv_sz = Math.max(fr_width,fr_height);
+      i_w = (canv_sz-fr_width)/2;
+      i_h = (canv_sz-fr_height)/2;
+			tmp_canvas.width  = canv_sz;
+			tmp_canvas.height = canv_sz;
+			var ctx = tmp_canvas.getContext('2d')
+			ctx.drawImage( this, i_w, i_h );
 			
 			// Remove the image for memory management reasons
 			URL.revokeObjectURL(this.src);
 			this.src = '';
 			
 			// Send the pixel data to the worker for processing
-			var myCanvasData = myCanvasCtx.getImageData(0, 0, fr_width, fr_height).data.buffer;
+			var myCanvasData = ctx.getImageData(i_w, i_h, fr_width, fr_height).data.buffer;
 			frame_worker.postMessage(myCanvasData, [myCanvasData]);
-
+      
+      // After posting the data, let's rotate or something
+      ctx.save();
+      ctx.translate( i_w+fr_width/2, i_h+fr_height/2 );
+      ctx.rotate( Math.PI/2 );
+      ctx.translate( -1*(i_w+fr_width/2), -1*(i_h+fr_height/2) );
+      // Clear the remnants of the last image
+      //ctx.clearRect( 0, 0, canv_sz, canv_sz );
+      ctx.drawImage( myCanvas, 0, 0 );
+      ctx.restore();
+      
 		}
 	};
 }, false );

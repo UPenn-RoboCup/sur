@@ -29,7 +29,7 @@ function init_scene() {
 
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1e6 );
   camera.position.y = 1000;
-  camera.position.z = 1000;
+  camera.position.z = 2000;
   //camera.rotation.y = Math.PI/3;
   
   var lookTarget = new THREE.Vector3(0,0,-1000);
@@ -114,23 +114,30 @@ function init_scene() {
   scene.add(z_floor);
 
   // stl files
-  /*
+  
   var stl_material = new THREE.MeshLambertMaterial(
     { color:0xdddd00, side: THREE.DoubleSide } );
   var obj_id = 0;
-  var stl_objs = ['LEFT_GRIPPER','LEFT_ANKLE','FOOT'];
+  //var stl_objs = ['LEFT_GRIPPER','LEFT_ANKLE','FOOT', 'cordless_drill'];
+  var stl_objs = ['cordless_drill'];
   var loader = new THREE.STLLoader();
   loader.load( "models/"+stl_objs[obj_id]+'.stl' );
   loader.addEventListener( 'load', function ( event ) {
     console.log(obj_id)
     var stl_geometry = event.content;
     var mesh = new THREE.Mesh( stl_geometry, stl_material );
-    mesh.position.setZ( 1000 );
+    // Gazebo meshes must be scaled
+    // TODO: Just scale the Webots down?
+    mesh.scale.x = 1000;
+    mesh.scale.y = 1000;
+    mesh.scale.z = 1000;
+    mesh.rotation.x = -Math.PI/2;
+    mesh.position.setZ( -1000 );
+    mesh.position.setY( -400 );
     scene.add( mesh );
     obj_id++;
     loader.load( "models/"+stl_objs[obj_id]+'.stl' );
   } );
-  */
   
   // particles from the mesh at first
   
