@@ -26,16 +26,14 @@ function init_scene() {
   // add the camera
 
   camera = new THREE.PerspectiveCamera( 60, width / height, 0.01, 1e10 );
-  camera.position.x = 0;
-  camera.position.y = 0;
-  camera.position.z = 1000; // in millimeters
+  
   
   // add the controls to look around the scene
   controls = new THREE.TrackballControls( camera );
 
   controls.rotateSpeed = 5.0;
   controls.zoomSpeed = 5;
-  controls.panSpeed = 2;
+  controls.panSpeed = 2000;
 
   controls.noZoom = false;
   controls.noPan = false;
@@ -55,6 +53,10 @@ function init_scene() {
   // add the camera to the scene
   
   scene.add( camera );
+  camera.position.set(-1,0,0); //in millimeters
+  camera.up = new THREE.Vector3(0,0,1);
+  camera.lookAt(new THREE.Vector3(1000,0,0));
+  //camera.position.setX()
   
   // planes for understanding where we are
   
@@ -69,26 +71,27 @@ function init_scene() {
   m3.makeRotationZ( gamma );
   
   // 1 sq. meter
+  var floor_sz = 10000;
   var x_floor_color  = new THREE.MeshBasicMaterial( 
     { color:0xff0000, side: THREE.DoubleSide } );
-  var x_floor_geom   = new THREE.PlaneGeometry(2000, 2000, 1, 1);
+  var x_floor_geom   = new THREE.PlaneGeometry(floor_sz, floor_sz, 1, 1);
   x_floor_geom.applyMatrix(m2); // rotate around y
   var x_floor        = new THREE.Mesh( x_floor_geom, x_floor_color );
-  x_floor.position.x = 1000;
+  x_floor.position.x = -floor_sz/2;
   
   var y_floor_color  = new THREE.MeshBasicMaterial( 
     { color:0x00ff00, side: THREE.DoubleSide } );
-  var y_floor_geom   = new THREE.PlaneGeometry(2000, 2000, 1, 1);
+  var y_floor_geom   = new THREE.PlaneGeometry(floor_sz, floor_sz, 1, 1);
   var y_floor        = new THREE.Mesh( y_floor_geom, y_floor_color );
   y_floor.applyMatrix(m1);
-  y_floor.position.y = 1000;
+  y_floor.position.y = -floor_sz/2;
   
   var z_floor_color  = new THREE.MeshBasicMaterial( 
     { color:0x0000ff, side: THREE.DoubleSide } );
-  var z_floor_geom   = new THREE.PlaneGeometry(2000, 2000, 1, 1);
+  var z_floor_geom   = new THREE.PlaneGeometry(floor_sz, floor_sz, 1, 1);
   var z_floor        = new THREE.Mesh( z_floor_geom, z_floor_color );
   //z_floor.applyMatrix(m3);
-  z_floor.position.z = 1000;
+  z_floor.position.z = -floor_sz/2;
   
   // add the floors to the scene
   
@@ -97,24 +100,20 @@ function init_scene() {
   scene.add(z_floor);
 
   // stl files
-  /*
+  
   var stl_material = new THREE.MeshLambertMaterial( { color:0xffffff, side: THREE.DoubleSide } );
 
   var loader = new THREE.STLLoader();
   loader.addEventListener( 'load', function ( event ) {
-
     var stl_geometry = event.content;
-
     var mesh = new THREE.Mesh( stl_geometry, stl_material );
-    mesh.position.setY( - 0.09 );
+    mesh.position.setX( 1000 );
     scene.add( mesh );
 
   } );
   loader.load( "models/LEFT_ARM.stl" );
   loader.load( "models/LEFT_ELBOW.stl" );
   loader.load( "models/LEFT_GRIPPER.stl" );
-  
-  */
   
   // particles from the mesh at first
   
