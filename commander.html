@@ -18,6 +18,9 @@
   
   <!--GUI helpers-->
 	<script src="lib/TrackballControls.js"></script>
+  <script src="lib/TransformControls.js"></script>
+  <script src="lib/FlyControls.js"></script>
+  <script src="lib/FirstPersonControls.js"></script>
   
   <!--Debug helpers-->
 	<script src="lib/Detector.js"></script>
@@ -32,12 +35,10 @@
 </head>
 
 <body>
-  <div id="debug"></div>
   <div id="buttons">
     <a id="req_btn" class="btn">Get frame!</a>
-    <a id="show_btn" class="btn">Show depth map</a>
+    <a id="show_btn" class="btn">Show depth</a>
   </div>
-  <div id="scene"></div>
   <div id="canvases">
     <canvas id="depth"></canvas>
     <canvas id="color"></canvas>

@@ -33,11 +33,12 @@ self.onmessage = function(e) {
         r = ((d / 255) * (2-.1) + .1) * 1000;
   		  x = r * hok_factor_xy * Math.cos(pan_angle);
   		  y = r * hok_factor_xy * Math.sin(pan_angle);
-        z = -r * hok_factor_z;
+        z = r * hok_factor_z;
         
-        positions[position_idx]   = x;
-        positions[position_idx+1] = y;
-        positions[position_idx+2] = z;        
+        // Like webots, we flip some coordinates
+        positions[position_idx]   = y;
+        positions[position_idx+1] = -z;
+        positions[position_idx+2] = -x;        
       } else {
         positions[position_idx]   = -100000; //100m away
         positions[position_idx+1] = 0;

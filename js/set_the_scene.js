@@ -6,11 +6,16 @@ var camera, controls, scene, renderer;
 
 var cross;
 
-var width  = 640;
-var height = 480;
+var width;
+var height;
 var nparticles = fr_width * fr_height;
 
+var clock = new THREE.Clock();
+
 function init_scene() {
+  
+  width  = window.innerWidth;
+  height = window.innerHeight;
   
   // grab our container
   container = document.getElementById( 'scene' );
@@ -22,23 +27,38 @@ function init_scene() {
   
   // add the camera
 
-  camera = new THREE.PerspectiveCamera( 35, width / height, 1, 10000 );
+	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1e6 );
+  camera.position.y = 1000;
+  camera.position.z = 1000;
+  //camera.rotation.y = Math.PI/3;
   
+  var lookTarget = new THREE.Vector3(0,0,-1000);
   
   // add the controls to look around the scene
+  /*
+	controls = new THREE.FirstPersonControls( camera );
+	controls.movementSpeed = 1000;
+	controls.lookSpeed = 0.125;
+	controls.lookVertical = true;
+	controls.constrainVertical = true;
+	controls.verticalMin = 1.1;
+	controls.verticalMax = 2.2;
+  controls.target = lookTarget;
+  */
   controls = new THREE.TrackballControls( camera );
 
-  controls.rotateSpeed = 5.0;
-  controls.panSpeed = 2000;
+  controls.rotateSpeed = 2.0;
+  controls.panSpeed = 2.0;
+  controls.zoomSpeed = 2.0;
 
-  controls.noZoom = true;
+  controls.noZoom = false;
   controls.noPan = false;
   controls.minDistance = 1;
 
-  controls.staticMoving = true;
+  controls.staticMoving = false;
   controls.dynamicDampingFactor = 0.3;
-  controls.screen = { left: 8, top: 8, width: 640, height: 480 };
-
+  controls.keys = [ 65, 83, 68 ];
+  controls.target = lookTarget;
 
   // add light
 
@@ -51,10 +71,7 @@ function init_scene() {
   // add the camera to the scene
   
   scene.add( camera );
-  camera.position.set(-1,0,0); //in millimeters
-  camera.up = new THREE.Vector3(0,0,1);
-  camera.lookAt(new THREE.Vector3(10000,0,0));
-  
+
   // planes for understanding where we are
   
   var alpha = Math.PI/2;
@@ -97,7 +114,7 @@ function init_scene() {
   scene.add(z_floor);
 
   // stl files
-  
+  /*
   var stl_material = new THREE.MeshLambertMaterial(
     { color:0xdddd00, side: THREE.DoubleSide } );
   var obj_id = 0;
@@ -108,11 +125,12 @@ function init_scene() {
     console.log(obj_id)
     var stl_geometry = event.content;
     var mesh = new THREE.Mesh( stl_geometry, stl_material );
-    mesh.position.setX( 1000 );
+    mesh.position.setZ( 1000 );
     scene.add( mesh );
     obj_id++;
     loader.load( "models/"+stl_objs[obj_id]+'.stl' );
   } );
+  */
   
   // particles from the mesh at first
   
@@ -176,12 +194,15 @@ function init_scene() {
   renderer = new THREE.WebGLRenderer( { antialias: false } );
   renderer.setClearColor( 0x000000, 1 );
   renderer.setSize( width, height );
+  
+	container = document.createElement( 'div' );
+	document.body.appendChild( container );
+	container.appendChild( renderer.domElement );
 
   // fps stats
   
   stats = new Stats();
-  //stats.domElement.style.position = 'absolute';
-  stats.domElement.style.top = '40px';
+  // css is done externally
   
   // add to the HTML page
   
@@ -200,8 +221,8 @@ function init_scene() {
 
 function onWindowResize() {
 
-  //width = window.innerWidth - 2*40;
-  //height = window.innerHeight - 2*40;
+  width  = window.innerWidth;
+  height = window.innerHeight;
 
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
@@ -215,7 +236,7 @@ function onWindowResize() {
 function animate() {
 
   requestAnimationFrame( animate );
-  controls.update();
+  controls.update(clock.getDelta());
   renderer.render( scene, camera );
 
   stats.update();
