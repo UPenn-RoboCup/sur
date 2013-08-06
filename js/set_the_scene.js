@@ -6,46 +6,44 @@ var camera, controls, scene, renderer;
 
 var cross;
 
-var width, height;
-width = 600;
-height = 400;
+var width  = 640;
+var height = 480;
 var nparticles = fr_width * fr_height;
 
 function init_scene() {
   
   // grab our container
   container = document.getElementById( 'scene' );
+  console.log('Container:',container);
   
   // create the scene
   
   scene = new THREE.Scene();
   
-  width = window.innerWidth - 2*40;
-  height = window.innerHeight - 2*40;
-  
   // add the camera
 
-  camera = new THREE.PerspectiveCamera( 60, width / height, 0.01, 1e10 );
+  camera = new THREE.PerspectiveCamera( 35, width / height, 1, 10000 );
   
   
   // add the controls to look around the scene
   controls = new THREE.TrackballControls( camera );
 
   controls.rotateSpeed = 5.0;
-  controls.zoomSpeed = 5;
   controls.panSpeed = 2000;
 
-  controls.noZoom = false;
+  controls.noZoom = true;
   controls.noPan = false;
+  controls.minDistance = 1;
 
   controls.staticMoving = true;
   controls.dynamicDampingFactor = 0.3;
+  controls.screen = { left: 8, top: 8, width: 640, height: 480 };
 
 
   // add light
 
   var dirLight = new THREE.DirectionalLight( 0xffffff );
-  dirLight.position.set( 2000, 2000, 1000 ).normalize();
+  dirLight.position.set( 0, 0, 10 ).normalize();
 
   camera.add( dirLight );
   camera.add( dirLight.target );
@@ -55,8 +53,7 @@ function init_scene() {
   scene.add( camera );
   camera.position.set(-1,0,0); //in millimeters
   camera.up = new THREE.Vector3(0,0,1);
-  camera.lookAt(new THREE.Vector3(1000,0,0));
-  //camera.position.setX()
+  camera.lookAt(new THREE.Vector3(10000,0,0));
   
   // planes for understanding where we are
   
@@ -101,19 +98,21 @@ function init_scene() {
 
   // stl files
   
-  var stl_material = new THREE.MeshLambertMaterial( { color:0xffffff, side: THREE.DoubleSide } );
-
+  var stl_material = new THREE.MeshLambertMaterial(
+    { color:0xdddd00, side: THREE.DoubleSide } );
+  var obj_id = 0;
+  var stl_objs = ['LEFT_GRIPPER','LEFT_ANKLE','FOOT'];
   var loader = new THREE.STLLoader();
+  loader.load( "models/"+stl_objs[obj_id]+'.stl' );
   loader.addEventListener( 'load', function ( event ) {
+    console.log(obj_id)
     var stl_geometry = event.content;
     var mesh = new THREE.Mesh( stl_geometry, stl_material );
     mesh.position.setX( 1000 );
     scene.add( mesh );
-
+    obj_id++;
+    loader.load( "models/"+stl_objs[obj_id]+'.stl' );
   } );
-  loader.load( "models/LEFT_ARM.stl" );
-  loader.load( "models/LEFT_ELBOW.stl" );
-  loader.load( "models/LEFT_GRIPPER.stl" );
   
   // particles from the mesh at first
   
@@ -167,7 +166,7 @@ function init_scene() {
 
   geometry.computeBoundingSphere();
   // default size: 15
-  var material = new THREE.ParticleBasicMaterial( { size: 2, vertexColors: true } ); 
+  var material = new THREE.ParticleBasicMaterial( { size: 5, vertexColors: true } ); 
 
   particleSystem = new THREE.ParticleSystem( geometry, material );
   scene.add( particleSystem );
@@ -181,7 +180,7 @@ function init_scene() {
   // fps stats
   
   stats = new Stats();
-  stats.domElement.style.position = 'absolute';
+  //stats.domElement.style.position = 'absolute';
   stats.domElement.style.top = '40px';
   
   // add to the HTML page
@@ -201,8 +200,8 @@ function init_scene() {
 
 function onWindowResize() {
 
-  width = window.innerWidth - 2*40;
-  height = window.innerHeight - 2*40;
+  //width = window.innerWidth - 2*40;
+  //height = window.innerHeight - 2*40;
 
   camera.aspect = width / height;
   camera.updateProjectionMatrix();

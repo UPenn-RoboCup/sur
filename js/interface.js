@@ -10,7 +10,10 @@ var get_frame = function(){
 }
 
 // add callbacks to DOM elements
-
 document.addEventListener( "DOMContentLoaded", function(){
 	$('#req_btn').bind("click",get_frame);
+  $('#show_btn').bind("click",function(){
+    console.log('hello');
+    $('#canvases').toggle();
+  });
 }, false );
