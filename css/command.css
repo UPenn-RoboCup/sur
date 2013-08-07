@@ -4,11 +4,9 @@ body {
 	overflow: hidden;
 }
 
-#canvases {
-  position: absolute;
-  top: 0;
-  left: 50px;
-  display: none;
+#images canvas {
+  width: 600;
+  height: 400;
 }
 
 #buttons {

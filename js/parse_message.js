@@ -1,5 +1,5 @@
 // Configuration and globals
-var ws_port = 9002
+var mesh_port = 9002
 var ww_script = "mesh_worker"
 var fr_ws;
 var fr_width = 480
@@ -16,7 +16,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 	var URL = window.URL || window.webkitURL;
 
 	// Connect to the websocket server
-	fr_ws = new WebSocket('ws://' + host + ':' + ws_port);
+	fr_ws = new WebSocket('ws://' + host + ':' + mesh_port);
 	//fr_ws.binaryType = "arraybuffer";
 	fr_ws.binaryType = "blob";
 	
