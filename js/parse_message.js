@@ -2,8 +2,6 @@
 var mesh_port = 9002
 var ww_script = "mesh_worker"
 var fr_ws;
-var fr_width = 480
-var fr_height = 500
 
 // Setup the WebSocket connection and callbacks
 document.addEventListener( "DOMContentLoaded", function(){
@@ -43,10 +41,9 @@ document.addEventListener( "DOMContentLoaded", function(){
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
 			console.log('Latency: '+latency*1000+'ms')
-      /*
-      fr_width = fr_metadata.w
-      fr_height = fr_metadata.h
-      */
+      fr_width = fr_metadata.res[1]
+      fr_height = fr_metadata.res[0]
+      console.log(fr_metadata)
 			return
 		}
 		
@@ -67,21 +64,18 @@ document.addEventListener( "DOMContentLoaded", function(){
 		img.onload = function(e) {
 			
 			// Set the canvas to the pixel data of the image
-      var canv_sz = Math.max(fr_width,fr_height);
-      i_w = (canv_sz-fr_width)/2;
-      i_h = (canv_sz-fr_height)/2;
       var tmp_canvas = document.createElement('canvas');
-			tmp_canvas.width  = canv_sz;
-			tmp_canvas.height = canv_sz;
+			tmp_canvas.width  = fr_width;
+			tmp_canvas.height = fr_height;
 			var ctx = tmp_canvas.getContext('2d')
-			ctx.drawImage( this, i_w, i_h );
+			ctx.drawImage( this, 0, 0 );
 			
 			// Remove the image for memory management reasons
 			URL.revokeObjectURL(this.src);
 			this.src = '';
 			
 			// Send the pixel data to the worker for processing
-			var myCanvasData = ctx.getImageData(i_w, i_h, fr_width, fr_height).data;
+			var myCanvasData = ctx.getImageData(0, 0, fr_width, fr_height).data;
       frame_worker.postMessage(myCanvasData.buffer, [myCanvasData.buffer]);
       
       // After posting the data, let's rotate or something
@@ -90,9 +84,9 @@ document.addEventListener( "DOMContentLoaded", function(){
       dcanvas.height = fr_width;
       var dcanv_ctx = dcanvas.getContext('2d');
       dcanv_ctx.save()
-      dcanv_ctx.translate( i_w+fr_width/2, i_h-fr_height/2 );
+      dcanv_ctx.translate( fr_width/2, -fr_height/2 );
       dcanv_ctx.rotate( Math.PI/2 );
-      dcanv_ctx.drawImage( tmp_canvas, i_w+fr_width/2, i_h-fr_height/2 );
+      dcanv_ctx.drawImage( tmp_canvas, fr_width/2, -fr_height/2 );
       dcanv_ctx.restore()
 		}
 	};

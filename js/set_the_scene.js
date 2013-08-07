@@ -8,7 +8,8 @@ var cross;
 
 var width;
 var height;
-var nparticles = fr_width * fr_height;
+
+var nparticles = 500 * 480;
 
 var clock = new THREE.Clock();
 
