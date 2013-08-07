@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--HTML5 doctype-->
+<html>
+     
+<head>
+  <title>SUR Visualizer</title>
+  <meta charset="utf-8">
+  
+  <!-- CSS for Styling the page -->
+  <link rel="stylesheet" type="text/css" href="css/command.css">
+  <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.3.custom.min.css">
+    
+  <!-- Application Frameworks -->
+  <script src="lib/jquery-1.9.1.js"></script>
+  <script src="lib/jquery-ui-1.10.3.custom.min.js"></script>
+	<script src="lib/three.min.js"></script>
+  
+  <!--Models helpers-->
+  <script src="lib/STLLoader.js"></script>
+  
+  <!--GUI helpers-->
+	<script src="lib/TrackballControls.js"></script>
+  <script src="lib/TransformControls.js"></script>
+  <script src="lib/FlyControls.js"></script>
+  <script src="lib/FirstPersonControls.js"></script>
+  
+  <!--Debug helpers-->
+	<script src="lib/Detector.js"></script>
+	<script src="lib/stats.min.js"></script>
+  
+  <!-- SUR JS -->
+  <!-- Order is important due to shared variables -->
+  <!-- TODO: Make a global variable js file -->
+  <script src="js/parse_message.js"></script>
+  <script src="js/set_the_scene.js"></script>
+  
+  <script>
+  $(function() {
+    $( "#dialog-modal" ).dialog({
+      height: 140,
+      modal: true,
+      autoOpen: false
+    });
+  });
+  </script>
+  
+  <script>
+  /* Buttons to update settings */
+  $(function() {
+    $( "a#req_btn" ).button().click(function( event ) {
+      event.preventDefault();
+      var request = {loc: 'chest', quality: 95, range: [.1,2] }
+      fr_ws.send( JSON.stringify(request) );
+    });
+  });
+  /* Buttons to update settings */
+  $(function() {
+    $( "a#dmap_btn" ).button().click(function( event ) {
+      event.preventDefault();
+      var request = {loc: 'chest', quality: 95, range: [.1,2] }
+      fr_ws.send( JSON.stringify(request) );
+    });
+  });
+  /* Buttons to update settings */
+  $(function() {
+    $( "a#settings_btn" ).button().click(function( event ) {
+      event.preventDefault();
+      var command = {
+        //endpoints: $( "#slider-range" ).slider( "values" )
+      }
+      //op_ws.send( JSON.stringify(command) );
+      console.log(command);
+      $( "#dialog-modal" ).dialog("open");
+    });
+  });
+  </script>
+  
+</head>
+
+<body>
+  <div id="buttons">
+    <a id="req_btn" class="btn">Get frame!</a>
+    <br/>
+    <a id="dmap_btn" class="btn">Depth Map</a>
+    <br/>
+    <a id="settings_btn" class="btn">Settings</a>
+  </div>
+  <div id="canvases">
+    <canvas id="depth"></canvas>
+    <canvas id="color"></canvas>
+  </div>
+  <div id="dialog-modal" title="Basic modal dialog">
+    <p>Adding the modal overlay screen makes the dialog look more prominent because it dims out the page content.</p>
+    <a id="save_btn" class="btn">Save setting to robot.</a>
+  </div>
+</body>
+
+</html>
