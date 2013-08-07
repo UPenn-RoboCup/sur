@@ -24,7 +24,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 	var frame_worker = new Worker("js/"+ww_script+".js");
   frame_worker.onmessage = function(e) {
     if(e.data=='initialized'){
-      console.log('WW initialized!')
+      console.log('WebWorker initialized!')
     } else {
       var positions = new Float32Array(e.data);
       update_particles(positions);
@@ -85,16 +85,15 @@ document.addEventListener( "DOMContentLoaded", function(){
       frame_worker.postMessage(myCanvasData.buffer, [myCanvasData.buffer]);
       
       // After posting the data, let's rotate or something
-      //var dimg = document.getElementById("tmp");
-      ctx.save();
-      ctx.translate( i_w+fr_width/2, i_h+fr_height/2 );
-      ctx.rotate( Math.PI/2 );
-      ctx.translate( -1*(i_w+fr_width/2), -1*(i_h+fr_height/2) );
-      //ctx.drawImage( dimg, 0, 0 );
-      // Clear the remnants of the last image
-      //ctx.clearRect( 0, 0, canv_sz, canv_sz );
-      ctx.restore();
-      
+      var dcanvas = $("#depthmap")[0];
+      dcanvas.width = fr_height;
+      dcanvas.height = fr_width;
+      var dcanv_ctx = dcanvas.getContext('2d');
+      dcanv_ctx.save()
+      dcanv_ctx.translate( i_w+fr_width/2, i_h-fr_height/2 );
+      dcanv_ctx.rotate( Math.PI/2 );
+      dcanv_ctx.drawImage( tmp_canvas, i_w+fr_width/2, i_h-fr_height/2 );
+      dcanv_ctx.restore()
 		}
 	};
 }, false );
