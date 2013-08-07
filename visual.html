@@ -48,9 +48,15 @@
   		if(typeof e.data === "string"){
         var op_data   = JSON.parse(e.data)
         var recv_time = e.timeStamp/1e6;
-        var latency   = recv_time - fr_metadata.t
-  			console.log('Operator Latency: '+latency*1000+'ms')
-        console.log(data);
+        var latency   = recv_time - op_data.t
+        if (op_data.tool !== undefined) {
+          console.log(op_data);
+          tools[op_data.tool].position.set(
+            -op_data.pos[1],op_data.pos[2],-op_data.pos[0]);
+          tools[op_data.tool].quaternion.set(
+            -op_data.rot[2], op_data.rot[1], -op_data.rot[3], op_data.rot[0] )
+        }
+  			//console.log('Operator Latency: '+latency*1000+'ms')
   			return;
   		}
     }; //onmessage

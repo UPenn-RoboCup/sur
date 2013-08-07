@@ -13,6 +13,9 @@ var nparticles = 500 * 480;
 
 var clock = new THREE.Clock();
 
+var stl_objs = ['drill'];
+var tools = {};
+
 function init_scene() {
   
   width  = window.innerWidth;
@@ -25,11 +28,11 @@ function init_scene() {
   // add the camera
 
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1e6 );
-  camera.position.y = 1000;
-  camera.position.z = 2000;
+  camera.position.y = 1;
+  camera.position.z = 2;
   //camera.rotation.y = Math.PI/3;
   
-  var lookTarget = new THREE.Vector3(0,0,-1000);
+  var lookTarget = new THREE.Vector3(0,0,-1);
   
   // add the controls to look around the scene
   /*
@@ -82,7 +85,7 @@ function init_scene() {
   m3.makeRotationZ( gamma );
   
   // 1 sq. meter
-  var floor_sz = 10000;
+  var floor_sz = 10;
   var x_floor_color  = new THREE.MeshBasicMaterial( 
     { color:0xff0000, side: THREE.DoubleSide } );
   var x_floor_geom   = new THREE.PlaneGeometry(floor_sz, floor_sz, 1, 1);
@@ -116,7 +119,7 @@ function init_scene() {
     { color:0xdddd00, side: THREE.DoubleSide } );
   var obj_id = 0;
   //var stl_objs = ['LEFT_GRIPPER','LEFT_ANKLE','FOOT', 'cordless_drill'];
-  var stl_objs = ['cordless_drill'];
+  
   //var stl_objs = ['makita'];
   var loader = new THREE.STLLoader();
   loader.load( "models/"+stl_objs[obj_id]+'.stl' );
@@ -126,13 +129,18 @@ function init_scene() {
     var mesh = new THREE.Mesh( stl_geometry, stl_material );
     // Gazebo meshes must be scaled
     // TODO: Just scale the Webots down?
+    /*
     mesh.scale.x = 1000;
     mesh.scale.y = 1000;
     mesh.scale.z = 1000;
+    */
     mesh.rotation.x = -Math.PI/2;
-    mesh.position.setZ( -1000 );
-    mesh.position.setY( -400 );
+    mesh.position.setZ( -1 );
+    mesh.position.setY( -.4 );
+    mesh.useQuaternion = true;
     scene.add( mesh );
+    var name = stl_objs[obj_id];
+    tools[name] = mesh;
     obj_id++;
     if(obj_id<stl_objs.length){
       loader.load( "models/"+stl_objs[obj_id]+'.stl' );
@@ -191,7 +199,7 @@ function init_scene() {
 
   geometry.computeBoundingSphere();
   // default size: 15
-  var material = new THREE.ParticleBasicMaterial( { size: 2, vertexColors: true } ); 
+  var material = new THREE.ParticleBasicMaterial( { size: .002, vertexColors: true } ); 
 
   particleSystem = new THREE.ParticleSystem( geometry, material );
   scene.add( particleSystem );

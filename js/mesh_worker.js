@@ -30,7 +30,7 @@ self.onmessage = function(e) {
       // Compute the xyz
       d = pixels[pixel_idx];
       if (d<253){
-        r = ((d / 255) * (2-.1) + .1) * 1000;
+        r = ((d / 255) * (2-.1) + .1);
   		  x = r * hok_factor_xy * Math.cos(pan_angle);
   		  y = r * hok_factor_xy * Math.sin(pan_angle);
         z = r * hok_factor_z;

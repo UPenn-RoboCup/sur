@@ -50,21 +50,21 @@ document.addEventListener( "DOMContentLoaded", function(){
 		// Use the size as a sort of checksum
 		fr_sz_checksum = e.data.size;
 		if(fr_metadata.sz!==fr_sz_checksum){
-			console.log('Checksum fail!',fr_metadata.sz,fr_sz_checksum)
-			return
+			console.log('Checksum fail!',fr_metadata.sz,fr_sz_checksum);
+			return;
 		}
 
 		// Make the image
-		var img = new Image()
+		var img = new Image();
 		//img.height = fr_height;
 		// Put received JPEG data into the image
 		img.src = URL.createObjectURL( e.data );
 
 		// Trigger processing once the image is fully loaded
 		img.onload = function(e) {
-			
+
 			// Set the canvas to the pixel data of the image
-      var tmp_canvas = document.createElement('canvas');
+      var tmp_canvas    = document.createElement('canvas');
 			tmp_canvas.width  = fr_width;
 			tmp_canvas.height = fr_height;
 			var ctx = tmp_canvas.getContext('2d')
@@ -83,11 +83,12 @@ document.addEventListener( "DOMContentLoaded", function(){
       dcanvas.width = fr_height;
       dcanvas.height = fr_width;
       var dcanv_ctx = dcanvas.getContext('2d');
-      dcanv_ctx.save()
+      dcanv_ctx.save();
       dcanv_ctx.translate( fr_width/2, -fr_height/2 );
+      dcanv_ctx.scale(-1, 1);
       dcanv_ctx.rotate( Math.PI/2 );
-      dcanv_ctx.drawImage( tmp_canvas, fr_width/2, -fr_height/2 );
-      dcanv_ctx.restore()
+      dcanv_ctx.drawImage( tmp_canvas, fr_height/2, -fr_width/2 );
+      dcanv_ctx.restore();
 		}
 	};
 }, false );

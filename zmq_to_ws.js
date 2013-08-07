@@ -55,7 +55,7 @@ var ws_connection = function(ws){
   /* Save this web socket connection */
   ws_clients[this.id] = ws;
   
-  console.log('User is connected to',this.id);
+  console.log('User is connected to', names[this.id] );
 }
 
 /* Initialize the websocket servers for each port */
@@ -79,26 +79,30 @@ for( var w=0; w<ws_ports.length; w++) {
 */
 
 var zmq_message = function(metadata,payload){
+  
+  var ws = ws_clients[this.id];
+  if( ws == undefined ){
+    return;
+  }
+  
+  /* msgpack -> JSON */
   var meta = mp.unpack(metadata);
+  meta.sz = 0;
   /* Add the payload sz parameter to the metadata */
   if(payload!==undefined){
     meta.sz = payload.length;
-  } else {
-    meta.sz = 0;
+  }
+  var str = JSON.stringify(meta);
+  
+  /* Send the metadata on the websocket connection */
+  ws.send(str,ws_error);
+  
+  /* Follow the metadata with the binary payload (if it exists) */
+  if(meta.sz>0){
+    ws.send(payload,{binary: true},ws_error);
   } // if a payload
-
-  /* Provide Debugging information */
-  var ws = ws_clients[this.id];
-  if( ws != null ){
-    /* Browser expects JSON metadata, sent as a string */
-    var str = JSON.stringify(meta);
-    ws.send(str,ws_error);
-    /* Follow the metadata with the binary payload (if it exists) */
-    if(meta.sz>0){
-      ws.send(payload,{binary: true},ws_error);
-    } // if a payload
-    console.log('Robot '+names[this.id]+' | '+str);
-  } // if not null
+  
+  //console.log('Robot '+names[this.id]+' | '+str);
 }
 
 for( var w=0; w<ws_ports.length; w++) {
