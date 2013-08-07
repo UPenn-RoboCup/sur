@@ -16,6 +16,10 @@ body {
   font-size: 10px;
 }
 
+.settings {
+  font-size: 14px;
+}
+
 .btn {
   width: 80px;
 }
