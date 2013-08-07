@@ -40,21 +40,22 @@ var ws_error = function(e){
 
 var ws_message = function(msg){
   /* Accept JSON browser commands and no binary */
+  console.log('Message on',this.id)
   var cmd = JSON.parse(msg);
   console.log('Browser | ', cmd);
   /* Pack as MessagePack for use by the robot, and send on the socket */
   var mp_cmd = mp.pack(cmd);
   console.log('Forwarding to '+zmq_send_ch[this.id]+' '+mp_cmd.length+' bytes.')
-  zmq_senders[this.id].send(mp_cmd);
+  zmq_send_ch[this.id].send(mp_cmd);
 }
 
 var ws_connection = function(ws){
   /* Web Browser Message */
-  /* Each server, for now, only has one client */
+  /* TODO: Each server, for now, only has one client */
   ws.on('message', ws_message.bind({id: this.id}) );
   
   /* Save this web socket connection */
-  ws_clients[ws_id] = ws;
+  ws_clients[this.id] = ws;
   
   console.log('User is connected to',this.id);
 }
@@ -78,6 +79,31 @@ for( var w=0; w<ws_ports.length; w++) {
 /***************
 * ZeroMQ robot data receiving
 */
+
+var zmq_message = function(metadata,payload){
+  var meta = mp.unpack(metadata);
+  /* Add the payload sz parameter to the metadata */
+  if(payload!==undefined){
+    meta.sz = payload.length;
+  } else {
+    meta.sz = 0;
+  } // if a payload
+
+  /* Provide Debugging information */
+  console.log('Robot ZMQ | ', this.id);
+  var ws = ws_clients[this.id];
+  if( ws != null ){
+    /* Browser expects JSON metadata, sent as a string */
+    var str = JSON.stringify(meta);
+    ws.send(str,ws_error);
+    /* Follow the metadata with the binary payload (if it exists) */
+    if(meta.sz>0){
+      ws.send(payload,{binary: true},ws_error);
+    } // if a payload
+    console.log('\tSent to browser '+str);
+  } // if not null
+}
+
 for( var w=0; w<ws_ports.length; w++) {
   
   var zmq_send_skt = zmq.socket('pub');
@@ -89,32 +115,6 @@ for( var w=0; w<ws_ports.length; w++) {
   zmq_recv_skt.connect('ipc:///tmp/'+zmq_recv_ch[w]);
   zmq_recv_skt.subscribe('');
   console.log('ZeroMQ IPC | Connected to '+zmq_recv_ch[w]);
-
-  var ws_id = w;
-
-  zmq_recv_skt.on('message', function(metadata,payload){
-    var meta = mp.unpack(metadata);
-    /* Add the payload sz parameter to the metadata */
-    if(payload!==undefined){
-      meta.sz = payload.length;
-    } else {
-      meta.sz = 0;
-    } // if a payload
-
-    /* Provide Debugging information */
-    console.log('Robot ZMQ | ', ws_id);
-    var ws = ws_clients[ws_id];
-    if( ws != null ){
-      /* Browser expects JSON metadata, sent as a string */
-      var str = JSON.stringify(meta);
-      ws.send(str,ws_error);
-      /* Follow the metadata with the binary payload (if it exists) */
-      if(meta.sz>0){
-        ws.send(payload,{binary: true},ws_error);
-      } // if a payload
-      console.log('Sent to browser!');
-    } // if not null
-
-  });
+  zmq_recv_skt.on('message', zmq_message.bind({id:w}) );
 
 } // for w
