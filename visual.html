@@ -67,7 +67,7 @@
       buttons: {
         Send: function() {
           var command = {
-            //endpoints: $( "#slider-range" ).slider( "values" )
+            endpoints: $( "#slider-range" ).slider( "values" )
           }
           op_ws.send( JSON.stringify(command) );
           $( this ).dialog( "close" );
@@ -128,13 +128,12 @@
       max: 60,
       values: [ -45, 45 ],
       slide: function( event, ui ) {
-        $( "#endpoints" ).val( "Lidar Range: " + ui.values[ 0 ] + " - $" + ui.values[ 1 ] );
-        var command = {
-          endpoints: ui.values
-        }
-        //op_ws.send( JSON.stringify(command) );
+        $( "#endpoints" ).val( ui.values[ 0 ] + " to " + ui.values[ 1 ] );
       }
     });
+    // Initialize
+    var vals = $( "#slider-range" ).slider( "values" );
+    $( "#endpoints" ).val( vals[ 0 ] + " to " + vals[ 1 ] );
   });
   </script>
   
@@ -155,7 +154,8 @@
   <div class="settings" id="settings" title="Basic modal dialog">
     <p>Please choose the minimum and maximum scanning range</p>
     <div id="slider-range"></div>
-    <label for="endpoints">Lidar range:</label>
+    <label for="endpoints">Lidar pan endpoints (degrees):</label>
+    <input type="text" id="endpoints" />
   </div>
 </body>
 

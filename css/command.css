@@ -26,3 +26,9 @@ body {
   position: absolute;
   bottom: 0px;
 }
+
+#endpoints {
+  border: 0;
+  color: #f6931f;
+  font-weight: bold;
+}

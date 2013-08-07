@@ -5,6 +5,7 @@
 
 /**
 * Load configuration values
+* TODO: Make these JSON for both the browser and node
 */
 var names    = ['operator', 'mesh', 'rgbd' ];
 var ws_ports = [9001,       9002,   9003   ];
@@ -39,7 +40,7 @@ var ws_error = function(e){
 var ws_message = function(msg){
   /* Accept JSON browser commands and no binary */
   var cmd = JSON.parse(msg);
-  console.log('\nBrowser '+names[this.id]+' | '+cmd);
+  console.log('\nBrowser '+names[this.id]+' | ',cmd);
   /* Pack as MessagePack for use by the robot, and send on the socket */
   var mp_cmd = mp.pack(cmd);
   console.log('Forwarding to '+names[this.id]+' '+mp_cmd.length+' bytes.')
