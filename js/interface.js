@@ -1,9 +1,8 @@
 // Animation
 var stream = 0;
 var get_frame = function(){
-  var request = {type: 'chest', quality: 90, range: [.1,2] }
+  var request = {loc: 'chest', quality: 95, range: [.1,2] }
 	fr_ws.send( JSON.stringify(request) );
-  console.log('Requesting frame...');
 	// Automatically request frames
   //stream = 1-stream;
 	//if(stream==1){ requestAnimationFrame( get_frame ); }
@@ -13,7 +12,6 @@ var get_frame = function(){
 document.addEventListener( "DOMContentLoaded", function(){
 	$('#req_btn').bind("click",get_frame);
   $('#show_btn').bind("click",function(){
-    console.log('hello');
     $('#canvases').toggle();
   });
 }, false );

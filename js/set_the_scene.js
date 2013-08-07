@@ -17,10 +17,6 @@ function init_scene() {
   width  = window.innerWidth;
   height = window.innerHeight;
   
-  // grab our container
-  container = document.getElementById( 'scene' );
-  console.log('Container:',container);
-  
   // create the scene
   
   scene = new THREE.Scene();
@@ -120,6 +116,7 @@ function init_scene() {
   var obj_id = 0;
   //var stl_objs = ['LEFT_GRIPPER','LEFT_ANKLE','FOOT', 'cordless_drill'];
   var stl_objs = ['cordless_drill'];
+  //var stl_objs = ['makita'];
   var loader = new THREE.STLLoader();
   loader.load( "models/"+stl_objs[obj_id]+'.stl' );
   loader.addEventListener( 'load', function ( event ) {
@@ -136,7 +133,9 @@ function init_scene() {
     mesh.position.setY( -400 );
     scene.add( mesh );
     obj_id++;
-    loader.load( "models/"+stl_objs[obj_id]+'.stl' );
+    if(obj_id<stl_objs.length){
+      loader.load( "models/"+stl_objs[obj_id]+'.stl' );
+    }
   } );
   
   // particles from the mesh at first
@@ -181,7 +180,7 @@ function init_scene() {
 
     color.setRGB( vx, vy, vz );
     
-    //color.setRGB( .5, .5, .5 );
+    color.setRGB( .5, .5, .5 );
 
     colors[ i ]     = color.r;
     colors[ i + 1 ] = color.g;
@@ -191,7 +190,7 @@ function init_scene() {
 
   geometry.computeBoundingSphere();
   // default size: 15
-  var material = new THREE.ParticleBasicMaterial( { size: 5, vertexColors: true } ); 
+  var material = new THREE.ParticleBasicMaterial( { size: 2, vertexColors: true } ); 
 
   particleSystem = new THREE.ParticleSystem( geometry, material );
   scene.add( particleSystem );
@@ -252,7 +251,6 @@ function animate() {
 
 function update_particles(positions){
   // We need an update!
-  console.log('update particle positions',positions);
   particleSystem.geometry.attributes.position.array = positions;
   particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
 }
