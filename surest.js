@@ -17,23 +17,14 @@ server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
-/* GET: vcm.get_head_camera_t() 
-* [memory].get_[segment]_[key]()
+/* GET: [memory].get_[segment]_[key]()
+* vcm.get_head_camera_t()
 * */
 server.get('/:memory/:segment/:key', function (req, res, next) {
 	
   // Send the reply to the host
-  // TODO: Deal with timeout issues?
   var reply_handler = function(data){
-    try {
-      payload = mp.unpack(data)
-      console.log(payload)
-      var str = JSON.stringify(payload);
-      res.json( str );
-      console.log(this)
-    } catch(e) {
-      console.log("zmq request reply error " + e);
-    }
+    res.json( JSON.stringify(mp.unpack(data)) );
   }
   zmq_req_skt.once('message', reply_handler);
   
@@ -41,39 +32,27 @@ server.get('/:memory/:segment/:key', function (req, res, next) {
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
   req.params.call = 'get'
-  var ret = zmq_req_skt.send( mp.pack(req.params) );
+  zmq_req_skt.send( mp.pack(req.params) );
   
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
 	
   return next();
 });
 
-/* PUT: vcm.get_head_camera_t() 
-* [memory].set_[segment]_[key]()
+/* PUT: [memory].set_[segment]_[key]([val])
+* vcm.set_head_camera_t(1120.2)
+* Request must have all of the values in []
 * */
 server.put('/:memory/:segment/:key', function update(req, res, next) {
-	
-  console.log(req.params)
   
   // Send the reply to the host
-  // TODO: Deal with timeout issues?
   var reply_handler = function(data){
-    try {
-      payload = mp.unpack(data)
-      console.log('Payload',payload)
-      var str = JSON.stringify(payload);
-      res.json( str );
-    } catch(e) {
-      console.log("zmq request reply error " + e);
-    }
+    res.send(200);
   }
   zmq_req_skt.once('message', reply_handler);
   req.params.call = 'set'
-  req.params.val = JSON.parse(req.params.val);
-  var ret = zmq_req_skt.send( mp.pack(req.params) );
-  
-  // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
-	
+  req.params.val  = JSON.parse(req.params.val);
+  zmq_req_skt.send( mp.pack(req.params) );
   return next();
 });
 
