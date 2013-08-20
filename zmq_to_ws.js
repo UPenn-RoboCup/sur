@@ -7,8 +7,8 @@
 * Load configuration values
 * TODO: Make these JSON for both the browser and node
 */
-var names    = ['operator', 'mesh', 'rgbd' ];
-var ws_ports = [9001,       9002,   9003   ];
+var names    = ['mesh', 'rgbd' ];
+var ws_ports = [9002,   9003   ];
 
 /***
 * Communication with the robot uses ZeroMQ
@@ -77,7 +77,6 @@ for( var w=0; w<ws_ports.length; w++) {
 /***************
 * ZeroMQ robot data receiving
 */
-
 var zmq_message = function(metadata,payload){
   
   var ws = ws_clients[this.id];
@@ -107,10 +106,12 @@ var zmq_message = function(metadata,payload){
 
 for( var w=0; w<ws_ports.length; w++) {
   
+  /*
   var zmq_send_skt = zmq.socket('pub');
   zmq_send_skt.bind('ipc:///tmp/to_'+names[w]);
   console.log('ZeroMQ IPC | Bound to to_'+names[w]);
   zmq_senders[w] = zmq_send_skt
+  */
 
   var zmq_recv_skt = zmq.socket('sub');
   zmq_recv_skt.connect('ipc:///tmp/from_'+names[w]);

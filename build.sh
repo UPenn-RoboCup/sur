@@ -1,2 +1,2 @@
 #!/bin/sh
-npm install msgpack ws zmq
+npm install msgpack ws zmq restify

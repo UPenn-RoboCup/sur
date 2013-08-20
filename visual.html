@@ -36,7 +36,7 @@
   
   <script>
   /* Setup the operator websocket connection */
-  var op_port = 9001;
+  var op_port = 8085;
   var op_ws;
   $(function(){
     var host = window.document.location.host.replace(/:.*/, '');
@@ -53,8 +53,20 @@
           console.log(op_data);
           tools[op_data.tool].position.set(
             -op_data.pos[1],op_data.pos[2],-op_data.pos[0]);
+            //var axis = new THREE.Vector3(
+              //op_data.ax[0],op_data.ax[1],op_data.ax[2] );
+          //tools[op_data.tool].quaternion.setFromAxisAngle(axis, op_data.ang)
+            
           tools[op_data.tool].quaternion.set(
-            -op_data.rot[2], op_data.rot[1], -op_data.rot[3], op_data.rot[0] )
+            op_data.q[1], op_data.q[2], op_data.q[3], op_data.q[0] )
+          var quaternion = new THREE.Quaternion();
+          var m = new THREE.Matrix4();
+          m.makeRotationX(Math.PI/2);
+          quaternion.setFromRotationMatrix( m )
+          tools[op_data.tool].quaternion.multiply(quaternion);
+          m.makeRotationZ(Math.PI/2);
+          quaternion.setFromRotationMatrix( m )
+          tools[op_data.tool].quaternion.multiply(quaternion);
         }
   			//console.log('Operator Latency: '+latency*1000+'ms')
   			return;

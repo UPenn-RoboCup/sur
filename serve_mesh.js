@@ -72,7 +72,7 @@ wss.on('connection', function(ws) {
     // check what the message says...
     console.log('Commander | ',msg);
     var mp_msg = mp.pack(msg)
-    zmq_req_skt.send(mp_msg);
+    zmq_req_skt.send( mp_msg );
     udp_req_skt.send( mp_msg, 0 , mp_msg.length, udp_port, udp_addr );
     
 	});//onmessage
@@ -109,7 +109,6 @@ server.on("message", function (msg, rinfo) {
 	}
   
 	/* Provide Debugging information */
-	
 	console.log("Robot UDP: " + msg.length + " from " +
 	rinfo.address + ":" + rinfo.port);
 	

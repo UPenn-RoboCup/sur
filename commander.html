@@ -6,22 +6,27 @@
   <title>SUR Commander</title>
   <meta charset="utf-8">
   
-  <!-- CSS for Styling the page -->
-  <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
-    
-  <!-- Application Frameworks -->
-  <script src="lib/jquery-1.9.1.js"></script>
-  <script src="lib/jquery-ui.js"></script>
-  
   <script>
   /* Setup the websocket connection */
-  var ws_port = 9001;
+  var op_port = 9001;
   var op_ws;
   document.addEventListener( "DOMContentLoaded", function(){
     var host = window.document.location.host.replace(/:.*/, '');
     if( host.length==0 ){ host = "localhost"; }
     var URL = window.URL || window.webkitURL;
-    op_ws = new WebSocket('ws://' + host + ':' + ws_port);
+    var op_host = 'ws://' + host + ':' + op_port;
+    console.log('Starting connection...')
+    op_ws = new WebSocket(op_host);
+    console.log(op_host);
+    op_ws.open = function(e){
+      console.log('connected!')
+    }
+    op_ws.onerror = function(e) {
+      console.log('error',e)
+    }
+    op_ws.onclose = function(e) {
+      console.log('close',e)
+    }
     /* Grab messages from the operator */
   	op_ws.onmessage = function(e){
   		if(typeof e.data === "string"){
@@ -37,50 +42,11 @@
   });
   </script>
 
-  <script>
-  /* Slidar for the lidar scanning range */
-  $(function() {
-    $( "#slider-range" ).slider({
-      range: true,
-      min: 0,
-      max: 500,
-      values: [ 75, 300 ],
-      slide: function( event, ui ) {
-        
-        $( "#amount" ).val( "Lidar Range: " + ui.values[ 0 ] + " - $" + ui.values[ 1 ] );
-        op_ws.send( JSON.stringify(command) );
-      }
-    });
-    $( "#amount" ).val( "$" + $( "#slider-range" ).slider( "values", 0 ) + " - $" + $( "#slider-range" ).slider( "values", 1 ) );
-  });
-  </script>
-
-  <script>
-  /* Buttons to update settings */
-  $(function() {
-    $( "input[type=submit], a, button" )
-    .button()
-    .click(function( event ) {
-      event.preventDefault();
-      var command = {
-        endpoints: $( "#slider-range" ).slider( "values" )
-      }
-      op_ws.send( JSON.stringify(command) );
-    });
-  });
-  </script>
-
 </head>
 
 <body>
-  
-  <p>
-    <label for="amount">Price range:</label>
-    <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
-  </p>
- 
-  <div id="slider-range"></div>
-  <input type="submit" value="Update mesh parameters" />
+
+  <div id='debug'></div>
 
 </body>
 
