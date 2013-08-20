@@ -6,14 +6,20 @@
   <title>SUR Commander</title>
   <meta charset="utf-8">
   
+  <script src="lib/jquery-1.9.1.js"></script>
+  
+  <script>
+  var host = window.document.location.host.replace(/:.*/, '');
+  if( host.length==0 ){ host = "localhost"; }
+  var URL = window.URL || window.webkitURL;
+  </script>
+  
   <script>
   /* Setup the websocket connection */
+  /*
   var op_port = 9001;
   var op_ws;
   document.addEventListener( "DOMContentLoaded", function(){
-    var host = window.document.location.host.replace(/:.*/, '');
-    if( host.length==0 ){ host = "localhost"; }
-    var URL = window.URL || window.webkitURL;
     var op_host = 'ws://' + host + ':' + op_port;
     console.log('Starting connection...')
     op_ws = new WebSocket(op_host);
@@ -27,27 +33,49 @@
     op_ws.onclose = function(e) {
       console.log('close',e)
     }
-    /* Grab messages from the operator */
-  	op_ws.onmessage = function(e){
-  		if(typeof e.data === "string"){
+    // Grab messages from the operator
+    op_ws.onmessage = function(e){
+      if(typeof e.data === "string"){
         var op_data   = JSON.parse(e.data)
         var recv_time = e.timeStamp/1e6;
         var latency   = recv_time - fr_metadata.t
-  			console.log('Operator Latency: '+latency*1000+'ms')
+        console.log('Operator Latency: '+latency*1000+'ms')
         console.log(data);
-  			return;
-  		}
+        return;
+      }
     }; //onmessage
     
   });
+  */
+  </script>
+  
+  <script>
+  document.addEventListener( "DOMContentLoaded", function(){
+    var get_url = 'http://'+host+':8080/vcm/head_lidar/mesh_resolution';
+    $.get(get_url,function(data,status){
+      console.log("Data: " + data + "\nStatus: " + status);
+    })
+  });
+  </script>
+  
+  <script>
+  document.addEventListener( "DOMContentLoaded", function(){
+    var post_url = 'http://'+host+':8080/vcm/head_lidar/mesh_resolution';
+    var data = {val:[600,480]};
+    console.log(data);
+    console.log(JSON.stringify(data));
+    $.post(post_url,data,function(data,status){
+      //console.log("Data: " + data + "\nStatus: " + status);
+    },"json")
+  });
   </script>
 
-</head>
+  </head>
 
-<body>
+  <body>
 
-  <div id='debug'></div>
+    <div id='debug'></div>
 
-</body>
+  </body>
 
-</html>
+  </html>

@@ -1,4 +1,5 @@
-var util = require('util')
+var util = require('util');
+var fs = require('fs');
 var zmq = require('zmq');
 var mp  = require('msgpack');
 var restify = require('restify');
@@ -17,6 +18,29 @@ server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
+// Main page
+server.get('/', function (req, res, next) {
+  var body = fs.readFileSync('commander.html',{encoding:'utf8'});
+  res.writeHead(200, {
+    'Content-Length': Buffer.byteLength(body),
+    'Content-Type': 'text/html'
+  });
+  res.write(body);
+  res.end();
+} );
+
+// Javascript libraries
+server.get('/lib/:library', function (req, res, next) {
+  //console.log('library',req.params.library)
+  var body = fs.readFileSync('lib/'+req.params.library,{encoding:'utf8'});
+  res.writeHead(200, {
+    'Content-Length': Buffer.byteLength(body),
+    'Content-Type': 'text/javascript'
+  });
+  res.write(body);
+  res.end();
+});
+
 /* GET: [memory].get_[segment]_[key]()
 * vcm.get_head_camera_t()
 * */
@@ -24,7 +48,10 @@ server.get('/:memory/:segment/:key', function (req, res, next) {
 	
   // Send the reply to the host
   var reply_handler = function(data){
-    res.json( JSON.stringify(mp.unpack(data)) );
+    //var value = {val: mp.unpack(data)};
+    //console.log(value);
+    //res.send(JSON.stringify(value));
+    res.json( {val: mp.unpack(data)} );
   }
   zmq_req_skt.once('message', reply_handler);
   
@@ -43,15 +70,14 @@ server.get('/:memory/:segment/:key', function (req, res, next) {
 * vcm.set_head_camera_t(1120.2)
 * Request must have all of the values in []
 * */
-server.put('/:memory/:segment/:key', function update(req, res, next) {
+server.post('/:memory/:segment/:key', function update(req, res, next) {
   
   // Send the reply to the host
   var reply_handler = function(data){
-    res.send(200);
+    this.res.send(200);
   }
-  zmq_req_skt.once('message', reply_handler);
+  zmq_req_skt.once('message', reply_handler.bind({res:res}));
   req.params.call = 'set'
-  req.params.val  = JSON.parse(req.params.val);
   zmq_req_skt.send( mp.pack(req.params) );
   return next();
 });
