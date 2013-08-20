@@ -106,12 +106,10 @@ var zmq_message = function(metadata,payload){
 
 for( var w=0; w<ws_ports.length; w++) {
   
-  /*
   var zmq_send_skt = zmq.socket('pub');
   zmq_send_skt.bind('ipc:///tmp/to_'+names[w]);
   console.log('ZeroMQ IPC | Bound to to_'+names[w]);
   zmq_senders[w] = zmq_send_skt
-  */
 
   var zmq_recv_skt = zmq.socket('sub');
   zmq_recv_skt.connect('ipc:///tmp/from_'+names[w]);
