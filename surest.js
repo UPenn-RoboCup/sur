@@ -6,7 +6,8 @@ var restify = require('restify');
 
 var zmq_req_skt = zmq.socket('req');
 //zmq_req_skt.connect('ipc:///tmp/test');
-var ret = zmq_req_skt.connect('tcp://localhost:5555');
+//var ret = zmq_req_skt.connect('tcp://localhost:5555');
+var ret = zmq_req_skt.connect('tcp://192.168.123.22:5555');
 console.log('ZeroMQ REQ IPC | Connected!');
 
 var server = restify.createServer({
@@ -77,6 +78,7 @@ server.post('/:memory/:segment/:key', function update(req, res, next) {
   }
   zmq_req_skt.once('message', reply_handler.bind({res:res}));
   req.params.call = 'set'
+  req.params.val = JSON.parse(req.params.val)
   zmq_req_skt.send( mp.pack(req.params) );
   return next();
 });
