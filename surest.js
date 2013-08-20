@@ -5,9 +5,8 @@ var mp  = require('msgpack');
 var restify = require('restify');
 
 var zmq_req_skt = zmq.socket('req');
-// 100 ms timeout
-//zmq_req_skt.setsockopt(zmq.ZMQ_LINGER, 100)
-zmq_req_skt.connect('ipc:///tmp/test');
+//zmq_req_skt.connect('ipc:///tmp/test');
+var ret = zmq_req_skt.connect('tcp://localhost:5555');
 console.log('ZeroMQ REQ IPC | Connected!');
 
 var server = restify.createServer({
