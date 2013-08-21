@@ -4,11 +4,6 @@ body {
 	overflow: hidden;
 }
 
-#depthmap {
-  width: 500;
-  height: 480;
-}
-
 #buttons {
   position: absolute;
   font-size: 10px;

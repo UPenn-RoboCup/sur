@@ -33,28 +33,45 @@ server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
-// Main page
-server.get('/', function (req, res, next) {
-  var body = fs.readFileSync('commander.html',{encoding:'utf8'});
+// HTML files
+var load_html = function (req, res, next) {
+  //var body = fs.readFileSync('commander.html',{encoding:'utf8'});
+  var body = fs.readFileSync('index.html',{encoding:'utf8'});
   res.writeHead(200, {
     'Content-Length': Buffer.byteLength(body),
     'Content-Type': 'text/html'
   });
   res.write(body);
   res.end();
-} );
+};
+server.get('/', load_html );
 
 // Javascript libraries
-server.get('/lib/:library', function (req, res, next) {
+var load_js = function (req, res, next) {
   //console.log('library',req.params.library)
-  var body = fs.readFileSync('lib/'+req.params.library,{encoding:'utf8'});
+  var body = fs.readFileSync(this.base_dir+'/'+req.params.js,{encoding:'utf8'});
   res.writeHead(200, {
     'Content-Length': Buffer.byteLength(body),
     'Content-Type': 'text/javascript'
   });
   res.write(body);
   res.end();
-});
+};
+server.get('/lib/:js', load_js.bind({base_dir: 'lib'}) );
+server.get('/js/:js', load_js.bind({base_dir: 'js'}) );
+
+// CSS stylesheet
+var load_js = function (req, res, next) {
+  //console.log('library',req.params.library)
+  var body = fs.readFileSync(this.base_dir+'/'+req.params.css,{encoding:'utf8'});
+  res.writeHead(200, {
+    'Content-Length': Buffer.byteLength(body),
+    'Content-Type': 'text/css'
+  });
+  res.write(body);
+  res.end();
+};
+server.get('/css/:css', load_js.bind({base_dir: 'css'}) );
 
 /* GET: [memory].get_[segment]_[key]()
 * vcm.get_head_camera_t()

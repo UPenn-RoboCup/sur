@@ -13,13 +13,13 @@ document.addEventListener( "DOMContentLoaded", function(){
   //fr_ws.binaryType = "arraybuffer";
   fr_ws.binaryType = "blob";
   
-  op_ws.open = function(e){
+  fr_ws.open = function(e){
     console.log('connected!')
   }
-  op_ws.onerror = function(e) {
+  fr_ws.onerror = function(e) {
     console.log('error',e)
   }
-  op_ws.onclose = function(e) {
+  fr_ws.onclose = function(e) {
     console.log('close',e)
   }
 	
@@ -29,7 +29,7 @@ document.addEventListener( "DOMContentLoaded", function(){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
-      console.log('Latency: '+latency*1000+'ms')
+      console.log('Mesh Latency: '+latency*1000+'ms')
       fr_width  = fr_metadata.res[1]
       fr_height = fr_metadata.res[0]
       console.log(fr_metadata)
