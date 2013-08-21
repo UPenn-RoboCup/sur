@@ -209,25 +209,36 @@ var init_scene = function(){
   renderer.setClearColor( 0x000000, 1 );
   renderer.setSize( width, height );
   
-  // create the container
-  
-	container = document.createElement( 'div' );
-	document.body.appendChild( container );
-	container.appendChild( renderer.domElement );
-
   // fps stats
   
   stats = new Stats();
   // css is done externally
-  
-  // add to the HTML page
-  
-  container.appendChild( renderer.domElement );
-  container.appendChild( stats.domElement );
 
   // initial animation
   
+  window.addEventListener( 'resize', function() {
+
+    width  = window.innerWidth;
+    height = window.innerHeight;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( width, height );
+
+    controls.handleResize();
+
+  }, false );
+  
   animate();
+  
+  // add to the HTML page
+  
+	container = document.createElement( 'div' );
+	container.appendChild( renderer.domElement );
+  container.appendChild( renderer.domElement );
+  container.appendChild( stats.domElement );
+  document.body.appendChild( container );
   
 }
 
@@ -240,16 +251,3 @@ function animate() {
 
 // add document on load
 document.addEventListener( "DOMContentLoaded", init_scene );
-window.addEventListener( 'resize', function() {
-
-  width  = window.innerWidth;
-  height = window.innerHeight;
-
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize( width, height );
-
-  controls.handleResize();
-
-}, false );

@@ -11,7 +11,7 @@
   <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.3.custom.min.css">
     
   <!-- Application Frameworks -->
-  <script src="lib/jquery-1.9.1.js"></script>
+  <script src="lib/jquery-2.0.3.min.js"></script>
   <script src="lib/jquery-ui-1.10.3.custom.min.js"></script>
 	<script src="lib/three.min.js"></script>
   
@@ -33,6 +33,7 @@
   <script src="js/ws_mesh.js"></script>
   <script type="text/javascript" src="js/view_3d.js"></script>
   <!--
+    
   <script src="js/ws_spacemouse.js"></script>
   -->
 
@@ -51,7 +52,7 @@
           var command = {
             endpoints: $( "#slider-range" ).slider( "values" )
           }
-          op_ws.send( JSON.stringify(command) );
+          //op_ws.send( JSON.stringify(command) );
           $( this ).dialog( "close" );
         }
       }
