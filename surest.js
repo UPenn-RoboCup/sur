@@ -23,7 +23,7 @@ var zmq_rpc_addr = 'tcp://'+rpc_host+':5555'
 
 var zmq_req_skt = zmq.socket('req');
 var ret = zmq_req_skt.connect(zmq_rpc_addr);
-console.log('ZeroMQ RPC | Connected to',zmq_rpc_addr);
+console.log('RPC connected to',zmq_rpc_addr);
 
 var server = restify.createServer({
   name: 'surest',
@@ -76,8 +76,7 @@ server.get('/css/:css', load_js.bind({base_dir: 'css'}) );
 /* GET: [memory].get_[segment]_[key]()
 * vcm.get_head_camera_t()
 * */
-server.get('/:memory/:segment/:key', function (req, res, next) {
-	
+var rest_get = function (req, res, next) {
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
@@ -88,31 +87,33 @@ server.get('/:memory/:segment/:key', function (req, res, next) {
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
-  req.params.call = 'get'
+  req.params.call   = 'get'
+  req.params.memory = this.mem;
   zmq_req_skt.send( mp.pack(req.params) );
   
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
-	
+  console.log(req.params);
   return next();
-});
+}
 
 /* PUT: [memory].set_[segment]_[key]([val])
 * vcm.set_head_camera_t(1120.2)
 * Request must have all of the values in []
 * */
-server.put('/:memory/:segment/:key', function update(req, res, next) {
+var rest_put = function (req, res, next) {
   // Send the reply to the host
   var reply_handler = function(data){ this.res.send(200); }
   zmq_req_skt.once('message', reply_handler.bind({res:res}));
   req.params.call = 'set';
+  req.params.memory = this.mem;
   req.params.val  = JSON.parse( req.params.val );
   zmq_req_skt.send( mp.pack(req.params) );
+  console.log(req.params);
   return next();
-});
+}
 
-server.listen(8080, function () {
-  console.log('%s listening at %s', server.name, server.url);
-});
+server.get('/vcm/:segment/:key', rest_get.bind({mem:'vcm'}) );
+server.put('/vcm/:segment/:key', rest_put.bind({mem:'vcm'}) );
 
 /***
 * Communication with the robot uses ZeroMQ
@@ -154,24 +155,8 @@ var ws_connection = function(ws){
   /* Save this web socket connection */
   ws_clients[this.id] = ws;
   
-  console.log('Websocket connection on', names[this.id] );
+  console.log('Websocket ws_connection on', names[this.id] );
 }
-
-/* Initialize the websocket servers for each port */
-for( var w=0; w<ws_ports.length; w++) {
-  
-  /* Initialize the server */
-  var wss = new WebSocketServer({port: ws_ports[w]});
-  
-  /* Get a connection from a user */
-  /* Save which socket this is, using bind */
-  wss.on('connection', ws_connection.bind({id: w}) );
-  
-  ws_servers[w] = wss;
-  
-  console.log('Websocket ' + names[w] + ' on port ' + ws_ports[w]);
-  
-} // for loop
 
 /***************
 * ZeroMQ robot data receiving
@@ -249,6 +234,19 @@ for( var w=0; w<ws_ports.length; w++) {
   var udp_recv = dgram.createSocket("udp4");
   udp_recv.bind(udp_ports[w]);
   udp_recv.on( "message", udp_message.bind({id:w}) );
-  udp_receivers[w] = udp_recv
+  udp_receivers[w] = udp_recv;
+  
+  /* Initialize the server */
+  var wss = new WebSocketServer({port: ws_ports[w]});
+  /* Get a connection from a user */
+  /* Save which socket this is, using bind */
+  wss.on('connection', ws_connection.bind({id: w}) );
+  ws_servers[w] = wss;
+  
+  console.log('Websocket ' + names[w] + ' on port ' + ws_ports[w]);
 
 } // for w
+
+server.listen(8080, function () {
+  console.log('%s listening at %s', server.name, server.url);
+});

@@ -1,22 +1,55 @@
-if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+// Globally accessible variables
 
 var container, stats;
-
 var camera, controls, scene, renderer;
-
 var cross;
-
-var width;
-var height;
-
+var width, height; // TODO: rename to scene_width, scene_height
 var nparticles = 500 * 480;
-
 var clock = new THREE.Clock();
-
 var stl_objs = ['drill'];
+//var stl_objs = ['LEFT_GRIPPER','LEFT_ANKLE','FOOT', 'cordless_drill'];
+//var stl_objs = ['makita'];
 var tools = {};
 
-function init_scene() {
+/* This function should be globally accessible */
+var update_particles = function( positions ){
+  particleSystem.geometry.attributes.position.array = positions;
+  particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
+}
+
+// stl files
+var load_stl = function(){
+  var stl_material = new THREE.MeshLambertMaterial(
+    { color:0xdddd00, side: THREE.DoubleSide } );
+  var obj_id = 0;
+  var loader = new THREE.STLLoader();
+  loader.load( "models/"+stl_objs[obj_id]+'.stl' );
+  loader.addEventListener( 'load', function ( event ) {
+    console.log(obj_id)
+    var stl_geometry = event.content;
+    var mesh = new THREE.Mesh( stl_geometry, stl_material );
+    // Gazebo meshes must be scaled
+    // TODO: Just scale the Webots down?
+    /*
+    mesh.scale.x = 1000;
+    mesh.scale.y = 1000;
+    mesh.scale.z = 1000;
+    */
+    mesh.rotation.x = -Math.PI/2;
+    mesh.position.setZ( -1 );
+    mesh.position.setY( -.4 );
+    mesh.useQuaternion = true;
+    scene.add( mesh );
+    var name = stl_objs[obj_id];
+    tools[name] = mesh;
+    obj_id++;
+    if(obj_id<stl_objs.length){
+      loader.load( "models/"+stl_objs[obj_id]+'.stl' );
+    }
+  });
+}
+
+var init_scene = function(){
   
   width  = window.innerWidth;
   height = window.innerHeight;
@@ -112,40 +145,6 @@ function init_scene() {
   scene.add(x_floor);
   scene.add(y_floor);
   scene.add(z_floor);
-
-  // stl files
-  
-  var stl_material = new THREE.MeshLambertMaterial(
-    { color:0xdddd00, side: THREE.DoubleSide } );
-  var obj_id = 0;
-  //var stl_objs = ['LEFT_GRIPPER','LEFT_ANKLE','FOOT', 'cordless_drill'];
-  
-  //var stl_objs = ['makita'];
-  var loader = new THREE.STLLoader();
-  loader.load( "models/"+stl_objs[obj_id]+'.stl' );
-  loader.addEventListener( 'load', function ( event ) {
-    console.log(obj_id)
-    var stl_geometry = event.content;
-    var mesh = new THREE.Mesh( stl_geometry, stl_material );
-    // Gazebo meshes must be scaled
-    // TODO: Just scale the Webots down?
-    /*
-    mesh.scale.x = 1000;
-    mesh.scale.y = 1000;
-    mesh.scale.z = 1000;
-    */
-    mesh.rotation.x = -Math.PI/2;
-    mesh.position.setZ( -1 );
-    mesh.position.setY( -.4 );
-    mesh.useQuaternion = true;
-    scene.add( mesh );
-    var name = stl_objs[obj_id];
-    tools[name] = mesh;
-    obj_id++;
-    if(obj_id<stl_objs.length){
-      loader.load( "models/"+stl_objs[obj_id]+'.stl' );
-    }
-  } );
   
   // particles from the mesh at first
   
@@ -210,6 +209,8 @@ function init_scene() {
   renderer.setClearColor( 0x000000, 1 );
   renderer.setSize( width, height );
   
+  // create the container
+  
 	container = document.createElement( 'div' );
 	document.body.appendChild( container );
 	container.appendChild( renderer.domElement );
@@ -224,17 +225,22 @@ function init_scene() {
   container.appendChild( renderer.domElement );
   container.appendChild( stats.domElement );
 
-  //
-
-  window.addEventListener( 'resize', onWindowResize, false );
-
   // initial animation
   
   animate();
   
 }
 
-function onWindowResize() {
+function animate() {
+  requestAnimationFrame( animate );
+  controls.update(clock.getDelta());
+  renderer.render( scene, camera );
+  stats.update();
+}
+
+// add document on load
+document.addEventListener( "DOMContentLoaded", init_scene );
+window.addEventListener( 'resize', function() {
 
   width  = window.innerWidth;
   height = window.innerHeight;
@@ -246,23 +252,4 @@ function onWindowResize() {
 
   controls.handleResize();
 
-}
-
-function animate() {
-
-  requestAnimationFrame( animate );
-  controls.update(clock.getDelta());
-  renderer.render( scene, camera );
-
-  stats.update();
-
-}
-
-function update_particles(positions){
-  // We need an update!
-  particleSystem.geometry.attributes.position.array = positions;
-  particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
-}
-
-// add document on load
-document.addEventListener( "DOMContentLoaded", init_scene );
+}, false );
