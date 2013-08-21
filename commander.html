@@ -16,7 +16,6 @@
   
   <script>
   /* Setup the websocket connection */
-  /*
   var op_port = 9001;
   var op_ws;
   document.addEventListener( "DOMContentLoaded", function(){
@@ -46,27 +45,29 @@
     }; //onmessage
     
   });
-  */
   </script>
   
   <script>
   document.addEventListener( "DOMContentLoaded", function(){
     var get_url = 'http://'+host+':8080/vcm/head_lidar/mesh_resolution';
-    $.get(get_url,function(data,status){
-      console.log("Data: " + data + "\nStatus: " + status);
+    $.get(get_url,function(data,status,xhr){
+      console.log(data,status,xhr);
     })
   });
   </script>
   
   <script>
   document.addEventListener( "DOMContentLoaded", function(){
-    var post_url = 'http://'+host+':8080/vcm/head_lidar/mesh_resolution';
-    var data = {val:[600,480]};
-    console.log(data);
-    console.log(JSON.stringify(data));
-    $.post(post_url,data,function(data,status){
-      //console.log("Data: " + data + "\nStatus: " + status);
-    },"json")
+    var put_url  = 'http://' + host + ':8080/vcm/head_lidar/mesh_resolution';
+    var value     = [600,480];
+    var put_data = 'val=' + JSON.stringify(value);
+    $.ajax({
+    type: "PUT",
+    url:  put_url,
+    data: put_data,
+    //success: function(data,status){ console.log(data,status); },
+    //dataType: 'json'
+    });
   });
   </script>
 

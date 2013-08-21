@@ -7,8 +7,9 @@
 * Load configuration values
 * TODO: Make these JSON for both the browser and node
 */
-var names    = ['mesh', 'rgbd' ];
-var ws_ports = [9002,   9003   ];
+var names     = ['mesh', 'rgbd' ];
+var ws_ports  = [9002,   9003   ];
+var udp_ports = [5002,   5003   ];
 
 /***
 * Communication with the robot uses ZeroMQ
