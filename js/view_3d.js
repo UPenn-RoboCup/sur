@@ -238,7 +238,7 @@ var init_scene = function(){
 	container.appendChild( renderer.domElement );
   container.appendChild( renderer.domElement );
   container.appendChild( stats.domElement );
-  document.body.appendChild( container );
+  //document.body.appendChild( container );
   
 }
 

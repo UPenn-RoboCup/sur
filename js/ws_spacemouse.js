@@ -1,35 +1,51 @@
 // Setup the WebSocket connection and callbacks
 document.addEventListener( "DOMContentLoaded", function(){
   
+  var update = function(e) {
+    if(typeof e.data != "string"){ return; }
+    var data    = JSON.parse(e.data)
+    var recv_t  = e.timeStamp/1e6;
+    var latency = recv_t - data.t
+    //console.log('Spacemouse Latency: '+latency*1000+'ms')
+
+    // update state
+    var values = data.vals;
+    if (data.evt == 'rotate') {
+      // rotate
+      update.wx = values.wx;
+      update.wy = values.wy;
+      update.wz = values.wz;
+    } else if (data.evt == 'translate'){
+      // translate
+      update.x = values.x;
+      update.y = values.y;
+      update.z = values.z;
+    } else {
+      // button
+      update.button = values;
+    }
+    
+    /* Convert to a velocity */
+    var put_url  = 'http://' + host + ':8080/mcm/walk/vel';
+    var value    = [update.x/350,update.y/350,update.wz/350];
+    var put_data = 'val='+JSON.stringify(value);
+    $.ajax({
+      type: "PUT",
+      url:  put_url,
+      data: put_data,
+    });
+  }
+  
   // Configuration
   var port = 9003
-
   // Connect to the websocket server
   var ws = new WebSocket('ws://' + host + ':' + port);
   //fr_ws.binaryType = "arraybuffer";
   ws.binaryType = "blob";
-  
-  ws.open = function(e){
-    console.log('connected!')
-  }
-  ws.onerror = function(e) {
-    console.log('error',e)
-  }
-  ws.onclose = function(e) {
-    console.log('close',e)
-  }
-	
+  ws.open    = function(e) { console.log('connected!') }
+  ws.onerror = function(e) { console.log('error',e) }
+  ws.onclose = function(e) { console.log('close',e) }
   // Set the position and orientaiton of the object
-  ws.onmessage = function(e){
-    if(typeof e.data != "string"){ return; }
-    var op_data   = JSON.parse(e.data)
-    var recv_time = e.timeStamp/1e6;
-    var latency   = recv_time - op_data.t
-    console.log('Spacemouse Latency: '+latency*1000+'ms')
-    if (op_data.tool !== undefined) {
-      console.log(op_data);
-      tools[op_data.tool].position.set(-op_data.pos[1],op_data.pos[2],-op_data.pos[0]);
-      tools[op_data.tool].quaternion.set(op_data.q[0], op_data.q[1], op_data.q[2], op_data.q[3] )
-    }
-  };
+  ws.onmessage = update;
+  
 }, false );

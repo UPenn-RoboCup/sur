@@ -88,15 +88,15 @@ document.addEventListener( "DOMContentLoaded", function(){
   var frame_worker = new Worker("js/"+ww_script+".js");
   frame_worker.onmessage = function(e) {
     if(e.data=='initialized'){
-      console.log('WebWorker initialized!')
-    } else {
-      var positions = new Float32Array(e.data);
-      if (update_particles!==undefined){
-        update_particles(positions);
-      } else {
-        console.log('No particle update available');
-      }
+      console.log('WebWorker initialized!');
+			return;
     }
+    if ( typeof update_particles!='function') {
+			console.log('No particle update available');
+			return;
+		}
+    var positions = new Float32Array(e.data);
+    update_particles(positions);
   };
   frame_worker.postMessage('Start!');
 }, false );
