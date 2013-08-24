@@ -91,8 +91,8 @@ var load_js = function (req, res, next) {
 };
 server.get('/css/:css', load_js.bind({base_dir: 'css'}) );
 
-/* GET: [memory].get_[segment]_[key]()
-* vcm.get_head_camera_t()
+/* Shared memory management: [memory].get_[segment]_[key]()
+* vcm.set_head_camera_t(val)
 * */
 var rest_shm = function (req, res, next) {
   // Send the reply to the host
@@ -117,6 +117,34 @@ var rest_shm = function (req, res, next) {
   
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
   console.log(req.params);
+  return next();
+}
+
+/* FSM event sending and state getting
+* sm:add_event('standup')
+* */
+var rest_fsm = function (req, res, next) {
+  
+  console.log(req.params);
+  
+  // Send the reply to the host
+  var reply_handler = function(data){
+    // TODO: Add any timestamp information or anything?
+    var ret = mp.unpack(data)
+    if(ret!=null){
+      res.json( ret )
+    } else {
+      res.send()
+    }
+  }
+  zmq_req_skt.once('message', reply_handler);
+  
+  // Send the RPC over the ZMQ REQ/REP
+  // TODO: Deal with concurrent requests?
+  // Form the Remote Procedure Call
+  zmq_req_skt.send( mp.pack(req.params) );
+  
+  // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
   return next();
 }
 
@@ -222,8 +250,8 @@ for( var w=0; w<bridges.length; w++) {
 server.get('/m/:shm/:segment/:key', rest_shm);
 server.post('/m/:shm/:segment/:key',rest_shm);
 // state machines
-//server.get('/s/:fsm', rest_fsm);
-//server.post('/s/:fsm',rest_fsm);
+server.get('/s/:fsm', rest_fsm);
+server.post('/s/:fsm',rest_fsm);
 
 /* Connect to the RPC server */
 var zmq_req_skt = zmq.socket('req');
