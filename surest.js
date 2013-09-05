@@ -14,9 +14,10 @@ var dgram   = require("dgram");
 var homepage="simple.html"
 
 /* Remote Procedure Call Configuration */
-//var rpc_host     = '192.168.123.22'
-var rpc_host     = 'localhost'
-var zmq_rpc_addr = 'tcp://'+rpc_host+':5555'
+//var rpc_robot     = '192.168.123.22'
+var rpc_robot     = 'localhost'
+var rpc_reliable_port = 55555
+var zmq_rpc_addr = 'tcp://'+rpc_robot+':'+rpc_reliable_port
 
 /**
 * Load configuration values
@@ -26,13 +27,13 @@ var bridges = [];
 bridges.push({
 	name : 'LIDAR mesh',
 	ws : 9001,
-	udp: 5001,
+	udp: 33334,
 	clients : []
 });
 bridges.push({
 	name : 'Kinect rgbd',
 	ws : 9002,
-	udp: 5002,
+	udp: 33335,
 	clients : []
 });
 bridges.push({
@@ -99,6 +100,7 @@ var rest_shm = function (req, res, next) {
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
     var ret = mp.unpack(data)
+    console.log(ret)
     if(ret!=null){
       res.json( ret )
     } else {
@@ -208,10 +210,11 @@ var udp_message = function(msg,rinfo){
   /* msgpack -> JSON */
   /* the jpeg is right after the messagepacked metadata (concatenated) */
   var meta = mp.unpack(msg)
-  var payload = msg.slice(msg.length - tbl.sz) // offset
+  var payload_len = mp.unpack.bytes_remaining
+  var payload = msg.slice(msg.length - payload_len) // offset
   /* Add the payload sz parameter to the metadata */
   meta.sz = 0;
-  if(payload!==undefined){meta.sz = payload.length;}
+  if(payload!==undefined){meta.sz = payload_len;}
 	bridge_send_ws(this.id,meta,payload);
 }
 
@@ -231,14 +234,14 @@ for( var w=0; w<bridges.length; w++) {
 			zmq_recv_skt.connect('ipc:///tmp/'+b.ipc);
 			zmq_recv_skt.subscribe('');
 			zmq_recv_skt.on('message', zmq_message.bind({id:w}) );
-			console.log('\tIPC Bridge');
+			console.log('\tIPC Bridge',b.ipc);
 		}
 
 		if( b.udp !== undefined ){
 			var udp_recv_skt = dgram.createSocket("udp4");
 			udp_recv_skt.bind( b.udp );
 			udp_recv_skt.on( "message", udp_message.bind({id:w}) );
-			console.log('\tUDP Bridge');
+			console.log('\tUDP Bridge',b.udp);
 		}
 
 	} //ws check
