@@ -46,13 +46,14 @@ document.addEventListener( "DOMContentLoaded", function(){
       return;
     }
 
-    // Put received JPEG data into the image
-    mesh_img.src = URL.createObjectURL( e.data );
-
-    // Trigger processing once the image is fully loaded
     if( mesh_handler !== undefined ) {
-      mesh_img.onload = mesh_handler;
-    }
+      requestAnimationFrame( function(){
+        // Put received JPEG data into the image
+        mesh_img.src = URL.createObjectURL( e.data );
+        // Trigger processing once the image is fully loaded
+        mesh_img.onload = mesh_handler;
+      }); //animframe
+    } // if a mesh handler is available
   };
 
 }, false );
