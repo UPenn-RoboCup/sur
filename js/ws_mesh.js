@@ -31,15 +31,12 @@ document.addEventListener( "DOMContentLoaded", function(){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
-      console.log('Mesh Latency: '+latency*1000+'ms',fr_metadata)
-      /*
-      mesh_width  = fr_metadata.res[1]
-      mesh_height = fr_metadata.res[0]
-      */
+      //console.log('Mesh Latency: '+latency*1000+'ms',fr_metadata)
       return;
     }
 		
     // Use the size as a sort of checksum
+    // for metadata pairing with an incoming image
     fr_sz_checksum = e.data.size;
     if(fr_metadata.sz!==fr_sz_checksum){
       console.log('Checksum fail!',fr_metadata.sz,fr_sz_checksum);
@@ -57,23 +54,3 @@ document.addEventListener( "DOMContentLoaded", function(){
   };
 
 }, false );
-/*
-document.addEventListener( "DOMContentLoaded", function(){
-  var ww_script = "mesh_worker"
-  // WebWorker
-  var frame_worker = new Worker("js/"+ww_script+".js");
-  frame_worker.onmessage = function(e) {
-    if(e.data=='initialized'){
-      console.log('WebWorker initialized!');
-			return;
-    }
-    if ( typeof update_particles!='function') {
-			console.log('No particle update available');
-			return;
-		}
-    var positions = new Float32Array(e.data);
-    update_particles(positions);
-  };
-  frame_worker.postMessage('Start!');
-}, false );
-*/
