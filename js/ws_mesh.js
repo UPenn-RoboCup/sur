@@ -1,5 +1,5 @@
 // Setup the WebSocket connection and callbacks
-var mesh_img;
+var mesh_img = new Image();
 //var mesh_width, mesh_height;
 document.addEventListener( "DOMContentLoaded", function(){
   
@@ -46,8 +46,6 @@ document.addEventListener( "DOMContentLoaded", function(){
       return;
     }
 
-    // Make the image
-    mesh_img = new Image();
     // Put received JPEG data into the image
     mesh_img.src = URL.createObjectURL( e.data );
 

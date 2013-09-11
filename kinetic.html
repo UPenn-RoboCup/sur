@@ -18,13 +18,15 @@
   <!-- SUR CONTROLLER JS -->
   <script src="js/util.js"></script>
   <script>
-  var stage,layer;
+  var stage,mesh_layer;
   </script>
-  <script src="js/mesh_handler.js"></script>
 
   <!-- SUR Websockets JS -->
   <script src="js/ws_mesh.js"></script>
   <script src="js/ws_spacemouse.js"></script>
+
+  <!-- SUR Handlers -->
+  <script src="js/mesh_handler.js"></script>
 
   <script>
   $(function() {
@@ -34,8 +36,6 @@
       width: 640,
       height: 480
     });
-    layer = new Kinetic.Layer();
-    console.log('layer!',layer)
   });
   </script>
  
