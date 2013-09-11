@@ -16,26 +16,30 @@ var homepage="simple.html"
 /* Remote Procedure Call Configuration */
 //var rpc_robot     = '192.168.123.22'
 var rpc_robot     = 'localhost'
-var rpc_reliable_port = 55555
-var zmq_rpc_addr = 'tcp://'+rpc_robot+':'+rpc_reliable_port
+var rpc_reliable_port   = 55555
+var rpc_unreliable_port = 55556
 
 /**
 * Load configuration values
 * TODO: Make these JSON for both the browser and node
 */
 var bridges = [];
+/*
 bridges.push({
 	name : 'LIDAR mesh',
 	ws : 9001,
 	udp: 33334,
 	clients : []
 });
+*/
+
 bridges.push({
-	name : 'Kinect rgbd',
+	name : 'Kinect rgbd depth',
 	ws : 9002,
-	udp: 33335,
+	udp: 33337,
 	clients : []
 });
+
 bridges.push({
 	name : 'Spacemouse',
 	ws : 9003,
@@ -216,6 +220,7 @@ var udp_message = function(msg,rinfo){
   meta.sz = 0;
   if(payload!==undefined){meta.sz = payload_len;}
 	bridge_send_ws(this.id,meta,payload);
+
 }
 
 /* Bridge to  websockets */
@@ -258,8 +263,14 @@ server.post('/s/:fsm',rest_fsm);
 
 /* Connect to the RPC server */
 var zmq_req_skt = zmq.socket('req');
-var ret = zmq_req_skt.connect(zmq_rpc_addr);
-console.log('\nRESTful RPC connected to '+zmq_rpc_addr);
+var ret = zmq_req_skt.connect('tcp://'+rpc_robot+':'+rpc_reliable_port);
+console.log('\nRESTful reliable RPC connected to ',rpc_robot,rpc_reliable_port);
+
+/*
+var udp_rpc_skt = dgram.createSocket("udp4");
+var ret = udp_rpc_skt.connect(rpc_unreliable_port);
+console.log('\nRESTful unreliable RPC connected to ', rpc_robot, rpc_unreliable_port);
+*/
 
 /* Listen for HTTP on port 8080 */
 server.listen(8080, function () {
