@@ -6,4 +6,5 @@ document.addEventListener( "DOMContentLoaded", function(){
     width: 640,
     height: 480
   });
+  console.log('Kinetic stage initialized!');
 }, false );

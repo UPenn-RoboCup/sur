@@ -100,6 +100,9 @@ server.get('/css/:css', load_js.bind({base_dir: 'css'}) );
 * vcm.set_head_camera_t(val)
 * */
 var rest_shm = function (req, res, next) {
+
+console.log(req.params);
+
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
@@ -122,7 +125,7 @@ var rest_shm = function (req, res, next) {
   zmq_req_skt.send( mp.pack(req.params) );
   
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
-  console.log(req.params);
+  
   return next();
 }
 

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!--HTML5 doctype-->
+<html>
+     
+<head>
+  <title>SUR Visualizer</title>
+  <meta charset="utf-8">
+  
+  <!-- CSS for Styling the page -->
+  <link rel="stylesheet" type="text/css" href="css/command.css">
+  <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.3.custom.min.css">
+    
+  <!-- Application Frameworks -->
+  <script src="lib/jquery-2.0.3.min.js"></script>
+  <script src="lib/jquery-ui-1.10.3.custom.min.js"></script>
+  <script src="lib/kinetic-v4.6.0.min.js"></script>
+  <script src="lib/three.min.js"></script>
+
+  <!-- SUR Utilities JS -->
+  <script src="js/util.js"></script>
+  <script src="lib/stats.min.js"></script>
+
+  <!-- SUR Layout JS -->
+  <script src="js/kinetic_stage.js"></script>
+  <script src="js/three_scene.js"></script>
+  <script src="js/jq_gui.js"></script>
+
+  <!-- SUR interactions JS -->
+  <script src="js/mesh_interaction.js"></script>
+
+  <!-- SUR Websockets JS -->
+  <script src="js/ws_mesh.js"></script>
+  <script src="js/ws_spacemouse.js"></script>
+
+  <!-- SUR Handlers -->
+  <script src="js/mesh_handler.js"></script>
+ 
+</head>
+
+<body>
+  <div id='btns'>
+    <a id="req_btn" class="btn">Get frame!</a>
+  </div>
+  <div id="stage_container"></div>
+  <div id="scene_container"></div>
+  <div id="debug"></div>
+</body>
+
+</html>
