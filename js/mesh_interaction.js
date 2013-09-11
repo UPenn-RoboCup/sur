@@ -15,9 +15,12 @@ var mesh_click = function(e){
 	/* Find the world coordinates */
 	var hFOV = 58*Math.PI/180;
 	var vFOV = 45*Math.PI/180;
-	// TODO: Convert w of 0-255 to bitshifted actual value
-	var x = w;
+	// Convert w of 0-255 to bitshifted actual value
+	// NOTE: Should receive this in the metadata
+	var shift_amt = 4;
+	var x = w<<shift_amt;
 	var y = Math.tan(hFOV/2)*2*(u/sz.width -.5)*x;
-	var z = Math.tan(vFOV/2)*2*(v/sz.height-.5)*w;
+	var z = Math.tan(vFOV/2)*2*(v/sz.height-.5)*x;
+	// World coordinates are in millimeters
 	console.log('World',x,y,z);
 }
