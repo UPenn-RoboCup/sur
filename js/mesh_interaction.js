@@ -8,7 +8,7 @@ var mesh_click = function(e){
 	var v = e.clientY - offset.y;
 	// Get the image value
 	var ctx = mesh_kinetic.getContext();
-	var pixel = ctx.getImageData(u, v, 1, 1).data; 
+	var pixel = ctx.getImageData(u, v, 1, 1).data;
 	var w = pixel[0];
 	//console.log('Pixel',u,v,w);
 	
