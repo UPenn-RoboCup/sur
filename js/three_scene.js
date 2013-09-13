@@ -1,5 +1,5 @@
 // Setup the THREE scene
-var scene, renderer, camera, stats;
+var scene, renderer, camera, stats, controls;
 document.addEventListener( "DOMContentLoaded", function(){
   var CANVAS_WIDTH = 400, CANVAS_HEIGHT = 400;
   var container = document.getElementById( 'scene_container' );
@@ -22,6 +22,22 @@ document.addEventListener( "DOMContentLoaded", function(){
   // add the camera to the scene
   scene.add( camera );
 
+  // add controls
+  controls = new THREE.OrbitControls( camera );
+/*
+  controls.rotateSpeed = 2.0;
+  controls.panSpeed = 2.0;
+  controls.zoomSpeed = 2.0;
+  controls.noZoom = false;
+  controls.noPan = false;
+  controls.minDistance = 1;
+  controls.staticMoving = false;
+  controls.dynamicDampingFactor = 0.3;
+  controls.keys = [ 65, 83, 68 ];
+  */
+  //controls.target = lookTarget;
+  controls.target.x = .1;
+
   // fps stats  
   stats = new Stats();
 
@@ -32,6 +48,33 @@ document.addEventListener( "DOMContentLoaded", function(){
   // Add to the container
   container.appendChild( renderer.domElement );
   container.appendChild( stats.domElement );
+
+  ///////////////
+///////////////
+var sphereMaterial =
+  new THREE.MeshLambertMaterial(
+    {
+      color: 0xFF0000
+    });
+// set up the sphere vars
+var radius = 1,
+    segments = 16,
+    rings = 16;
+
+// create a new mesh with
+// sphere geometry - we will cover
+// the sphereMaterial next!
+var sphere = new THREE.Mesh(
+
+  new THREE.SphereGeometry(
+    radius,
+    segments,
+    rings),
+
+  sphereMaterial);
+scene.add(sphere);
+///////////////
+///////////////
 
   console.log('THREE scene initialized!');
   // Begin animation

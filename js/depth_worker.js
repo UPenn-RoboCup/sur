@@ -6,7 +6,8 @@ var vFOV = 45*Math.PI/180;
 // LUT for depth->x,y,z
 var hlut;
 var vlut;
-var shift_amt = 2;
+var near = .5, far = 2;
+var factor;
 
 var init_lut = function(width,height){
 	hlut = new Float32Array( width  );
@@ -23,7 +24,8 @@ self.onmessage = function(e) {
 	if (!ready) {
 		// TODO: get the width/height here
 		init_lut(320,240);
-		// TODO: get the shift_amt, too
+		// TODO: get the near/far
+		factor = (far-near)/255;
 		ready = true;
 		self.postMessage('initialized');
 		return;
@@ -41,7 +43,8 @@ self.onmessage = function(e) {
 	for(var j=0; j<height; j++ ){
 		var tmp_vlut = vlut[j];
 		for (var i = 0; i<width; i++ ){
-			x = (pixels[pixel_idx]<<shift_amt) / 1000.0;
+			//x = (pixels[pixel_idx]<<shift_amt) / 1000.0;
+			x = factor*pixels[pixel_idx]+near;
 			y = hlut[i]  * x;
 			z = tmp_vlut * x;
 			positions[pos_idx] = x;
