@@ -7,26 +7,25 @@
   <meta charset="utf-8">
   
   <!-- CSS for Styling the page -->
-  <link rel="stylesheet" type="text/css" href="css/command.css">
-  <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.3.custom.min.css">
-    
+  <link rel="stylesheet" type="text/css" href="css/gh-buttons.css">
+  
   <!-- Application Frameworks -->
-  <script src="lib/jquery-2.0.3.min.js"></script>
-  <script src="lib/jquery-ui-1.10.3.custom.min.js"></script>
   <script src="lib/kinetic-v4.6.0.min.js"></script>
   <script src="lib/three.min.js"></script>
+  <script src="lib/sizzle.min.js"></script>
+  <script src="lib/promise.min.js"></script>
 
   <!-- SUR Utilities JS -->
   <script src="js/util.js"></script>
   <script src="lib/stats.min.js"></script>
+  <script src="lib/OrbitControls.js"></script>
 
   <!-- SUR Layout JS -->
   <script src="js/kinetic_stage.js"></script>
   <script src="js/three_scene.js"></script>
-  <script src="js/jq_gui.js"></script>
+  <script src="js/gui.js"></script>
 
   <!-- SUR interactions JS -->
-  <script src="lib/OrbitControls.js"></script>
   <script src="js/mesh_interaction.js"></script>
 
   <!-- SUR Websockets JS -->
@@ -40,9 +39,9 @@
 </head>
 
 <body>
-  <div id='btns'>
-    <a id="request_btn" class="btn">Get frame!</a>
-    <a id="dipole_btn" class="btn">Update Dipole</a>
+  <div class="button-group">
+    <a href="#" class="button big" id="request">Get frame!</a>
+    <a href="#" class="button big" id="update">Update Dipole</a>
   </div>
   <div id="stage_container"></div>
   <div id="scene_container"></div>
