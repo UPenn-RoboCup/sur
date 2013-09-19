@@ -1,3 +1,4 @@
+#!/usr/local/bin/node
 /***
 * SUR: Data forwarding
 * (c) Stephen McGill, 2013
@@ -10,8 +11,8 @@ var mp      = require('msgpack');
 var restify = require('restify');
 var dgram   = require("dgram");
 
-//var homepage="index.html"
-var homepage="simple.html"
+var homepage="index.html"
+//var homepage="simple.html"
 
 /* Remote Procedure Call Configuration */
 //var rpc_robot     = '192.168.123.22'

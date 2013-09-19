@@ -7,110 +7,45 @@
   <meta charset="utf-8">
   
   <!-- CSS for Styling the page -->
-  <link rel="stylesheet" type="text/css" href="css/command.css">
-  <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.3.custom.min.css">
-    
+  <link rel="stylesheet" type="text/css" href="css/gh-buttons.css">
+  
   <!-- Application Frameworks -->
-  <script src="lib/jquery-2.0.3.min.js"></script>
-  <script src="lib/jquery-ui-1.10.3.custom.min.js"></script>
-	<script src="lib/three.min.js"></script>
-  
-  <!--Models helpers-->
-  <script src="lib/STLLoader.js"></script>
-  
-  <!--GUI helpers-->
-	<script src="lib/TrackballControls.js"></script>
-  <script src="lib/TransformControls.js"></script>
-  <script src="lib/FlyControls.js"></script>
-  <script src="lib/FirstPersonControls.js"></script>
-  
-  <!--Debug helpers-->
-	<script src="lib/Detector.js"></script>
-	<script src="lib/stats.min.js"></script>
-  
-  <!-- SUR CONTROLLER JS -->
-  <script src="js/util.js"></script>
-  <script src="js/ws_mesh.js"></script>
-  <script type="text/javascript" src="js/view_3d.js"></script>
-  <!--
-    
-  <script src="js/ws_spacemouse.js"></script>
-  -->
+  <script src="lib/kinetic-v4.6.0.min.js"></script>
+  <script src="lib/three.min.js"></script>
+  <script src="lib/sizzle.min.js"></script>
+  <script src="lib/promise.min.js"></script>
 
-  <!-- SUR GUI JS -->
-  <script src="js/view_main_buttons.js"></script>
-  
-  <script>
-  $(function() {
-    $( "#settings" ).dialog({
-      width: 640,
-      height: 480,
-      modal: true,
-      autoOpen: false,
-      buttons: {
-        Send: function() {
-          var command = {
-            endpoints: $( "#slider-range" ).slider( "values" )
-          }
-          //op_ws.send( JSON.stringify(command) );
-          $( this ).dialog( "close" );
-        }
-      }
-    });
-  });
-  </script>
-  
-  <script>
-  /* Show the depth map */
-  $(function() {
-    $( "#images" ).dialog({
-      width: 800,
-      height: 600,
-      modal: true,
-      autoOpen: false,
-    });
-  });
-  </script>
-  
-  <script>
-  /* Slidar for the lidar scanning range */
-  $(function() {
-    $( "#slider-range" ).slider({
-      range: true,
-      min: -60,
-      max: 60,
-      values: [ -45, 45 ],
-      slide: function( event, ui ) {
-        $( "#endpoints" ).val( ui.values[ 0 ] + " to " + ui.values[ 1 ] );
-      }
-    });
-    // Initialize
-    var vals = $( "#slider-range" ).slider( "values" );
-    $( "#endpoints" ).val( vals[ 0 ] + " to " + vals[ 1 ] );
-  });
-  </script>
-  
+  <!-- SUR Utilities JS -->
+  <script src="js/util.js"></script>
+  <script src="lib/stats.min.js"></script>
+  <script src="lib/OrbitControls.js"></script>
+
+  <!-- SUR Layout JS -->
+  <script src="js/kinetic_stage.js"></script>
+  <script src="js/three_scene.js"></script>
+  <script src="js/gui.js"></script>
+
+  <!-- SUR interactions JS -->
+  <script src="js/mesh_interaction.js"></script>
+
+  <!-- SUR Websockets JS -->
+  <script src="js/ws_mesh.js"></script>
+  <script src="js/ws_spacemouse.js"></script>
+
+  <!-- SUR Handlers -->
+  <script src="js/mesh_handler.js"></script>
+  <script src="js/mesh_three.js"></script>
+ 
 </head>
 
 <body>
-  <div id="buttons">
-    <a id="req_btn" class="btn">Get frame!</a>
-    <br/>
-    <a id="dmap_btn" class="btn">Depth Map</a>
-    <br/>
-    <a id="settings_btn" class="btn">Settings</a>
+  <div class="button-group">
+    <a href="#" class="button big" id="request">Get frame!</a>
+    <a href="#" class="button big" id="update">Update Dipole</a>
   </div>
-  
-  <div id="images">
-    <canvas id="depthmap"/>
-  </div>
-  
-  <div class="settings" id="settings" title="Basic modal dialog">
-    <p>Please choose the minimum and maximum scanning range</p>
-    <div id="slider-range"></div>
-    <label for="endpoints">Lidar pan endpoints (degrees):</label>
-    <input type="text" id="endpoints" />
-  </div>
+  <div id="stage_container"></div>
+  <div id="scene_container"></div>
+  <div id="debug"></div>
 </body>
 
 </html>
