@@ -8,9 +8,10 @@
   
   <!-- CSS for Styling the page -->
   <link rel="stylesheet" type="text/css" href="css/gh-buttons.css">
+  <link rel="stylesheet" type="text/css" href="css/sur.css">
   
   <!-- Application Frameworks -->
-  <script src="lib/kinetic-v4.6.0.min.js"></script>
+  <script src="lib/kinetic-v4.7.0.min.js"></script>
   <script src="lib/three.min.js"></script>
   <script src="lib/sizzle.min.js"></script>
   <script src="lib/promise.min.js"></script>
@@ -41,12 +42,14 @@
 </head>
 
 <body>
-  <div class="button-group">
+  <div id="stage_container"></div>
+  <div id="scene_container"></div>
+
+  <div class="button-group" id="buttons">
     <a href="#" class="button big" id="request">Get frame!</a>
     <a href="#" class="button big" id="update">Update Dipole</a>
   </div>
-  <div id="stage_container"></div>
-  <div id="scene_container"></div>
+  
   <div id="debug"></div>
 </body>
 

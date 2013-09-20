@@ -1,8 +1,10 @@
 // Setup the THREE scene
 var scene, renderer, camera, stats, controls;
+var CANVAS_WIDTH, CANVAS_HEIGHT;
 document.addEventListener( "DOMContentLoaded", function(){
-  var CANVAS_WIDTH = 400, CANVAS_HEIGHT = 400;
   var container = document.getElementById( 'scene_container' );
+  CANVAS_WIDTH = container.clientWidth;
+  CANVAS_HEIGHT = container.clientHeight;
   if(container===undefined){return;}
 
   // make the scene
@@ -64,7 +66,7 @@ var radius = 1,
 // create a new mesh with
 // sphere geometry - we will cover
 // the sphereMaterial next!
-/*
+
 var sphere = new THREE.Mesh(
 
   new THREE.SphereGeometry(
@@ -74,9 +76,23 @@ var sphere = new THREE.Mesh(
 
   sphereMaterial);
 scene.add(sphere);
-*/
+
 ///////////////
 ///////////////
+
+  // handle resizing
+  window.addEventListener( 'resize', function() {
+    // update the width/height
+    CANVAS_WIDTH = container.clientWidth;
+    CANVAS_HEIGHT = container.clientHeight;
+    // update the camera view
+    camera.aspect = CANVAS_WIDTH / CANVAS_HEIGHT;
+    camera.updateProjectionMatrix();
+    // Set the rendering size
+    renderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
+    // Fix the controls
+    controls.handleResize();
+  }, false );
 
   console.log('THREE scene initialized!');
   // Begin animation
@@ -92,4 +108,4 @@ var animate = function(){
   stats.update();
   // request itself again
   requestAnimationFrame( animate );
-}
+};
