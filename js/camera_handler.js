@@ -2,13 +2,12 @@ var camera_layer = new Kinetic.Layer();
 var camera_kinetic;
 /* Handle the onload of the camera_image */
 var camera_handler = function(e){
-	console.log('here')
 	/* Kinetic addition */
 	if(camera_kinetic===undefined){
 		camera_kinetic = new Kinetic.Image({
 		image: this,
-		//x: 30,
-		//y: 50,
+		x: 30,
+		y: 50,
 		width:  this.width,
 		height: this.height
 		});

@@ -1,6 +1,35 @@
 // Setup the WebSocket connection and callbacks
+// Form the camera image layer
 var camera_img = new Image();
-//var mesh_width, mesh_height;
+var camera_layer, camera_kinetic;
+/* Handle the onload of the camera_image */
+var camera_handler = function(e){
+  /* Kinetic addition */
+  if(camera_layer===undefined){
+    camera_layer = new Kinetic.Layer({
+      width:  this.width,
+      height: this.height  
+    });
+    camera_kinetic = new Kinetic.Image({
+    image: this,
+    x: 30,
+    y: 50,
+    width:  this.width,
+    height: this.height
+    });
+    // add the image to the layer
+    camera_layer.add(camera_kinetic);
+    // add the layer to the stage
+    stage.add(camera_layer);
+  }
+  // Redraw the image
+  camera_layer.draw();
+  
+  // Remove the image for memory management reasons
+  URL.revokeObjectURL(this.src);
+  this.src = '';
+}
+
 document.addEventListener( "DOMContentLoaded", function(){
   
   // Configuration
@@ -42,15 +71,12 @@ document.addEventListener( "DOMContentLoaded", function(){
       console.log('Checksum fail!',fr_metadata.sz,fr_sz_checksum);
       return;
     }
-
-    if( mesh_handler !== undefined ) {
-      requestAnimationFrame( function(){
-        // Put received JPEG data into the image
-        camera_img.src = URL.createObjectURL( e.data );
-        // Trigger processing once the image is fully loaded
-        camera_img.onload = camera_handler;
-      }); //animframe
-    } // if a mesh handler is available
+    requestAnimationFrame( function(){
+      // Put received JPEG data into the image
+      camera_img.src = URL.createObjectURL( e.data );
+      // Trigger processing once the image is fully loaded
+      camera_img.onload = camera_handler;
+    }); //animframe
   };
 
 }, false );

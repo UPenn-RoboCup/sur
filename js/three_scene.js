@@ -49,7 +49,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   renderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
   // Add to the container
   container.appendChild( renderer.domElement );
-  container.appendChild( stats.domElement );
+  //container.appendChild( stats.domElement );
 
   ///////////////
 ///////////////
