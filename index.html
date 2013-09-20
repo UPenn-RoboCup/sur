@@ -11,9 +11,7 @@
   <link rel="stylesheet" type="text/css" href="css/sur.css">
   
   <!-- Application Frameworks -->
-  <script src="lib/kinetic-v4.7.0.min.js"></script>
   <script src="lib/three.min.js"></script>
-  <script src="lib/sizzle.min.js"></script>
   <script src="lib/promise.min.js"></script>
 
   <!-- SUR Utilities JS -->
@@ -22,26 +20,16 @@
   <script src="lib/OrbitControls.js"></script>
 
   <!-- SUR Layout JS -->
-  <script src="js/kinetic_stage.js"></script>
-  <script src="js/three_scene.js"></script>
   <script src="js/gui.js"></script>
 
-  <!-- SUR interactions JS -->
-  <script src="js/mesh_interaction.js"></script>
-
-  <!-- SUR Websockets JS -->
-  <script src="js/ws_camera.js"></script>
-  <script src="js/ws_mesh.js"></script>
-  <script src="js/ws_spacemouse.js"></script>
-
-  <!-- SUR Handlers -->
-  <script src="js/mesh_three.js"></script>
+  <!-- SUR data JS -->
+  <script src="js/camera_show.js"></script>
  
 </head>
 
 <body>
-  <div id="stage_container"></div>
-  <div id="scene_container"></div>
+  <div id="three_container"></div>
+  <div id="camera_container"></div>
 
   <div class="button-group" id="buttons">
     <a href="#" class="button big" id="request">Get frame!</a>
