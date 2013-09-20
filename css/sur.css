@@ -7,8 +7,35 @@
 #camera_container {
   position: absolute;
   left: 25%;
+  top: 0px;
+  width: 50%;
+  height: 50%;
+  background-color:#800;
+}
+
+#three_container {
+  position: absolute;
+  left: 25%;
   bottom: 0px;
   width: 50%;
+  height: 50%;
+  background-color:#008;
+}
+
+#mesh_container {
+  position: absolute;
+  right: 0%;
+  top: 30%;
+  width: 25%;
   height: 40%;
-  margin: 0px;
+  background-color: #880;
+}
+
+#slam_container {
+  position: absolute;
+  left: 0%;
+  top: 30%;
+  width: 25%;
+  height: 40%;
+  background-color: #080;
 }

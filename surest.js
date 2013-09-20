@@ -28,7 +28,7 @@ var bridges = [];
 bridges.push({
 	name : 'LIDAR mesh',
 	ws : 9001,
-	udp: 33334,
+	udp: 33344,
 	clients : []
 });
 
