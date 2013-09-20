@@ -1,11 +1,10 @@
 // Setup the WebSocket connection and callbacks
-var mesh_img = new Image();
+var camera_img = new Image();
 //var mesh_width, mesh_height;
 document.addEventListener( "DOMContentLoaded", function(){
   
   // Configuration
-  var mesh_port = 9001 // mesh
-  //var mesh_port = 9002 //kinect
+  var mesh_port = 9005
   
   // Checksum and metadata
   var fr_sz_checksum;
@@ -32,7 +31,7 @@ document.addEventListener( "DOMContentLoaded", function(){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
-      //console.log('Mesh Latency: '+latency*1000+'ms',fr_metadata)
+      //console.log('Camera Latency: '+latency*1000+'ms',fr_metadata)
       return;
     }
 		
@@ -47,9 +46,9 @@ document.addEventListener( "DOMContentLoaded", function(){
     if( mesh_handler !== undefined ) {
       requestAnimationFrame( function(){
         // Put received JPEG data into the image
-        mesh_img.src = URL.createObjectURL( e.data );
+        camera_img.src = URL.createObjectURL( e.data );
         // Trigger processing once the image is fully loaded
-        mesh_img.onload = mesh_handler;
+        camera_img.onload = camera_handler;
       }); //animframe
     } // if a mesh handler is available
   };

@@ -4,8 +4,8 @@ var mesh_particles;
 // Add the WebWorker to make particles
 document.addEventListener( "DOMContentLoaded", function(){
   /* Start the webworker */
-  //var ww_script = "mesh_worker"
-  var ww_script = "depth_worker"
+  var ww_script = "mesh_worker"
+  //var ww_script = "depth_worker"
   mesh_worker = new Worker("js/"+ww_script+".js");
   mesh_worker.onmessage = function(e) {
     if(e.data=='initialized'){

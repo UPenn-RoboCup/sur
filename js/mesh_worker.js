@@ -1,15 +1,18 @@
 var ready    = false;
-var horiz_sz = 500;
-var vert_sz  = 480;
+var horiz_sz = 480;
+var vert_sz  = 500;
 var hFOV     = 1;
 var vFOV     = 120 * Math.PI/180;
 var h_rpp    = hFOV / horiz_sz;
 var v_rpp    = vFOV / vert_sz;
+var near = .5, far = 2;
+var factor;
 
 self.onmessage = function(e) {
   
 	if (!ready) {
 		ready = true
+    factor = (far-near)/255;
 		self.postMessage('initialized');
 		return;
 	}
@@ -29,8 +32,8 @@ self.onmessage = function(e) {
       var hok_factor_xy = Math.cos(hok_angle);
       // Compute the xyz
       d = pixels[pixel_idx];
-      if (d<253){
-        r = ((d / 255) * (2-.1) + .1);
+      if (d<255 && d>0){
+        r = d * factor + near;
   		  x = r * hok_factor_xy * Math.cos(pan_angle);
   		  y = r * hok_factor_xy * Math.sin(pan_angle);
         z = r * hok_factor_z;
@@ -49,7 +52,6 @@ self.onmessage = function(e) {
       position_idx += 3;
 		}
 	}
-  //self.postMessage(pixels.buffer,[pixels.buffer]);
   self.postMessage(positions.buffer,[positions.buffer]);
 };
 

@@ -64,6 +64,7 @@ var radius = 1,
 // create a new mesh with
 // sphere geometry - we will cover
 // the sphereMaterial next!
+/*
 var sphere = new THREE.Mesh(
 
   new THREE.SphereGeometry(
@@ -73,6 +74,7 @@ var sphere = new THREE.Mesh(
 
   sphereMaterial);
 scene.add(sphere);
+*/
 ///////////////
 ///////////////
 

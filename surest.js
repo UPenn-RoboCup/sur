@@ -15,8 +15,8 @@ var homepage="index.html"
 //var homepage="simple.html"
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.22'
-var rpc_robot     = 'localhost'
+var rpc_robot     = '192.168.123.24'
+//var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555
 var rpc_unreliable_port = 55556
 
@@ -25,14 +25,12 @@ var rpc_unreliable_port = 55556
 * TODO: Make these JSON for both the browser and node
 */
 var bridges = [];
-/*
 bridges.push({
 	name : 'LIDAR mesh',
 	ws : 9001,
 	udp: 33334,
 	clients : []
 });
-*/
 
 bridges.push({
 	name : 'Kinect rgbd depth',
@@ -44,8 +42,22 @@ bridges.push({
 bridges.push({
 	name : 'Spacemouse',
 	ws : 9003,
-	ipc: 'spacemouse',
+	sub: 'spacemouse',
 	clients : []
+});
+
+bridges.push({
+  name : 'Reliable Mesh',
+  ws : 9004,
+  req: 33345,
+  clients : []
+});
+
+bridges.push({
+  name : 'Head Camera',
+  ws : 9005,
+  udp: 33333,
+  clients : []
 });
 
 
@@ -215,6 +227,7 @@ var zmq_message = function(metadata,payload){
 * UDP robot data receiving
 */
 var udp_message = function(msg,rinfo){
+  //console.log('got im')
   /* msgpack -> JSON */
   /* the jpeg is right after the messagepacked metadata (concatenated) */
   var meta = mp.unpack(msg)
@@ -237,13 +250,14 @@ for( var w=0; w<bridges.length; w++) {
 		var wss = new WebSocketServer({port: b.ws});
 		wss.on('connection', ws_connection.bind({id: w}) );
 		console.log('\n'+b.name);
+    console.log('\tWebsocket: '+b.ws)
 
-		if( b.ipc !== undefined ) {
+		if( b.sub !== undefined ) {
 			var zmq_recv_skt = zmq.socket('sub');
 			zmq_recv_skt.connect('ipc:///tmp/'+b.ipc);
 			zmq_recv_skt.subscribe('');
 			zmq_recv_skt.on('message', zmq_message.bind({id:w}) );
-			console.log('\tIPC Bridge',b.ipc);
+			console.log('\tSubscriber Bridge',b.sub);
 		}
 
 		if( b.udp !== undefined ){
@@ -252,6 +266,13 @@ for( var w=0; w<bridges.length; w++) {
 			udp_recv_skt.on( "message", udp_message.bind({id:w}) );
 			console.log('\tUDP Bridge',b.udp);
 		}
+
+    if( b.req !== undefined ) {
+      var zmq_req_skt = zmq.socket('req');
+      zmq_req_skt.connect('tcp://'+rpc_robot+':'+b.req);
+      zmq_req_skt.on('message', zmq_message.bind({id:w}) );
+      console.log('\tRequester Bridge',b.req);
+    }
 
 	} //ws check
 

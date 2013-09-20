@@ -3,8 +3,8 @@ var stage;
 document.addEventListener( "DOMContentLoaded", function(){
   stage = new Kinetic.Stage({
     container: 'stage_container',
-    width: 360,
-    height: 280
+    width: 640,
+    height: 480
   });
   console.log('Kinetic stage initialized!');
 }, false );

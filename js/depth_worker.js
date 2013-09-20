@@ -44,12 +44,19 @@ self.onmessage = function(e) {
 		var tmp_vlut = vlut[j];
 		for (var i = 0; i<width; i++ ){
 			//x = (pixels[pixel_idx]<<shift_amt) / 1000.0;
-			x = factor*pixels[pixel_idx]+near;
-			y = hlut[i]  * x;
-			z = tmp_vlut * x;
-			positions[pos_idx] = x;
-			positions[pos_idx+1] = y;
-			positions[pos_idx+2] = z;
+			d = pixels[pixel_idx];
+			if (d<255 && d>0){
+				x = factor*d+near;
+				y = hlut[i]  * x;
+				z = tmp_vlut * x;
+				positions[pos_idx] = x;
+				positions[pos_idx+1] = y;
+				positions[pos_idx+2] = z;
+			} else {
+		        positions[pos_idx]   = -100000; //100m away
+		        positions[pos_idx+1] = 0;
+		        positions[pos_idx+2] = 0;
+			}
 			pixel_idx += 4;
 			pos_idx   += 3;
 		}
