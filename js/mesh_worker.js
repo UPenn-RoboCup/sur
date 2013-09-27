@@ -19,7 +19,7 @@ self.onmessage = function(e) {
 	// Array to be put into the WebGL buffer
   var positions    = new Float32Array( horiz_sz * vert_sz * 3 );
   // access to the pixels from the JPEG as bytes
-  var pixels       = new Uint8Array(e.data);
+  var pixels       = new Uint8Array(e.data.buf);
 	var pixel_idx    = 0;
   var position_idx = 0;
 
