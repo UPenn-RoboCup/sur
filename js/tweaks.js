@@ -124,9 +124,9 @@ var h = 100;
 
 var data = d3.range(800).map(Math.random);
 
-var margin = {top: 194, right: 50, bottom: 214, left: 50},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+var margin = {top: 0, right: 25, bottom: 20, left: 25},
+    width = 300 - margin.left - margin.right,
+    height = 40 - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
     .range([0, width]);
@@ -145,10 +145,10 @@ var arc = d3.svg.arc()
     .startAngle(0)
     .endAngle(function(d, i) { return i ? -Math.PI : Math.PI; });
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select("#bodyheight_slider").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
-  .append("g")
+    .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 svg.append("g")

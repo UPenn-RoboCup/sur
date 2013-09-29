@@ -2,6 +2,10 @@ body {
   /* background-color: #444; */
 }
 
+#request_btn {
+  float: left;
+}
+
 #buttons {
   position: absolute;
   left: 10px;
