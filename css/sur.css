@@ -2,8 +2,12 @@ body {
   /* background-color: #444; */
 }
 
-#request_btn {
+.mesh_selection {
   float: left;
+}
+
+#mesh_select {
+  height: 50px;
 }
 
 #buttons {

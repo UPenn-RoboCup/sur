@@ -125,7 +125,7 @@ var h = 100;
 var data = d3.range(800).map(Math.random);
 
 var margin = {top: 0, right: 25, bottom: 20, left: 25},
-    width = 300 - margin.left - margin.right,
+    width = 200 - margin.left - margin.right,
     height = 40 - margin.top - margin.bottom;
 
 var x = d3.scale.linear()

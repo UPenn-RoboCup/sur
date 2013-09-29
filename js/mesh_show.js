@@ -14,10 +14,152 @@ var mesh_handler = function(e){
   this.src = '';
 }
 
-document.addEventListener( "DOMContentLoaded", function(){
+var add_depth_slider = function(){
+  //var data = d3.range(800).map(Math.random);
+
+  var margin = {top: 0, right: 25, bottom: 20, left: 25},
+      width = 200 - margin.left - margin.right,
+      height = 40 - margin.top - margin.bottom;
+
+  var x = d3.scale.linear()
+      .range([0, width])
+      .domain([0, 10]);
+
+  var y = d3.random.normal(height / 2, height / 8);
+
+  var brush = d3.svg.brush()
+      .x(x)
+      .extent([.5, 2])
+      .on("brushstart", brushstart)
+      .on("brush", brushmove)
+      .on("brushend", brushend);
+
+  var arc = d3.svg.arc()
+      .outerRadius(height / 2)
+      .startAngle(0)
+      .endAngle(function(d, i) { return i ? -Math.PI : Math.PI; });
+
+  var svg = d3.select("#bodyheight_slider").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.svg.axis().scale(x).orient("bottom"));
+
+/*
+  var circle = svg.append("g").selectAll("circle")
+      .data(data)
+    .enter().append("circle")
+      .attr("transform", function(d) { return "translate(" + x(d) + "," + y() + ")"; })
+      .attr("r", 3.5);
+*/
+
+  var brushg = svg.append("g")
+      .attr("class", "brush")
+      .call(brush);
+
+  brushg.selectAll(".resize").append("path")
+      .attr("transform", "translate(0," +  height / 2 + ")")
+      .attr("d", arc);
+
+  brushg.selectAll("rect")
+      .attr("height", height);
+
+  brushstart();
+  brushmove();
+
+  function brushstart() {
+    svg.classed("selecting", true);
+  }
+
+  function brushmove() {
+    var s = brush.extent();
+    //circle.classed("selected", function(d) { return s[0] <= d && d <= s[1]; });
+  }
+
+  function brushend() {
+    svg.classed("selecting", !d3.event.target.empty());
+
+    var rpc_url = rest_root+'/m/vcm/kinect/depths'
+    var vals = brush.extent();
+    // perform the post request
+    promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
+        if(error){ return; }
+    });
+  }
+}
+
+var add_mesh_buttons = function(){
+  var request_btn = document.getElementById('request_mesh_btn');
+  request_btn.addEventListener('click', function() {
+    //var rpc_url = rest_root+'/m/vcm/chest_lidar/net'
+    var rpc_url = rest_root+'/m/vcm/kinect/net_depth'
+    var vals = [1,1,90];
+    // perform the post request
+    promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
+        if(error){ return; }
+    });
+  }, false);
+
+  var request_btn = document.getElementById('switch_mesh_btn');
+  request_btn.addEventListener('click', function() {
+    //var rpc_url = rest_root+'/m/vcm/chest_lidar/net'
+    var rpc_url = rest_root+'/m/vcm/kinect/net_depth'
+    var vals = [1,1,90];
+    // perform the post request
+    promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
+        if(error){ return; }
+    });
+  }, false);
+
+}
+
+var mesh_click = function(e){
+  console.log(e)
+  // TODO: Allow scaled image clicking for zoom feature
+  var sz = mesh_kinetic.getSize();
+  // Get the mouse coordinates within the image
+  var offset = mesh_kinetic.getPosition();
+  var u = e.clientX - offset.x;
+  var v = e.clientY - offset.y;
+  // Get the image value
+  var ctx = mesh_kinetic.getContext();
+  var pixel = ctx.getImageData(u, v, 1, 1).data;
+  var w = pixel[0];
+  if(w==0||w==255){return;}
   
-  // Configuration
-  var mesh_port = 9001
+  /* Find the world coordinates */
+  var hFOV = 58*Math.PI/180;
+  var vFOV = 45*Math.PI/180;
+  // Convert w of 0-255 to actual meters value
+  // NOTE: Should receive this in the metadata, 
+  // or from mesh request itself
+  var near = .5, far = 2;
+  var factor = (far-near)/255;
+  // Convert form millimeters to meters
+  var x = factor*w+near;
+  var y = Math.tan(hFOV/2)*2*(u/sz.width-.5)*x;
+  var z = Math.tan(vFOV/2)*2*(.5-v/sz.height)*x;
+  // World coordinates are in meters
+  console.log(w+' World: '+x+','+y+','+z);
+}
+
+document.addEventListener( "DOMContentLoaded", function(){
+
+  var mesh_container = document.getElementById('mesh_container');
+
+  // GUI setup
+  add_depth_slider();
+  add_mesh_buttons();
+  // clicking on the mesh
+  mesh_container.addEventListener("click", mesh_click, false);
+  
+  // Websocket Configuration
+  var mesh_port = 9004; // kinect
   
   // Checksum and metadata
   var fr_sz_checksum;
@@ -25,7 +167,6 @@ document.addEventListener( "DOMContentLoaded", function(){
 
   // setup the canvas element
   var mesh_canvas = document.createElement('canvas');
-  var mesh_container = document.getElementById('mesh_container');
   mesh_canvas.setAttribute('width',mesh_container.clientWidth);
   mesh_canvas.setAttribute('height',mesh_container.clientHeight);
   mesh_ctx = mesh_canvas.getContext('2d');
