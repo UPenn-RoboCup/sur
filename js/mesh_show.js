@@ -1,6 +1,6 @@
 // Setup the WebSocket connection and callbacks
 // Form the mesh image layer
-var mesh_img = new Image();
+var last_mesh_img;
 var mesh_ctx;
 /* Handle the onload of the mesh_image */
 var mesh_handler = function(e){
@@ -15,7 +15,6 @@ var mesh_handler = function(e){
 }
 
 var add_depth_slider = function(){
-  //var data = d3.range(800).map(Math.random);
 
   var margin = {top: 0, right: 25, bottom: 20, left: 25},
       width = 200 - margin.left - margin.right,
@@ -50,14 +49,6 @@ var add_depth_slider = function(){
       .attr("transform", "translate(0," + height + ")")
       .call(d3.svg.axis().scale(x).orient("bottom"));
 
-/*
-  var circle = svg.append("g").selectAll("circle")
-      .data(data)
-    .enter().append("circle")
-      .attr("transform", function(d) { return "translate(" + x(d) + "," + y() + ")"; })
-      .attr("r", 3.5);
-*/
-
   var brushg = svg.append("g")
       .attr("class", "brush")
       .call(brush);
@@ -73,17 +64,22 @@ var add_depth_slider = function(){
   brushmove();
 
   function brushstart() {
-    svg.classed("selecting", true);
   }
 
   function brushmove() {
-    var s = brush.extent();
-    //circle.classed("selected", function(d) { return s[0] <= d && d <= s[1]; });
+    // realtime update of the dynamic range
+/*
+    var rpc_url = rest_root+'/m/vcm/kinect/depths'
+    var vals = brush.extent();
+    // perform the post request
+    promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
+        if(error){ return; }
+    });
+*/
   }
 
   function brushend() {
-    svg.classed("selecting", !d3.event.target.empty());
-
+    // ajax to set the depths
     var rpc_url = rest_root+'/m/vcm/kinect/depths'
     var vals = brush.extent();
     // perform the post request
@@ -95,6 +91,9 @@ var add_depth_slider = function(){
 
 var add_mesh_buttons = function(){
   var request_btn = document.getElementById('request_mesh_btn');
+  var switch_btn = document.getElementById('switch_mesh_btn');
+
+  // request a new mesh
   request_btn.addEventListener('click', function() {
     //var rpc_url = rest_root+'/m/vcm/chest_lidar/net'
     var rpc_url = rest_root+'/m/vcm/kinect/net_depth'
@@ -105,15 +104,13 @@ var add_mesh_buttons = function(){
     });
   }, false);
 
-  var request_btn = document.getElementById('switch_mesh_btn');
-  request_btn.addEventListener('click', function() {
-    //var rpc_url = rest_root+'/m/vcm/chest_lidar/net'
-    var rpc_url = rest_root+'/m/vcm/kinect/net_depth'
-    var vals = [1,1,90];
-    // perform the post request
-    promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
-        if(error){ return; }
-    });
+  // switch the type of mesh to request
+  switch_btn.addEventListener('click', function() {
+    if(switch_btn.textContent=='Head'){
+      switch_btn.textContent = "Chest";
+    } else {
+      switch_btn.textContent = "Head";
+    }
   }, false);
 
 }
@@ -166,6 +163,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   var fr_metadata;
 
   // setup the canvas element
+  var mesh_img = new Image();
   var mesh_canvas = document.createElement('canvas');
   mesh_canvas.setAttribute('width',mesh_container.clientWidth);
   mesh_canvas.setAttribute('height',mesh_container.clientHeight);
@@ -204,9 +202,10 @@ document.addEventListener( "DOMContentLoaded", function(){
       console.log('Checksum fail!',fr_metadata.sz,fr_sz_checksum);
       return;
     }
+    last_mesh_img = e.data;
     requestAnimationFrame( function(){
       // Put received JPEG data into the image
-      mesh_img.src = URL.createObjectURL( e.data );
+      mesh_img.src = URL.createObjectURL( last_mesh_img );
       // Trigger processing once the image is fully loaded
       mesh_img.onload = mesh_handler;
     }); //animframe

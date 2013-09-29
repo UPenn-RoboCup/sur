@@ -1,4 +1,5 @@
 // Setup the WebSocket connection and callbacks
+var last_camera_img;
 
 /* Handle the onload of a new camera_image */
 var camera_handler = function(e){
@@ -53,9 +54,11 @@ document.addEventListener( "DOMContentLoaded", function(){
       console.log('Checksum fail!',fr_metadata.sz,fr_sz_checksum);
       return;
     }
+
+    last_frame = e.data;
     requestAnimationFrame( function(){
       // Put received JPEG data into the image
-      camera_img.src = URL.createObjectURL( e.data );
+      camera_img.src = URL.createObjectURL( last_frame );
       // Trigger processing once the image is fully loaded
       camera_img.onload = camera_handler;
     }); //animframe
