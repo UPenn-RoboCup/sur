@@ -1,18 +1,6 @@
 // Setup the WebSocket connection and callbacks
 // Form the mesh image layer
-var last_mesh_img;
-var mesh_ctx;
-/* Handle the onload of the mesh_image */
-var mesh_handler = function(e){
-  var w = this.width;
-  var h = this.height;
-  var img = this;
-  mesh_ctx.drawImage(this, 0, 0);
-  
-  // Remove the image for memory management reasons
-  URL.revokeObjectURL(this.src);
-  this.src = '';
-}
+var last_mesh_img, mesh_ctx, mesh_svg, mesh_clicks, mesh_points, mesh_depths;
 
 var add_depth_slider = function(){
 
@@ -114,37 +102,75 @@ var add_mesh_buttons = function(){
   }, false);
 
 }
-
-var mesh_click = function(e){
-  console.log(e)
-  /*
-  // TODO: Allow scaled image clicking for zoom feature
-  var sz = mesh_kinetic.getSize();
-  // Get the mouse coordinates within the image
-  var offset = mesh_kinetic.getPosition();
-  var u = e.clientX - offset.x;
-  var v = e.clientY - offset.y;
-  // Get the image value
-  var ctx = mesh_kinetic.getContext();
-  var pixel = ctx.getImageData(u, v, 1, 1).data;
-  var w = pixel[0];
-  if(w==0||w==255){return;}
-  
-  // Find the world coordinates
+var get_kinect_xyz = function(u,v,w,near,far){
   var hFOV = 58*Math.PI/180;
   var vFOV = 45*Math.PI/180;
+  var width = 320;
+  var height = 240;
   // Convert w of 0-255 to actual meters value
   // NOTE: Should receive this in the metadata, 
   // or from mesh request itself
-  var near = .5, far = 2;
   var factor = (far-near)/255;
   // Convert form millimeters to meters
   var x = factor*w+near;
-  var y = Math.tan(hFOV/2)*2*(u/sz.width-.5)*x;
-  var z = Math.tan(vFOV/2)*2*(.5-v/sz.height)*x;
-  // World coordinates are in meters
-  console.log(w+' World: '+x+','+y+','+z);
-  */
+  var y = Math.tan(hFOV/2)*2*(u/width-.5)*x;
+  var z = Math.tan(vFOV/2)*2*(.5-v/height)*x;
+  return vec3.fromValues(x, y, z);
+}
+
+var mesh_click = function(e){
+  console.log(e);
+  var u = e.offsetX;
+  var v = e.offsetY;
+  var pixel = mesh_ctx.getImageData(u, v, 1, 1).data;
+  // greyscale means we need only one pixel
+  var w = pixel[0];
+  console.log('Local: ',u,v,w,pixel);
+
+  // do not use saturated pixels
+  if(w==0||w==255){
+    console.log('Saturated pixel',w);
+    return;
+  }
+  
+  // save the click
+  mesh_clicks.push( vec3.fromValues(u,v,w) );
+
+  // Find the world coordinates
+  console.log('nf',mesh_depths);
+  var point = get_kinect_xyz(u,v,w,mesh_depths[0],mesh_depths[1]);
+  console.log('World: ',point);
+  mesh_points.push( point );
+  
+  // the svg overlay has the circles for where we clicked
+  var click_circles = mesh_svg.selectAll("circle")
+  .data(mesh_clicks).enter()
+  .append("circle").style("fill", "red")
+  .attr("cx", function(p,i){
+    console.log('Adding cx',p[0]);
+    return p[0];
+  })
+  .attr("cy", function(p,i){
+    console.log('Adding cy',p[1]);
+    return p[1];
+  })
+  .attr("r", 4); // radius
+  
+  // attributes for new clicks
+  // http://mbostock.github.io/d3/tutorial/circle.html
+
+}
+
+/* Handle the onload of the mesh_image */
+var mesh_handler = function(e){
+  var w = this.width;
+  var h = this.height;
+  var img = this;
+  mesh_ctx.drawImage(this, 0, 0);
+  
+  // Remove the image for memory management reasons
+  URL.revokeObjectURL(this.src);
+  this.src = '';
 }
 
 document.addEventListener( "DOMContentLoaded", function(){
@@ -159,10 +185,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Websocket Configuration
   var mesh_port = 9004; // kinect
-  
-  // Checksum and metadata
-  var fr_sz_checksum;
-  var fr_metadata;
+  var fr_sz_checksum, fr_metadata;
 
   // setup the canvas element
   var mesh_img = new Image();
@@ -171,28 +194,28 @@ document.addEventListener( "DOMContentLoaded", function(){
   var h = mesh_container.clientHeight;
   mesh_canvas.setAttribute('width', w);
   mesh_canvas.setAttribute('height',h);
-  mesh_ctx = mesh_canvas.getContext('2d');
-
-  // add the canvas
   mesh_canvas.setAttribute('class','mesh_overlay');
-  //mesh_canvas.setAttribute('left','0');
-  //mesh_canvas.setAttribute('top','0');
+  mesh_ctx = mesh_canvas.getContext('2d');
+  // add the canvas
   mesh_container.appendChild( mesh_canvas );
-  // add the overlay
-  var svg_overlay = d3.select("#mesh_container").append("svg")
-    .attr("width", w)
-    .attr("height", h)
-    .attr('class','mesh_overlay')
-    //.attr("position", 'absolute')
-    //.attr("left", '0')
-    //.attr("top", '0')
 
-  //Draw the Circle
- var circle = svg_overlay.append("circle")
+  // add the d3 overlay
+  mesh_svg = d3.select("#mesh_container").append("svg")
+    .attr("width",  w)
+    .attr("height", h)
+    .attr('class','mesh_overlay');
+
+  // reset the 2D clicked and local 3D points
+  mesh_points = [];
+  mesh_clicks = [];
+
+  // draw a test Circle
+  /*
+  var circle = mesh_svg.append("circle")
                           .attr("cx", 30)
                           .attr("cy", 30)
                           .attr("r", 20);
-
+  */
 
   // Connect to the websocket server
   var ws = new WebSocket('ws://' + host + ':' + mesh_port);
@@ -215,7 +238,8 @@ document.addEventListener( "DOMContentLoaded", function(){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
-      //console.log('mesh Latency: '+latency*1000+'ms',fr_metadata)
+      console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
+      mesh_depths = fr_metadata.depths;
       return;
     }
 		
