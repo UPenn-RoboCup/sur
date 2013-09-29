@@ -1,14 +1,16 @@
 // Setup the WebSocket connection and callbacks
 // Form the camera image layer
-var camera_img = new Image();
-var camera_ctx;
+var camera_img;
+//var camera_ctx;
 /* Handle the onload of the camera_image */
 var camera_handler = function(e){
+  /*
   var w = this.width;
   var h = this.height;
   var img = this;
   camera_ctx.drawImage(this, 0, 0);
-  
+  */
+
   // Remove the image for memory management reasons
   URL.revokeObjectURL(this.src);
   this.src = '';
@@ -17,22 +19,28 @@ var camera_handler = function(e){
 document.addEventListener( "DOMContentLoaded", function(){
   
   // Configuration
-  var mesh_port = 9005
+  var ws_camera_port = 9005; // kinect
   
   // Checksum and metadata
   var fr_sz_checksum;
   var fr_metadata;
 
-  // setup the canvas element
+  // setup the canvas element and temporary image
+  camera_img = new Image();
+  // Add the image to the camera container
+  camera_container.appendChild( camera_img );
+
+  /*
   var camera_canvas = document.createElement('canvas');
   var camera_container = document.getElementById('camera_container');
   camera_canvas.setAttribute('width',camera_container.clientWidth);
   camera_canvas.setAttribute('height',camera_container.clientHeight);
   camera_ctx = camera_canvas.getContext('2d');
   camera_container.appendChild( camera_canvas );
+  */
 
   // Connect to the websocket server
-  var ws = new WebSocket('ws://' + host + ':' + mesh_port);
+  var ws = new WebSocket('ws://' + host + ':' + ws_camera_port);
   //ws.binaryType = "arraybuffer";
   ws.binaryType = "blob";
   

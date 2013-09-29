@@ -10,6 +10,7 @@ var zmq     = require('zmq');
 var mp      = require('msgpack');
 var restify = require('restify');
 var dgram   = require("dgram");
+var _       = require('underscore');
 
 var homepage="index.html"
 //var homepage="simple.html"
@@ -33,31 +34,38 @@ bridges.push({
 });
 
 bridges.push({
-	name : 'Kinect rgbd depth',
-	ws : 9002,
-	udp: 33337,
-	clients : []
-});
-
-bridges.push({
-	name : 'Spacemouse',
-	ws : 9003,
-	sub: 'spacemouse',
-	clients : []
-});
-
-bridges.push({
   name : 'Reliable Mesh',
-  ws : 9004,
+  ws : 9002,
   req: 33345,
   clients : []
 });
 
 bridges.push({
   name : 'Head Camera',
-  ws : 9005,
+  ws : 9003,
   udp: 33333,
   clients : []
+});
+
+bridges.push({
+	name : 'Kinect rgbd depth',
+	ws : 9004,
+	udp: 33346,
+	clients : []
+});
+
+bridges.push({
+  name : 'Kinect rgbd color',
+  ws : 9005,
+  udp: 33347,
+  clients : []
+});
+
+bridges.push({
+	name : 'Spacemouse',
+	ws : 9006,
+	sub: 'spacemouse',
+	clients : []
 });
 
 
@@ -190,11 +198,20 @@ var ws_message = function(msg){
   console.log('\nBrowser '+bridges[this.id]+' | ',cmd);
 }
 
+var ws_close = function(e){
+  console.log('Closed',this.n, this.id);
+  bridges[this.id].clients[this.n] = false;
+  bridges[this.id].clients = _.compact(bridges[this.id].clients);
+}
+
 var ws_connection = function(ws){
   /* Web Browser Message */
   ws.on('message', ws_message.bind({id: this.id}) );
   /* Save this web socket connection */
+  var conn_number = bridges[this.id].clients.length;
   bridges[this.id].clients.push(ws);
+  /* On close, remove this client */
+  ws.on('close',   ws_close.bind(  {id: this.id, n: conn_number}) );
 }
 
 var bridge_send_ws = function(b_id,meta,payload){
