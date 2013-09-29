@@ -199,7 +199,7 @@ var ws_message = function(msg){
 }
 
 var ws_close = function(e){
-  console.log('Closed',this.n, this.id);
+  //console.log('Closed',this.n, this.id);
   bridges[this.id].clients[this.n] = false;
   bridges[this.id].clients = _.compact(bridges[this.id].clients);
 }

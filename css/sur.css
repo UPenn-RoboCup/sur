@@ -1,5 +1,5 @@
 body {
-  background-color: #111;
+  /* background-color: #444; */
 }
 
 #buttons {
@@ -14,7 +14,7 @@ body {
   top: 0px;
   width: 50%;
   height: 50%;
-  background-color:#800;
+  background-color: #800;
 }
 
 #three_container {
@@ -23,7 +23,7 @@ body {
   bottom: 0px;
   width: 50%;
   height: 50%;
-  background-color:#008;
+  background-color: #008;
 }
 
 #mesh_container {
@@ -33,6 +33,14 @@ body {
   width: 25%;
   height: 40%;
   background-color: #880;
+}
+
+#tweak_container {
+  position: absolute;
+  right: 0%;
+  bottom: 0%;
+  width: 25%;
+  height: 30%;
 }
 
 #slam_container {

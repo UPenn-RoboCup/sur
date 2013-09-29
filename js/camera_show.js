@@ -1,21 +1,13 @@
 // Setup the WebSocket connection and callbacks
-// Form the camera image layer
-var camera_img;
-//var camera_ctx;
-/* Handle the onload of the camera_image */
-var camera_handler = function(e){
-  /*
-  var w = this.width;
-  var h = this.height;
-  var img = this;
-  camera_ctx.drawImage(this, 0, 0);
-  */
 
+/* Handle the onload of a new camera_image */
+var camera_handler = function(e){
   // Remove the image for memory management reasons
   URL.revokeObjectURL(this.src);
   this.src = '';
 }
 
+/* Handle the page load */
 document.addEventListener( "DOMContentLoaded", function(){
   
   // Configuration
@@ -26,22 +18,12 @@ document.addEventListener( "DOMContentLoaded", function(){
   var fr_metadata;
 
   // setup the canvas element and temporary image
-  camera_img = new Image();
+  var camera_img = new Image();
   // Add the image to the camera container
   camera_container.appendChild( camera_img );
 
-  /*
-  var camera_canvas = document.createElement('canvas');
-  var camera_container = document.getElementById('camera_container');
-  camera_canvas.setAttribute('width',camera_container.clientWidth);
-  camera_canvas.setAttribute('height',camera_container.clientHeight);
-  camera_ctx = camera_canvas.getContext('2d');
-  camera_container.appendChild( camera_canvas );
-  */
-
   // Connect to the websocket server
   var ws = new WebSocket('ws://' + host + ':' + ws_camera_port);
-  //ws.binaryType = "arraybuffer";
   ws.binaryType = "blob";
   
   ws.open = function(e){

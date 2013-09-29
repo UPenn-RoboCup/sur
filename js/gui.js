@@ -36,8 +36,8 @@ document.addEventListener( "DOMContentLoaded", function(){
   // request image be sent to us...
   var request_btn = document.getElementById('request_btn');
   request_btn.addEventListener('click', function() {
-  	//var rpc_url = 'http://'+host+':8080/m/vcm/kinect/net_depth'
-  	var rpc_url = 'http://'+host+':8080/m/vcm/chest_lidar/net'
+  	//var rpc_url = rest_root+'/m/vcm/chest_lidar/net'
+    var rpc_url = rest_root+'/m/vcm/kinect/net_depth'
   	var vals = [1,1,90];
     // perform the post request
   	promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
