@@ -4,8 +4,10 @@ var last_camera_img;
 /* Handle the onload of a new camera_image */
 var camera_handler = function(e){
   // Remove the image for memory management reasons
+  /*
   URL.revokeObjectURL(this.src);
   this.src = '';
+  */
 }
 
 /* Handle the page load */
@@ -55,10 +57,13 @@ document.addEventListener( "DOMContentLoaded", function(){
       return;
     }
 
-    last_frame = e.data;
+    last_camera_img = e.data;
     requestAnimationFrame( function(){
+      // clear the previous frame
+      URL.revokeObjectURL(camera_img.src);
+      //camera_img.src = '';
       // Put received JPEG data into the image
-      camera_img.src = URL.createObjectURL( last_frame );
+      camera_img.src = URL.createObjectURL( last_camera_img );
       // Trigger processing once the image is fully loaded
       camera_img.onload = camera_handler;
     }); //animframe

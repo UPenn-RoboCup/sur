@@ -43,6 +43,12 @@ body {
   background-color: #880;
 }
 
+#mesh_container .mesh_overlay {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
 #tweak_container {
   position: absolute;
   right: 0%;

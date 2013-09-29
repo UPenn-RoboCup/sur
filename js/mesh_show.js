@@ -91,7 +91,7 @@ var add_depth_slider = function(){
 
 var add_mesh_buttons = function(){
   var request_btn = document.getElementById('request_mesh_btn');
-  var switch_btn = document.getElementById('switch_mesh_btn');
+  var switch_btn  = document.getElementById('switch_mesh_btn');
 
   // request a new mesh
   request_btn.addEventListener('click', function() {
@@ -117,6 +117,7 @@ var add_mesh_buttons = function(){
 
 var mesh_click = function(e){
   console.log(e)
+  /*
   // TODO: Allow scaled image clicking for zoom feature
   var sz = mesh_kinetic.getSize();
   // Get the mouse coordinates within the image
@@ -129,7 +130,7 @@ var mesh_click = function(e){
   var w = pixel[0];
   if(w==0||w==255){return;}
   
-  /* Find the world coordinates */
+  // Find the world coordinates
   var hFOV = 58*Math.PI/180;
   var vFOV = 45*Math.PI/180;
   // Convert w of 0-255 to actual meters value
@@ -143,6 +144,7 @@ var mesh_click = function(e){
   var z = Math.tan(vFOV/2)*2*(.5-v/sz.height)*x;
   // World coordinates are in meters
   console.log(w+' World: '+x+','+y+','+z);
+  */
 }
 
 document.addEventListener( "DOMContentLoaded", function(){
@@ -165,10 +167,32 @@ document.addEventListener( "DOMContentLoaded", function(){
   // setup the canvas element
   var mesh_img = new Image();
   var mesh_canvas = document.createElement('canvas');
-  mesh_canvas.setAttribute('width',mesh_container.clientWidth);
-  mesh_canvas.setAttribute('height',mesh_container.clientHeight);
+  var w = mesh_container.clientWidth;
+  var h = mesh_container.clientHeight;
+  mesh_canvas.setAttribute('width', w);
+  mesh_canvas.setAttribute('height',h);
   mesh_ctx = mesh_canvas.getContext('2d');
+
+  // add the canvas
+  mesh_canvas.setAttribute('class','mesh_overlay');
+  //mesh_canvas.setAttribute('left','0');
+  //mesh_canvas.setAttribute('top','0');
   mesh_container.appendChild( mesh_canvas );
+  // add the overlay
+  var svg_overlay = d3.select("#mesh_container").append("svg")
+    .attr("width", w)
+    .attr("height", h)
+    .attr('class','mesh_overlay')
+    //.attr("position", 'absolute')
+    //.attr("left", '0')
+    //.attr("top", '0')
+
+  //Draw the Circle
+ var circle = svg_overlay.append("circle")
+                          .attr("cx", 30)
+                          .attr("cy", 30)
+                          .attr("r", 20);
+
 
   // Connect to the websocket server
   var ws = new WebSocket('ws://' + host + ':' + mesh_port);
