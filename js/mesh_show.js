@@ -1,7 +1,16 @@
 // Setup the WebSocket connection and callbacks
 // Form the mesh image layer
-var last_mesh_img, mesh_ctx, mesh_svg, mesh_clicks, mesh_points, mesh_depths;
-var mesh_req_url = rest_root+'/m/vcm/chest_lidar/net';
+var last_mesh_img, mesh_ctx, mesh_svg;
+var mesh_clicks, mesh_points, mesh_depths;
+var mesh_in_use = 'head_lidar';
+var mesh_width, mesh_height, mesh_fov = [];
+
+// Robot properties for where the LIDARs are
+var chest_depth    = 0.05;
+var chest_height   = 0.10;
+var chest_off_axis = 0.05;
+var neck_height    = 0.30;
+var neck_off_axis  = 0.01;
 
 var add_depth_slider = function(){
 
@@ -87,7 +96,10 @@ var add_mesh_buttons = function(){
   request_btn.addEventListener('click', function() {
 
     // if testing with the kinect
-    //mesh_req_url = rest_root+'/m/vcm/kinect/net_depth'
+    var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net'
+    if(mesh_in_use=='kinect'){
+      mesh_req_url+='_depth';
+    }
 
     var vals = [1,1,90];
     // perform the post request
@@ -98,17 +110,25 @@ var add_mesh_buttons = function(){
 
   // switch the type of mesh to request
   switch_btn.addEventListener('click', function() {
-    if(switch_btn.textContent=='Head'){
-      mesh_req_url = rest_root+'/m/vcm/head_lidar/net';
-      switch_btn.textContent = "Chest";
-    } else {
-      mesh_req_url = rest_root+'/m/vcm/chest_lidar/net';
-      switch_btn.textContent = "Head";
+    switch(switch_btn.textContent){
+      case 'Head':
+        switch_btn.textContent = "Chest";
+        mesh_in_use = 'chest_lidar';
+        break;
+      case 'Chest':
+        switch_btn.textContent = "Head";
+        mesh_in_use = 'head_lidar';
+        break;
+      default:
+        switch_btn.textContent = "Kinect";
+        mesh_in_use = 'kinect';
+        break;
     }
   }, false);
 
   // Clear the points on the mesh
   clear_btn.addEventListener('click', function() {
+    mesh_points = [];
     mesh_clicks = [];
     mesh_svg.selectAll("circle")
     .data(mesh_clicks).exit().remove()
@@ -116,27 +136,40 @@ var add_mesh_buttons = function(){
 
 }
 
-var get_hokuyo_xyz = function(u,v,w,width,height,near,far,fov){
-  // angle per pixel
-  var h_pp = fov[0] / width;
-  var v_pp = fov[1] / height;
+var get_hokuyo_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
+  console.log(u,v,w,width,height,near,far,hFOV,vFOV);
+  // radians per pixel
+  var h_rpp = hFOV / width;
+  var v_rpp = vFOV / height;
   // angle in radians of the selected pixel
   var h_angle   = h_rpp * (u-width/2);
-  var v_angle   = v_rpp * (v-height/2);
+  var v_angle   = v_rpp * (height/2-v);
   // Convert w of 0-255 to actual meters value
   var factor = (far-near)/255;
   var r = factor*w+near;
+  
+
+
+
   // find the x, y, z
   var x = r * Math.cos(v_angle) * Math.cos(h_angle);
   var y = r * Math.cos(v_angle) * Math.sin(h_angle);
   var z = r * Math.sin(v_angle);
+
+  if(mesh_in_use=='head_lidar'){
+    z = z + neck_height;
+  } else {
+    x = x + chest_depth;
+    z = z + chest_height;
+  }
+
+  console.log('hokuyo',x,y,z);
+
   // return the vector
   return new THREE.Vector3( x, y, z );
 }
 
-var get_kinect_xyz = function(u,v,w,width,height,near,far){
-  var hFOV = 58*Math.PI/180;
-  var vFOV = 45*Math.PI/180;
+var get_kinect_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   // Convert w of 0-255 to actual meters value
   var factor = (far-near)/255;
   var x = factor*w+near;
@@ -159,19 +192,45 @@ var mesh_click = function(e){
     //console.log('Saturated pixel',w);
     return;
   }
+
+  // Find the world coordinates
+  var point;
+  switch(mesh_in_use){
+    case 'kinect':
+      point = get_kinect_xyz(u,v,w,
+        mesh_width,mesh_height,
+        mesh_depths[0], mesh_depths[1],
+        58*Math.PI/180, 45*Math.PI/180
+        );
+      break;
+    case 'head_lidar':
+      point = get_hokuyo_xyz(u,v,w,
+        mesh_width,mesh_height,
+        mesh_depths[0],mesh_depths[1],
+        mesh_fov[0],mesh_fov[1]
+      );
+      break;
+    case 'chest_lidar':
+      point = get_hokuyo_xyz(u,v,w,
+        mesh_width,mesh_height,
+        mesh_depths[0],mesh_depths[1],
+        mesh_fov[1],mesh_fov[0]
+      );
+      break;
+    default:
+      return;
+  }
+  
+  //console.log('World: ',point);
   
   // save the click
   mesh_clicks.push( new THREE.Vector3(u,v,w) );
-
-  // Find the world coordinates
-  var point = get_kinect_xyz(u,v,w,320,240,mesh_depths[0],mesh_depths[1]);
-  //console.log('World: ',point);
   mesh_points.push( point );
 
   if(mesh_points.length>=3){
     calculate_wheel(mesh_points);
   }
-  
+
   // the svg overlay has the circles for where we clicked
   var click_circles = mesh_svg.selectAll("circle")
   .data(mesh_clicks).enter()
@@ -195,6 +254,10 @@ var mesh_handler = function(e){
   var h = this.height;
   var img = this;
 
+  // clear the context
+  //console.log(mesh_ctx);
+  mesh_ctx.clearRect( 0 , 0 , mesh_ctx.canvas.width , mesh_ctx.canvas.height );
+
   // Rotate if the chest...
   if(this.alt=='chest'){
     var half_w = w/2;
@@ -209,7 +272,11 @@ var mesh_handler = function(e){
     half_w+=diff;
     mesh_ctx.drawImage(this, -half_w, -half_h);
     mesh_ctx.restore();
+    mesh_width  = h;
+    mesh_height = w;
   } else{
+    mesh_width  = w;
+    mesh_height = h;
     mesh_ctx.drawImage(this, 0, 0);
   }
 
@@ -305,8 +372,10 @@ document.addEventListener( "DOMContentLoaded", function(){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
-      //console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
-      mesh_depths = fr_metadata.depths;
+      console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
+      mesh_depths = fr_metadata.depths.slice(0);
+      mesh_fov[0] = fr_metadata.fov[1]-fr_metadata.fov[0];
+      mesh_fov[1] = fr_metadata.scanlines[1]-fr_metadata.scanlines[0];
       return;
     }
 		
