@@ -110,16 +110,30 @@ var add_mesh_buttons = function(){
   }, false);
 
 }
-var get_kinect_xyz = function(u,v,w,near,far){
+
+var get_hokuyo_xyz = function(u,v,w,width,height,near,far,fov){
+  // angle per pixel
+  var h_pp = fov[0] / width;
+  var v_pp = fov[1] / height;
+  // angle in radians of the selected pixel
+  var h_angle   = h_rpp * (u-width/2);
+  var v_angle   = v_rpp * (v-height/2);
+  // Convert w of 0-255 to actual meters value
+  var factor = (far-near)/255;
+  var r = factor*w+near;
+  // find the x, y, z
+  var x = r * Math.cos(v_angle) * Math.cos(h_angle);
+  var y = r * Math.cos(v_angle) * Math.sin(h_angle);
+  var z = r * Math.sin(v_angle);
+  // return the vector
+  return new THREE.Vector3( x, y, z );
+}
+
+var get_kinect_xyz = function(u,v,w,width,height,near,far){
   var hFOV = 58*Math.PI/180;
   var vFOV = 45*Math.PI/180;
-  var width = 320;
-  var height = 240;
   // Convert w of 0-255 to actual meters value
-  // NOTE: Should receive this in the metadata, 
-  // or from mesh request itself
   var factor = (far-near)/255;
-  // Convert form millimeters to meters
   var x = factor*w+near;
   var y = Math.tan(hFOV/2)*2*(u/width-.5)*x;
   var z = Math.tan(vFOV/2)*2*(.5-v/height)*x;
@@ -145,7 +159,7 @@ var mesh_click = function(e){
   mesh_clicks.push( new THREE.Vector3(u,v,w) );
 
   // Find the world coordinates
-  var point = get_kinect_xyz(u,v,w,mesh_depths[0],mesh_depths[1]);
+  var point = get_kinect_xyz(u,v,w,320,240,mesh_depths[0],mesh_depths[1]);
   //console.log('World: ',point);
   mesh_points.push( point );
 
