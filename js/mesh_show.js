@@ -115,31 +115,30 @@ var get_kinect_xyz = function(u,v,w,near,far){
   var x = factor*w+near;
   var y = Math.tan(hFOV/2)*2*(u/width-.5)*x;
   var z = Math.tan(vFOV/2)*2*(.5-v/height)*x;
-  return vec3.fromValues(x, y, z);
+  return new THREE.Vector3( x, y, z );
 }
 
 var mesh_click = function(e){
-  console.log(e);
+  //console.log(e);
   var u = e.offsetX;
   var v = e.offsetY;
   var pixel = mesh_ctx.getImageData(u, v, 1, 1).data;
   // greyscale means we need only one pixel
   var w = pixel[0];
-  console.log('Local: ',u,v,w,pixel);
+  //console.log('Local: ',u,v,w,pixel);
 
   // do not use saturated pixels
   if(w==0||w==255){
-    console.log('Saturated pixel',w);
+    //console.log('Saturated pixel',w);
     return;
   }
   
   // save the click
-  mesh_clicks.push( vec3.fromValues(u,v,w) );
+  mesh_clicks.push( new THREE.Vector3(u,v,w) );
 
   // Find the world coordinates
-  console.log('nf',mesh_depths);
   var point = get_kinect_xyz(u,v,w,mesh_depths[0],mesh_depths[1]);
-  console.log('World: ',point);
+  //console.log('World: ',point);
   mesh_points.push( point );
   
   // the svg overlay has the circles for where we clicked
@@ -147,12 +146,10 @@ var mesh_click = function(e){
   .data(mesh_clicks).enter()
   .append("circle").style("fill", "red")
   .attr("cx", function(p,i){
-    console.log('Adding cx',p[0]);
-    return p[0];
+    return p.x;
   })
   .attr("cy", function(p,i){
-    console.log('Adding cy',p[1]);
-    return p[1];
+    return p.y;
   })
   .attr("r", 4); // radius
   
@@ -238,7 +235,7 @@ document.addEventListener( "DOMContentLoaded", function(){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
-      console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
+      //console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
       mesh_depths = fr_metadata.depths;
       return;
     }
