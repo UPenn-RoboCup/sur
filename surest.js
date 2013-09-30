@@ -16,7 +16,7 @@ var homepage="index.html"
 //var homepage="simple.html"
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.24'
+//var rpc_robot     = '192.168.123.25'
 var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555
 var rpc_unreliable_port = 55556
@@ -122,6 +122,7 @@ server.get('/css/:css', load_js.bind({base_dir: 'css'}) );
 * */
 var rest_shm = function (req, res, next) {
 
+// debug rest requests for shm
 console.log(req.params);
 
   // Send the reply to the host
@@ -155,6 +156,7 @@ console.log(req.params);
 * */
 var rest_fsm = function (req, res, next) {
   
+  // debug rest requests for fsm
   console.log(req.params);
   
   // Send the reply to the host
@@ -244,7 +246,7 @@ var zmq_message = function(metadata,payload){
 * UDP robot data receiving
 */
 var udp_message = function(msg,rinfo){
-  //console.log('got im')
+  console.log('got im')
   /* msgpack -> JSON */
   /* the jpeg is right after the messagepacked metadata (concatenated) */
   var meta = mp.unpack(msg)

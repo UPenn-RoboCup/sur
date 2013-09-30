@@ -1,30 +1,42 @@
 // Setup the WebSocket connection and callbacks
-var last_camera_img;
+var last_camera_img, camera_canvas, camera_canvas_ctx;
 
 /* Handle the onload of a new camera_image */
 var camera_handler = function(e){
+  // grab important properties
+  var w = this.width;
+  var h = this.height;
+  var img = this;
+
+  // draw to the canvas
+  camera_canvas.width = w;
+  camera_canvas.width = h;
+  camera_canvas_ctx.drawImage(this, 0, 0);
+
   // Remove the image for memory management reasons
-  /*
   URL.revokeObjectURL(this.src);
   this.src = '';
-  */
 }
 
 /* Handle the page load */
 document.addEventListener( "DOMContentLoaded", function(){
   
   // Configuration
-  var ws_camera_port = 9005; // kinect
-  //var ws_camera_port = 9003; // head camera
+  //var ws_camera_port = 9005; // kinect
+  var ws_camera_port = 9003; // head camera
   
   // Checksum and metadata
   var fr_sz_checksum;
   var fr_metadata;
 
   // setup the canvas element and temporary image
-  var camera_img = new Image();
+  var camera_img  = new Image();
+  camera_canvas = document.createElement('canvas');
+  camera_canvas_ctx = camera_canvas.getContext('2d');
+  // add the canvas
+  camera_container.appendChild( camera_canvas );
   // Add the image to the camera container
-  camera_container.appendChild( camera_img );
+  //camera_container.appendChild( camera_img );
 
   // Connect to the websocket server
   var ws = new WebSocket('ws://' + host + ':' + ws_camera_port);
@@ -60,9 +72,6 @@ document.addEventListener( "DOMContentLoaded", function(){
 
     last_camera_img = e.data;
     requestAnimationFrame( function(){
-      // clear the previous frame
-      URL.revokeObjectURL(camera_img.src);
-      //camera_img.src = '';
       // Put received JPEG data into the image
       camera_img.src = URL.createObjectURL( last_camera_img );
       // Trigger processing once the image is fully loaded

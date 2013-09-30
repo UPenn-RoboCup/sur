@@ -1,3 +1,5 @@
+importScripts('../lib/three.min.js');
+
 var ready    = false;
 var horiz_sz = 480;
 var vert_sz  = 500;
@@ -13,7 +15,9 @@ self.onmessage = function(e) {
 	if (!ready) {
 		ready = true
     factor = (far-near)/255;
-		self.postMessage('initialized');
+    self.postMessage('initialized');
+    //var tmp = new THREE.Vector4()
+    //self.postMessage(tmp);
 		return;
 	}
 	// Array to be put into the WebGL buffer
