@@ -78,7 +78,7 @@ var add_depth_slider = function(){
 
   function brushend() {
     // ajax to set the depths
-    var rpc_url = rest_root+'/m/vcm/kinect/depths'
+    var rpc_url = rest_root+'/m/vcm/'+mesh_in_use+'/depths'
     var vals = brush.extent();
     // perform the post request
     promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
@@ -137,36 +137,56 @@ var add_mesh_buttons = function(){
 }
 
 var get_hokuyo_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
-  console.log(u,v,w,width,height,near,far,hFOV,vFOV);
+  //console.log(u,v,w,width,height,near,far,hFOV,vFOV);
   // radians per pixel
   var h_rpp = hFOV / width;
   var v_rpp = vFOV / height;
   // angle in radians of the selected pixel
-  var h_angle   = h_rpp * (u-width/2);
-  var v_angle   = v_rpp * (height/2-v);
+  var h_angle = h_rpp * (u-width/2);
+  var v_angle = v_rpp * (height/2-v);
   // Convert w of 0-255 to actual meters value
   var factor = (far-near)/255;
   var r = factor*w+near;
-  
 
+  // make the local vector
+  var point = new THREE.Vector4(
+    r*Math.cos(h_angle),
+    r*Math.sin(h_angle),
+    0,
+    0
+  );
 
-
-  // find the x, y, z
-  var x = r * Math.cos(v_angle) * Math.cos(h_angle);
-  var y = r * Math.cos(v_angle) * Math.sin(h_angle);
-  var z = r * Math.sin(v_angle);
-
+  // depth to world coordinates
   if(mesh_in_use=='head_lidar'){
-    z = z + neck_height;
+    // adjust the local vector
+    point.z = neck_off_axis;
+    // make the transform to global
+    var local_to_global = new THREE.Matrix4();
+    local_to_global.makeRotationY( v_angle );
+    // apply transform so that local is now global
+    point.applyMatrix4(local_to_global);
+    // add the neck height offset from the torso
+    point.z = point.z + neck_height;
   } else {
-    x = x + chest_depth;
-    z = z + chest_height;
+    r += chest_off_axis;
+    // find the x, y, z
+    /*
+    var x = r * Math.cos(v_angle) * Math.cos(h_angle) + chest_depth;
+    var y = r * Math.cos(v_angle) * Math.sin(h_angle) + chest_height;
+    var z = r * Math.sin(v_angle);
+    */
+    // make the transform to global
+    var local_to_global = new THREE.Matrix4();
+    local_to_global.makeRotationY( v_angle );
+    // apply transform so that local is now global
+    point.applyMatrix4(local_to_global);
+    // add the chest offset from the torso
+    point.x = point.x + chest_depth;
+    point.z = point.z + chest_height;
   }
 
-  console.log('hokuyo',x,y,z);
-
-  // return the vector
-  return new THREE.Vector3( x, y, z );
+  // return the global point vector
+  return point;
 }
 
 var get_kinect_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
@@ -221,7 +241,7 @@ var mesh_click = function(e){
       return;
   }
   
-  //console.log('World: ',point);
+  console.log('World: ',point);
   
   // save the click
   mesh_clicks.push( new THREE.Vector3(u,v,w) );
