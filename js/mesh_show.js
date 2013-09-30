@@ -1,6 +1,7 @@
 // Setup the WebSocket connection and callbacks
 // Form the mesh image layer
 var last_mesh_img, mesh_ctx, mesh_svg, mesh_clicks, mesh_points, mesh_depths;
+var mesh_req_url = rest_root+'/m/vcm/chest_lidar/net';
 
 var add_depth_slider = function(){
 
@@ -84,11 +85,13 @@ var add_mesh_buttons = function(){
 
   // request a new mesh
   request_btn.addEventListener('click', function() {
-    //var rpc_url = rest_root+'/m/vcm/chest_lidar/net'
-    var rpc_url = rest_root+'/m/vcm/kinect/net_depth'
+
+    // if testing with the kinect
+    //mesh_req_url = rest_root+'/m/vcm/kinect/net_depth'
+
     var vals = [1,1,90];
     // perform the post request
-    promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
+    promise.post( mesh_req_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
         if(error){ return; }
     });
   }, false);
@@ -96,8 +99,10 @@ var add_mesh_buttons = function(){
   // switch the type of mesh to request
   switch_btn.addEventListener('click', function() {
     if(switch_btn.textContent=='Head'){
+      mesh_req_url = rest_root+'/m/vcm/head_lidar/net';
       switch_btn.textContent = "Chest";
     } else {
+      mesh_req_url = rest_root+'/m/vcm/chest_lidar/net';
       switch_btn.textContent = "Head";
     }
   }, false);
@@ -189,8 +194,44 @@ var mesh_handler = function(e){
   var w = this.width;
   var h = this.height;
   var img = this;
-  mesh_ctx.drawImage(this, 0, 0);
-  
+
+  // Rotate if the chest...
+  if(this.alt=='chest'){
+    var half_w = w/2;
+    var half_h = h/2;
+    var diff   = (h-w)/2;
+    mesh_ctx.save();
+    mesh_ctx.translate(half_w, half_h);
+    mesh_ctx.rotate(Math.PI/2);
+    // if the image is not square, 
+    // add half the difference of the smaller to the larger one
+    half_h+=diff;
+    half_w+=diff;
+    mesh_ctx.drawImage(this, -half_w, -half_h);
+    mesh_ctx.restore();
+  } else{
+    mesh_ctx.drawImage(this, 0, 0);
+  }
+
+  // TODO: recolor to something that is not grey
+/*
+  var imageData = context.getImageData(x, y, imageObj.width, imageObj.height);
+  var data = imageData.data;
+
+  for(var i = 0; i < data.length; i += 4) {
+    var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+    // red
+    data[i] = brightness;
+    // green
+    data[i + 1] = brightness;
+    // blue
+    data[i + 2] = brightness;
+  }
+
+  // overwrite original image
+  context.putImageData(imageData, x, y);
+*/
+
   // Remove the image for memory management reasons
   URL.revokeObjectURL(this.src);
   this.src = '';
@@ -207,7 +248,10 @@ document.addEventListener( "DOMContentLoaded", function(){
   mesh_container.addEventListener("click", mesh_click, false);
   
   // Websocket Configuration
-  var mesh_port = 9004; // kinect
+  //var mesh_port = 9004; // kinect
+  var mesh_port = 9001; // kinect
+  
+  // checksum & metadata
   var fr_sz_checksum, fr_metadata;
 
   // setup the canvas element
@@ -277,6 +321,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     requestAnimationFrame( function(){
       // Put received JPEG data into the image
       mesh_img.src = URL.createObjectURL( last_mesh_img );
+      mesh_img.alt = fr_metadata.name;
       // Trigger processing once the image is fully loaded
       mesh_img.onload = mesh_handler;
     }); //animframe

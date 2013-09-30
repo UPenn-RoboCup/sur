@@ -15,6 +15,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Configuration
   var ws_camera_port = 9005; // kinect
+  //var ws_camera_port = 9003; // head camera
   
   // Checksum and metadata
   var fr_sz_checksum;

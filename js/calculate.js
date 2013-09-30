@@ -30,7 +30,7 @@ var calculate_wheel = function(points){
     pitch_diff.subVectors(top,center);
     var pitch = Math.atan2( pitch_diff.x, pitch_diff.z);
 
-    console.log('Found wheel',center,handleyaw,handlepitch,radius);
+    console.log('Found wheel',center,yaw,pitch,radius);
     //wheel = [center handleyaw handlepitch radius];
     //CONTROL.send_control_packet('GameFSM',MODELS.ooi,'hcm','wheel','model', wheel );
 }

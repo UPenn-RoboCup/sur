@@ -47,8 +47,8 @@ body {
   position: absolute;
   left:  1040px;
   top:      0px;
-  width:  400px;
-  height: 400px;
+  width:  500px;
+  height: 500px;
   background-color: #880;
 }
 
@@ -61,7 +61,7 @@ body {
 #selection_container {
   position: absolute;
   left:  1040px;
-  top:    400px;
-  width:  400px;
+  top:    500px;
+  width:  500px;
   height: 320px;
 }
