@@ -7,7 +7,7 @@ body {
 }
 
 #mesh_select {
-  height: 50px;
+  height: 100px;
 }
 
 #buttons {
@@ -16,30 +16,39 @@ body {
   bottom: 0px;
 }
 
+#slam_container {
+  position: absolute;
+  left:     0px;
+  top:      0px;
+  width:  400px;
+  height: 400px;
+  background-color: #080;
+}
+
 #camera_container {
   position: absolute;
-  left: 25%;
-  top: 0px;
-  width: 50%;
-  height: 50%;
+  left:   400px;
+  top:      0px;
+  width:  640px;
+  height: 360px;
   background-color: #800;
 }
 
 #three_container {
   position: absolute;
-  left: 25%;
-  bottom: 0px;
-  width: 50%;
-  height: 50%;
+  left:   400px;
+  top:    360px;
+  width:  640px;
+  height: 360px;
   background-color: #008;
 }
 
 #mesh_container {
   position: absolute;
-  right: 0%;
-  top: 30%;
-  width: 25%;
-  height: 40%;
+  left:  1040px;
+  top:      0px;
+  width:  400px;
+  height: 400px;
   background-color: #880;
 }
 
@@ -49,19 +58,10 @@ body {
   left: 0px;
 }
 
-#tweak_container {
+#selection_container {
   position: absolute;
-  right: 0%;
-  bottom: 0%;
-  width: 25%;
-  height: 30%;
-}
-
-#slam_container {
-  position: absolute;
-  left: 0%;
-  top: 30%;
-  width: 25%;
-  height: 40%;
-  background-color: #080;
+  left:  1040px;
+  top:    400px;
+  width:  400px;
+  height: 320px;
 }

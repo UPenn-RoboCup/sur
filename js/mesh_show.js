@@ -80,6 +80,7 @@ var add_depth_slider = function(){
 var add_mesh_buttons = function(){
   var request_btn = document.getElementById('request_mesh_btn');
   var switch_btn  = document.getElementById('switch_mesh_btn');
+  var clear_btn   = document.getElementById('clear_mesh_btn');
 
   // request a new mesh
   request_btn.addEventListener('click', function() {
@@ -99,6 +100,13 @@ var add_mesh_buttons = function(){
     } else {
       switch_btn.textContent = "Head";
     }
+  }, false);
+
+  // Clear the points on the mesh
+  clear_btn.addEventListener('click', function() {
+    mesh_clicks = [];
+    mesh_svg.selectAll("circle")
+    .data(mesh_clicks).exit().remove()
   }, false);
 
 }
@@ -140,6 +148,10 @@ var mesh_click = function(e){
   var point = get_kinect_xyz(u,v,w,mesh_depths[0],mesh_depths[1]);
   //console.log('World: ',point);
   mesh_points.push( point );
+
+  if(mesh_points.length>=3){
+    calculate_wheel(mesh_points);
+  }
   
   // the svg overlay has the circles for where we clicked
   var click_circles = mesh_svg.selectAll("circle")

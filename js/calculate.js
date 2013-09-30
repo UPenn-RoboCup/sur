@@ -1,12 +1,13 @@
-// Find the wheel paramters based on three clicked points
+// Find the wheel parameters based on three clicked points
 var calculate_wheel = function(points){
     var left  = points[0];
     var right = points[1];
     var top   = points[2];
 
     // Find the center of the wheel
-    var center = (left+right)/2;
-    if(center[0] > 1 || center[0] < 0.10){
+    var center = new THREE.Vector3();
+    center.addVectors( left, right ).divideScalar(2);
+    if(center.x > 1 || center.x < 0.10){
       // x distance in meters
       alert('Handle is too far or too close!');
       console.log(center);
@@ -14,24 +15,60 @@ var calculate_wheel = function(points){
     }
 
     // Find the radius of the wheel
-    var handleradius = norm(leftrelpos-rightrelpos)/2;
-    if handleradius>1 || handleradius<0.10
-        // radius in meters
-        disp('Radius is too big or too small!');
-        disp(handleradius);
+    var diff = new THREE.Vector3();
+    diff.subVectors( left, right );
+    var radius = diff.length()/2;
+    if (radius>1 || radius<0.10){
+      // radius in meters
+        console.log('Radius is too big or too small!',radius);
         return;
-    end
+    }
 
-        handleyaw = atan2(...
-            leftrelpos(2)-rightrelpos(2), ...
-            leftrelpos(1)-rightrelpos(1)) ...
-            - pi/2;
-        % TODO: yaw checks
+    // find the yaw/pitch of the wheel
+    var yaw   = Math.atan2( diff.y, diff.x) - Math.PI/2;
+    var pitch_diff = new THREE.Vector3();
+    pitch_diff.subVectors(top,center);
+    var pitch = Math.atan2( pitch_diff.x, pitch_diff.z);
 
-        handlepitch = atan2( ...
-          toprelpos(1)-handlepos(1),...
-            toprelpos(3)-handlepos(3) );
-
+    console.log('Found wheel',center,handleyaw,handlepitch,radius);
+    //wheel = [center handleyaw handlepitch radius];
+    //CONTROL.send_control_packet('GameFSM',MODELS.ooi,'hcm','wheel','model', wheel );
 }
-        wheel = [handlepos handleyaw handlepitch handleradius];
-        CONTROL.send_control_packet('GameFSM',MODELS.ooi,'hcm','wheel','model', wheel );
+
+// Find the handle parameters based on three clicked points
+var calculate_handle = function(points){
+    var knob     = points[0];
+    var endpoint = points[1];
+    var diff = new THREE.Vector3();
+    diff.subVectors( endpoint, knob );
+
+    // Find the center of the handle
+    var center = new THREE.Vector3();
+    center.addVectors( knob, endpoint ).divideScalar(2);
+    if(center.x > .5 || center.x < 0.10){
+      // x distance in meters
+      alert('Handle is too far or too close!');
+      console.log(center);
+      return;
+    }
+
+    // Find the length of the handle
+    var diff = new THREE.Vector3();
+    diff.subVectors( endpoint, knob );
+    var length = diff.length();
+    if (length>1 || length<0.10){
+      // radius in meters
+      console.log('Length is too big or too small!',length);
+      return;
+    }
+
+    // find the yaw/pitch of the wheel
+    var yaw   = Math.atan2( diff.y, diff.x);
+    var pitch_diff = new THREE.Vector3();
+    pitch_diff.subVectors(top,center);
+    var pitch = Math.atan2( pitch_diff.x, pitch_diff.z);
+
+    console.log('Found handle',center,yaw,pitch,length);
+    //handle = [grip_pos handle_yaw handle_roll handle_length];
+    //CONTROL.send_control_packet('GameFSM',MODELS.ooi,'hcm','door','handle',handle);
+}
