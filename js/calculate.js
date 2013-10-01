@@ -9,8 +9,7 @@ var calculate_wheel = function(points){
     center.addVectors( left, right ).divideScalar(2);
     if(center.x > 1 || center.x < 0.10){
       // x distance in meters
-      alert('Handle is too far or too close!');
-      console.log(center);
+      console.log('Handle is too far or too close!',center);
       return;
     }
 
@@ -30,8 +29,7 @@ var calculate_wheel = function(points){
     pitch_diff.subVectors(top,center);
     var pitch = Math.atan2( pitch_diff.x, pitch_diff.z);
 
-    console.log('Found wheel',center,yaw,pitch,radius);
-    //wheel = [center handleyaw handlepitch radius];
+    return [center.x, center.y, center.z, yaw, pitch, radius];
     //CONTROL.send_control_packet('GameFSM',MODELS.ooi,'hcm','wheel','model', wheel );
 }
 
@@ -47,8 +45,7 @@ var calculate_handle = function(points){
     center.addVectors( knob, endpoint ).divideScalar(2);
     if(center.x > .5 || center.x < 0.10){
       // x distance in meters
-      alert('Handle is too far or too close!');
-      console.log(center);
+      console.log('Handle is too far or too close!',center);
       return;
     }
 
@@ -67,6 +64,8 @@ var calculate_handle = function(points){
     var pitch_diff = new THREE.Vector3();
     pitch_diff.subVectors(top,center);
     var pitch = Math.atan2( pitch_diff.x, pitch_diff.z);
+
+    var wheel = [ ]
 
     console.log('Found handle',center,yaw,pitch,length);
     //handle = [grip_pos handle_yaw handle_roll handle_length];

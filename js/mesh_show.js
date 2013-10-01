@@ -18,6 +18,8 @@ var add_mesh_buttons = function(){
   var request_btn = document.getElementById('request_mesh_btn');
   var switch_btn  = document.getElementById('switch_mesh_btn');
   var clear_btn   = document.getElementById('clear_mesh_btn');
+  var grabwheel_btn = document.getElementById('grabwheel_btn');
+  var grabtool_btn  = document.getElementById('grabtool_btn');
 
   // request a new mesh
   request_btn.addEventListener('click', function() {
@@ -68,6 +70,19 @@ var add_mesh_buttons = function(){
     .data(mesh_clicks).exit().remove()
   }, false);
 
+  // Clear the points on the mesh
+  grabwheel_btn.addEventListener('click', function() {
+    var wheel = calculate_wheel(mesh_points);
+    console.log('Wheel',wheel);
+    if(wheel===undefined){return;}
+
+    var wheel_url = rest_root+'/m/hcm/wheel/model'
+    // perform the post request
+    promise.post( wheel_url, {val:JSON.stringify(wheel)} ).then(function(error, text, xhr) {
+        if(error){ return; }
+    });
+
+  }, false);
 }
 
 var get_hokuyo_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
@@ -185,8 +200,6 @@ var mesh_click = function(e){
   mesh_clicks.push( new THREE.Vector3(u,v,w) );
   mesh_points.push( point );
 
-  //if(mesh_points.length>=3){calculate_wheel(mesh_points);}
-
   // the svg overlay has the circles for where we clicked
   var click_circles = mesh_svg.selectAll("circle")
   .data(mesh_clicks).enter()
@@ -202,28 +215,6 @@ var mesh_click = function(e){
   // attributes for new clicks
   // http://mbostock.github.io/d3/tutorial/circle.html
 
-}
-
-var draw_jet_map = function(raw_ctx){
-  // clear the context
-  //console.log(mesh_ctx);
-  mesh_ctx.clearRect( 0 , 0 , mesh_ctx.canvas.width , mesh_ctx.canvas.height );
-
-  // TODO: recolor to something that is not grey
-  var rawDataImage = raw_ctx.getImageData(0, 0, mesh_width, mesh_height);
-  var data = rawDataImage.data;
-  for(var i = 0; i < data.length; i += 4) {
-    // http://www.metastine.com/?p=7
-    var fourValue = 4-(4/255 * data[i]);
-    // red
-    data[i] = 255*Math.min(fourValue - 1.5, -fourValue + 4.5);
-    // green
-    data[i+1] = 255*Math.min(fourValue - 0.5, -fourValue + 3.5);
-    // blue
-    data[i+2] = 255*Math.min(fourValue + 0.5, -fourValue + 2.5);
-  }
-  // overwrite original image
-  mesh_ctx.putImageData(rawDataImage, 0, 0);
 }
 
 /* Handle the onload of the mesh_image */
@@ -406,6 +397,29 @@ document.addEventListener( "DOMContentLoaded", function(){
 
 }, false );
 
+var draw_jet_map = function(raw_ctx){
+  // clear the context
+  //console.log(mesh_ctx);
+  var w = mesh_ctx.canvas.width;
+  var h = mesh_ctx.canvas.height;
+  mesh_ctx.clearRect( 0 , 0 , w , h );
+
+  // TODO: recolor to something that is not grey
+  var rawDataImage = raw_ctx.getImageData(0, 0, w, h);
+  var data = rawDataImage.data;
+  for(var i = 0; i < data.length; i += 4) {
+    // http://www.metastine.com/?p=7
+    var fourValue = 4-(4/255 * data[i]);
+    // red
+    data[i] = 255*Math.min(fourValue - 1.5, -fourValue + 4.5);
+    // green
+    data[i+1] = 255*Math.min(fourValue - 0.5, -fourValue + 3.5);
+    // blue
+    data[i+2] = 255*Math.min(fourValue + 0.5, -fourValue + 2.5);
+  }
+  // overwrite original image
+  mesh_ctx.putImageData(rawDataImage, 0, 0);
+}
 
 var add_depth_slider = function(){
 

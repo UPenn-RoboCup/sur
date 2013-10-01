@@ -6,6 +6,10 @@ body {
   float: left;
 }
 
+#mesh_clicks{
+  clear: both;
+}
+
 #mesh_select {
   height: 100px;
 }
