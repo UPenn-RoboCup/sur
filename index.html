@@ -27,10 +27,23 @@
   <!-- SUR data JS -->
   <script src="js/camera_show.js"></script>
   <script src="js/mesh_show.js"></script>
+  <script src="js/three_scene.js"></script>
  
 </head>
 
 <body>
+
+<!--https://github.com/necolas/css3-github-buttons-->
+  <div id="fsm_container">
+  
+  <div class="button-group">
+  <li><span class='label rss icon'>Arm:</span></li>
+  <a href="#" class="button fsm_selection" id="arm_fsm_init_btn">Init</a>
+  <a href="#" class="button fsm_selection" id="arm_fsm_reset_btn">Reset</a>
+  <a href="#" class="button fsm_selection" id="arm_fsm_ready_btn">Ready</a>
+  </div>
+  </div>
+
   <div id="three_container"></div>
   <div id="camera_container"></div>
   <div id="mesh_container"></div>

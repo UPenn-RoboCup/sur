@@ -29,6 +29,14 @@ body {
   background-color: #080;
 }
 
+#fsm_container {
+  position: absolute;
+  left:     0px;
+  top:    400px;
+  width:  400px;
+  height: 720px;
+}
+
 #camera_container {
   position: absolute;
   left:   400px;

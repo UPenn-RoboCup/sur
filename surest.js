@@ -16,8 +16,8 @@ var homepage="index.html"
 //var homepage="simple.html"
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.25'
-var rpc_robot     = 'localhost'
+var rpc_robot     = '192.168.123.25'
+//var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555
 var rpc_unreliable_port = 55556
 
@@ -27,47 +27,44 @@ var rpc_unreliable_port = 55556
 */
 var bridges = [];
 bridges.push({
-	name : 'LIDAR mesh',
+	name : 'mesh', // reliable name
 	ws : 9001,
 	udp: 33344,
+  // reliable request forwards same place
+  req: 33345,
 	clients : []
 });
 
 bridges.push({
-  name : 'Reliable Mesh',
-  ws : 9002,
-  req: 33345,
-  clients : []
-});
-
-bridges.push({
-  name : 'Head Camera',
+  name : 'head_camera',
   ws : 9003,
   udp: 33333,
   clients : []
 });
 
 bridges.push({
-	name : 'Kinect rgbd depth',
+	name : 'rgbd_depth',
 	ws : 9004,
 	udp: 33346,
 	clients : []
 });
 
 bridges.push({
-  name : 'Kinect rgbd color',
+  name : 'rgbd_color',
   ws : 9005,
   udp: 33347,
   clients : []
 });
 
 bridges.push({
-	name : 'Spacemouse',
+	name : 'spacemouse',
 	ws : 9006,
 	sub: 'spacemouse',
 	clients : []
 });
 
+// rest look up table for the objects
+var reliable_lookup = {}
 
 /* Begin the REST HTTP server */
 var server = restify.createServer({
@@ -162,11 +159,11 @@ var rest_fsm = function (req, res, next) {
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
-    var ret = mp.unpack(data)
+    var ret = mp.unpack(data);
     if(ret!=null){
-      res.json( ret )
+      res.json( ret );
     } else {
-      res.send()
+      res.send();
     }
   }
   zmq_req_skt.once('message', reply_handler);
@@ -175,6 +172,35 @@ var rest_fsm = function (req, res, next) {
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
   zmq_req_skt.send( mp.pack(req.params) );
+  
+  // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
+  return next();
+}
+
+/* Reliable large data
+* reliable_mesh:send('')
+* */
+var rest_reliable = function (req, res, next) {
+  
+  // debug rest requests for fsm
+  console.log('reliable',req.params);
+
+  // grab the bridge
+  var my_bridge = reliable_lookup[req.params.reliable];
+  //console.log(my_bridge)
+  
+  // Send the reply to the host
+  var reply_handler = function(metadata,payload){
+    // TODO: Add any timestamp information or anything?
+    var meta = mp.unpack(metadata);
+    // TODO: Not sure if safe to use my_bridge
+    bridge_send_ws(my_bridge,meta,payload);
+    res.send();
+  }
+  zmq_req_skt.once('message', reply_handler);
+  
+  // Send over the ZMQ REQ/REP
+  my_bridge.requester.send( mp.pack(req.params) );
   
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
   return next();
@@ -291,6 +317,8 @@ for( var w=0; w<bridges.length; w++) {
       zmq_req_skt.connect('tcp://'+rpc_robot+':'+b.req);
       zmq_req_skt.on('message', zmq_message.bind({id:w}) );
       console.log('\tRequester Bridge',b.req);
+      b.requester = zmq_req_skt;
+      reliable_lookup[b.name]=b;
     }
 
 	} //ws check
@@ -304,6 +332,8 @@ server.post('/m/:shm/:segment/:key',rest_shm);
 // state machines
 server.get('/s/:fsm', rest_fsm);
 server.post('/s/:fsm',rest_fsm);
+// Reliable large data
+server.post('/r/:reliable',rest_reliable);
 
 /* Connect to the RPC server */
 var zmq_req_skt = zmq.socket('req');

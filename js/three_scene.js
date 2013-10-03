@@ -2,7 +2,7 @@
 var scene, renderer, camera, stats, controls;
 var CANVAS_WIDTH, CANVAS_HEIGHT;
 document.addEventListener( "DOMContentLoaded", function(){
-  var container = document.getElementById( 'scene_container' );
+  var container = document.getElementById( 'three_container' );
   CANVAS_WIDTH = container.clientWidth;
   CANVAS_HEIGHT = container.clientHeight;
   if(container===undefined){return;}
@@ -63,17 +63,20 @@ var radius = 1,
     segments = 16,
     rings = 16;
 
+var pl_width = 1, pl_height = 1;
+
 // create a new mesh with
 // sphere geometry - we will cover
 // the sphereMaterial next!
 
 var sphere = new THREE.Mesh(
-
+new THREE.PlaneGeometry(pl_width, pl_height),
+/*
   new THREE.SphereGeometry(
     radius,
     segments,
     rings),
-
+*/
   sphereMaterial);
 scene.add(sphere);
 

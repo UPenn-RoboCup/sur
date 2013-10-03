@@ -75,14 +75,13 @@ var add_mesh_buttons = function(){
     var wheel = calculate_wheel(mesh_points);
     console.log('Wheel',wheel);
     if(wheel===undefined){return;}
-
     var wheel_url = rest_root+'/m/hcm/wheel/model'
     // perform the post request
     promise.post( wheel_url, {val:JSON.stringify(wheel)} ).then(function(error, text, xhr) {
         if(error){ return; }
     });
-
   }, false);
+
 }
 
 var get_hokuyo_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
@@ -402,7 +401,7 @@ var draw_jet_map = function(raw_ctx){
   //console.log(mesh_ctx);
   var w = mesh_ctx.canvas.width;
   var h = mesh_ctx.canvas.height;
-  mesh_ctx.clearRect( 0 , 0 , w , h );
+  mesh_ctx.clearRect( 0 , 0 , 500 , 500 );
 
   // TODO: recolor to something that is not grey
   var rawDataImage = raw_ctx.getImageData(0, 0, w, h);
