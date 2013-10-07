@@ -132,7 +132,8 @@ foot_steps = []
     var midex = 320*(240/2)+(320/2);
     console.log('middle: '+positions[midex]+','+positions[midex+1]+','+positions[midex+2]);
     */
-    //update_particles( positions );
+    update_particles( positions );
+    render();
   }; //onmessage
   mesh_worker.postMessage('Start!');
 

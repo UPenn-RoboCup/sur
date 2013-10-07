@@ -32,13 +32,14 @@ self.onmessage = function(e) {
     for (var j = 0; j<height; j++ ) {
       // Compute the xyz
       var p = get_hokuyo_chest_xyz(i,j,pixels[pixel_idx],width,height,near,far,hFOV,vFOV);
+      // put into mm
       if(p!==undefined){
         // THREE x is our negative y (TODO: have in util)
         // THREE y is our x (TODO: have in util)
         // THREE z is our z (TODO: have in util)
-        positions[particle_idx]   = -p.y;
-        positions[particle_idx+1] = p.x;
-        positions[particle_idx+2] = p.z;
+        positions[particle_idx]   = -p.y * 1000;
+        positions[particle_idx+1] = p.x  * 1000;
+        positions[particle_idx+2] = p.z  * 1000;
       }
       // Increment the pixel idx for the next mesh pixel
       pixel_idx += 4;
