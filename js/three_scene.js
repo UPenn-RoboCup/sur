@@ -126,13 +126,14 @@ foot_steps = []
     var positions = new Float32Array(e.data);
 
     // debug
-    console.log('processed mesh',positions);
-    console.log(e)
+    //console.log('processed mesh',positions);
+    //console.log(e)
     /*
     var midex = 320*(240/2)+(320/2);
     console.log('middle: '+positions[midex]+','+positions[midex+1]+','+positions[midex+2]);
     */
     update_particles( positions );
+    // render the particle system change
     render();
   }; //onmessage
   mesh_worker.postMessage('Start!');
@@ -265,8 +266,8 @@ var make_particle_system = function(){
   }
 
   geometry.computeBoundingSphere();
-  // default size: 15
-  var material = new THREE.ParticleBasicMaterial( { size: .002, vertexColors: true } ); 
+  // default size: 1 cm
+  var material = new THREE.ParticleBasicMaterial( { size: 10, vertexColors: true } );
 
   particleSystem = new THREE.ParticleSystem( geometry, material );
   scene.add( particleSystem );

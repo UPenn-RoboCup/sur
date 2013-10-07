@@ -37,9 +37,14 @@ self.onmessage = function(e) {
         // THREE x is our negative y (TODO: have in util)
         // THREE y is our x (TODO: have in util)
         // THREE z is our z (TODO: have in util)
-        positions[particle_idx]   = -p.y * 1000;
-        positions[particle_idx+1] = p.x  * 1000;
-        positions[particle_idx+2] = p.z  * 1000;
+        // This is transform makes NO sense right now...
+        positions[particle_idx]   = -p.z * 1000;
+        positions[particle_idx+1] =  p.x * 1000;
+        positions[particle_idx+2] =  p.y * 1000 + 1000;
+      } else {
+        positions[particle_idx]   = 0;
+        positions[particle_idx+1] = 0;
+        positions[particle_idx+2] = 0;
       }
       // Increment the pixel idx for the next mesh pixel
       pixel_idx += 4;
