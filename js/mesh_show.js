@@ -61,6 +61,9 @@ var add_mesh_buttons = function(){
     mesh_clicks = [];
     mesh_svg.selectAll("circle")
     .data(mesh_clicks).exit().remove()
+    // remove the coord info
+    d3.select("#mesh_clicks").selectAll("p")
+    .data(mesh_clicks).exit().remove()
   }, false);
 
   // Clear the points on the mesh
@@ -68,6 +71,9 @@ var add_mesh_buttons = function(){
     mesh_points = [];
     mesh_clicks = [];
     mesh_svg.selectAll("circle")
+    .data(mesh_clicks).exit().remove()
+    // remove the coord info
+    d3.select("#mesh_clicks").selectAll("p")
     .data(mesh_clicks).exit().remove()
   }, false);
 
@@ -207,6 +213,16 @@ var mesh_click = function(e){
   // save the click
   mesh_clicks.push( new THREE.Vector3(u,v,w) );
   mesh_points.push( point );
+
+  // Log all points in our debug zone
+  // http://alignedleft.com/tutorials/d3/using-your-data
+  d3.select("#mesh_clicks").selectAll("p")
+    .data(mesh_points)
+    .enter()
+    .append("p")
+    .text(function(d) {
+      return '('+d.x+','+d.y+','+d.z+')';
+    });
 
   // the svg overlay has the circles for where we clicked
   var click_circles = mesh_svg.selectAll("circle")

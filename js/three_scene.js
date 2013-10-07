@@ -120,8 +120,12 @@ foot_steps = []
       console.log('Using WebWorker '+ww_script);
       return;
     }
+    // TODO: Is this expensive, or just a cheap view change?
     var positions = new Float32Array(e.data);
-    console.log('hello',e);
+
+    // debug
+    console.log('processed mesh',positions);
+    console.log(e)
     /*
     var midex = 320*(240/2)+(320/2);
     console.log('middle: '+positions[midex]+','+positions[midex+1]+','+positions[midex+2]);
