@@ -12,12 +12,12 @@ var restify = require('restify');
 var dgram   = require("dgram");
 var _       = require('underscore');
 
-var homepage="index.html"
 //var homepage="simple.html"
+var homepage="index.html"
 
 /* Remote Procedure Call Configuration */
-var rpc_robot     = '192.168.123.25'
-//var rpc_robot     = 'localhost'
+//var rpc_robot     = '192.168.123.25'
+var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555
 var rpc_unreliable_port = 55556
 
@@ -102,7 +102,7 @@ server.get('/lib/:js', load_js.bind({base_dir: 'lib'}) );
 server.get('/js/:js', load_js.bind({base_dir: 'js'}) );
 
 // CSS stylesheet
-var load_js = function (req, res, next) {
+var load_css = function (req, res, next) {
   //console.log('library',req.params.library)
   var body = fs.readFileSync(this.base_dir+'/'+req.params.css,{encoding:'utf8'});
   res.writeHead(200, {
@@ -112,7 +112,7 @@ var load_js = function (req, res, next) {
   res.write(body);
   res.end();
 };
-server.get('/css/:css', load_js.bind({base_dir: 'css'}) );
+server.get('/css/:css', load_css.bind({base_dir: 'css'}) );
 
 /* Shared memory management: [memory].get_[segment]_[key]()
 * vcm.set_head_camera_t(val)

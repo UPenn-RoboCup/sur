@@ -34,7 +34,7 @@ body {
   left:     0px;
   top:    400px;
   width:  400px;
-  height: 720px;
+  height: 320px;
 }
 
 #camera_container {
@@ -75,5 +75,5 @@ body {
   left:  1040px;
   top:    500px;
   width:  500px;
-  height: 320px;
+  height: 220px;
 }
