@@ -14,6 +14,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   camera = new THREE.PerspectiveCamera( 60, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
   // add the camera to the scene
   camera.position.z = 500;
+  camera.position.y = -500;
 
   // add controls
   controls = new THREE.OrbitControls( camera, container );
@@ -46,12 +47,16 @@ var sphereMaterial =
     {
       color: 0xFF0000
     });
+var wireMaterial = new THREE.MeshBasicMaterial({
+  wireframe: true,
+  color: 'blue'
+})
 // set up the sphere vars
 var radius = 100,
     segments = 16,
     rings = 16;
 
-var pl_width = 1, pl_height = 1;
+var pl_width = 5000, pl_height = 5000, pl_seg = 100;
 
 // create a new mesh with
 // sphere geometry - we will cover
@@ -66,9 +71,11 @@ var sphere = new THREE.Mesh(
 scene.add(sphere);
 
 var plane = new THREE.Mesh(
-new THREE.PlaneGeometry(pl_width, pl_height),sphereMaterial);
+new THREE.PlaneGeometry(pl_width, pl_height, pl_seg, pl_seg),wireMaterial);
 plane.material.side = THREE.DoubleSide;
-//scene.add(plane);
+scene.add(plane);
+// move it around in the scene
+//mesh.position = new THREE.Vector3(100, 100, 100)
 
 ///////////////
 ///////////////
