@@ -1,60 +1,48 @@
 importScripts('../lib/three.min.js');
 importScripts('../js/util.js');
 
-var ready    = false;
-var horiz_sz = 480;
-var vert_sz  = 500;
-var hFOV     = 1;
-var vFOV     = 120 * Math.PI/180;
-var h_rpp    = hFOV / horiz_sz;
-var v_rpp    = vFOV / vert_sz;
-var near = .5, far = 2;
-var factor;
+var ready = false;
 
 self.onmessage = function(e) {
   
 	if (!ready) {
 		ready = true
-    factor = (far-near)/255;
     self.postMessage('initialized');
-    //var tmp = new THREE.Vector4()
-    //self.postMessage(tmp);
 		return;
 	}
-	// Array to be put into the WebGL buffer
-  var positions    = new Float32Array( horiz_sz * vert_sz * 3 );
-  // access to the pixels from the JPEG as bytes
-  var pixels       = new Uint8Array(e.data.buf);
-	var pixel_idx    = 0;
-  var position_idx = 0;
 
-	var x,y,z,d,r;
-  for (var i = 0; i<horiz_sz; i++ ) {
-    var pan_angle = h_rpp * (i-horiz_sz/2);
-    for (var j = 0; j<vert_sz; j++ ) {
-      var hok_angle     = v_rpp * (j-vert_sz/2);
-      var hok_factor_z  = Math.sin(hok_angle);
-      var hok_factor_xy = Math.cos(hok_angle);
+  // process the input
+  var pixels = new Uint8Array(e.data.buf);
+  var width  = e.data.res[0];
+  var height = e.data.res[1];
+  var near   = e.data.dep[0];
+  var far    = e.data.dep[1];
+  var hFOV   = e.data.fov[0];
+  var vFOV   = e.data.fov[1];
+
+	// Array to be put into the WebGL buffer
+  var positions    = new Float32Array( width * height * 3 );
+
+  // Access pixel array elements and particle elements
+	var pixel_idx    = 0;
+  var particle_idx = 0;
+
+  // begin the loop
+  for (var i = 0; i<width; i++ ) {
+    for (var j = 0; j<height; j++ ) {
       // Compute the xyz
-      d = pixels[pixel_idx];
-      if (d<255 && d>0){
-        r = d * factor + near;
-  		  x = r * hok_factor_xy * Math.cos(pan_angle);
-  		  y = r * hok_factor_xy * Math.sin(pan_angle);
-        z = r * hok_factor_z;
-        
-        // Like webots, we flip some coordinates
-        positions[position_idx]   = y;
-        positions[position_idx+1] = -z;
-        positions[position_idx+2] = -x;        
-      } else {
-        positions[position_idx]   = -100000; //100m away
-        positions[position_idx+1] = 0;
-        positions[position_idx+2] = 0;
+      var p = get_hokuyo_chest_xyz(i,j,pixels[pixel_idx],width,height,near,far,hFOV,vFOV);
+      if(p!==undefined){
+        // THREE x is our negative y (TODO: have in util)
+        // THREE y is our x (TODO: have in util)
+        // THREE z is our z (TODO: have in util)
+        positions[particle_idx]   = -p.y;
+        positions[particle_idx+1] = p.x;
+        positions[particle_idx+2] = p.z;
       }
       // Increment the pixel idx for the next mesh pixel
       pixel_idx += 4;
-      position_idx += 3;
+      particle_idx += 3;
 		}
 	}
   self.postMessage(positions.buffer,[positions.buffer]);

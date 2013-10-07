@@ -7,13 +7,6 @@ var mesh_in_use = 'chest_lidar';
 var mesh_width, mesh_height, mesh_fov = [];
 var mesh_worker;
 
-// Robot properties for where the LIDARs are
-var chest_depth    = 0.05;
-var chest_height   = 0.09;
-var chest_off_axis = 0.04;
-var neck_height    = 0.30;
-var neck_off_axis  = 0.12; // not sure if correct...
-
 var add_mesh_buttons = function(){
   var request_btn   = document.getElementById('request_mesh_btn');
   var switch_btn    = document.getElementById('switch_mesh_btn');
@@ -93,7 +86,7 @@ var add_mesh_buttons = function(){
   // Check that the 3D environment exists...
   if(mesh_to_three!==undefined){
     three_btn.addEventListener('click', function() {
-      mesh_to_three(chest_mesh_raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov);
+      mesh_to_three(chest_mesh_raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov,mesh_in_use);
     }, false);
   }
 
@@ -119,8 +112,7 @@ var mesh_click = function(e){
     case 'head_lidar':
       var w = head_mesh_raw_ctx.getImageData(u, v, 1, 1).data[0];
       // do not use saturated pixels
-      if(w==0||w==255){return;}
-      point = get_hokuyo_xyz(u,v,w,
+      point = get_hokuyo_head_xyz(u,v,w,
         mesh_width,mesh_height,
         mesh_depths[0],mesh_depths[1],
         mesh_fov[0],mesh_fov[1]
@@ -128,9 +120,9 @@ var mesh_click = function(e){
       break;
     case 'chest_lidar':
       var w = chest_mesh_raw_ctx.getImageData(u, v, 1, 1).data[0];
-      // do not use saturated pixels
-      if(w==0||w==255){return;}
-      point = get_hokuyo_xyz(u,v,w,
+      
+      
+      point = get_hokuyo_chest_xyz(u,v,w,
         mesh_width,mesh_height,
         mesh_depths[0],mesh_depths[1],
         mesh_fov[0],mesh_fov[1]
