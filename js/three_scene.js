@@ -1,7 +1,7 @@
 // Setup the THREE scene
 var scene, renderer, camera, stats, controls;
 // special objects
-var foot_floor;
+var foot_floor, foot_steps, foot_geo, foot_mat;
 var CANVAS_WIDTH, CANVAS_HEIGHT;
 document.addEventListener( "DOMContentLoaded", function(){
   var container = document.getElementById( 'three_container' );
@@ -70,7 +70,7 @@ var sphere = new THREE.Mesh(
     segments,
     rings),
   sphereMaterial);
-scene.add(sphere);
+//scene.add(sphere);
 
 foot_floor = new THREE.Mesh(
 new THREE.PlaneGeometry(pl_width, pl_height, pl_seg, pl_seg),wireMaterial);
@@ -78,6 +78,14 @@ new THREE.PlaneGeometry(pl_width, pl_height, pl_seg, pl_seg),wireMaterial);
 scene.add(foot_floor);
 // move it around in the scene
 //mesh.position = new THREE.Vector3(100, 100, 100)
+
+// Make the footstep queue
+// TODO: Use underscore to remove arbitrary footsteps
+foot_geo = new THREE.CubeGeometry( 50, 100, 10 );
+foot_mat = new THREE.MeshLambertMaterial({
+  color: 0xAAAAAA
+});
+foot_steps = []
 
 ///////////////
 ///////////////
@@ -129,12 +137,11 @@ var select_footstep = function(event){
   var mouse_vector = new THREE.Vector3(
     ( event.offsetX / CANVAS_WIDTH ) * 2 - 1,
     -( event.offsetY / CANVAS_HEIGHT ) * 2 + 1);
-
-  //console.log('Mouse',mouse_vector);
+  //console.log('Mouse',mouse_vector); // need Vector3, not vector2
 
   var projector = new THREE.Projector();
   //console.log('projector',projector)
-  var raycaster = projector.pickingRay(mouse_vector.clone(),camera);
+  var raycaster = projector.pickingRay(mouse_vector,camera);
   //console.log('picking raycaster',raycaster)
 
   // intersect the plane
@@ -143,5 +150,19 @@ var select_footstep = function(event){
   if(intersection.length==0){ return; }
 
   // record the position
-  console.log(intersection[0].point);
+  var placement = intersection[0].point;
+  console.log(placement);
+
+  // make a new footstep
+  var new_footstep = new THREE.Mesh( foot_geo, foot_mat );
+  scene.add(new_footstep)
+
+  console.log(new_footstep)
+  new_footstep.position.copy(placement);
+  foot_steps.push(new_footstep);
+
+  render();
+  
 }
+// for rotation (look for theta)
+//: view-source:mrdoob.github.io/three.js/examples/webgl_interactive_voxelpainter.html
