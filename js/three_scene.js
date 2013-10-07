@@ -2,6 +2,8 @@
 var scene, renderer, camera, stats, controls;
 // special objects
 var foot_floor, foot_steps, foot_geo, foot_mat;
+// particle system
+var particleSystem
 var CANVAS_WIDTH, CANVAS_HEIGHT;
 document.addEventListener( "DOMContentLoaded", function(){
   var container = document.getElementById( 'three_container' );
@@ -134,6 +136,9 @@ foot_steps = []
   }; //onmessage
   mesh_worker.postMessage('Start!');
 
+  // make the particle system
+  make_particle_system();
+
   // Begin animation
   animate();
 
@@ -200,4 +205,68 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
   obj.use = name;
   console.log(obj)
   mesh_worker.postMessage(obj,[buf]);
+}
+
+var update_particles = function( positions ){
+  particleSystem.geometry.attributes.position.array = positions;
+  particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
+}
+
+var make_particle_system = function(){
+  // TODO: Ensure nparticles does not exceed 65000
+  // TODO: Use the index attribute to overcome the limit
+  // as documented in buffer triangles
+  var nparticles = 500*480;
+
+  var geometry = new THREE.BufferGeometry();
+  geometry.attributes = {
+    position: {
+      itemSize: 3,
+      array: new Float32Array( nparticles * 3 )
+    },
+    color: {
+      itemSize: 3,
+      array: new Float32Array( nparticles * 3 )
+    }
+  } // geom attr
+  
+  // default (random) particle positions/colors
+  var positions = geometry.attributes.position.array;
+  var colors = geometry.attributes.color.array;
+  var color = new THREE.Color();
+  var n = 1000, n2 = n / 2; // particles spread in the cube
+  for ( var i = 0; i < positions.length; i += 3 ) {
+
+    // positions
+
+    var x = Math.random() * n - n2;
+    var y = Math.random() * n - n2;
+    var z = Math.random() * n - n2;
+
+    positions[ i ]     = x;
+    positions[ i + 1 ] = y;
+    positions[ i + 2 ] = z;
+
+    // colors
+    
+    var vx = ( x / n ) + 0.5;
+    var vy = ( y / n ) + 0.5;
+    var vz = ( z / n ) + 0.5;
+
+    color.setRGB( vx, vy, vz );
+    
+    color.setRGB( .5, .5, .5 );
+
+    colors[ i ]     = color.r;
+    colors[ i + 1 ] = color.g;
+    colors[ i + 2 ] = color.b;
+
+  }
+
+  geometry.computeBoundingSphere();
+  // default size: 15
+  var material = new THREE.ParticleBasicMaterial( { size: .002, vertexColors: true } ); 
+
+  particleSystem = new THREE.ParticleSystem( geometry, material );
+  scene.add( particleSystem );
 }
