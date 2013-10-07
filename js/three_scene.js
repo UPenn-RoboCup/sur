@@ -106,14 +106,32 @@ foot_steps = []
   }, false );
 
   // add event for picking the location of a click on the plane
-  container.addEventListener( 'mousedown', select_footstep, false );
+  //container.addEventListener( 'mouseup', select_footstep, false );
+  container.addEventListener( 'dblclick', select_footstep, false );
 
   console.log('THREE scene initialized!');
 
+  // Start the webworker
+  var ww_script = "mesh_worker"
+  //var ww_script = "depth_worker"
+  mesh_worker = new Worker("js/"+ww_script+".js");
+  mesh_worker.onmessage = function(e) {
+    if(e.data=='initialized'){
+      console.log('Using WebWorker '+ww_script);
+      return;
+    }
+    var positions = new Float32Array(e.data);
+    console.log('hello',e);
+    /*
+    var midex = 320*(240/2)+(320/2);
+    console.log('middle: '+positions[midex]+','+positions[midex+1]+','+positions[midex+2]);
+    */
+    //update_particles( positions );
+  }; //onmessage
+  mesh_worker.postMessage('Start!');
+
   // Begin animation
   animate();
-
-
 
 }, false );
 
@@ -151,18 +169,27 @@ var select_footstep = function(event){
 
   // record the position
   var placement = intersection[0].point;
-  console.log(placement);
+  //console.log(placement);
 
   // make a new footstep
   var new_footstep = new THREE.Mesh( foot_geo, foot_mat );
   scene.add(new_footstep)
 
-  console.log(new_footstep)
+  //console.log(new_footstep)
   new_footstep.position.copy(placement);
   foot_steps.push(new_footstep);
 
+  // Render the scene now that we have updated the footsteps
   render();
   
 }
 // for rotation (look for theta)
 //: view-source:mrdoob.github.io/three.js/examples/webgl_interactive_voxelpainter.html
+
+var mesh_to_three = function( raw_mesh_ctx, resolution ){
+  var buf = raw_mesh_ctx.getImageData(1, 1, resolution[0], resolution[1]).data.buffer;
+  var obj = {}
+  obj.buf = buf;
+  obj.res = resolution;
+  mesh_worker.postMessage(obj,[buf]);
+}

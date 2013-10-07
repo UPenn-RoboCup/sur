@@ -3,7 +3,7 @@
 var last_mesh_img, mesh_ctx, mesh_svg;
 var head_mesh_raw_ctx, chest_mesh_raw_ctx, kinect_mesh_raw_ctx;
 var mesh_clicks, mesh_points, mesh_depths;
-var mesh_in_use = 'head_lidar';
+var mesh_in_use = 'chest_lidar';
 var mesh_width, mesh_height, mesh_fov = [];
 var mesh_worker;
 
@@ -15,11 +15,12 @@ var neck_height    = 0.30;
 var neck_off_axis  = 0.12; // not sure if correct...
 
 var add_mesh_buttons = function(){
-  var request_btn = document.getElementById('request_mesh_btn');
-  var switch_btn  = document.getElementById('switch_mesh_btn');
-  var clear_btn   = document.getElementById('clear_mesh_btn');
+  var request_btn   = document.getElementById('request_mesh_btn');
+  var switch_btn    = document.getElementById('switch_mesh_btn');
+  var clear_btn     = document.getElementById('clear_mesh_btn');
   var grabwheel_btn = document.getElementById('grabwheel_btn');
   var grabtool_btn  = document.getElementById('grabtool_btn');
+  var three_btn        = document.getElementById('three_btn');
 
   // request a new mesh
   request_btn.addEventListener('click', function() {
@@ -70,7 +71,7 @@ var add_mesh_buttons = function(){
     .data(mesh_clicks).exit().remove()
   }, false);
 
-  // Clear the points on the mesh
+  // Calculate where the wheel is; send to the robot
   grabwheel_btn.addEventListener('click', function() {
     var wheel = calculate_wheel(mesh_points);
     console.log('Wheel',wheel);
@@ -81,6 +82,14 @@ var add_mesh_buttons = function(){
         if(error){ return; }
     });
   }, false);
+
+  // Place into 3D coordinates
+  // Check that the 3D environment exists...
+  if(mesh_to_three!==undefined){
+    three_btn.addEventListener('click', function() {
+      mesh_to_three(chest_mesh_raw_ctx,[mesh_width,mesh_height]);
+    }, false);
+  }
 
 }
 
@@ -375,25 +384,6 @@ document.addEventListener( "DOMContentLoaded", function(){
     }); //animframe
   };
 
-  // Start the webworker
-  var ww_script = "mesh_worker"
-  //var ww_script = "depth_worker"
-  mesh_worker = new Worker("js/"+ww_script+".js");
-  mesh_worker.onmessage = function(e) {
-    if(e.data=='initialized'){
-      console.log('Using WebWorker '+ww_script);
-      return;
-    }
-    var positions = new Float32Array(e.data);
-    console.log('hello',e);
-    /*
-    var midex = 320*(240/2)+(320/2);
-    console.log('middle: '+positions[midex]+','+positions[midex+1]+','+positions[midex+2]);
-    */
-    //update_particles( positions );
-  }; //onmessage
-  mesh_worker.postMessage('Start!');
-
 }, false );
 
 var draw_jet_map = function(raw_ctx){
@@ -422,7 +412,7 @@ var draw_jet_map = function(raw_ctx){
 
 var add_depth_slider = function(){
 
-  var margin = {top: 0, right: 25, bottom: 20, left: 25},
+  var margin = {top: 0, right: 12, bottom: 18, left: 12},
       width = 200 - margin.left - margin.right,
       height = 40 - margin.top - margin.bottom;
 

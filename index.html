@@ -44,27 +44,32 @@
   </div>
   </div>
 
-  <div id="three_container"></div>
-  <div id="camera_container"></div>
-  <div id="mesh_container"></div>
   <div id="slam_container"></div>
-
-  <div class="button-group" id="buttons">
-    <a href="#" class="button big" id="update_btn">Update Dipole</a>
-  </div>
+  <div id="camera_container"></div>
+  <div id="three_container"></div>
+  <div id="mesh_container"></div>
 
   <div id="selection_container">
     <div id="mesh_select">
-      <a href="#" class="button big mesh_selection" id="request_mesh_btn">Mesh</a>
       <div id="bodyheight_slider" class="mesh_selection"></div>
-      <a href="#" class="button small mesh_selection" id="switch_mesh_btn">Head</a>
-      <a href="#" class="button small mesh_selection" id="clear_mesh_btn">Clear</a>
-      <a href="#" class="button small mesh_selection" id="grabwheel_btn">Wheel</a>
-      <a href="#" class="button small mesh_selection" id="grabtool_btn">Tool</a>
+      <div class="button-group" id="mesh_btns">
+        <a href="#" class="button mesh_selection" id="request_mesh_btn">Mesh</a>
+        <a href="#" class="button mesh_selection" id="switch_mesh_btn">Chest</a>
+        <a href="#" class="button mesh_selection" id="clear_mesh_btn">Clear</a>
+        <a href="#" class="button mesh_selection" id="grabwheel_btn">Wheel</a>
+        <a href="#" class="button mesh_selection" id="grabtool_btn">Tool</a>
+        <a href="#" class="button mesh_selection" id="three_btn">3D</a>
+      </div>
+      
       <div id="mesh_clicks">
       You clicked:
       </div>
     </div>
+  </div>
+
+  <!-- Bottom row buttons -->
+  <div class="button-group" id="buttons">
+    <a href="#" class="button big" id="update_btn">Update Dipole</a>
   </div>
 
 </body>
