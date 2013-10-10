@@ -17,8 +17,8 @@ document.addEventListener( "DOMContentLoaded", function(){
   // add the camera
   camera = new THREE.PerspectiveCamera( 60, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
   // add the camera to the scene
-  camera.position.z = 500;
-  camera.position.y = -500;
+  camera.position.z = -500;
+  camera.position.y = bodyHeight*1000;
 
   // add controls
   controls = new THREE.OrbitControls( camera, container );
@@ -30,7 +30,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 
   // add light to the scene
   var dirLight = new THREE.DirectionalLight( 0xffffff );
-  dirLight.position.set( 0, 0, 1000 ).normalize();
+  dirLight.position.set( 0, 0, -1000 ).normalize();
   scene.add( dirLight );
 
   // re-add?
@@ -77,9 +77,12 @@ var sphere = new THREE.Mesh(
 foot_floor = new THREE.Mesh(
 new THREE.PlaneGeometry(pl_width, pl_height, pl_seg, pl_seg),wireMaterial);
 //foot_floor.material.side = THREE.DoubleSide;
+//foot_floor.rotation.set(Math.PI/2, 0,0);
+foot_floor.rotation.x = -Math.PI/2;
 scene.add(foot_floor);
 // move it around in the scene
 //mesh.position = new THREE.Vector3(100, 100, 100)
+// foot_floor.rotation.set(Math.PI/2, 0,0);
 
 // Make the footstep queue
 // TODO: Use underscore to remove arbitrary footsteps
@@ -176,11 +179,12 @@ var select_footstep = function(event){
   // intersect the plane
   var intersection = raycaster.intersectObject( foot_floor );
   // if no intersection
+  //console.log(intersection)
   if(intersection.length==0){ return; }
 
   // record the position
   var placement = intersection[0].point;
-  //console.log(placement);
+  console.log(placement);
 
   // make a new footstep
   var new_footstep = new THREE.Mesh( foot_geo, foot_mat );
@@ -214,6 +218,64 @@ var update_particles = function( positions ){
   particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
 }
 
+// make a new mesh from the number of triangles specified
+var make_mesh = function(ntriangles){
+
+  /////////////////////
+  // Initialize the faces
+  var fgeometry = new THREE.BufferGeometry();
+  // Dynamic, because we will update it (holds buffers)
+  fgeometry.dynamic = true;
+  // Set the attribute buffers
+  fgeometry.attributes = {
+    index: {
+      itemSize: 1,
+      array: new Uint16Array( ntriangles * 3 ),
+      numItems: ntriangles * 3
+    },
+    position: {
+      itemSize: 3,
+      array: new Float32Array( ntriangles * 3 * 3 ),
+      numItems: ntriangles * 3 * 3
+    },
+    normal: {
+      itemSize: 3,
+      array: new Float32Array( ntriangles * 3 * 3 ),
+      numItems: ntriangles * 3 * 3
+    },
+    color: {
+      itemSize: 3,
+      array: new Float32Array( ntriangles * 3 * 3 ),
+      numItems: ntriangles * 3 * 3
+    }
+  }
+  /////////////////////
+
+  /////////////////////
+  // Initialize the indices and offsets for chunks of triangles
+  // This is because you can only index by uint16, so need to overcome this
+  // From the reference: "break geometry into
+  // chunks of 21,845 triangles (3 unique vertices per triangle)
+  // for indices to fit into 16 bit integer number
+  // floor(2^16 / 3) = 21845"
+  var chunkSize = 21845;
+  var indices = fgeometry.attributes.index.array;
+  for ( var i = 0; i < indices.length; i ++ ) {
+    indices[ i ] = i % ( 3 * chunkSize );
+  }
+  var offsets = ntriangles / chunkSize;
+  fgeometry.offsets = [];
+  for ( var i = 0; i < offsets; i ++ ) {
+    var offset = {
+      start: i * chunkSize * 3,
+      index: i * chunkSize * 3,
+      count: Math.min( ntriangles - ( i * chunkSize ), chunkSize ) * 3
+    };
+    fgeometry.offsets.push( offset );
+  }
+  /////////////////////
+}
+
 var make_particle_system = function(){
   // TODO: Ensure nparticles does not exceed 65000
   // TODO: Use the index attribute to overcome the limit
@@ -231,7 +293,8 @@ var make_particle_system = function(){
       array: new Float32Array( nparticles * 3 )
     }
   } // geom attr
-  
+
+/*
   // default (random) particle positions/colors
   var positions = geometry.attributes.position.array;
   var colors = geometry.attributes.color.array;
@@ -264,8 +327,9 @@ var make_particle_system = function(){
     colors[ i + 2 ] = color.b;
 
   }
-
+  // NOTE: This should be upon every particle position update
   geometry.computeBoundingSphere();
+*/
   // default size: 1 cm
   var material = new THREE.ParticleBasicMaterial( { size: 10, vertexColors: true } );
 

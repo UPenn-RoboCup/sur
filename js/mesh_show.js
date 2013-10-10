@@ -82,14 +82,6 @@ var add_mesh_buttons = function(){
     });
   }, false);
 
-  // Place into 3D coordinates
-  // Check that the 3D environment exists...
-  if(mesh_to_three!==undefined){
-    three_btn.addEventListener('click', function() {
-      mesh_to_three(chest_mesh_raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov,mesh_in_use);
-    }, false);
-  }
-
 }
 
 var mesh_click = function(e){
@@ -227,6 +219,14 @@ var mesh_handler = function(e){
   }
 
   draw_jet_map(raw_ctx);
+
+  // Place into 3D coordinates
+  // Check that the 3D environment exists...
+  if(mesh_to_three!==undefined){
+    //three_btn.addEventListener('click', function() {
+      mesh_to_three(raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov,mesh_in_use);
+    //}, false);
+  }
 
 }
 
