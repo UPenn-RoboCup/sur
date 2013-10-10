@@ -43,7 +43,7 @@ self.onmessage = function(e) {
         // THREE z is our z (TODO: have in util)
         positions[particle_idx]   =  p[1] * 1000;
         positions[particle_idx+1] =  (p[2]+bodyHeight) * 1000;
-        positions[particle_idx+2] =  (p[0]-near) * 1000;
+        positions[particle_idx+2] =  p[0] * 1000;
       }
       // Increment the pixel idx for the next mesh pixel
       pixel_idx += 4;
