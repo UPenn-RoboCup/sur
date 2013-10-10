@@ -28,23 +28,28 @@ self.onmessage = function(e) {
   var particle_idx = 0;
 
   // begin the loop
-  for (var i = 0; i<width; i++ ) {
-    for (var j = 0; j<height; j++ ) {
+  for (var j = 0; j<height; j++ ) {
+    for (var i = 0; i<width; i++ ) {
       // Compute the xyz
       var p = get_hokuyo_chest_xyz(i,j,pixels[pixel_idx],width,height,near,far,hFOV,vFOV);
       // put into mm
-      if(p!==undefined){
+      if(p===null){
+        positions[particle_idx]   = 0;
+        positions[particle_idx+1] = 0;
+        positions[particle_idx+2] = 0;
+      } else {
         // THREE x is our negative y (TODO: have in util)
         // THREE y is our x (TODO: have in util)
         // THREE z is our z (TODO: have in util)
         // This is transform makes NO sense right now...
-        positions[particle_idx]   = -p.z * 1000;
-        positions[particle_idx+1] =  p.x * 1000;
-        positions[particle_idx+2] =  p.y * 1000 + 1000;
-      } else {
-        positions[particle_idx]   = 0;
-        positions[particle_idx+1] = 0;
-        positions[particle_idx+2] = 0;
+        /*
+        positions[particle_idx]   =  p.z * 1000;
+        positions[particle_idx+1] =  (p.y+bodyHeight) * 1000;
+        positions[particle_idx+2] =  (p.x-near) * 1000;
+        */
+        positions[particle_idx]   =  p[1] * 1000;
+        positions[particle_idx+1] =  (p[2]+bodyHeight) * 1000;
+        positions[particle_idx+2] =  (p[0]-near) * 1000;
       }
       // Increment the pixel idx for the next mesh pixel
       pixel_idx += 4;

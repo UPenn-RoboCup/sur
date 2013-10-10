@@ -28,7 +28,7 @@ var chest_off_axis = 0.04;
 var neck_height    = 0.30;
 var neck_off_axis  = 0.12;
 /* robot bodyHeight, but this can change a LOT */
-var bodyHeight = 0.95;
+var bodyHeight = 1.12;
 
 var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   // do not use saturated pixels
@@ -65,19 +65,21 @@ var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
 
 var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   // do not use saturated pixels
-  if(w==0||w==255){return;}
+  if(w<5||w>250){return null;}
+  //console.log(w)
   //console.log(u,v,w,width,height,near,far,hFOV,vFOV);
   // radians per pixel
   var h_rpp = hFOV / width;
   var v_rpp = vFOV / height;
   // angle in radians of the selected pixel
   var h_angle = h_rpp * (width/2-u);
-  var v_angle = v_rpp * (v-height/2);
+  var v_angle = v_rpp * (height/2-v);
   // Convert w of 0-255 to actual meters value
   var factor = (far-near)/255;
   var r = factor*w+near + chest_off_axis;
 
   // make the local vector
+  /*
   var point = new THREE.Vector4(
     r*Math.cos(h_angle),
     r*Math.sin(h_angle),
@@ -93,7 +95,19 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   // add the chest offset from the torso
   point.x = point.x + chest_depth;
   point.z = point.z + chest_height;
+  console.log(point);
+  return point;
+  */
+
+  var x = r * Math.cos(v_angle) * Math.cos(h_angle) + chest_depth;
+  var y = r * Math.cos(v_angle) * Math.sin(h_angle) + chest_height;
+  var z = r * Math.sin(v_angle);
+  //console.log(x,y,z);
+
+  //if(z>1){return null;}
 
   // return the global point vector
-  return point;
+  //return new THREE.Vector3( x, y, z );
+  return [x,y,z];
+  
 }

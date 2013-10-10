@@ -126,6 +126,8 @@ var mesh_click = function(e){
   
   //console.log('World: ',point);
   
+  if(point===undefined){return;}
+
   // save the click
   mesh_clicks.push( new THREE.Vector3(u,v,w) );
   mesh_points.push( point );
@@ -224,7 +226,7 @@ var mesh_handler = function(e){
   // Check that the 3D environment exists...
   if(mesh_to_three!==undefined){
     //three_btn.addEventListener('click', function() {
-      mesh_to_three(raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov,mesh_in_use);
+      mesh_to_three(raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov, mesh_in_use);
     //}, false);
   }
 
