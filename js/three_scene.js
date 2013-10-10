@@ -134,13 +134,14 @@ foot_steps = []
     var colors    = new Float32Array(e.data.col);
     //
     var p2 = new Float32Array(e.data.pos.slice());
+    var c2 = new Float32Array(e.data.col.slice());
     var index = new Uint16Array(e.data.idx);
 
     // debug
     //console.log('processed mesh',positions);
     console.log(e.data)
 
-    make_mesh(index,p2,e.data.n_quad,e.data.n_el);
+    make_mesh(index,p2,e.data.n_quad,e.data.n_el,c2);
 
     //make_particle_system(positions, colors);
 
@@ -219,7 +220,7 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
 }
 
 // make a new mesh from the number of triangles specified
-var make_mesh = function(index,position,n_quad,n_el){
+var make_mesh = function(index,position,n_quad,n_el,c2){
   scene.remove( mesh );
   /////////////////////
   // Initialize the faces
@@ -235,6 +236,10 @@ var make_mesh = function(index,position,n_quad,n_el){
     position: {
       itemSize: 3,
       array: position,
+    },
+    color: {
+      itemSize: 3,
+      array: c2,
     },
   }
   /////////////////////
@@ -263,7 +268,7 @@ var make_mesh = function(index,position,n_quad,n_el){
     color: 0xFFaaaa,
     side: THREE.DoubleSide,
     //wireframe: true,
-    //vertexColors: THREE.VertexColors
+    vertexColors: THREE.VertexColors
   } );
   /////////////////////
 
