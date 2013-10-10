@@ -1,4 +1,4 @@
-//importScripts('../lib/three.min.js');
+importScripts('../lib/three.min.js');
 importScripts('../js/util.js');
 
 var ready = false;
@@ -12,7 +12,7 @@ self.onmessage = function(e) {
 	}
 
   // process the input
-  var pixels = new Uint8Array(e.data.buf);
+  var pixels = new Uint8Array(e.data.buf); //just modify this!
   var width  = e.data.res[0];
   var height = e.data.res[1];
   var near   = e.data.dep[0];
@@ -21,66 +21,61 @@ self.onmessage = function(e) {
   var vFOV   = e.data.fov[1];
 
 	// Array to be put into the WebGL buffer
-  var positions    = new Float32Array( width * height * 3 );
+  var positions = new Float32Array( width * height * 3 );
+  var colors    = new Float32Array( width * height * 3 );
 
   // Access pixel array elements and particle elements
 	var pixel_idx    = 0;
-  var particle_idx = 0;
+  var position_idx = 0;
 
   // begin the loop to find particle positions
+  var n_el = 0;
   for (var j = 0; j<height; j++ ) {
     for (var i = 0; i<width; i++ ) {
-      // Compute the xyz
-      var p = get_hokuyo_chest_xyz(i,j,pixels[pixel_idx],width,height,near,far,hFOV,vFOV);
-      // put into mm
+      // Compute the xyz positions
+      var w = pixels[pixel_idx];
+      var p = get_hokuyo_chest_xyz(i,j,w,width,height,near,far,hFOV,vFOV);
+      // saturation check
       if(p===null){
-        positions[particle_idx]   = 0;
-        positions[particle_idx+1] = 0;
-        positions[particle_idx+2] = 0;
-      } else {
-        // THREE x is our negative y (TODO: have in util)
-        // THREE y is our x (TODO: have in util)
-        // THREE z is our z (TODO: have in util)
-        positions[particle_idx]   =  p[1] * 1000;
-        positions[particle_idx+1] =  (p[2]+bodyHeight) * 1000;
-        positions[particle_idx+2] =  p[0] * 1000;
+        pixels[pixel_idx]=0;
+        pixel_idx+=4;
+        continue;
       }
-      // Increment the pixel idx for the next mesh pixel
-      pixel_idx += 4;
-      particle_idx += 3;
+
+      // z check 5cm within the ground plane
+      if( Math.abs(p[2])<0.050 ){
+        pixels[pixel_idx]=0;
+        pixel_idx+=4;
+        continue;
+      }
+
+      // we have an element!
+      n_el++;
+
+      // Save the distance in pixels array
+      
+      positions[position_idx]   =  p[1] * 1000;
+      positions[position_idx+1] =  p[2] * 1000;
+      positions[position_idx+2] =  p[0] * 1000;
+
+      // jet
+      var cm = jet(w);
+      colors[ i ]     = cm[0];
+      colors[ i + 1 ] = cm[1];
+      colors[ i + 2 ] = cm[2];
+      // move the indices
+      position_idx += 3;
+      pixel_idx+=4;
 		}
 	}
 
-  // Construct the mesh
-  var idx_width = 3*width;
-  var b_col = 1, b_row = 0; // save the column idx and row idx
-  var ai = 0,    ci = idx_width;
-  var bi = ai+3, di = ci+3;
-  // four corners of the mesh
-  var a, b = positions.subarray(ai,ai+2), c, d=positions.subarray(ci,ci+2);
-  // do not evaluate the last row, since
-  var len = positions.length-idx_width;
-  // loop through two rows at the same time
-  for (; bi < len; bi+=3) {
-    // shift the pixels
-    a = b;
-    b = positions.subarray(bi,bi+2);
-    c = d;
-    d = positions.subarray(di,di+2);
-    // at the end of the width, there is no b
-    if(b_col==width){
-      b_col = 0;
-      b_row++;
-      continue;
-    }
-    // Process a,b,c,d to make a mesh
+  // post a message of the elements
+  var el = {}
+  el.pos = positions.buffer;
+  el.col = colors.buffer;//.slice(0,n_el)
+  el.n_el = n_el;
 
-    // save where we are
-    di+=3;
-    b_col++;
-  }
-
-  self.postMessage(positions.buffer,[positions.buffer]);
+  self.postMessage(el,[el.pos, el.col]);
 };
 
 self.onerror = function(message) {

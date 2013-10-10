@@ -348,6 +348,11 @@ var draw_jet_map = function(raw_ctx){
   var data = rawDataImage.data;
   for(var i = 0; i < data.length; i += 4) {
     // http://www.metastine.com/?p=7
+    var cm = jet(data[i])
+    data[i] = cm[0];
+    data[i+1] = cm[1];
+    data[i+2] = cm[2];
+    /*
     var fourValue = 4-(4/255 * data[i]);
     // red
     data[i] = 255*Math.min(fourValue - 1.5, -fourValue + 4.5);
@@ -355,6 +360,7 @@ var draw_jet_map = function(raw_ctx){
     data[i+1] = 255*Math.min(fourValue - 0.5, -fourValue + 3.5);
     // blue
     data[i+2] = 255*Math.min(fourValue + 0.5, -fourValue + 2.5);
+    */
   }
   // overwrite original image
   mesh_ctx.putImageData(rawDataImage, 0, 0);

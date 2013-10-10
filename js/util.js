@@ -9,6 +9,14 @@ if(this.document!==undefined){
   rest_root = 'http://'+host+':8080';
 }
 
+var jet = function(val){
+  // http://www.metastine.com/?p=7
+  var fourValue = 4-(4 * val)/255;
+  return [ 255*Math.min(fourValue - 1.5, -fourValue + 4.5),
+           255*Math.min(fourValue - 0.5, -fourValue + 3.5),
+           255*Math.min(fourValue + 0.5, -fourValue + 2.5) ]
+}
+
 // convert location
 var get_kinect_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   // Convert w of 0-255 to actual meters value
@@ -77,7 +85,7 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   var r = factor*w+near + chest_off_axis;
   var x = r * Math.cos(v_angle) * Math.cos(h_angle) + chest_depth;
   var y = r * Math.cos(v_angle) * Math.sin(h_angle) + chest_height;
-  var z = r * Math.sin(v_angle);
+  var z = r * Math.sin(v_angle) + bodyHeight;
 
   return [x,y,z,r];
 }

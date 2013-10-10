@@ -126,25 +126,27 @@ foot_steps = []
       console.log('Using WebWorker '+ww_script);
       return;
     }
+    //console.log(e)
     // TODO: Is this expensive, or just a cheap view change?
-    var positions = new Float32Array(e.data);
+    var positions = new Float32Array(e.data.pos);
+    var colors = new Float32Array(e.data.col);
 
     // debug
-    //console.log('processed mesh',positions);
-    //console.log(e)
+    console.log('processed mesh',positions);
+    console.log(e.data)
     /*
     var midex = 320*(240/2)+(320/2);
     console.log('middle: '+positions[midex]+','+positions[midex+1]+','+positions[midex+2]);
     */
-    update_particles( positions );
+    update_particles( positions, colors );
     // render the particle system change
     render();
   }; //onmessage
   mesh_worker.postMessage('Start!');
 
   // make the particle system
-  make_particle_system();
-  make_mesh(1000);
+  //make_particle_system();
+  //make_mesh(500*480*2);
 
   // Begin animation
   animate();
@@ -215,10 +217,14 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
   mesh_worker.postMessage(obj,[buf]);
 }
 
-var update_particles = function( positions ){
+var update_particles = function( positions, colors ){
+  make_particle_system(positions, colors)
+  /*
   particleSystem.geometry.attributes.position.array = positions;
   particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
   particleSystem.geometry.computeBoundingSphere();
+  */
+  render();
 }
 
 // make a new mesh from the number of triangles specified
@@ -228,7 +234,7 @@ var make_mesh = function(ntriangles){
   // Initialize the faces
   var fgeometry = new THREE.BufferGeometry();
   // Dynamic, because we will do raycasting
-  fgeometry.dynamic = true;
+  //fgeometry.dynamic = true;
   // Set the attribute buffers
   fgeometry.attributes = {
     index: {
@@ -237,11 +243,6 @@ var make_mesh = function(ntriangles){
       numItems: ntriangles * 3
     },
     position: {
-      itemSize: 3,
-      array: new Float32Array( ntriangles * 3 * 3 ),
-      numItems: ntriangles * 3 * 3
-    },
-    normal: {
       itemSize: 3,
       array: new Float32Array( ntriangles * 3 * 3 ),
       numItems: ntriangles * 3 * 3
@@ -261,11 +262,8 @@ var make_mesh = function(ntriangles){
   // chunks of 21,845 triangles (3 unique vertices per triangle)
   // for indices to fit into 16 bit integer number
   // floor(2^16 / 3) = 21845"
-  var chunkSize = 21845;
-  var indices = fgeometry.attributes.index.array;
-  for ( var i = 0; i < indices.length; i ++ ) {
-    indices[ i ] = i % ( 3 * chunkSize );
-  }
+  //var chunkSize = 21845;
+  var chunkSize = Math.floor(2^16 / 3);
   var offsets = ntriangles / chunkSize;
   fgeometry.offsets = [];
   for ( var i = 0; i < offsets; i ++ ) {
@@ -278,11 +276,16 @@ var make_mesh = function(ntriangles){
   }
   /////////////////////
 
-    /////////////////////
+  /////////////////////
   // Initialize the colors and positions
+  var indices   = fgeometry.attributes.index.array;
   var positions = fgeometry.attributes.position.array;
-  var normals = fgeometry.attributes.normal.array;
-  var colors = fgeometry.attributes.color.array;
+  var normals   = fgeometry.attributes.normal.array;
+  var colors    = fgeometry.attributes.color.array;
+
+  for ( var i = 0; i < indices.length; i ++ ) {
+    indices[ i ] = i % ( 3 * chunkSize );
+  }
 
   var color = new THREE.Color();
 
@@ -378,6 +381,7 @@ var make_mesh = function(ntriangles){
 
   }
   /////////////////////
+  console.log(positions,indices);
   
   /////////////////////
   // Massage the geometry to be ready for the scene
@@ -401,26 +405,30 @@ var make_mesh = function(ntriangles){
   /////////////////////
 }
 
-var make_particle_system = function(){
+var make_particle_system = function(pos,col){
+
+  scene.remove( particleSystem );
+
   // TODO: Ensure nparticles does not exceed 65000
   // TODO: Use the index attribute to overcome the limit
   // as documented in buffer triangles
-  var nparticles = 500*480;
+  //var nparticles = 500*480;
 
   var geometry = new THREE.BufferGeometry();
   geometry.attributes = {
     position: {
       itemSize: 3,
-      array: new Float32Array( nparticles * 3 )
+      array: pos
     },
     color: {
       itemSize: 3,
-      array: new Float32Array( nparticles * 3 )
+      array: col
     }
   } // geom attr
 
   // default size: 1 cm
   var material = new THREE.ParticleBasicMaterial( { size: 10, vertexColors: true } );
+  
 
   particleSystem = new THREE.ParticleSystem( geometry, material );
   scene.add( particleSystem );
