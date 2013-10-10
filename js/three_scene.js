@@ -2,8 +2,8 @@
 var scene, renderer, camera, stats, controls;
 // special objects
 var foot_floor, foot_steps, foot_geo, foot_mat;
-// particle system
-var particleSystem
+// particle system and mesh
+var particleSystem, mesh;
 var CANVAS_WIDTH, CANVAS_HEIGHT;
 document.addEventListener( "DOMContentLoaded", function(){
   var container = document.getElementById( 'three_container' );
@@ -78,7 +78,7 @@ var sphere = new THREE.Mesh(
 
 foot_floor = new THREE.Mesh(
 new THREE.PlaneGeometry(pl_width, pl_height),wireMaterial);
-//foot_floor.material.side = THREE.DoubleSide;
+foot_floor.material.side = THREE.DoubleSide;
 //foot_floor.rotation.set(Math.PI/2, 0,0);
 foot_floor.rotation.x = -Math.PI/2;
 //foot_floor.position.y = ;
@@ -131,24 +131,23 @@ foot_steps = []
     //console.log(e)
     // TODO: Is this expensive, or just a cheap view change?
     var positions = new Float32Array(e.data.pos);
-    var colors = new Float32Array(e.data.col);
+    var colors    = new Float32Array(e.data.col);
+    //
+    var p2 = new Float32Array(e.data.pos.slice());
+    var index = new Uint16Array(e.data.idx);
 
     // debug
-    console.log('processed mesh',positions);
+    //console.log('processed mesh',positions);
     console.log(e.data)
-    /*
-    var midex = 320*(240/2)+(320/2);
-    console.log('middle: '+positions[midex]+','+positions[midex+1]+','+positions[midex+2]);
-    */
-    update_particles( positions, colors );
+
+    make_mesh(index,p2,e.data.n_quad,e.data.n_el);
+
+    //make_particle_system(positions, colors);
+
     // render the particle system change
     render();
   }; //onmessage
   mesh_worker.postMessage('Start!');
-
-  // make the particle system
-  //make_particle_system();
-  //make_mesh(500*480*2);
 
   // Begin animation
   animate();
@@ -215,194 +214,64 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
   obj.dep = depths;
   obj.fov = fov;
   obj.use = name;
-  console.log(obj)
+  //console.log(obj);
   mesh_worker.postMessage(obj,[buf]);
 }
 
-var update_particles = function( positions, colors ){
-  make_particle_system(positions, colors)
-  /*
-  particleSystem.geometry.attributes.position.array = positions;
-  particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
-  particleSystem.geometry.computeBoundingSphere();
-  */
-  render();
-}
-
 // make a new mesh from the number of triangles specified
-var make_mesh = function(ntriangles){
+var make_mesh = function(index,position,n_quad,n_el){
 
   /////////////////////
   // Initialize the faces
-  var fgeometry = new THREE.BufferGeometry();
+  var geometry = new THREE.BufferGeometry();
+  // quads have 2 tri each (but we have more pos, anyway...)
+  //geometry.numVertices = n_quad * 4;
+  geometry.numVertices = n_el;
   // Dynamic, because we will do raycasting
-  //fgeometry.dynamic = true;
+  geometry.dynamic = true;
   // Set the attribute buffers
-  fgeometry.attributes = {
+  console.log(index.length,n_quad*6,n_el*6)
+  geometry.attributes = {
     index: {
       itemSize: 1,
-      array: new Uint16Array( ntriangles * 3 ),
-      numItems: ntriangles * 3
+      array: index,
     },
     position: {
       itemSize: 3,
-      array: new Float32Array( ntriangles * 3 * 3 ),
-      numItems: ntriangles * 3 * 3
+      array: position,
     },
-    color: {
-      itemSize: 3,
-      array: new Float32Array( ntriangles * 3 * 3 ),
-      numItems: ntriangles * 3 * 3
-    }
   }
   /////////////////////
-
-  /////////////////////
-  // Initialize the indices and offsets for chunks of triangles
-  // This is because you can only index by uint16, so need to overcome this
-  // From the reference: "break geometry into
-  // chunks of 21,845 triangles (3 unique vertices per triangle)
-  // for indices to fit into 16 bit integer number
-  // floor(2^16 / 3) = 21845"
-  //var chunkSize = 21845;
-  var chunkSize = Math.floor(2^16 / 3);
-  var offsets = ntriangles / chunkSize;
-  fgeometry.offsets = [];
+  // form the offsets
+  var chunkSize = 2^16;
+  var offsets = geometry.numVertices / chunkSize;
+  geometry.offsets = [];
   for ( var i = 0; i < offsets; i ++ ) {
     var offset = {
-      start: i * chunkSize * 3,
-      index: i * chunkSize * 3,
-      count: Math.min( ntriangles - ( i * chunkSize ), chunkSize ) * 3
+      //start: i * chunkSize * (12 / 8) * 3, // 12 tri from 8 vert
+      start: i * chunkSize * (2 / 4) * 3,
+      index: i * chunkSize,
+      count: Math.min( 2*n_quad - ( i * chunkSize * (2 / 4) ), chunkSize * (2 / 4) ) * 3
     };
-    fgeometry.offsets.push( offset );
+    geometry.offsets.push( offset );
   }
   /////////////////////
+  geometry.computeBoundingSphere();
 
-  /////////////////////
-  // Initialize the colors and positions
-  var indices   = fgeometry.attributes.index.array;
-  var positions = fgeometry.attributes.position.array;
-  var normals   = fgeometry.attributes.normal.array;
-  var colors    = fgeometry.attributes.color.array;
-
-  for ( var i = 0; i < indices.length; i ++ ) {
-    indices[ i ] = i % ( 3 * chunkSize );
-  }
-
-  var color = new THREE.Color();
-
-  var n = 800, n2 = n/2;  // triangles spread in the cube
-  var d = 12, d2 = d/2; // individual triangle size
-
-  var pA = new THREE.Vector3();
-  var pB = new THREE.Vector3();
-  var pC = new THREE.Vector3();
-
-  var cb = new THREE.Vector3();
-  var ab = new THREE.Vector3();
-
-  for ( var i = 0; i < positions.length; i += 9 ) {
-
-    // positions
-
-    var x = Math.random() * n - n2;
-    var y = Math.random() * n - n2;
-    var z = Math.random() * n - n2;
-
-    var ax = x + Math.random() * d - d2;
-    var ay = y + Math.random() * d - d2;
-    var az = z + Math.random() * d - d2;
-
-    var bx = x + Math.random() * d - d2;
-    var by = y + Math.random() * d - d2;
-    var bz = z + Math.random() * d - d2;
-
-    var cx = x + Math.random() * d - d2;
-    var cy = y + Math.random() * d - d2;
-    var cz = z + Math.random() * d - d2;
-
-    positions[ i ]     = ax;
-    positions[ i + 1 ] = ay;
-    positions[ i + 2 ] = az;
-
-    positions[ i + 3 ] = bx;
-    positions[ i + 4 ] = by;
-    positions[ i + 5 ] = bz;
-
-    positions[ i + 6 ] = cx;
-    positions[ i + 7 ] = cy;
-    positions[ i + 8 ] = cz;
-
-    // flat face normals
-
-    pA.set( ax, ay, az );
-    pB.set( bx, by, bz );
-    pC.set( cx, cy, cz );
-
-    cb.subVectors( pC, pB );
-    ab.subVectors( pA, pB );
-    cb.cross( ab );
-
-    cb.normalize();
-
-    var nx = cb.x;
-    var ny = cb.y;
-    var nz = cb.z;
-
-    normals[ i ]     = nx;
-    normals[ i + 1 ] = ny;
-    normals[ i + 2 ] = nz;
-
-    normals[ i + 3 ] = nx;
-    normals[ i + 4 ] = ny;
-    normals[ i + 5 ] = nz;
-
-    normals[ i + 6 ] = nx;
-    normals[ i + 7 ] = ny;
-    normals[ i + 8 ] = nz;
-
-    // colors
-
-    var vx = ( x / n ) + 0.5;
-    var vy = ( y / n ) + 0.5;
-    var vz = ( z / n ) + 0.5;
-
-    color.setRGB( vx, vy, vz );
-
-    colors[ i ]     = color.r;
-    colors[ i + 1 ] = color.g;
-    colors[ i + 2 ] = color.b;
-
-    colors[ i + 3 ] = color.r;
-    colors[ i + 4 ] = color.g;
-    colors[ i + 5 ] = color.b;
-
-    colors[ i + 6 ] = color.r;
-    colors[ i + 7 ] = color.g;
-    colors[ i + 8 ] = color.b;
-
-  }
-  /////////////////////
-  console.log(positions,indices);
-  
-  /////////////////////
-  // Massage the geometry to be ready for the scene
-  // fgeometry.computeFaceNormals();
-  // TODO: not included
-  fgeometry.computeBoundingSphere();
-  /////////////////////
 
   /////////////////////
   // Set a the initial colors (from fgeometry) and material (standard)
-  var material = new THREE.MeshPhongMaterial( {
-    color: 0xaaaaaa, ambient: 0xaaaaaa, specular: 0xffffff, shininess: 250,
-    side: THREE.DoubleSide, vertexColors: THREE.VertexColors
+  var material = new THREE.MeshBasicMaterial( {
+    color: 0xFFaaaa,
+    //side: THREE.DoubleSide,
+    wireframe: true,
+    //vertexColors: THREE.VertexColors
   } );
   /////////////////////
 
   /////////////////////
   // Make the mesh from our geometry, and add it to the scene
-  mesh = new THREE.Mesh( fgeometry, material );
+  mesh = new THREE.Mesh( geometry, material );
   scene.add( mesh );
   /////////////////////
 }
