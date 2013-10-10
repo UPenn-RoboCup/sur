@@ -126,11 +126,12 @@ var mesh_click = function(e){
   
   //console.log('World: ',point);
   
-  if(point===undefined){return;}
+  if(point===null){return;}
 
   // save the click
   mesh_clicks.push( new THREE.Vector3(u,v,w) );
-  mesh_points.push( point );
+  var p = new THREE.Vector3()
+  mesh_points.push( p.fromArray(point) );
 
   // Log all points in our debug zone
   // http://alignedleft.com/tutorials/d3/using-your-data

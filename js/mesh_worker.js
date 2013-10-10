@@ -1,4 +1,4 @@
-importScripts('../lib/three.min.js');
+//importScripts('../lib/three.min.js');
 importScripts('../js/util.js');
 
 var ready = false;
@@ -41,12 +41,6 @@ self.onmessage = function(e) {
         // THREE x is our negative y (TODO: have in util)
         // THREE y is our x (TODO: have in util)
         // THREE z is our z (TODO: have in util)
-        // This is transform makes NO sense right now...
-        /*
-        positions[particle_idx]   =  p.z * 1000;
-        positions[particle_idx+1] =  (p.y+bodyHeight) * 1000;
-        positions[particle_idx+2] =  (p.x-near) * 1000;
-        */
         positions[particle_idx]   =  p[1] * 1000;
         positions[particle_idx+1] =  (p[2]+bodyHeight) * 1000;
         positions[particle_idx+2] =  (p[0]-near) * 1000;

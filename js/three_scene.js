@@ -30,7 +30,7 @@ document.addEventListener( "DOMContentLoaded", function(){
 
   // add light to the scene
   var dirLight = new THREE.DirectionalLight( 0xffffff );
-  dirLight.position.set( 0, 0, -1000 ).normalize();
+  dirLight.position.set( 0, 1000, 0 ).normalize();
   scene.add( dirLight );
 
   // re-add?
@@ -87,7 +87,7 @@ scene.add(foot_floor);
 
 // Make the footstep queue
 // TODO: Use underscore to remove arbitrary footsteps
-foot_geo = new THREE.CubeGeometry( 50, 100, 10 );
+foot_geo = new THREE.CubeGeometry( 50, 10, 100 );
 foot_mat = new THREE.MeshLambertMaterial({
   color: 0xAAAAAA
 });
