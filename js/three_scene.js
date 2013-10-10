@@ -144,6 +144,7 @@ foot_steps = []
 
   // make the particle system
   make_particle_system();
+  make_mesh(1000);
 
   // Begin animation
   animate();
@@ -217,6 +218,7 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
 var update_particles = function( positions ){
   particleSystem.geometry.attributes.position.array = positions;
   particleSystem.geometry.attributes[ "position" ].needsUpdate = true;
+  particleSystem.geometry.computeBoundingSphere();
 }
 
 // make a new mesh from the number of triangles specified
@@ -225,7 +227,7 @@ var make_mesh = function(ntriangles){
   /////////////////////
   // Initialize the faces
   var fgeometry = new THREE.BufferGeometry();
-  // Dynamic, because we will update it (holds buffers)
+  // Dynamic, because we will do raycasting
   fgeometry.dynamic = true;
   // Set the attribute buffers
   fgeometry.attributes = {
@@ -275,6 +277,128 @@ var make_mesh = function(ntriangles){
     fgeometry.offsets.push( offset );
   }
   /////////////////////
+
+    /////////////////////
+  // Initialize the colors and positions
+  var positions = fgeometry.attributes.position.array;
+  var normals = fgeometry.attributes.normal.array;
+  var colors = fgeometry.attributes.color.array;
+
+  var color = new THREE.Color();
+
+  var n = 800, n2 = n/2;  // triangles spread in the cube
+  var d = 12, d2 = d/2; // individual triangle size
+
+  var pA = new THREE.Vector3();
+  var pB = new THREE.Vector3();
+  var pC = new THREE.Vector3();
+
+  var cb = new THREE.Vector3();
+  var ab = new THREE.Vector3();
+
+  for ( var i = 0; i < positions.length; i += 9 ) {
+
+    // positions
+
+    var x = Math.random() * n - n2;
+    var y = Math.random() * n - n2;
+    var z = Math.random() * n - n2;
+
+    var ax = x + Math.random() * d - d2;
+    var ay = y + Math.random() * d - d2;
+    var az = z + Math.random() * d - d2;
+
+    var bx = x + Math.random() * d - d2;
+    var by = y + Math.random() * d - d2;
+    var bz = z + Math.random() * d - d2;
+
+    var cx = x + Math.random() * d - d2;
+    var cy = y + Math.random() * d - d2;
+    var cz = z + Math.random() * d - d2;
+
+    positions[ i ]     = ax;
+    positions[ i + 1 ] = ay;
+    positions[ i + 2 ] = az;
+
+    positions[ i + 3 ] = bx;
+    positions[ i + 4 ] = by;
+    positions[ i + 5 ] = bz;
+
+    positions[ i + 6 ] = cx;
+    positions[ i + 7 ] = cy;
+    positions[ i + 8 ] = cz;
+
+    // flat face normals
+
+    pA.set( ax, ay, az );
+    pB.set( bx, by, bz );
+    pC.set( cx, cy, cz );
+
+    cb.subVectors( pC, pB );
+    ab.subVectors( pA, pB );
+    cb.cross( ab );
+
+    cb.normalize();
+
+    var nx = cb.x;
+    var ny = cb.y;
+    var nz = cb.z;
+
+    normals[ i ]     = nx;
+    normals[ i + 1 ] = ny;
+    normals[ i + 2 ] = nz;
+
+    normals[ i + 3 ] = nx;
+    normals[ i + 4 ] = ny;
+    normals[ i + 5 ] = nz;
+
+    normals[ i + 6 ] = nx;
+    normals[ i + 7 ] = ny;
+    normals[ i + 8 ] = nz;
+
+    // colors
+
+    var vx = ( x / n ) + 0.5;
+    var vy = ( y / n ) + 0.5;
+    var vz = ( z / n ) + 0.5;
+
+    color.setRGB( vx, vy, vz );
+
+    colors[ i ]     = color.r;
+    colors[ i + 1 ] = color.g;
+    colors[ i + 2 ] = color.b;
+
+    colors[ i + 3 ] = color.r;
+    colors[ i + 4 ] = color.g;
+    colors[ i + 5 ] = color.b;
+
+    colors[ i + 6 ] = color.r;
+    colors[ i + 7 ] = color.g;
+    colors[ i + 8 ] = color.b;
+
+  }
+  /////////////////////
+  
+  /////////////////////
+  // Massage the geometry to be ready for the scene
+  // fgeometry.computeFaceNormals();
+  // TODO: not included
+  fgeometry.computeBoundingSphere();
+  /////////////////////
+
+  /////////////////////
+  // Set a the initial colors (from fgeometry) and material (standard)
+  var material = new THREE.MeshPhongMaterial( {
+    color: 0xaaaaaa, ambient: 0xaaaaaa, specular: 0xffffff, shininess: 250,
+    side: THREE.DoubleSide, vertexColors: THREE.VertexColors
+  } );
+  /////////////////////
+
+  /////////////////////
+  // Make the mesh from our geometry, and add it to the scene
+  mesh = new THREE.Mesh( fgeometry, material );
+  scene.add( mesh );
+  /////////////////////
 }
 
 var make_particle_system = function(){
@@ -295,42 +419,6 @@ var make_particle_system = function(){
     }
   } // geom attr
 
-/*
-  // default (random) particle positions/colors
-  var positions = geometry.attributes.position.array;
-  var colors = geometry.attributes.color.array;
-  var color = new THREE.Color();
-  var n = 1000, n2 = n / 2; // particles spread in the cube
-  for ( var i = 0; i < positions.length; i += 3 ) {
-
-    // positions
-
-    var x = Math.random() * n - n2;
-    var y = Math.random() * n - n2;
-    var z = Math.random() * n - n2;
-
-    positions[ i ]     = x;
-    positions[ i + 1 ] = y;
-    positions[ i + 2 ] = z;
-
-    // colors
-    
-    var vx = ( x / n ) + 0.5;
-    var vy = ( y / n ) + 0.5;
-    var vz = ( z / n ) + 0.5;
-
-    color.setRGB( vx, vy, vz );
-    
-    color.setRGB( .5, .5, .5 );
-
-    colors[ i ]     = color.r;
-    colors[ i + 1 ] = color.g;
-    colors[ i + 2 ] = color.b;
-
-  }
-  // NOTE: This should be upon every particle position update
-  geometry.computeBoundingSphere();
-*/
   // default size: 1 cm
   var material = new THREE.ParticleBasicMaterial( { size: 10, vertexColors: true } );
 
