@@ -220,17 +220,13 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
 
 // make a new mesh from the number of triangles specified
 var make_mesh = function(index,position,n_quad,n_el){
-
+  scene.remove( mesh );
   /////////////////////
   // Initialize the faces
   var geometry = new THREE.BufferGeometry();
-  // quads have 2 tri each (but we have more pos, anyway...)
-  //geometry.numVertices = n_quad * 4;
-  geometry.numVertices = n_el;
   // Dynamic, because we will do raycasting
-  geometry.dynamic = true;
+  //geometry.dynamic = true;
   // Set the attribute buffers
-  console.log(index.length,n_quad*6,n_el*6)
   geometry.attributes = {
     index: {
       itemSize: 1,
@@ -243,8 +239,10 @@ var make_mesh = function(index,position,n_quad,n_el){
   }
   /////////////////////
   // form the offsets
-  var chunkSize = 2^16;
-  var offsets = geometry.numVertices / chunkSize;
+  //var chunkSize = 2^16;
+  var chunkSize = 655356;
+  var offsets = n_el / chunkSize;
+  console.log(n_el,chunkSize,offsets)
   geometry.offsets = [];
   for ( var i = 0; i < offsets; i ++ ) {
     var offset = {
@@ -263,8 +261,8 @@ var make_mesh = function(index,position,n_quad,n_el){
   // Set a the initial colors (from fgeometry) and material (standard)
   var material = new THREE.MeshBasicMaterial( {
     color: 0xFFaaaa,
-    //side: THREE.DoubleSide,
-    wireframe: true,
+    side: THREE.DoubleSide,
+    //wireframe: true,
     //vertexColors: THREE.VertexColors
   } );
   /////////////////////

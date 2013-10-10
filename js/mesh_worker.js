@@ -114,7 +114,6 @@ self.onmessage = function(e) {
       // Found a quad!
       n_quad++;
       // Add the upper tri
-      //quad_pos[quad_idx]
       index[quad_idx]   = indices[idx]; //a
       index[quad_idx+1] = indices[idx+1]; //b
       index[quad_idx+2] = indices[idx+width]; //c
