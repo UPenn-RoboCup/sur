@@ -60,9 +60,9 @@ self.onmessage = function(e) {
 
       // jet
       var cm = jet(w);
-      colors[ i ]     = cm[0];
-      colors[ i + 1 ] = cm[1];
-      colors[ i + 2 ] = cm[2];
+      colors[ position_idx ]     = cm[0];
+      colors[ position_idx + 1 ] = cm[1];
+      colors[ position_idx + 2 ] = cm[2];
       // move the indices
       position_idx += 3;
       pixel_idx+=4;

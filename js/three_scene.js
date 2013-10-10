@@ -17,12 +17,14 @@ document.addEventListener( "DOMContentLoaded", function(){
   // add the camera
   camera = new THREE.PerspectiveCamera( 60, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
   // add the camera to the scene
-  camera.position.z = -500;
+  camera.position.z = 0;
   camera.position.y = bodyHeight*1000;
 
   // add controls
   controls = new THREE.OrbitControls( camera, container );
   controls.addEventListener( 'change', render );
+  //controls.center = new THREE.Vector3(0,0,1000);
+  controls.target = new THREE.Vector3(0,0,1000);// look in front one meter
   //controls.addEventListener('change',function(){requestAnimationFrame( animate )});
 
   // make the scene
@@ -52,8 +54,8 @@ var sphereMaterial =
       color: 0xFF0000
     });
 var wireMaterial = new THREE.MeshBasicMaterial({
-  wireframe: true,
-  color: 'blue'
+  //wireframe: true,
+  color: 0x555555
 })
 // set up the sphere vars
 var radius = 100,
@@ -75,7 +77,7 @@ var sphere = new THREE.Mesh(
 //scene.add(sphere);
 
 foot_floor = new THREE.Mesh(
-new THREE.PlaneGeometry(pl_width, pl_height, pl_seg, pl_seg),wireMaterial);
+new THREE.PlaneGeometry(pl_width, pl_height),wireMaterial);
 //foot_floor.material.side = THREE.DoubleSide;
 //foot_floor.rotation.set(Math.PI/2, 0,0);
 foot_floor.rotation.x = -Math.PI/2;

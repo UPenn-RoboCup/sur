@@ -10,6 +10,7 @@ if(this.document!==undefined){
 }
 
 var jet = function(val){
+  //val = Math.min(Math.max(val,0),255);
   // http://www.metastine.com/?p=7
   var fourValue = 4-(4 * val)/255;
   return [ 255*Math.min(fourValue - 1.5, -fourValue + 4.5),
