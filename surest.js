@@ -106,9 +106,9 @@ var load_img = function(req, res, next) {
   //console.log('img',req.params,fname);
   var raw = fs.readFile(this.base_dir+'/'+req.params.img, function(err, file) {
     if (err) {
-      //console.log(err);
+      console.log(err,file);
       res.writeHead(500);
-      return response.end();
+      return res.end();
     }
     res.writeHead(200);
     res.write(file);
@@ -118,6 +118,8 @@ var load_img = function(req, res, next) {
 };
 server.get('/png/:img', load_img.bind({base_dir: 'png'}) );
 server.get('/jpg/:img', load_img.bind({base_dir: 'jpg'}) );
+// stl loader ignores content type, so we are ok :)
+server.get('/stl/:img', load_img.bind({base_dir: 'stl'}) );
 
 // CSS stylesheet
 var load_css = function (req, res, next) {

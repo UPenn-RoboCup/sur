@@ -22,6 +22,7 @@
   <script src="js/calculate.js"></script>
   <script src="lib/stats.min.js"></script>
   <script src="lib/OrbitControls.js"></script>
+  <script src="lib/STLLoader.js"></script>
 
   <!-- SUR Layout JS -->
 
@@ -29,6 +30,7 @@
   <script src="js/camera_show.js"></script>
   <script src="js/mesh_show.js"></script>
   <script src="js/three_scene.js"></script>
+  <script src="js/three_robot.js"></script>
  
 </head>
 
@@ -36,13 +38,26 @@
 
 <!--https://github.com/necolas/css3-github-buttons-->
   <div id="fsm_container">
-  
+
   <div class="button-group">
   <li><span class='label rss icon'>Arm:</span></li>
   <a href="#" class="button fsm_selection" id="arm_fsm_init_btn">Init</a>
   <a href="#" class="button fsm_selection" id="arm_fsm_reset_btn">Reset</a>
   <a href="#" class="button fsm_selection" id="arm_fsm_ready_btn">Ready</a>
   </div>
+  <div class="button-group">
+  <li><span class='label rss icon'>Body:</span></li>
+  <a href="#" class="big button fsm_selection" id="arm_fsm_init_btn">Init</a>
+  <a href="#" class="big button fsm_selection" id="arm_fsm_reset_btn">Reset</a>
+  <a href="#" class="big button fsm_selection" id="arm_fsm_ready_btn">Ready</a>
+  </div>
+  <div class="button-group">
+  <li><span class='label rss icon'>Body:</span></li>
+  <a href="#" class="button fsm_selection" id="arm_fsm_init_btn">Init</a>
+  <a href="#" class="button fsm_selection" id="arm_fsm_reset_btn">Reset</a>
+  <a href="#" class="button fsm_selection" id="arm_fsm_ready_btn">Ready</a>
+  </div>
+
   </div>
 
   <div id="slam_container"></div>
