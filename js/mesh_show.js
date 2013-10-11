@@ -24,7 +24,10 @@ var add_mesh_buttons = function(){
       mesh_req_url+='_depth';
     }
 
-    var vals = [1,1,90];
+    // Unreliable
+    //var vals = [1,1,90];
+    // Reliable PNG
+    var vals = [3,3,90];
     // perform the post request
     promise.post( mesh_req_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
         if(error){ return; }

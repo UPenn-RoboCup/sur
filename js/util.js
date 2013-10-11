@@ -37,7 +37,8 @@ var chest_off_axis = 0.04;
 var neck_height    = 0.30;
 var neck_off_axis  = 0.12;
 /* robot bodyHeight, but this can change a LOT */
-var bodyHeight = 1.12;
+//var bodyHeight = 1.155;
+var bodyHeight = 1.02;
 
 var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   // do not use saturated pixels

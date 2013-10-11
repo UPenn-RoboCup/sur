@@ -46,13 +46,14 @@ self.onmessage = function(e) {
         continue;
       }
 
-      // z check 5cm within the ground plane
-      if( Math.abs(p[2])<0.050 ){
+      // z check 1 inch within the ground plane
+      /*
+      if( Math.abs(p[2])<0.0254 ){
         pixels[pixel_idx]=0;
         pixel_idx+=4;
         continue;
       }
-
+      */
       // we have an element!
       n_el++;
 

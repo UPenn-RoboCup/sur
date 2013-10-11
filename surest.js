@@ -31,7 +31,8 @@ bridges.push({
 	ws : 9001,
 	udp: 33344,
   // reliable request forwards same place
-  req: 33345,
+  //req: 33345,
+  tcp: 33345,
 	clients : []
 });
 
@@ -260,7 +261,7 @@ var ws_connection = function(ws){
   var conn_number = bridges[this.id].clients.length;
   bridges[this.id].clients.push(ws);
   /* On close, remove this client */
-  ws.on('close',   ws_close.bind(  {id: this.id, n: conn_number}) );
+  ws.on('close', ws_close.bind(  {id: this.id, n: conn_number}) );
 }
 
 var bridge_send_ws = function(b_id,meta,payload){
@@ -281,8 +282,10 @@ var bridge_send_ws = function(b_id,meta,payload){
 * ZeroMQ receiving
 */
 var zmq_message = function(metadata,payload){
+  //console.log('zmq message!!')
   /* msgpack -> JSON */
   var meta = mp.unpack(metadata);
+  //console.log(meta)
   /* Add the payload sz parameter to the metadata */
   meta.sz = 0;
   if(payload!==undefined){meta.sz = payload.length;}
@@ -340,6 +343,14 @@ for( var w=0; w<bridges.length; w++) {
       console.log('\tRequester Bridge',b.req);
       b.requester = zmq_req_skt;
       reliable_lookup[b.name]=b;
+    }
+
+    if( b.tcp !== undefined ) {
+      var zmq_tcp_skt = zmq.socket('sub');
+      zmq_tcp_skt.connect('tcp://'+rpc_robot+':'+b.tcp);
+      zmq_tcp_skt.subscribe('');
+      zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
+      console.log('\tTCP Sub Bridge',b.tcp);
     }
 
 	} //ws check
