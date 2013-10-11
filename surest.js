@@ -89,7 +89,7 @@ server.get('/', load_html );
 
 // Javascript libraries
 var load_js = function (req, res, next) {
-  //console.log('library',req.params.library)
+  //console.log('library',req.params.js)
   var body = fs.readFileSync(this.base_dir+'/'+req.params.js,{encoding:'utf8'});
   res.writeHead(200, {
     'Content-Length': Buffer.byteLength(body),
@@ -100,6 +100,24 @@ var load_js = function (req, res, next) {
 };
 server.get('/lib/:js', load_js.bind({base_dir: 'lib'}) );
 server.get('/js/:js', load_js.bind({base_dir: 'js'}) );
+
+// Images
+var load_img = function(req, res, next) {
+  //console.log('img',req.params,fname);
+  var raw = fs.readFile(this.base_dir+'/'+req.params.img, function(err, file) {
+    if (err) {
+      //console.log(err);
+      res.writeHead(500);
+      return response.end();
+    }
+    res.writeHead(200);
+    res.write(file);
+    res.end();
+    return next();
+  });
+};
+server.get('/png/:img', load_img.bind({base_dir: 'png'}) );
+server.get('/jpg/:img', load_img.bind({base_dir: 'jpg'}) );
 
 // CSS stylesheet
 var load_css = function (req, res, next) {

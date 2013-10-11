@@ -264,11 +264,11 @@ var make_mesh = function(index,position,n_quad,n_el,c2){
 
   /////////////////////
   // Set a the initial colors (from fgeometry) and material (standard)
-  var material = new THREE.MeshBasicMaterial( {
+  var material = new THREE.MeshPhongMaterial( {
     color: 0xFFaaaa,
     side: THREE.DoubleSide,
     //wireframe: true,
-    vertexColors: THREE.VertexColors
+    //vertexColors: THREE.VertexColors
   } );
   /////////////////////
 
