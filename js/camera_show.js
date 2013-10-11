@@ -10,7 +10,7 @@ var camera_handler = function(e){
 
   // draw to the canvas
   camera_canvas.width = w;
-  camera_canvas.width = h;
+  camera_canvas.height = h;
   camera_canvas_ctx.drawImage(this, 0, 0);
 
   // Remove the image for memory management reasons
