@@ -183,14 +183,14 @@ var select_footstep = function(event){
   //console.log('picking raycaster',raycaster)
 
   // intersect the plane
-  var intersection = raycaster.intersectObject( foot_floor );
+  var intersection = raycaster.intersectObjects( [foot_floor,mesh] );
   // if no intersection
   //console.log(intersection)
   if(intersection.length==0){ return; }
 
   // record the position
   var placement = intersection[0].point;
-  console.log(placement);
+  //console.log(placement);
 
   // make a new footstep
   var new_footstep = new THREE.Mesh( foot_geo, foot_mat );
@@ -226,7 +226,7 @@ var make_mesh = function(index,position,n_quad,n_el,c2){
   // Initialize the faces
   var geometry = new THREE.BufferGeometry();
   // Dynamic, because we will do raycasting
-  //geometry.dynamic = true;
+  geometry.dynamic = true;
   // Set the attribute buffers
   geometry.attributes = {
     index: {
@@ -247,7 +247,7 @@ var make_mesh = function(index,position,n_quad,n_el,c2){
   //var chunkSize = 2^16;
   var chunkSize = 655356;
   var offsets = n_el / chunkSize;
-  console.log(n_el,chunkSize,offsets)
+  //console.log(n_el,chunkSize,offsets)
   geometry.offsets = [];
   for ( var i = 0; i < offsets; i ++ ) {
     var offset = {
@@ -266,10 +266,10 @@ var make_mesh = function(index,position,n_quad,n_el,c2){
   /////////////////////
   // Set a the initial colors (from fgeometry) and material (standard)
   var material = new THREE.MeshPhongMaterial( {
-    color: 0xFFaaaa,
+    //color: 0xFFaaaa,
     //side: THREE.DoubleSide,
     //wireframe: true,
-    //vertexColors: THREE.VertexColors
+    vertexColors: THREE.VertexColors
   } );
   /////////////////////
 
