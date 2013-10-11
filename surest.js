@@ -120,6 +120,7 @@ server.get('/png/:img', load_img.bind({base_dir: 'png'}) );
 server.get('/jpg/:img', load_img.bind({base_dir: 'jpg'}) );
 // stl loader ignores content type, so we are ok :)
 server.get('/stl/:img', load_img.bind({base_dir: 'stl'}) );
+server.get('/vrml/:img', load_img.bind({base_dir: 'vrml'}) );
 
 // CSS stylesheet
 var load_css = function (req, res, next) {
