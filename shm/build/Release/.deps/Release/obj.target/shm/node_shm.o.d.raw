@@ -1,9 +1,0 @@
-Release/obj.target/shm/node_shm.o: ../node_shm.cc \
-  /Users/smcgill3/.node-gyp/0.10.16/src/node.h \
-  /Users/smcgill3/.node-gyp/0.10.16/deps/uv/include/uv.h \
-  /Users/smcgill3/.node-gyp/0.10.16/deps/uv/include/uv-private/uv-unix.h \
-  /Users/smcgill3/.node-gyp/0.10.16/deps/uv/include/uv-private/ngx-queue.h \
-  /Users/smcgill3/.node-gyp/0.10.16/deps/uv/include/uv-private/uv-darwin.h \
-  /Users/smcgill3/.node-gyp/0.10.16/deps/v8/include/v8.h \
-  /Users/smcgill3/.node-gyp/0.10.16/deps/v8/include/v8stdint.h \
-  /Users/smcgill3/.node-gyp/0.10.16/src/node_object_wrap.h
