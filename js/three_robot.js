@@ -1,22 +1,29 @@
 // Skeleton
 var skeleton = {
-  tr: (new THREE.Matrix4()).makeTranslation( 0, 1155, 0 ),
+  q: new THREE.Quaternion(0,0,0,1),
+  p: new THREE.Vector3(0, 1155, 0),
   children: []
 };
 var neck_chain = {
   stl: 'NECK',
-  tr: (new THREE.Matrix4()).makeTranslation( 0, 50, 0 ),
+  q: new THREE.Quaternion(0,0,0,1),
+  p: new THREE.Vector3(0, 50, 0),
   children: [
-    { stl: 'CAM',tr: (new THREE.Matrix4()).makeTranslation( 0, 161, 0 ) }
+    {stl: 'CAM',
+    p: new THREE.Vector3(0, 161, 0),
+    q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(-1,0,0)), -0.17 ) }
   ]
 }
 skeleton.children.push(neck_chain);
 //
 var larm_chain = {
   stl: 'RIGHT_SHOULDER_PITCH',
-  tr: (new THREE.Matrix4()).makeTranslation( 50, 0, 0 ),
+  q: new THREE.Quaternion(0,0,0,1),
+  p: new THREE.Vector3(50, 0, 0),
   children: [
-    { stl: 'RIGHT_SHOULDER_ROLL',tr: (new THREE.Matrix4()).makeTranslation( 0, 0, 24 ) }
+    {stl: 'RIGHT_SHOULDER_ROLL',
+    p:new THREE.Vector3(0, 0, 24),
+    q: new THREE.Quaternion(0,0,0,1)}
   ]
 }
 skeleton.children.push(larm_chain);
@@ -61,7 +68,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     var mesh = new THREE.Mesh( geometry, material );
 
     //mesh.position.set( 0, bodyHeight*1000, 0 );
-    mesh.position.getPositionFromMatrix(this.root.tr);
+    //mesh.position.getPositionFromMatrix(this.root.tr);
     //mesh.rotation.set( - Math.PI / 2, 0, 0 );
     //mesh.scale.set( 2, 2, 2 );
 
@@ -101,12 +108,10 @@ document.addEventListener( "DOMContentLoaded", function(){
   var n_stl = load_skeleton(skeleton);
 
   var update_skeleton = function(root){
-    // load self
-    var loader = new THREE.STLLoader();
 
     // update the transform
     var chain_tr = new THREE.Matrix4();
-    chain_tr.copy(root.tr);
+    chain_tr.compose(root.p,root.q,1);
     if(root.parent!==undefined){
       chain_tr.multiply( root.parent.chain_tr );
     }
@@ -125,25 +130,6 @@ document.addEventListener( "DOMContentLoaded", function(){
     for(var c=0;c<root.children.length;c++){
       update_skeleton(root.children[c]);
     }
-  }
-
-/*
-  for(var i=0;i<parts_list.length;i++){
-    var name = parts_list[i];
-    var loader = new THREE.STLLoader();
-    loader.addEventListener( 'load', cb.bind({name: name}) );
-    loader.load( 'stl/'+name+'.stl' );
-  }// for
-*/
-
-/*
-  var loader = new THREE.VRMLLoader();
-  loader.addEventListener( 'load', function ( event ) {
-    console.log(event.content)
-    //scene = event.content;
-    //render();
-  });
-  loader.load( 'vrml/thorop7.vrml' );
-*/
+  } // update skeleton
 
 });

@@ -115,8 +115,8 @@ self.onmessage = function(e) {
       n_quad++;
       // Add the upper tri
       index[quad_idx]   = indices[idx]; //a
-      index[quad_idx+1] = indices[idx+1]; //b
-      index[quad_idx+2] = indices[idx+width]; //c
+      index[quad_idx+1] = indices[idx+width]; //c
+      index[quad_idx+2] = indices[idx+1]; //b
       // add the lower tri
       index[quad_idx+3] = indices[idx+width+1]; //d
       index[quad_idx+4] = indices[idx+1]; //b

@@ -132,18 +132,18 @@ foot_steps = []
     // TODO: Is this expensive, or just a cheap view change?
     var positions = new Float32Array(e.data.pos);
     var colors    = new Float32Array(e.data.col);
-    //
+    var index     = new Uint16Array(e.data.idx);
+    /*
     var p2 = new Float32Array(e.data.pos.slice());
     var c2 = new Float32Array(e.data.col.slice());
-    var index = new Uint16Array(e.data.idx);
+    make_particle_system(positions, colors);
+    */
+
+    make_mesh(index,positions,e.data.n_quad,e.data.n_el,colors);
 
     // debug
     //console.log('processed mesh',positions);
-    console.log(e.data)
-
-    make_mesh(index,p2,e.data.n_quad,e.data.n_el,c2);
-
-    //make_particle_system(positions, colors);
+    //console.log(e.data)
 
     // render the particle system change
     render();
@@ -260,13 +260,14 @@ var make_mesh = function(index,position,n_quad,n_el,c2){
   }
   /////////////////////
   geometry.computeBoundingSphere();
+  geometry.computeVertexNormals()
 
 
   /////////////////////
   // Set a the initial colors (from fgeometry) and material (standard)
   var material = new THREE.MeshPhongMaterial( {
     color: 0xFFaaaa,
-    side: THREE.DoubleSide,
+    //side: THREE.DoubleSide,
     //wireframe: true,
     //vertexColors: THREE.VertexColors
   } );
