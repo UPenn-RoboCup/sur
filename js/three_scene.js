@@ -35,6 +35,11 @@ document.addEventListener( "DOMContentLoaded", function(){
   dirLight.position.set( 0, 1000, 0 ).normalize();
   scene.add( dirLight );
 
+  // ground light
+  var light = new THREE.PointLight( 0xffffff, 1, 10000 );
+  light.position.set( 0, 0, 0 );
+  scene.add( light );
+
   // re-add?
   renderer = new THREE.WebGLRenderer( { antialias: false } );
   renderer.setClearColor( 0x005500, 1 );
@@ -53,10 +58,13 @@ var sphereMaterial =
     {
       color: 0xFF0000
     });
-var wireMaterial = new THREE.MeshBasicMaterial({
-  //wireframe: true,
-  color: 0x555555
-})
+  var floor_material = new THREE.MeshPhongMaterial({
+    ambient: 0x555555, specular: 0x111111, shininess: 200,
+    side: THREE.DoubleSide,
+    color: 0xAAAAAA,
+    //vertexColors: THREE.VertexColors,
+    //wireframe: true,
+  });
 // set up the sphere vars
 var radius = 100,
     segments = 16,
@@ -77,7 +85,7 @@ var sphere = new THREE.Mesh(
 //scene.add(sphere);
 
 foot_floor = new THREE.Mesh(
-new THREE.PlaneGeometry(pl_width, pl_height),wireMaterial);
+new THREE.PlaneGeometry(pl_width, pl_height),floor_material);
 foot_floor.material.side = THREE.DoubleSide;
 //foot_floor.rotation.set(Math.PI/2, 0,0);
 foot_floor.rotation.x = -Math.PI/2;
@@ -259,18 +267,18 @@ var make_mesh = function(index,position,n_quad,n_el,c2){
     geometry.offsets.push( offset );
   }
   /////////////////////
-  geometry.computeBoundingSphere();
-  geometry.computeVertexNormals()
-
+  geometry.computeBoundingSphere(); // for picking via raycasting
 
   /////////////////////
-  // Set a the initial colors (from fgeometry) and material (standard)
-  var material = new THREE.MeshPhongMaterial( {
-    //color: 0xFFaaaa,
-    //side: THREE.DoubleSide,
+  // Phong Material requires normals for reflectivity
+  geometry.computeVertexNormals()
+  var material = new THREE.MeshPhongMaterial({
+    ambient: 0x555555, specular: 0x111111, shininess: 200,
+    side: THREE.DoubleSide,
+    color: 0xCCCCCC,
+    //vertexColors: THREE.VertexColors,
     //wireframe: true,
-    vertexColors: THREE.VertexColors
-  } );
+  });
   /////////////////////
 
   /////////////////////
