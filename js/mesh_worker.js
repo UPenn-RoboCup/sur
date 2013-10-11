@@ -80,7 +80,7 @@ self.onmessage = function(e) {
   var index = new Uint16Array( n_el * 6 );
   var quad_pos = new Float32Array( n_el * 3 );
   var n_quad = 0;
-  var d_ep = 100; // mm
+  //var d_ep = 100; // mm? m?
   position_idx = -1;
   quad_idx = 0;
   // do not look at the last row/column
@@ -106,11 +106,13 @@ self.onmessage = function(e) {
       
       // Make sure all points are close (enough) to each other
       // via ranges for now
+      /*
       a = factor*a+near;
       b = factor*b+near;
       c = factor*c+near;
       d = factor*d+near;
       if( Math.abs(a-b)>d_ep || Math.abs(a-c)>d_ep || Math.abs(a-d)>d_ep ){continue;}
+      */
 
       // Found a quad!
       n_quad++;

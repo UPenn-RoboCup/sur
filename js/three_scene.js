@@ -99,7 +99,7 @@ scene.add(foot_floor);
 // TODO: Use underscore to remove arbitrary footsteps
 foot_geo = new THREE.CubeGeometry( 50, 10, 100 );
 foot_mat = new THREE.MeshLambertMaterial({
-  color: 0xAAAAAA
+  color: 0xFFAAAA
 });
 foot_steps = []
 
