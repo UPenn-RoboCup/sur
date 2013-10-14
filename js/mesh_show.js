@@ -88,7 +88,7 @@ var add_mesh_buttons = function(){
 }
 
 var mesh_click = function(e){
-  //console.log(e);
+  console.log(e);
   var u = e.offsetX;
   var v = e.offsetY;
   // Find the world coordinates
@@ -115,8 +115,6 @@ var mesh_click = function(e){
       break;
     case 'chest_lidar':
       var w = chest_mesh_raw_ctx.getImageData(u, v, 1, 1).data[0];
-      
-      
       point = get_hokuyo_chest_xyz(u,v,w,
         mesh_width,mesh_height,
         mesh_depths[0],mesh_depths[1],
@@ -127,7 +125,7 @@ var mesh_click = function(e){
       return;
   }
   
-  //console.log('World: ',point);
+  console.log('World: ',point);
   
   if(point===null){return;}
 
@@ -138,6 +136,7 @@ var mesh_click = function(e){
 
   // Log all points in our debug zone
   // http://alignedleft.com/tutorials/d3/using-your-data
+  /*
   d3.select("#mesh_clicks").selectAll("p")
     .data(mesh_points)
     .enter()
@@ -146,6 +145,7 @@ var mesh_click = function(e){
       //var str = numeral(1000).format('0,0');
       return '('+d.x+','+d.y+','+d.z+')';
     });
+  */
 
   // the svg overlay has the circles for where we clicked
   var click_circles = mesh_svg.selectAll("circle")

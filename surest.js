@@ -16,8 +16,8 @@ var _       = require('underscore');
 var homepage="index.html"
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.25'
-var rpc_robot     = 'localhost'
+var rpc_robot     = '192.168.123.25'
+//var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555
 var rpc_unreliable_port = 55556
 
@@ -176,7 +176,7 @@ console.log(req.params);
 var rest_fsm = function (req, res, next) {
   
   // debug rest requests for fsm
-  console.log(req.params);
+  //console.log(req.params);
   
   // Send the reply to the host
   var reply_handler = function(data){
@@ -362,8 +362,9 @@ for( var w=0; w<bridges.length; w++) {
 server.get('/m/:shm/:segment/:key', rest_shm);
 server.post('/m/:shm/:segment/:key',rest_shm);
 // state machines
-server.get('/s/:fsm', rest_fsm);
-server.post('/s/:fsm',rest_fsm);
+//server.get('/s/:fsm', rest_fsm);
+//server.post('/s/:fsm',rest_fsm);
+server.post('/s',rest_fsm);
 // Reliable large data
 server.post('/r/:reliable',rest_reliable);
 

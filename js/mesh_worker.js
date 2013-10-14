@@ -39,6 +39,7 @@ self.onmessage = function(e) {
       // Compute the xyz positions
       var w = pixels[pixel_idx];
       var p = get_hokuyo_chest_xyz(i,j,w,width,height,near,far,hFOV,vFOV);
+      //var p = get_hokuyo_head_xyz(i,j,w,width,height,near,far,hFOV,vFOV);
       // saturation check
       if(p===null){
         pixels[pixel_idx]=0;
