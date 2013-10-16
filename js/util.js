@@ -53,24 +53,14 @@ var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   // Convert w of 0-255 to actual meters value
   var factor = (far-near)/255;
   var r = factor*w+near;
-
-  // make the local vector
-  var point = new THREE.Vector4(
-    r*Math.cos(h_angle),
-    r*Math.sin(h_angle),
-    neck_off_axis,
-    0
-  );
-  // make the transform to global
-  var local_to_global = new THREE.Matrix4();
-  local_to_global.makeRotationY( v_angle );
-  // apply transform so that local is now global
-  point.applyMatrix4(local_to_global);
-  // add the neck height offset from the torso
-  point.z = point.z + neck_height;
+  var dx = r * Math.cos(h_angle);
+  //
+  var x = dx * Math.cos(h_angle) + Math.sin(v_angle)*neck_off_axis;
+  var y = r  * Math.sin(h_angle);
+  var z = -dx * Math.sin(h_angle) + Math.cos(v_angle)*neck_off_axis + neck_height;
 
   // return the global point vector
-  return point;
+  return [x,y,z,r];
 }
 
 var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
