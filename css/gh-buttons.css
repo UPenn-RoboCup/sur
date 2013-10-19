@@ -331,6 +331,7 @@
     *display: inline;
 }
 
+
 .button + .button,
 .button + .button-group,
 .button-group + .button,
@@ -342,6 +343,10 @@
     float: left;
     padding: 0;
     margin: 0;
+}
+
+.button-group span {
+    float: left;
 }
 
 .button-group .button {

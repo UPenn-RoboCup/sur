@@ -37,6 +37,10 @@ body {
   height: 280px;
 }
 
+#fsm_container .label {
+  width: 50px;
+}
+
 #camera_container {
   position: absolute;
   left:   400px;

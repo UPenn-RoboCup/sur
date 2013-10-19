@@ -12,7 +12,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   CANVAS_HEIGHT = container.clientHeight;
 
   // Look at things!
-  var lookTarget = new THREE.Vector3(0,0,0);
+  var lookTarget = new THREE.Vector3(0,1000,1000);
 
   // add the camera
   camera = new THREE.PerspectiveCamera( 60, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
@@ -24,7 +24,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   controls = new THREE.OrbitControls( camera, container );
   controls.addEventListener( 'change', render );
   //controls.center = new THREE.Vector3(0,0,1000);
-  controls.target = new THREE.Vector3(0,0,1000);// look in front one meter
+  controls.target = lookTarget;// look in front one meter
   //controls.addEventListener('change',function(){requestAnimationFrame( animate )});
 
   // make the scene

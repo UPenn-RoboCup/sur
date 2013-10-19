@@ -7,9 +7,11 @@ var calculate_wheel = function(points){
     // Find the center of the wheel
     var center = new THREE.Vector3();
     center.addVectors( left, right ).divideScalar(2);
+    var min_dist = .1, max_dist = 1;
     if(center.x > 1 || center.x < 0.10){
       // x distance in meters
-      console.log('Handle is too far or too close!',center);
+      //console.log('Handle is too far or too close!',center);
+      alert(sprintf("Handle is too far or too close: %.3f < %.3f < %.3f", min_dist,center.x,max_dist));
       return;
     }
 

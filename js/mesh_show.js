@@ -13,21 +13,19 @@ var add_mesh_buttons = function(){
   var clear_btn     = document.getElementById('clear_mesh_btn');
   var grabwheel_btn = document.getElementById('grabwheel_btn');
   var grabtool_btn  = document.getElementById('grabtool_btn');
-  var three_btn        = document.getElementById('three_btn');
+  var three_btn     = document.getElementById('three_btn');
 
   // request a new mesh
   request_btn.addEventListener('click', function() {
 
     // if testing with the kinect
     var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net'
-    if(mesh_in_use=='kinect'){
-      mesh_req_url+='_depth';
-    }
+    if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
 
     // Unreliable
-    //var vals = [1,1,90];
+    //var vals = [1,1,90,1];
     // Reliable PNG
-    var vals = [3,3,90];
+    var vals = [3,3,90,0];
     // perform the post request
     promise.post( mesh_req_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
         if(error){ return; }
@@ -125,7 +123,7 @@ var mesh_click = function(e){
       return;
   }
   
-  console.log('World: ',point);
+  //console.log('World: ',point);
   
   if(point===null){return;}
 
@@ -136,7 +134,6 @@ var mesh_click = function(e){
 
   // Log all points in our debug zone
   // http://alignedleft.com/tutorials/d3/using-your-data
-  /*
   d3.select("#mesh_clicks").selectAll("p")
     .data(mesh_points)
     .enter()
@@ -145,7 +142,6 @@ var mesh_click = function(e){
       //var str = numeral(1000).format('0,0');
       return '('+d.x+','+d.y+','+d.z+')';
     });
-  */
 
   // the svg overlay has the circles for where we clicked
   var click_circles = mesh_svg.selectAll("circle")

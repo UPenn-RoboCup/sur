@@ -70,5 +70,35 @@ document.addEventListener( "DOMContentLoaded", function(){
       if(error){ return; }
     });
   }, false);
+  
+  // Motion stand
+  document.getElementById('motion_fsm_stand_btn').addEventListener('click', function() {
+    // if testing with the kinect
+    var req_url = rest_root+'/s'
+    // perform the post request
+    promise.post( req_url, {fsm: 'MotionFSM' , evt: 'stand'} ).then(function(error, text, xhr) {
+      if(error){ return; }
+    });
+  }, false);
+  
+  // Motion walk
+  document.getElementById('motion_fsm_walk_btn').addEventListener('click', function() {
+    // if testing with the kinect
+    var req_url = rest_root+'/s'
+    // perform the post request
+    promise.post( req_url, {fsm: 'MotionFSM' , evt: 'walk'} ).then(function(error, text, xhr) {
+      if(error){ return; }
+    });
+  }, false);
+
+  // Body init
+  document.getElementById('body_fsm_init_btn').addEventListener('click', function() {
+    // if testing with the kinect
+    var req_url = rest_root+'/s'
+    // perform the post request
+    promise.post( req_url, {fsm: 'BodyFSM' , evt: 'init'} ).then(function(error, text, xhr) {
+      if(error){ return; }
+    });
+  }, false);
 
 }, false);

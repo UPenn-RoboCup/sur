@@ -62,6 +62,7 @@ self.onmessage = function(e) {
       indices[idx_idx] = position_idx/3;
 
       // Save the distance in pixels array
+      // Transformed to THREEjs coordinates
       positions[position_idx]   =  p[1] * 1000;
       positions[position_idx+1] =  p[2] * 1000;
       positions[position_idx+2] =  p[0] * 1000;
@@ -81,7 +82,7 @@ self.onmessage = function(e) {
   var index = new Uint16Array( n_el * 6 );
   var quad_pos = new Float32Array( n_el * 3 );
   var n_quad = 0;
-  //var d_ep = 100; // mm? m?
+  var d_ep = 100; // mm? m?
   position_idx = -1;
   quad_idx = 0;
   // do not look at the last row/column
@@ -90,6 +91,7 @@ self.onmessage = function(e) {
   for (var j = 0; j<height; j++ ) {
     for (var i = 0; i<width; i++ ) {
       var idx = width*j+i;
+      
       var ii = 4*idx;
       var a = pixels[ii];
       if(a==0){continue;}
@@ -97,6 +99,7 @@ self.onmessage = function(e) {
       position_idx++;
 
       // Check neighbors of the valid point
+
       var b = pixels[ii+4];
       if(b==0){continue;}
       ii+=(4*width);
@@ -117,6 +120,7 @@ self.onmessage = function(e) {
 
       // Found a quad!
       n_quad++;
+      
       // Add the upper tri
       index[quad_idx]   = indices[idx]; //a
       index[quad_idx+1] = indices[idx+width]; //c
