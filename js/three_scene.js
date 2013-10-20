@@ -143,8 +143,8 @@ foot_steps = []
     var colors    = new Float32Array(e.data.col);
     var index     = new Uint16Array(e.data.idx);
 
-    //make_particle_system(positions, colors);
-    make_mesh(index,positions,e.data.n_quad,e.data.n_el /*,colors*/ );
+    //make_mesh(index,positions,e.data.n_quad,e.data.n_el /*,colors*/ );
+    make_particle_system(positions, colors);
 
     // debug
     console.log(e.data);
@@ -219,7 +219,7 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
   obj.dep = depths;
   obj.fov = fov;
   obj.use = name;
-  obj.pitch = 10*Math.PI/180;
+  obj.pitch = 12*Math.PI/180;
   //console.log(obj);
   mesh_worker.postMessage(obj,[buf]);
 }
@@ -227,7 +227,7 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
 // make a new mesh from the number of triangles specified
 //var make_mesh = function(index,position,n_quad,n_el,c2){
  var make_mesh = function(index,position,n_quad,n_el){
-   console.log(index);
+  //console.log(index);
   scene.remove( mesh );
   /////////////////////
   // Initialize the faces
@@ -251,6 +251,8 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
     },
     */
   }
+
+  /*
   /////////////////////
   // form the offsets
   //var chunkSize = 2^16;
@@ -268,6 +270,12 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
     geometry.offsets.push( offset );
   }
   console.log(geometry.offsets);
+  */
+  geometry.offsets.push({
+    start: 0,
+    index: 0,
+    count: n_el
+  });
   /////////////////////
   geometry.computeBoundingSphere(); // for picking via raycasting
 

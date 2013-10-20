@@ -9,6 +9,19 @@ if(this.document!==undefined){
   rest_root = 'http://'+host+':8080';
 }
 
+//////////////////
+// Robot properties for where the LIDARs are
+//////////////////
+var chest_depth    = 0.05;
+var chest_height   = 0.09;
+var chest_off_axis = 0.04;
+var neck_height    = 0.30;
+var neck_off_axis  = 0.12;
+/* robot bodyHeight, but this can change a LOT */
+var bodyHeight = 1.155;
+var bodyTilt = 10*Math.PI/180;
+//var bodyHeight = 1.02;
+
 var jet = function(val){
   //val = Math.min(Math.max(val,0),255);
   // http://www.metastine.com/?p=7
@@ -27,18 +40,6 @@ var get_kinect_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   var z = Math.tan(vFOV/2)*2*(.5-v/height)*x;
   return new THREE.Vector3( x, y, z );
 }
-
-//////////////////
-// Robot properties for where the LIDARs are
-//////////////////
-var chest_depth    = 0.05;
-var chest_height   = 0.09;
-var chest_off_axis = 0.04;
-var neck_height    = 0.30;
-var neck_off_axis  = 0.12;
-/* robot bodyHeight, but this can change a LOT */
-//var bodyHeight = 1.155;
-var bodyHeight = 1.02;
 
 var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV,pitch){
   // do not use saturated pixels
@@ -86,6 +87,8 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV,pitch)
   var z = r * Math.sin(v_angle) + bodyHeight;
   
   // rotate for pitch compensation
+  // hack for now for ease
+  pitch = bodyTilt;
   var cp = Math.cos(pitch);
   var sp = Math.sin(pitch);
   var xx = cp*x + sp*z;
