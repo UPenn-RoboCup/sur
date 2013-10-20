@@ -146,7 +146,10 @@ foot_steps = []
     var index    = new Uint16Array(e.data.idx,0,6*e.data.n_quad);
     var offset   = e.data.quad_offsets;
     
-    console.log(index);
+    console.log( index[offset[0].count-1] );
+    console.log( index[offset[0].count] );
+    console.log( index[offset[0].count+1] );
+    
 
     make_mesh(index,position,color,offset);
     make_particle_system(position, color);
