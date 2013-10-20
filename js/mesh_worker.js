@@ -41,11 +41,28 @@ self.onmessage = function(e) {
 
   // Quads will cite indexed pixels
   var quad_offsets = [];
+  // first offset is just zero
+  quad_offsets.push({
+		index: 0,
+    start: 0,
+		count: 0,
+    row_break: 0
+	});
+  // save which offsets
+  var cur_quad_offset = 0;
 
   // Access pixel array elements and particle elements
 	var pixel_idx    = 0;
   var pixdex_idx   = 0;
   var position_idx = 0;
+  
+  // for chunks
+  var prev_pos_idx = 0;
+  var prev_idx_idx = 0;
+  var prev_chunk_n_el = 0;
+  var prev_chunk_start = 0;
+  var prev_pos_chunk_idx = 0;
+  var n_last_chunk_el = 0;
   
   // Save the particle with 1 indexed in pixdex
   var idx_idx = 1;
@@ -54,12 +71,6 @@ self.onmessage = function(e) {
   n_el = 0;
   pixdex_idx = -1;
   pixel_idx = -4;
-  var done_positioning = false;
-  var prev_pos_idx = 0;
-  var prev_idx_idx = 0;
-  var prev_chunk_n_el = 0;
-  var prev_chunk_start = 0;
-  var prev_pos_chunk_idx = 0;
   for (var j = 0; j<height; j++ ) {
     for (var i = 0; i<width; i++ ) {
       
@@ -111,8 +122,114 @@ self.onmessage = function(e) {
       idx_idx++;
 
 		} // for i in width
+    
+    // 20000 triangles per offsets = 60000 indexes
+    // i think that is right:
+    // http://alteredqualia.com/three/examples/webgl_buffergeometry_perf2.html
+    var n_plausible_quads = (n_el-n_last_chunk_el)/2;
+    var n_plausible_index = n_plausible_quads * 6;
+    if(n_plausible_index>55000){// heustic number
+      quad_offsets[quad_offsets.length-1].row = j;
+      n_last_chunk_el = n_el;
+      // break into a new chunk
+      quad_offsets.push({
+    		index: position_idx,
+        row: -1,
+        start: 0, // this will change anyway
+    		count: 0, // ditto
+    	});
+      
+      // Retain row duplicates from the previous row
+      var ndups = position_idx-prev_pos_idx;
+      // Look at a view on this array of the dups
+      var duplicate_positions = positions.subarray(prev_pos_idx, position_idx);
+      // Copy the duplicates
+      positions.set(duplicate_positions,ndups);
+      // Save the index for the next round
+      position_idx+=ndups;
+      idx_idx+=(ndups/3);
+    }
+    
+    prev_pos_idx = position_idx;
+    
+	} // for j in height
+  
+  // Allow for maximum number of quads
+  // 2 triangles per mesh. 3 indices per triangle
+  var index = new Uint16Array( n_el * 6 );
+  
+  var overflowing = false;
+  
+  n_quad = 0;
+  quad_idx = 0;
+  pixdex_idx = 0;
+  
+  // do not look at the last row/column
+  height--;
+  width--;
+  // begin the loop
+  var offset_num = 0;
+  var cur_offset = quad_offsets[offset_num];
+  for (var j = 0; j<height; j++ ) {
+    // check the offset index
+    var offset_row = cur_offset.row;
+    if(j==offset_row){
+      cur_offset.count = quad_idx - cur_offset.start;
+      offset_num++;
+      cur_offset = quad_offsets[offset_num];
+      cur_offset.start = quad_idx;
+    }
+    for (var i = 0; i<width; i++ ) {
+      
+      // use a tmeporary index
+      var tmp_idx = pixdex_idx;
+      
+      // ready for next iteration
+      pixdex_idx++;
+      
+      // a of the quad
+      var a_position_idx = pixdex[tmp_idx]-1;
+      if(a_position_idx<0){continue;}
+            
+      // b of the quad
+      var b_position_idx = pixdex[tmp_idx+1]-1;
+      if(b_position_idx<0){continue;}
+      
+      // go to the next row
+      tmp_idx+=width;
+      
+      // c of the quad
+      var c_position_idx = pixdex[tmp_idx]-1;
+      if(c_position_idx<0){continue;}
+            
+      // d of the quad
+      var d_position_idx = pixdex[tmp_idx+1]-1;
+      if(d_position_idx<0){continue;}
+      
+      // x, y, z of this position
+      //a = positions.subarray(a_position_idx, a_position_idx+3);
+      //b = positions.subarray(b_position_idx, b_position_idx+3);
+      //c = positions.subarray(c_position_idx, c_position_idx+3);
+      //d = positions.subarray(d_position_idx, d_position_idx+3);
+      
+      // We have a valid quad!
+      n_quad++;
+      
+      // Add the upper tri
+      index[quad_idx]   = a_position_idx;
+      index[quad_idx+1] = c_position_idx;
+      index[quad_idx+2] = b_position_idx;
+      // add the lower tri
+      index[quad_idx+3] = d_position_idx;
+      index[quad_idx+4] = b_position_idx;
+      index[quad_idx+5] = c_position_idx;
+      quad_idx+=6;
 
+    } // for i
+    /*
     // Check if this was the start of a new chunk
+    var is_switch_chunk = (j%rows_per_chunk==0);
+    var chunk_id = Math.ceil(j/rows_per_chunk);
     var is_switch_chunk = (j%rows_per_chunk==0);
     if(is_switch_chunk||j==height-1){
       quad_offsets.push({
@@ -137,73 +254,12 @@ self.onmessage = function(e) {
     // save the previous index offset
     prev_pos_idx = position_idx;
     prev_idx_idx = idx_idx;
-	} // for j in height
-  
-  // Allow for maximum number of quads
-  // 2 triangles per mesh. 3 indices per triangle
-  var index = new Uint16Array( n_el * 6 );
-  
-  n_quad = 0;
-  quad_idx = 0;
-  pixdex_idx = 0;
-  
-  // do not look at the last row/column
-  height--;
-  width--;
-  // begin the loop
-  for (var j = 0; j<height; j++ ) {
-    var is_switch_chunk = (j%rows_per_chunk==0);
-    var chunk_id = Math.ceil(j/rows_per_chunk);
-    //if(is_switch_chunk&&j!=0){break;}
-    if (chunk_id>0){break;}
-    for (var i = 0; i<width; i++ ) {
-      
-      var tmp_idx = pixdex_idx;
-      // ready for next iteration
-      pixdex_idx++;
-      
-      // a of the quad
-      var a_position_idx = pixdex[tmp_idx]-1;
-      if(a_position_idx<0){continue;}
-      // x, y, z of this position
-      //a = positions.subarray(a_position_idx, a_position_idx+3);
-            
-      // b of the quad
-      var b_position_idx = pixdex[tmp_idx+1]-1;
-      if(b_position_idx<0){continue;}
-      // x, y, z of this position
-      //b = positions.subarray(b_position_idx, b_position_idx+3);
-      
-      // go to the next row
-      tmp_idx+=width;
-      
-      // c of the quad
-      var c_position_idx = pixdex[tmp_idx]-1;
-      if(c_position_idx<0){continue;}
-      // x, y, z of this position
-      //c = positions.subarray(c_position_idx, c_position_idx+3);
-            
-      // d of the quad
-      var d_position_idx = pixdex[tmp_idx+1]-1;
-      if(d_position_idx<0){continue;}
-      // x, y, z of this position
-      //d = positions.subarray(d_position_idx, d_position_idx+3);
-
-      // We have a valid quad!
-      n_quad++;
-      
-      // Add the upper tri
-      index[quad_idx]   = a_position_idx;
-      index[quad_idx+1] = c_position_idx;
-      index[quad_idx+2] = b_position_idx;
-      // add the lower tri
-      index[quad_idx+3] = d_position_idx;
-      index[quad_idx+4] = b_position_idx;
-      index[quad_idx+5] = c_position_idx;
-      quad_idx+=6;
-
-    } // for i
+    */
+    
   } // for j
+  
+  // final offset count
+  cur_offset.count = quad_idx - cur_offset.start;
 
   // post a message of the elements
   var el = {} // 4 bytes, 3 vertices

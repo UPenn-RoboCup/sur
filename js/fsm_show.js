@@ -21,7 +21,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     });
   }, false);
 
-  // Head cneter
+  // Head center
   document.getElementById('head_fsm_center_btn').addEventListener('click', function() {
     // if testing with the kinect
     var req_url = rest_root+'/s'
@@ -97,6 +97,26 @@ document.addEventListener( "DOMContentLoaded", function(){
     var req_url = rest_root+'/s'
     // perform the post request
     promise.post( req_url, {fsm: 'BodyFSM' , evt: 'init'} ).then(function(error, text, xhr) {
+      if(error){ return; }
+    });
+  }, false);
+  
+  // Body follow
+  document.getElementById('body_fsm_follow_btn').addEventListener('click', function() {
+    // if testing with the kinect
+    var req_url = rest_root+'/s'
+    // perform the post request
+    promise.post( req_url, {fsm: 'BodyFSM' , evt: 'follow'} ).then(function(error, text, xhr) {
+      if(error){ return; }
+    });
+  }, false);
+  
+  // Lidar pan
+  document.getElementById('lidar_fsm_pan_btn').addEventListener('click', function() {
+    // if testing with the kinect
+    var req_url = rest_root+'/s'
+    // perform the post request
+    promise.post( req_url, {fsm: 'LidarFSM' , evt: 'pan'} ).then(function(error, text, xhr) {
       if(error){ return; }
     });
   }, false);
