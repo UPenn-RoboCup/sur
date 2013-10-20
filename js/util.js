@@ -40,7 +40,7 @@ var neck_off_axis  = 0.12;
 //var bodyHeight = 1.155;
 var bodyHeight = 1.02;
 
-var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
+var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV,pitch){
   // do not use saturated pixels
   if(w==0||w==255){return;}
   //console.log(u,v,w,width,height,near,far,hFOV,vFOV);
@@ -58,14 +58,20 @@ var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   var x = dx * Math.cos(h_angle) + Math.sin(v_angle)*neck_off_axis;
   var y = r  * Math.sin(h_angle);
   var z = -dx * Math.sin(h_angle) + Math.cos(v_angle)*neck_off_axis + neck_height;
+  
+  // rotate for pitch compensation
+  var cp = Math.cos(pitch);
+  var sp = Math.sin(pitch);
+  var xx = cp*x + sp*z;
+  var zz = -sp*x + cp*z;
 
   // return the global point vector
-  return [x,y,z,r];
+  return [xx,y,zz,r];
 }
 
-var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
+var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV,pitch){
   // do not use saturated pixels
-  if(w<5||w>250){return null;}
+  if(w==0||w==255){return;}
   // radians per pixel
   var h_rpp = hFOV / width;
   var v_rpp = vFOV / height;
@@ -78,6 +84,12 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV){
   var x = r * Math.cos(v_angle) * Math.cos(h_angle) + chest_depth;
   var y = r * Math.cos(v_angle) * Math.sin(h_angle) + chest_height;
   var z = r * Math.sin(v_angle) + bodyHeight;
+  
+  // rotate for pitch compensation
+  var cp = Math.cos(pitch);
+  var sp = Math.sin(pitch);
+  var xx = cp*x + sp*z;
+  var zz = -sp*x + cp*z;
 
-  return [x,y,z,r];
+  return [xx,y,zz,r];
 }

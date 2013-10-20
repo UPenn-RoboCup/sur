@@ -305,11 +305,11 @@
 /* Big button
    ========================================================================== */
 
-.button.big {
+.label.big, .button.big {
     font-size: 14px;
 }
 
-.button.big.icon:before {
+.label.big.icon:before, .button.big.icon:before {
     top: 0;
 }
 

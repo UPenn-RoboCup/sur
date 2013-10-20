@@ -136,22 +136,18 @@ foot_steps = []
       console.log('Using WebWorker '+ww_script);
       return;
     }
-    //console.log(e)
+    console.log(e)
+    
     // TODO: Is this expensive, or just a cheap view change?
     var positions = new Float32Array(e.data.pos);
     var colors    = new Float32Array(e.data.col);
     var index     = new Uint16Array(e.data.idx);
-    /*
-    var p2 = new Float32Array(e.data.pos.slice());
-    var c2 = new Float32Array(e.data.col.slice());
-    make_particle_system(positions, colors);
-    */
 
-    make_mesh(index,positions,e.data.n_quad,e.data.n_el,colors);
+    //make_particle_system(positions, colors);
+    make_mesh(index,positions,e.data.n_quad,e.data.n_el /*,colors*/ );
 
     // debug
-    //console.log('processed mesh',positions);
-    //console.log(e.data)
+    console.log(e.data);
 
     // render the particle system change
     render();
@@ -223,12 +219,15 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
   obj.dep = depths;
   obj.fov = fov;
   obj.use = name;
+  obj.pitch = 10*Math.PI/180;
   //console.log(obj);
   mesh_worker.postMessage(obj,[buf]);
 }
 
 // make a new mesh from the number of triangles specified
-var make_mesh = function(index,position,n_quad,n_el,c2){
+//var make_mesh = function(index,position,n_quad,n_el,c2){
+ var make_mesh = function(index,position,n_quad,n_el){
+   console.log(index);
   scene.remove( mesh );
   /////////////////////
   // Initialize the faces
@@ -245,17 +244,19 @@ var make_mesh = function(index,position,n_quad,n_el,c2){
       itemSize: 3,
       array: position,
     },
+    /*
     color: {
       itemSize: 3,
       array: c2,
     },
+    */
   }
   /////////////////////
   // form the offsets
   //var chunkSize = 2^16;
-  var chunkSize = 655356;
+  var chunkSize = 65536;
   var offsets = n_el / chunkSize;
-  //console.log(n_el,chunkSize,offsets)
+  console.log('chunky',n_el,chunkSize,offsets)
   geometry.offsets = [];
   for ( var i = 0; i < offsets; i ++ ) {
     var offset = {
@@ -266,6 +267,7 @@ var make_mesh = function(index,position,n_quad,n_el,c2){
     };
     geometry.offsets.push( offset );
   }
+  console.log(geometry.offsets);
   /////////////////////
   geometry.computeBoundingSphere(); // for picking via raycasting
 

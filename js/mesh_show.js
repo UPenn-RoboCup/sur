@@ -91,6 +91,7 @@ var mesh_click = function(e){
   var v = e.offsetY;
   // Find the world coordinates
   var point;
+  var pitch = 10*Math.PI/180;
   switch(mesh_in_use){
     case 'kinect':
       var w = kinect_mesh_raw_ctx.getImageData(u, v, 1, 1).data[0];
@@ -108,7 +109,8 @@ var mesh_click = function(e){
       point = get_hokuyo_head_xyz(u,v,w,
         mesh_width,mesh_height,
         mesh_depths[0],mesh_depths[1],
-        mesh_fov[0],mesh_fov[1]
+        mesh_fov[0],mesh_fov[1],
+        pitch
       );
       break;
     case 'chest_lidar':
@@ -116,7 +118,8 @@ var mesh_click = function(e){
       point = get_hokuyo_chest_xyz(u,v,w,
         mesh_width,mesh_height,
         mesh_depths[0],mesh_depths[1],
-        mesh_fov[0],mesh_fov[1]
+        mesh_fov[0],mesh_fov[1],
+        pitch
       );
       break;
     default:
