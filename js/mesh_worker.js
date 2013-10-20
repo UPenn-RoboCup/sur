@@ -178,6 +178,16 @@ self.onmessage = function(e) {
   var offset_num = 0;
   var cur_offset = quad_offsets[offset_num];
   for (var j = 0; j<height; j++ ) {
+    
+    // check the offset index
+    var offset_row = cur_offset.row;
+    if(j==(offset_row)){
+      cur_offset.count = quad_idx - cur_offset.start;
+      offset_num++;
+      cur_offset = quad_offsets[offset_num];
+      cur_offset.start = quad_idx;
+    }
+    
     for (var i = 0; i<width; i++ ) {
       
       // use a temporary index
@@ -210,7 +220,6 @@ self.onmessage = function(e) {
       b = positions.subarray(b_position_idx, b_position_idx+3);
       c = positions.subarray(c_position_idx, c_position_idx+3);
       d = positions.subarray(d_position_idx, d_position_idx+3);
-      //if(Math.abs(a[0]-b[0])>1000){continue;}
       
       // We have a valid quad!
       n_quad++;
@@ -223,17 +232,21 @@ self.onmessage = function(e) {
       index[quad_idx+3] = d_position_idx-cur_offset.index;
       index[quad_idx+4] = b_position_idx-cur_offset.index;
       index[quad_idx+5] = c_position_idx-cur_offset.index;
+      
+      if(false && offset_num>0){
+        // Add the upper tri
+        index[quad_idx]   = 0
+        index[quad_idx+1] = 0
+        index[quad_idx+2] = 0
+        // add the lower tri
+        index[quad_idx+3] = 0
+        index[quad_idx+4] = 0
+        index[quad_idx+5] = 0
+      }
+      
       quad_idx+=6;
 
     } // for i
-    // check the offset index
-    var offset_row = cur_offset.row;
-    if(j==(offset_row)){
-      cur_offset.count = quad_idx - cur_offset.start;
-      offset_num++;
-      cur_offset = quad_offsets[offset_num];
-      cur_offset.start = quad_idx;
-    }
   } // for j
   
   // final offset count

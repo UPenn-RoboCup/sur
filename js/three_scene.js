@@ -147,7 +147,7 @@ foot_steps = []
     var offset   = e.data.quad_offsets;
 
     make_mesh(index,position,color,offset);
-    //make_particle_system(position, color);
+    make_particle_system(position, color);
 
     // render the particle system change
     render();
