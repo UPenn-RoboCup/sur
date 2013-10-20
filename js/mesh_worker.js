@@ -4,7 +4,6 @@ importScripts('../js/util.js');
 var ready = false;
 var a,b,c,d;
 var n_quad, n_el, quad_idx;
-var diff_one;
 
 self.onmessage = function(e) {
   
@@ -57,6 +56,7 @@ self.onmessage = function(e) {
   pixel_idx = -4;
   var done_positioning = false;
   var prev_pos_idx = 0;
+  var prev_idx_idx = 0;
   var prev_chunk_n_el = 0;
   var prev_chunk_start = 0;
   var prev_pos_chunk_idx = 0;
@@ -136,6 +136,7 @@ self.onmessage = function(e) {
     }
     // save the previous index offset
     prev_pos_idx = position_idx;
+    prev_idx_idx = idx_idx;
 	} // for j in height
   
   // Allow for maximum number of quads
@@ -152,7 +153,9 @@ self.onmessage = function(e) {
   // begin the loop
   for (var j = 0; j<height; j++ ) {
     var is_switch_chunk = (j%rows_per_chunk==0);
-    if(is_switch_chunk&&j!=0){break;}
+    var chunk_id = Math.ceil(j/rows_per_chunk);
+    //if(is_switch_chunk&&j!=0){break;}
+    if (chunk_id>0){break;}
     for (var i = 0; i<width; i++ ) {
       
       var tmp_idx = pixdex_idx;

@@ -136,17 +136,18 @@ foot_steps = []
       console.log('Using WebWorker '+ww_script);
       return;
     }
-    //console.log(e)
+    
     // debug
+    //console.log(e)
     console.log(e.data);
     
-    var position = new Float32Array(e.data.pos);
-    var color    = new Float32Array(e.data.col);
-    var index    = new Uint16Array(e.data.idx);
-    var offset   = e.data.quad_offets;
+    var position = new Float32Array(e.data.pos,0,3*e.data.n_el);
+    var color    = new Float32Array(e.data.col,0,3*e.data.n_el);
+    var index    = new Uint16Array(e.data.idx,0,6*e.data.n_quad);
+    var offset   = e.data.quad_offsets;
 
-    //make_mesh(index,position,color,offset);
-    make_particle_system(position, color);
+    make_mesh(index,position,color,offset);
+    //make_particle_system(position, color);
 
     // render the particle system change
     render();
@@ -231,6 +232,8 @@ var make_mesh = function(index,position,color,offsets){
   var geometry = new THREE.BufferGeometry();
   // Dynamic, because we will do raycasting
   geometry.dynamic = true;
+  // Use our given offsets
+  geometry.offsets = [offsets[0]];
   // Set the attribute buffers
   geometry.attributes = {
     index: {
@@ -246,7 +249,6 @@ var make_mesh = function(index,position,color,offsets){
       array: color,
     },
   }
-  geometry.offsets = offsets;
 
   /////////////////////
   geometry.computeBoundingSphere(); // for picking via raycasting
@@ -280,6 +282,9 @@ var make_particle_system = function(pos,col){
   //var nparticles = 500*480;
 
   var geometry = new THREE.BufferGeometry();
+  // Dynamic, because we will do raycasting
+  geometry.dynamic = true;
+  //
   geometry.attributes = {
     position: {
       itemSize: 3,
@@ -293,7 +298,6 @@ var make_particle_system = function(pos,col){
 
   // default size: 1 cm
   var material = new THREE.ParticleBasicMaterial( { size: 10, vertexColors: true } );
-  
 
   particleSystem = new THREE.ParticleSystem( geometry, material );
   scene.add( particleSystem );
