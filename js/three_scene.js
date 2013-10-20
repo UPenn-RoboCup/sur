@@ -139,20 +139,15 @@ foot_steps = []
     
     // debug
     //console.log(e)
-    console.log(e.data);
+    //console.log(e.data);
     
     var position = new Float32Array(e.data.pos,0,3*e.data.n_el);
     var color    = new Float32Array(e.data.col,0,3*e.data.n_el);
     var index    = new Uint16Array(e.data.idx,0,6*e.data.n_quad);
-    var offset   = e.data.quad_offsets;
-    
-    console.log( index[offset[0].count-1] );
-    console.log( index[offset[0].count] );
-    console.log( index[offset[0].count+1] );
-    
+    var offset   = e.data.quad_offsets;    
 
     make_mesh(index,position,color,offset);
-    make_particle_system(position, color);
+    //make_particle_system(position, color);
 
     // render the particle system change
     render();
