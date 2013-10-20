@@ -136,18 +136,17 @@ foot_steps = []
       console.log('Using WebWorker '+ww_script);
       return;
     }
-    console.log(e)
-    
-    // TODO: Is this expensive, or just a cheap view change?
-    var positions = new Float32Array(e.data.pos);
-    var colors    = new Float32Array(e.data.col);
-    var index     = new Uint16Array(e.data.idx);
-
-    //make_mesh(index,positions,e.data.n_quad,e.data.n_el /*,colors*/ );
-    make_particle_system(positions, colors);
-
+    //console.log(e)
     // debug
     console.log(e.data);
+    
+    var position = new Float32Array(e.data.pos);
+    var color    = new Float32Array(e.data.col);
+    var index    = new Uint16Array(e.data.idx);
+    var offset   = e.data.quad_offets;
+
+    //make_mesh(index,position,color,offset);
+    make_particle_system(position, color);
 
     // render the particle system change
     render();
@@ -225,9 +224,7 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
 }
 
 // make a new mesh from the number of triangles specified
-//var make_mesh = function(index,position,n_quad,n_el,c2){
- var make_mesh = function(index,position,n_quad,n_el){
-  //console.log(index);
+var make_mesh = function(index,position,color,offsets){
   scene.remove( mesh );
   /////////////////////
   // Initialize the faces
@@ -244,38 +241,13 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
       itemSize: 3,
       array: position,
     },
-    /*
     color: {
       itemSize: 3,
-      array: c2,
+      array: color,
     },
-    */
   }
+  geometry.offsets = offsets;
 
-  /*
-  /////////////////////
-  // form the offsets
-  //var chunkSize = 2^16;
-  var chunkSize = 65536;
-  var offsets = n_el / chunkSize;
-  console.log('chunky',n_el,chunkSize,offsets)
-  geometry.offsets = [];
-  for ( var i = 0; i < offsets; i ++ ) {
-    var offset = {
-      //start: i * chunkSize * (12 / 8) * 3, // 12 tri from 8 vert
-      start: i * chunkSize * (2 / 4) * 3,
-      index: i * chunkSize,
-      count: Math.min( 2*n_quad - ( i * chunkSize * (2 / 4) ), chunkSize * (2 / 4) ) * 3
-    };
-    geometry.offsets.push( offset );
-  }
-  console.log(geometry.offsets);
-  */
-  geometry.offsets.push({
-    start: 0,
-    index: 0,
-    count: n_el
-  });
   /////////////////////
   geometry.computeBoundingSphere(); // for picking via raycasting
 

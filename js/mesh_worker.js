@@ -152,6 +152,7 @@ self.onmessage = function(e) {
   // begin the loop
   for (var j = 0; j<height; j++ ) {
     var is_switch_chunk = (j%rows_per_chunk==0);
+    if(is_switch_chunk&&j!=0){break;}
     for (var i = 0; i<width; i++ ) {
       
       var tmp_idx = pixdex_idx;
@@ -162,13 +163,13 @@ self.onmessage = function(e) {
       var a_position_idx = pixdex[tmp_idx]-1;
       if(a_position_idx<0){continue;}
       // x, y, z of this position
-      a = positions.subarray(a_position_idx, a_position_idx+3);
+      //a = positions.subarray(a_position_idx, a_position_idx+3);
             
       // b of the quad
       var b_position_idx = pixdex[tmp_idx+1]-1;
       if(b_position_idx<0){continue;}
       // x, y, z of this position
-      b = positions.subarray(b_position_idx, b_position_idx+3);
+      //b = positions.subarray(b_position_idx, b_position_idx+3);
       
       // go to the next row
       tmp_idx+=width;
@@ -177,13 +178,13 @@ self.onmessage = function(e) {
       var c_position_idx = pixdex[tmp_idx]-1;
       if(c_position_idx<0){continue;}
       // x, y, z of this position
-      c = positions.subarray(c_position_idx, c_position_idx+3);
+      //c = positions.subarray(c_position_idx, c_position_idx+3);
             
       // d of the quad
       var d_position_idx = pixdex[tmp_idx+1]-1;
       if(d_position_idx<0){continue;}
       // x, y, z of this position
-      d = positions.subarray(d_position_idx, d_position_idx+3);
+      //d = positions.subarray(d_position_idx, d_position_idx+3);
 
       // We have a valid quad!
       n_quad++;
@@ -209,12 +210,8 @@ self.onmessage = function(e) {
   el.n_el   = n_el;
   el.n_quad = n_quad;
   el.quad_offsets = quad_offsets;
-  /*
-  el.a = a;
-  el.diff_one = diff_one;
-  */
 
-  self.postMessage(el,[el.pos, el.idx]);
+  self.postMessage(el,[el.pos, el.idx, el.col]);
 };
 
 self.onerror = function(message) {
