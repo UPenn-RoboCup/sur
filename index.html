@@ -22,8 +22,6 @@
   <script src="js/calculate.js"></script>
   <script src="lib/stats.min.js"></script>
   <script src="lib/OrbitControls.js"></script>
-  <script src="lib/STLLoader.js"></script>
-  <script src="lib/VRMLLoader.js"></script>
 
   <!-- SUR Layout JS -->
 
@@ -32,14 +30,26 @@
   <script src="js/mesh_show.js"></script>
   <script src="js/three_scene.js"></script>
   <script src="js/fsm_show.js"></script>
+  
+  <!-- Plot the robot-->
+  <script src="lib/STLLoader.js"></script>
  
 </head>
 
 <body>
 
 <!--https://github.com/necolas/css3-github-buttons-->
-  <div id="fsm_container">
+<div id="fsm_container">
+  <div id="bodyheight_slider" class="mesh_selection"></div>
+  <div class="button-group" id="mesh_btns">
+    <a href="#" class="button mesh_selection" id="request_mesh_btn">Acquire</a>
+    <a href="#" class="button mesh_selection" id="switch_mesh_btn">Chest</a>
+    <a href="#" class="button mesh_selection" id="clear_mesh_btn">Clear</a>
+    <a href="#" class="button mesh_selection" id="grabwheel_btn">Wheel</a>
+    <a href="#" class="button mesh_selection" id="grabtool_btn">Tool</a>
+  </div>
 
+  <br/>
   <div class="button-group">
   <span class='big label rss icon'>Arm</span>
   <a href="#" class="big button fsm_selection" id="arm_fsm_init_btn">Init</a>
@@ -69,42 +79,24 @@
   <a href="#" class="big button fsm_selection" id="body_fsm_follow_btn">Follow</a>
   <a href="#" class="big button fsm_selection" id="body_fsm_step_btn">Step</a>
   </div>
-  
+
   <br/>
   <div class="button-group">
   <span class='big label rss icon'>LIDAR</span>
   <a href="#" class="big button fsm_selection" id="lidar_fsm_pan_btn">Pan</a>
   </div>
 
+  <div id="mesh_clicks">
+  You clicked:
+  </div>
+
 </div>
 
-  <div id="slam_container"></div>
-  <div id="camera_container"></div>
-  <div id="three_container"></div>
-  <div id="mesh_container"></div>
+<div id="wp_container"></div>
 
-  <div id="selection_container">
-    <div id="mesh_select">
-      <div id="bodyheight_slider" class="mesh_selection"></div>
-      <div class="button-group" id="mesh_btns">
-        <a href="#" class="button mesh_selection" id="request_mesh_btn">Mesh</a>
-        <a href="#" class="button mesh_selection" id="switch_mesh_btn">Chest</a>
-        <a href="#" class="button mesh_selection" id="clear_mesh_btn">Clear</a>
-        <a href="#" class="button mesh_selection" id="grabwheel_btn">Wheel</a>
-        <a href="#" class="button mesh_selection" id="grabtool_btn">Tool</a>
-        <a href="#" class="button mesh_selection" id="three_btn">3D</a>
-      </div>
-      
-      <div id="mesh_clicks">
-      You clicked:
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom row buttons -->
-  <div class="button-group" id="buttons">
-    <a href="#" class="button big" id="update_btn">Update Dipole</a>
-  </div>
+<div id="mesh_container"></div>
+<div id="camera_container"></div>
+<div id="three_container"></div>
 
 </body>
 

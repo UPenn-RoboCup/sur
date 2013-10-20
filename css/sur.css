@@ -2,6 +2,10 @@ body {
   /* background-color: #444; */
 }
 
+/*
+ * Mesh
+ */
+
 .mesh_selection {
   float: left;
 }
@@ -14,58 +18,13 @@ body {
   height: 100px;
 }
 
-#buttons {
-  position: absolute;
-  left: 10px;
-  bottom: 0px;
-}
-
-#slam_container {
-  position: absolute;
-  left:     0px;
-  top:      0px;
-  width:  400px;
-  height: 400px;
-  background-color: #080;
-}
-
-#fsm_container {
-  position: absolute;
-  left:     0px;
-  top:    400px;
-  width:  400px;
-  height: 280px;
-}
-
-#fsm_container .label {
-  width: 50px;
-}
-
-#camera_container {
-  position: absolute;
-  left:   400px;
-  top:      0px;
-  width:  640px;
-  height: 360px;
-  background-color: #800;
-}
-
-#three_container {
-  position: absolute;
-  left:   400px;
-  top:    360px;
-  width:  640px;
-  height: 320px;
-  background-color: #008;
-}
-
 #mesh_container {
   position: absolute;
-  left:  1040px;
+  left:     0px;
   top:      0px;
-  width:  500px;
-  height: 500px;
-  background-color: #880;
+  width:  640px;
+  height: 400px;
+  background-color: #080;
 }
 
 #mesh_container .mesh_overlay {
@@ -74,10 +33,60 @@ body {
   left: 0px;
 }
 
-#selection_container {
+/*
+ * FSM
+ */
+
+#fsm_container {
   position: absolute;
-  left:  1040px;
-  top:    500px;
-  width:  500px;
-  height: 180px;
+  left:     0px;
+  top:    400px;
+  width:  340px;
+  height: 280px;
+}
+
+#fsm_container .label {
+  width: 50px;
+}
+
+/*
+ * Waypoints
+ */
+
+#wp_container {
+  position: absolute;
+  left:   340px;
+  top:    400px;
+  width:  300px;
+  height: 280px;
+}
+
+#fsm_container .label {
+  width: 50px;
+}
+
+/*
+ * Camera
+ */
+
+#camera_container {
+  position: absolute;
+  left:   640px;
+  top:      0px;
+  width:  640px;
+  height: 360px;
+  background-color: #800;
+}
+
+/*
+ * THREE.js
+ */
+
+#three_container {
+  position: absolute;
+  left:   640px;
+  top:    360px;
+  width:  640px;
+  height: 320px;
+  background-color: #008;
 }
