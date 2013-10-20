@@ -46,7 +46,7 @@ self.onmessage = function(e) {
 		index: 0,
     start: 0,
 		count: 0,
-    row_break: 0,
+    row: 0,
     pixdex_offset: 0
 	});
   // save which offsets
@@ -129,7 +129,7 @@ self.onmessage = function(e) {
     // http://alteredqualia.com/three/examples/webgl_buffergeometry_perf2.html
     var n_plausible_quads = (n_el-n_last_chunk_el)/2;
     var n_plausible_index = n_plausible_quads * 6;
-    if(n_plausible_index>50000){// heustic number
+    if(n_plausible_index>55000){// heustic number
       quad_offsets[quad_offsets.length-1].row = j;
       
       var prev_pixdex_offset = quad_offsets[quad_offsets.length-1].pixdex_offset;
@@ -137,13 +137,14 @@ self.onmessage = function(e) {
       n_last_chunk_el = n_el;
       // break into a new chunk
       quad_offsets.push({
-    		index: position_idx,
+    		index: position_idx/3,
         row: -1,
-        pixdex_offset: prev_pixdex_offset,
+        pixdex_offset: 0,
         start: 0, // this will change anyway
     		count: 0, // ditto
     	});
       
+      /*
       // Retain row duplicates from the previous row
       var ndups = position_idx-prev_pos_idx;
       // Look at a view on this array of the dups
@@ -155,6 +156,7 @@ self.onmessage = function(e) {
       // save out pixdex offset
       quad_offsets[quad_offsets.length-1].pixdex_offset+=(ndups/3);
       //idx_idx+=(ndups/3);
+      */
     }
     
     prev_pos_idx = position_idx;
@@ -181,11 +183,15 @@ self.onmessage = function(e) {
     
     // check the offset index
     var offset_row = cur_offset.row;
-    if(j==(offset_row)){
+    if( j==offset_row ){
       cur_offset.count = quad_idx - cur_offset.start;
       offset_num++;
       cur_offset = quad_offsets[offset_num];
       cur_offset.start = quad_idx;
+      //pixdex_idx+=width;
+      //j++; // double continue :)
+      pixdex_idx+=width;
+      continue;
     }
     
     for (var i = 0; i<width; i++ ) {
@@ -225,24 +231,13 @@ self.onmessage = function(e) {
       n_quad++;
       
       // Add the upper tri
-      index[quad_idx]   = a_position_idx-cur_offset.index;
-      index[quad_idx+1] = c_position_idx-cur_offset.index;
-      index[quad_idx+2] = b_position_idx-cur_offset.index;
+      index[quad_idx]   = a_position_idx-3*cur_offset.index;
+      index[quad_idx+1] = c_position_idx-3*cur_offset.index;
+      index[quad_idx+2] = b_position_idx-3*cur_offset.index;
       // add the lower tri
-      index[quad_idx+3] = d_position_idx-cur_offset.index;
-      index[quad_idx+4] = b_position_idx-cur_offset.index;
-      index[quad_idx+5] = c_position_idx-cur_offset.index;
-      
-      if(false && offset_num>0){
-        // Add the upper tri
-        index[quad_idx]   = 0
-        index[quad_idx+1] = 0
-        index[quad_idx+2] = 0
-        // add the lower tri
-        index[quad_idx+3] = 0
-        index[quad_idx+4] = 0
-        index[quad_idx+5] = 0
-      }
+      index[quad_idx+3] = d_position_idx-3*cur_offset.index;
+      index[quad_idx+4] = b_position_idx-3*cur_offset.index;
+      index[quad_idx+5] = c_position_idx-3*cur_offset.index;
       
       quad_idx+=6;
 
