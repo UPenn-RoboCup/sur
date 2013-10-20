@@ -4,12 +4,32 @@ var scene, renderer, camera, stats, controls;
 var foot_floor, foot_steps, foot_geo, foot_mat;
 // particle system and mesh
 var particleSystem, mesh;
+//
 var CANVAS_WIDTH, CANVAS_HEIGHT;
 document.addEventListener( "DOMContentLoaded", function(){
   var container = document.getElementById( 'three_container' );
   if(container===undefined){return;}
   CANVAS_WIDTH = container.clientWidth;
   CANVAS_HEIGHT = container.clientHeight;
+
+
+
+
+  document.getElementById('clear_wp_btn').addEventListener('click', function() {
+  
+    for(var i=0;i<foot_steps.length;i++){
+      scene.remove(foot_steps[i]);
+    }
+    foot_steps = [];
+  
+    d3.select("#wp_status").selectAll("p")
+    .data(foot_steps).exit().remove();
+    
+    render();
+    
+  }, false);
+
+
 
   // Look at things!
   var lookTarget = new THREE.Vector3(0,1000,1000);
@@ -200,14 +220,26 @@ var select_footstep = function(event){
   var new_footstep = new THREE.Mesh( foot_geo, foot_mat );
   scene.add(new_footstep)
 
-  //console.log(new_footstep)
+  // Save the footstep
   new_footstep.position.copy(placement);
   foot_steps.push(new_footstep);
+
+  // Log all points in our debug zone
+  d3.select("#wp_status").selectAll("p")
+    .data(foot_steps)
+    .enter()
+    .append("p")
+    .text(function(d) {
+      var pos = d.position;
+      return sprintf('%.2f, %.2f, %.2f',pos.x,pos.y,pos.z);
+    });
+  
 
   // Render the scene now that we have updated the footsteps
   render();
   
 }
+
 // for rotation (look for theta)
 //: view-source:mrdoob.github.io/three.js/examples/webgl_interactive_voxelpainter.html
 
