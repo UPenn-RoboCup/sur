@@ -1,5 +1,3 @@
-// Setup the WebSocket connection and callbacks
-// Form the mesh image layer
 var last_mesh_img, mesh_ctx, mesh_svg;
 var head_mesh_raw_ctx, chest_mesh_raw_ctx, kinect_mesh_raw_ctx;
 var mesh_clicks, mesh_points, mesh_depths;
@@ -7,37 +5,45 @@ var mesh_in_use = 'chest_lidar';
 var mesh_width, mesh_height, mesh_fov = [];
 var mesh_worker;
 
+/**
+ * useful links
+ * attributes for new clicks
+ * http://mbostock.github.io/d3/tutorial/circle.html
+ * Log all points in our debug zone
+ * http://alignedleft.com/tutorials/d3/using-your-data
+ * jet
+ * http://www.metastine.com/?p=7
+*/
+
+/**
+ * Buttons for interacting with the mesh
+ */
 var add_mesh_buttons = function(){
   // request a new mesh
   document.getElementById('request_mesh_btn').addEventListener('click', function() {
     // if testing with the kinect
     var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net'
     if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
-    // Unreliable
-    //var vals = [1,1,90,1];
-    // Reliable PNG
-    var vals = [3,3,90,0];
-    // perform the post request
-    promise.post( mesh_req_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
-        if(error){ return; }
-    });
+    // perform the post request for a reliable PNG
+    promise.post( mesh_req_url, {val:JSON.stringify([3,3,90,0])} );
   }, false);
 
   // switch the type of mesh to request
   document.getElementById('switch_mesh_btn').addEventListener('click', function() {
-    switch(switch_btn.textContent){
+    // Change the button text
+    switch(this.textContent){
       case 'Head':
-        switch_btn.textContent = "Chest";
+        this.textContent = "Chest";
         mesh_in_use = 'chest_lidar';
         draw_jet_map(chest_mesh_raw_ctx);
         break;
       case 'Chest':
-        switch_btn.textContent = "Head";
+        this.textContent = "Head";
         mesh_in_use = 'head_lidar';
         draw_jet_map(head_mesh_raw_ctx);
         break;
       default:
-        switch_btn.textContent = "Kinect";
+        this.textContent = "Kinect";
         mesh_in_use = 'kinect';
         break;
     }
@@ -65,11 +71,7 @@ var add_mesh_buttons = function(){
   // Calculate where the wheel is; send to the robot
   document.getElementById('grabwheel_btn').addEventListener('click', function() {
     var wheel = calculate_wheel(mesh_points);
-    //console.log('Wheel',wheel);
     if(wheel===undefined){return;}
-    
-    
-    
     var wheel_url = rest_root+'/m/hcm/wheel/model'
     // perform the post request
     promise.post( wheel_url, {val:JSON.stringify(wheel)} ).then(function(error, text, xhr) {
@@ -78,9 +80,10 @@ var add_mesh_buttons = function(){
   }, false);
 
 }
-
+/**
+ * Clicking on the mesh canvas element
+ */
 var mesh_click = function(e){
-  console.log(e);
   var u = e.offsetX;
   var v = e.offsetY;
   // Find the world coordinates
@@ -119,9 +122,7 @@ var mesh_click = function(e){
     default:
       return;
   }
-  
-  //console.log('World: ',point);
-  
+    
   if(point===null){return;}
 
   // save the click
@@ -129,31 +130,21 @@ var mesh_click = function(e){
   var p = new THREE.Vector3()
   mesh_points.push( p.fromArray(point) );
 
-  // Log all points in our debug zone
-  // http://alignedleft.com/tutorials/d3/using-your-data
   d3.select("#mesh_clicks").selectAll("p")
     .data(mesh_points)
     .enter()
     .append("p")
-    .text(function(d) {
-      //var str = numeral(1000).format('0,0');
-      return '('+d.x+','+d.y+','+d.z+')';
-    });
+    .text( function(d){return sprintf('(%.3f,.3f,.3f)',d.x,d.y,d.z);} );
 
   // the svg overlay has the circles for where we clicked
   var click_circles = mesh_svg.selectAll("circle")
   .data(mesh_clicks).enter()
   .append("circle").style("fill", "white")
-  .attr("cx", function(p,i){
-    return p.x;
-  })
-  .attr("cy", function(p,i){
-    return p.y;
-  })
+  .attr("cx", function(p,i){return p.x;}) // x position
+  .attr("cy", function(p,i){return p.y;}) // y position
   .attr("r", 4); // radius
   
-  // attributes for new clicks
-  // http://mbostock.github.io/d3/tutorial/circle.html
+
 
 }
 
@@ -217,14 +208,14 @@ var mesh_handler = function(e){
     return;
   }
 
+  // draw to our context
   draw_jet_map(raw_ctx);
 
-  // Place into 3D coordinates
-  // Check that the 3D environment exists...
+  // Place into 3D coordinates if 3d is available
   if(mesh_to_three!==undefined){
-    //three_btn.addEventListener('click', function() {
-      mesh_to_three(raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov, mesh_in_use);
-    //}, false);
+    mesh_to_three(
+      raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov, mesh_in_use
+    );
   }
 
 }
@@ -281,19 +272,8 @@ document.addEventListener( "DOMContentLoaded", function(){
 
   // Connect to the websocket server
   var ws = new WebSocket('ws://' + host + ':' + mesh_port);
-  //ws.binaryType = "arraybuffer";
   ws.binaryType = "blob";
-  
-  ws.open = function(e){
-    console.log('connected!')
-  }
-  ws.onerror = function(e) {
-    console.log('error',e)
-  }
-  ws.onclose = function(e) {
-    console.log('close',e)
-  }
-	
+
   // Send data to the webworker
   ws.onmessage = function(e){
     if(typeof e.data === "string"){
@@ -301,7 +281,7 @@ document.addEventListener( "DOMContentLoaded", function(){
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
       
-      console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
+      //console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
       
       mesh_depths = fr_metadata.depths.slice(0);
       if(fr_metadata.name=='chest_lidar'){
@@ -337,53 +317,51 @@ document.addEventListener( "DOMContentLoaded", function(){
 
 var draw_jet_map = function(raw_ctx){
   // clear the context
-  //console.log(mesh_ctx);
   var w = mesh_ctx.canvas.width;
   var h = mesh_ctx.canvas.height;
   mesh_ctx.clearRect( 0 , 0 , 500 , 500 );
 
-  // TODO: recolor to something that is not grey
+  // Grab the raw data
   var rawDataImage = raw_ctx.getImageData(0, 0, w, h);
   var data = rawDataImage.data;
+  
+  // Convert each RGBA pixel
   for(var i = 0; i < data.length; i += 4) {
-    // http://www.metastine.com/?p=7
-    var cm = jet(data[i])
-    data[i] = cm[0];
+    var cm    = jet(data[i]);
+    data[i]   = cm[0];
     data[i+1] = cm[1];
     data[i+2] = cm[2];
-    /*
-    var fourValue = 4-(4/255 * data[i]);
-    // red
-    data[i] = 255*Math.min(fourValue - 1.5, -fourValue + 4.5);
-    // green
-    data[i+1] = 255*Math.min(fourValue - 0.5, -fourValue + 3.5);
-    // blue
-    data[i+2] = 255*Math.min(fourValue + 0.5, -fourValue + 2.5);
-    */
   }
-  // overwrite original image
+  
+  // overwrite previous image
   mesh_ctx.putImageData(rawDataImage, 0, 0);
 }
 
 var add_depth_slider = function(){
 
+  // CSS style for the slider
   var margin = {top: 0, right: 12, bottom: 18, left: 12},
       width = 200 - margin.left - margin.right,
       height = 40 - margin.top - margin.bottom;
 
+      /*
   var x = d3.scale.linear()
       .range([0, width])
       .domain([0, 10]);
+      */
+  var x = d3.scale.pow()
+  .exponent(.5)
+      .range([0, width])
+      .domain([0, 30]);
 
   var y = d3.random.normal(height / 2, height / 8);
 
   var brush = d3.svg.brush()
       .x(x)
       .extent([.5, 2])
-      .on("brushstart", brushstart)
-      .on("brush", brushmove)
       .on("brushend", brushend);
 
+      // Make the handle
   var arc = d3.svg.arc()
       .outerRadius(height / 2)
       .startAngle(0)
@@ -411,24 +389,7 @@ var add_depth_slider = function(){
   brushg.selectAll("rect")
       .attr("height", height);
 
-  brushstart();
-  brushmove();
-
-  function brushstart() {
-  }
-
-  function brushmove() {
-    // realtime update of the dynamic range
-/*
-    var rpc_url = rest_root+'/m/vcm/kinect/depths'
-    var vals = brush.extent();
-    // perform the post request
-    promise.post( rpc_url, {val:JSON.stringify(vals)} ).then(function(error, text, xhr) {
-        if(error){ return; }
-    });
-*/
-  }
-
+  // TODO: Use brushmove/brushstart possibly
   function brushend() {
     // ajax to set the depths
     var rpc_url = rest_root+'/m/vcm/'+mesh_in_use+'/depths'
