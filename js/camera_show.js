@@ -73,7 +73,10 @@ document.addEventListener( "DOMContentLoaded", function(){
     last_camera_img = e.data;
     requestAnimationFrame( function(){
       // Put received JPEG data into the image
-      camera_img.src = URL.createObjectURL( last_camera_img );
+      
+      camera_img.src = URL.createObjectURL(
+        last_camera_img.slice(0,last_camera_img.size,'image/'+fr_metadata.c)
+      );
       // Trigger processing once the image is fully loaded
       camera_img.onload = camera_handler;
     }); //animframe

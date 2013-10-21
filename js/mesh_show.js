@@ -8,20 +8,11 @@ var mesh_width, mesh_height, mesh_fov = [];
 var mesh_worker;
 
 var add_mesh_buttons = function(){
-  var request_btn   = document.getElementById('request_mesh_btn');
-  var switch_btn    = document.getElementById('switch_mesh_btn');
-  var clear_btn     = document.getElementById('clear_mesh_btn');
-  var grabwheel_btn = document.getElementById('grabwheel_btn');
-  var grabtool_btn  = document.getElementById('grabtool_btn');
-  var three_btn     = document.getElementById('three_btn');
-
   // request a new mesh
-  request_btn.addEventListener('click', function() {
-
+  document.getElementById('request_mesh_btn').addEventListener('click', function() {
     // if testing with the kinect
     var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net'
     if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
-
     // Unreliable
     //var vals = [1,1,90,1];
     // Reliable PNG
@@ -33,7 +24,7 @@ var add_mesh_buttons = function(){
   }, false);
 
   // switch the type of mesh to request
-  switch_btn.addEventListener('click', function() {
+  document.getElementById('switch_mesh_btn').addEventListener('click', function() {
     switch(switch_btn.textContent){
       case 'Head':
         switch_btn.textContent = "Chest";
@@ -61,7 +52,7 @@ var add_mesh_buttons = function(){
   }, false);
 
   // Clear the points on the mesh
-  clear_btn.addEventListener('click', function() {
+  document.getElementById('clear_mesh_btn').addEventListener('click', function() {
     mesh_points = [];
     mesh_clicks = [];
     mesh_svg.selectAll("circle")
@@ -72,10 +63,13 @@ var add_mesh_buttons = function(){
   }, false);
 
   // Calculate where the wheel is; send to the robot
-  grabwheel_btn.addEventListener('click', function() {
+  document.getElementById('grabwheel_btn').addEventListener('click', function() {
     var wheel = calculate_wheel(mesh_points);
-    console.log('Wheel',wheel);
+    //console.log('Wheel',wheel);
     if(wheel===undefined){return;}
+    
+    
+    
     var wheel_url = rest_root+'/m/hcm/wheel/model'
     // perform the post request
     promise.post( wheel_url, {val:JSON.stringify(wheel)} ).then(function(error, text, xhr) {
@@ -306,7 +300,9 @@ document.addEventListener( "DOMContentLoaded", function(){
       fr_metadata   = JSON.parse(e.data)
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
-      //console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
+      
+      console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
+      
       mesh_depths = fr_metadata.depths.slice(0);
       if(fr_metadata.name=='chest_lidar'){
         mesh_fov[1] = fr_metadata.fov[1]-fr_metadata.fov[0];
@@ -315,7 +311,6 @@ document.addEventListener( "DOMContentLoaded", function(){
         mesh_fov[0] = fr_metadata.fov[1]-fr_metadata.fov[0];
         mesh_fov[1] = fr_metadata.scanlines[1]-fr_metadata.scanlines[0];
       }
-      
       return;
     }
 		
@@ -328,8 +323,10 @@ document.addEventListener( "DOMContentLoaded", function(){
     }
     last_mesh_img = e.data;
     requestAnimationFrame( function(){
-      // Put received JPEG data into the image
-      mesh_img.src = URL.createObjectURL( last_mesh_img );
+      // Put received JPEG/PNG data into the image
+      mesh_img.src = URL.createObjectURL(
+        last_mesh_img.slice(0,last_mesh_img.size,'image/'+fr_metadata.c)
+      );
       mesh_img.alt = fr_metadata.name;
       // Trigger processing once the image is fully loaded
       mesh_img.onload = mesh_handler;

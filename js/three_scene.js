@@ -6,20 +6,12 @@ var foot_floor, foot_steps, foot_geo, foot_mat;
 var particleSystem, mesh;
 //
 var CANVAS_WIDTH, CANVAS_HEIGHT;
-document.addEventListener( "DOMContentLoaded", function(){
-  var container = document.getElementById( 'three_container' );
-  if(container===undefined){return;}
-  CANVAS_WIDTH = container.clientWidth;
-  CANVAS_HEIGHT = container.clientHeight;
 
-
-
-
+var add_mesh_buttons = function(){
+  
   document.getElementById('clear_wp_btn').addEventListener('click', function() {
   
-    for(var i=0;i<foot_steps.length;i++){
-      scene.remove(foot_steps[i]);
-    }
+    for(var i=0;i<foot_steps.length;i++){scene.remove(foot_steps[i]);}
     foot_steps = [];
   
     d3.select("#wp_status").selectAll("p")
@@ -28,8 +20,20 @@ document.addEventListener( "DOMContentLoaded", function(){
     render();
     
   }, false);
+}
 
 
+document.addEventListener( "DOMContentLoaded", function(){
+  var container = document.getElementById( 'three_container' );
+  if(container===undefined){return;}
+  CANVAS_WIDTH = container.clientWidth;
+  CANVAS_HEIGHT = container.clientHeight;
+
+  // Add the buttons
+  add_mesh_buttons();
+  // double clicking the scene
+  // add event for picking the location of a click on the plane
+  container.addEventListener( 'dblclick', select_footstep, false );
 
   // Look at things!
   var lookTarget = new THREE.Vector3(0,1000,1000);
@@ -141,10 +145,6 @@ foot_steps = []
     render();
   }, false );
 
-  // add event for picking the location of a click on the plane
-  //container.addEventListener( 'mouseup', select_footstep, false );
-  container.addEventListener( 'dblclick', select_footstep, false );
-
   console.log('THREE scene initialized!');
 
   // Start the webworker
@@ -222,6 +222,8 @@ var select_footstep = function(event){
 
   // Save the footstep
   new_footstep.position.copy(placement);
+  var pos = new_footstep.position;
+  new_footstep.robot_frame = new THREE.Vector3(pos.z/1000,pos.x/1000,pos.y/1000);
   foot_steps.push(new_footstep);
 
   // Log all points in our debug zone
@@ -230,7 +232,7 @@ var select_footstep = function(event){
     .enter()
     .append("p")
     .text(function(d) {
-      var pos = d.position;
+      var pos = d.robot_frame;
       return sprintf('%.2f, %.2f, %.2f',pos.x,pos.y,pos.z);
     });
   
@@ -256,11 +258,9 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
   mesh_worker.postMessage(obj,[buf]);
 }
 
-// make a new mesh from the number of triangles specified
+// BufferGeometry of the mesh
 var make_mesh = function(index,position,color,offsets){
   scene.remove( mesh );
-  /////////////////////
-  // Initialize the faces
   var geometry = new THREE.BufferGeometry();
   // Dynamic, because we will do raycasting
   geometry.dynamic = true;
@@ -281,10 +281,8 @@ var make_mesh = function(index,position,color,offsets){
       array: color,
     },
   }
-
   /////////////////////
   geometry.computeBoundingSphere(); // for picking via raycasting
-
   /////////////////////
   // Phong Material requires normals for reflectivity
   geometry.computeVertexNormals()
@@ -304,33 +302,24 @@ var make_mesh = function(index,position,color,offsets){
   /////////////////////
 }
 
-var make_particle_system = function(pos,col){
-
+// Update the particle system
+var make_particle_system = function(position,color){
   scene.remove( particleSystem );
-
-  // TODO: Ensure nparticles does not exceed 65000
-  // TODO: Use the index attribute to overcome the limit
-  // as documented in buffer triangles
-  //var nparticles = 500*480;
-
   var geometry = new THREE.BufferGeometry();
-  // Dynamic, because we will do raycasting
+  // Dynamic, because we will do raycasting? just for mesh
   geometry.dynamic = true;
-  //
   geometry.attributes = {
     position: {
       itemSize: 3,
-      array: pos
+      array: position
     },
     color: {
       itemSize: 3,
-      array: col
+      array: color
     }
   } // geom attr
-
   // default size: 1 cm
   var material = new THREE.ParticleBasicMaterial( { size: 5, vertexColors: true } );
-
   particleSystem = new THREE.ParticleSystem( geometry, material );
   scene.add( particleSystem );
 }

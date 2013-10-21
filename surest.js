@@ -17,7 +17,7 @@ var homepage="index.html"
 
 /* Remote Procedure Call Configuration */
 //var rpc_robot     = '192.168.123.25'
-//var rpc_robot     = '158.130.62.111'
+//var rpc_robot     = '158.130.62.140'
 var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555
 var rpc_unreliable_port = 55556
