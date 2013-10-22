@@ -19,8 +19,8 @@ var neck_height    = 0.30;
 var neck_off_axis  = 0.12;
 /* robot bodyHeight, but this can change a LOT */
 var bodyTilt = 11*Math.PI/180;
-var bodyHeight = 0.9285318;
-var supportX = 0.0515184;
+var bodyHeight = 0.9285318 + 0.13;
+var supportX = 0.0515184 + 0.01;
 
 var jet = function(val){
   //val = Math.min(Math.max(val,0),255);

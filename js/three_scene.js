@@ -1,5 +1,5 @@
 // Setup the THREE scene
-var scene, renderer, camera, stats, controls;
+var scene, renderer, camera, stats, controls, tcontrols=[];
 // special objects
 var foot_floor, foot_steps, foot_geo, foot_mat, waypoints = [];
 // particle system and mesh
@@ -35,7 +35,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   // add event for picking the location of a click on the plane
   container.addEventListener( 'dblclick', select_footstep, false );
 
-  // Look at things!
+  // Camera controls look here
   var lookTarget = new THREE.Vector3(0,1000,1000);
 
   // add the camera
@@ -47,8 +47,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   // add controls
   controls = new THREE.OrbitControls( camera, container );
   controls.addEventListener( 'change', render );
-  //controls.center = new THREE.Vector3(0,0,1000);
-  controls.target = lookTarget;// look in front one meter
+  controls.target = lookTarget;
   //controls.addEventListener('change',function(){requestAnimationFrame( animate )});
 
   // make the scene
@@ -104,7 +103,7 @@ foot_floor.material.side = THREE.DoubleSide;
 //foot_floor.rotation.set(Math.PI/2, 0,0);
 foot_floor.rotation.x = -Math.PI/2;
 //foot_floor.position.y = ;
-//scene.add(foot_floor);
+scene.add(foot_floor);
 // move it around in the scene
 //mesh.position = new THREE.Vector3(100, 100, 100)
 // foot_floor.rotation.set(Math.PI/2, 0,0);
@@ -179,6 +178,9 @@ var render = function(){
 var animate = function(){
   // request itself again
   //requestAnimationFrame( animate );
+  
+  for(var i=0,j=tcontrols.length;i<j;i++){tcontrols[ i ].update();}
+  
   controls.update();
   render();
 };
@@ -215,6 +217,45 @@ var select_footstep = function(event){
   var pos = new_footstep.position;
   new_footstep.robot_frame = new THREE.Vector3(pos.z/1000,pos.x/1000,pos.y/1000);
   foot_steps.push(new_footstep);
+  controls.enabled = false;
+  
+  // add the transform controls
+  var control = new THREE.TransformControls( camera, renderer.domElement );
+  control.addEventListener( 'change', render );
+  // attach to the mesh
+  control.attach( new_footstep );
+  scene.add( control );
+  tcontrols.push( control );
+  
+  // add the listener (TODO: add and remove the listener)
+  window.addEventListener( 'keydown', function ( event ) {
+    //console.log(event.which);
+    switch ( event.keyCode ) {
+      case 81: // Q
+        control.setSpace( control.space == "local" ? "world" : "local" );
+        break;
+      case 87: // W
+        control.setMode( "translate" );
+        break;
+      case 69: // E
+        control.setMode( "rotate" );
+        break;
+      case 82: // R
+        control.setMode( "scale" );
+        break;
+      // size stuff
+      case 187:
+      case 107: // +,=,num+
+              control.setSize( control.size + 0.1 );
+              break;
+      case 189:
+      case 10: // -,_,num-
+              control.setSize( Math.max(control.size - 0.1, 0.1 ) );
+              break;
+    }            
+});
+  
+  
 
   // Log all points in our debug zone
   d3.select("#wp_status").selectAll("p")
@@ -229,7 +270,6 @@ var select_footstep = function(event){
       waypoints.push(0);
       return sprintf('%.2f, %.2f, %.2f',pos.x,pos.y,pos.z);
     });
-  
 
   // Render the scene now that we have updated the footsteps
   render();
