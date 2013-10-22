@@ -104,7 +104,7 @@ foot_floor.material.side = THREE.DoubleSide;
 //foot_floor.rotation.set(Math.PI/2, 0,0);
 foot_floor.rotation.x = -Math.PI/2;
 //foot_floor.position.y = ;
-scene.add(foot_floor);
+//scene.add(foot_floor);
 // move it around in the scene
 //mesh.position = new THREE.Vector3(100, 100, 100)
 // foot_floor.rotation.set(Math.PI/2, 0,0);

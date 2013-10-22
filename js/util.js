@@ -12,15 +12,15 @@ if(this.document!==undefined){
 //////////////////
 // Robot properties for where the LIDARs are
 //////////////////
-var chest_depth    = 0.05;
-var chest_height   = 0.09;
-var chest_off_axis = 0.02;
+var chest_depth    = 0.07;
+var chest_height   = 0.08;
+var chest_off_axis = 0.04;
 var neck_height    = 0.30;
 var neck_off_axis  = 0.12;
 /* robot bodyHeight, but this can change a LOT */
-//var bodyHeight = 1.155;
-var bodyTilt = 10*Math.PI/180;
-var bodyHeight = 1.08;
+var bodyTilt = 11*Math.PI/180;
+var bodyHeight = 0.9285318;
+var supportX = 0.0515184;
 
 var jet = function(val){
   //val = Math.min(Math.max(val,0),255);
@@ -99,11 +99,11 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch){
   // default
   var x = r * cv * ch + chest_depth;
   var y = r * cv * sh + chest_height;
-  var z = r * sv + bodyHeight;
+  var z = r * sv;
   
   // rotate for pitch compensation
-  var xx = cp*x + sp*z;
-  var zz = -sp*x + cp*z;
+  var xx = cp*x + sp*z + supportX;
+  var zz = -sp*x + cp*z + bodyHeight;
 
   return [xx,y,zz,r];
   
