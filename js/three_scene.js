@@ -1,7 +1,7 @@
 // Setup the THREE scene
 var scene, renderer, camera, stats, controls;
 // special objects
-var foot_floor, foot_steps, foot_geo, foot_mat;
+var foot_floor, foot_steps, foot_geo, foot_mat, waypoints = [];
 // particle system and mesh
 var particleSystem, mesh;
 //
@@ -223,6 +223,10 @@ var select_footstep = function(event){
     .append("p")
     .text(function(d) {
       var pos = d.robot_frame;
+      // Shared memory segment
+      waypoints.push(pos.x);
+      waypoints.push(pos.y);
+      waypoints.push(0);
       return sprintf('%.2f, %.2f, %.2f',pos.x,pos.y,pos.z);
     });
   

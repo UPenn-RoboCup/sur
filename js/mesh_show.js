@@ -19,6 +19,9 @@ var mesh_worker;
  * Buttons for interacting with the mesh
  */
 var add_mesh_buttons = function(){
+  
+  // slow mesh
+  
   // request a new mesh
   document.getElementById('request_mesh_btn').addEventListener('click', function() {
     // if testing with the kinect
