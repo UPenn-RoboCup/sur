@@ -88,7 +88,6 @@ var mesh_click = function(e){
   var v = e.offsetY;
   // Find the world coordinates
   var point;
-  var pitch = 10*Math.PI/180;
   switch(mesh_in_use){
     case 'kinect':
       var w = kinect_mesh_raw_ctx.getImageData(u, v, 1, 1).data[0];
@@ -106,8 +105,8 @@ var mesh_click = function(e){
       point = get_hokuyo_head_xyz(u,v,w,
         mesh_width,mesh_height,
         mesh_depths[0],mesh_depths[1],
-        mesh_fov[0],mesh_fov[1],
-        pitch
+        mesh_fov,
+        bodyTilt
       );
       break;
     case 'chest_lidar':
@@ -115,8 +114,8 @@ var mesh_click = function(e){
       point = get_hokuyo_chest_xyz(u,v,w,
         mesh_width,mesh_height,
         mesh_depths[0],mesh_depths[1],
-        mesh_fov[0],mesh_fov[1],
-        pitch
+        mesh_fov,
+        bodyTilt
       );
       break;
     default:
@@ -285,11 +284,24 @@ document.addEventListener( "DOMContentLoaded", function(){
       
       mesh_depths = fr_metadata.depths.slice(0);
       if(fr_metadata.name=='chest_lidar'){
+        /*
         mesh_fov[1] = fr_metadata.fov[1]-fr_metadata.fov[0];
         mesh_fov[0] = fr_metadata.scanlines[1]-fr_metadata.scanlines[0];
+        */
+        mesh_fov[0] = fr_metadata.scanlines[0]; // horiz start
+        mesh_fov[1] = fr_metadata.scanlines[1]; // horiz end
+        mesh_fov[2] = fr_metadata.fov[0]; // vert start
+        mesh_fov[3] = fr_metadata.fov[1]; // vert end
+        
       } else {
+        /*
         mesh_fov[0] = fr_metadata.fov[1]-fr_metadata.fov[0];
         mesh_fov[1] = fr_metadata.scanlines[1]-fr_metadata.scanlines[0];
+        */
+        mesh_fov[0] = fr_metadata.fov[0]; // horiz start
+        mesh_fov[1] = fr_metadata.fov[1]; // horiz end
+        mesh_fov[2] = fr_metadata.scanlines[0]; // vert start
+        mesh_fov[3] = fr_metadata.scanlines[1]; // vert end
       }
       return;
     }
@@ -344,13 +356,8 @@ var add_depth_slider = function(){
       width = 200 - margin.left - margin.right,
       height = 40 - margin.top - margin.bottom;
 
-      /*
-  var x = d3.scale.linear()
-      .range([0, width])
-      .domain([0, 10]);
-      */
   var x = d3.scale.pow()
-  .exponent(.5)
+      .exponent(.5)
       .range([0, width])
       .domain([0, 30]);
 
@@ -358,7 +365,7 @@ var add_depth_slider = function(){
 
   var brush = d3.svg.brush()
       .x(x)
-      .extent([.5, 2])
+      .extent([.1, 5])
       .on("brushend", brushend);
 
       // Make the handle
@@ -376,7 +383,9 @@ var add_depth_slider = function(){
   svg.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.svg.axis().scale(x).orient("bottom"));
+      .call(d3.svg.axis().scale(x).orient("bottom").tickValues([0,.2,1,3,5,10,20,30])
+      .tickFormat(d3.format("g"))
+    );
 
   var brushg = svg.append("g")
       .attr("class", "brush")
@@ -399,4 +408,7 @@ var add_depth_slider = function(){
         if(error){ return; }
     });
   }
+  
+  // Call immediately to set on the robot the desired ranges
+  brushend();
 }

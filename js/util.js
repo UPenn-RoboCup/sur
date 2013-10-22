@@ -14,13 +14,13 @@ if(this.document!==undefined){
 //////////////////
 var chest_depth    = 0.05;
 var chest_height   = 0.09;
-var chest_off_axis = 0.04;
+var chest_off_axis = 0.02;
 var neck_height    = 0.30;
 var neck_off_axis  = 0.12;
 /* robot bodyHeight, but this can change a LOT */
-var bodyHeight = 1.155;
-var bodyTilt = 25*Math.PI/180;
-//var bodyHeight = 1.02;
+//var bodyHeight = 1.155;
+var bodyTilt = 12*Math.PI/180;
+var bodyHeight = 1.1;
 
 var jet = function(val){
   //val = Math.min(Math.max(val,0),255);
@@ -70,29 +70,41 @@ var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV,pitch){
   return [xx,y,zz,r];
 }
 
-var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV,pitch){
+var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch){
   // do not use saturated pixels
   if(w==0||w==255){return;}
+  
+  // Convert w of 0-255 to actual meters value
+  var factor = (far-near)/255;
+  var r = factor*w+near + chest_off_axis;
+  
+  // bodyTilt compensation (should be pitch in the future)
+  var cp = Math.cos(pitch);
+  var sp = Math.sin(pitch);
+  
   // radians per pixel
+  var hFOV  = fov[1]-fov[0];
+  var vFOV  = fov[3]-fov[2];
   var h_rpp = hFOV / width;
   var v_rpp = vFOV / height;
   // angle in radians of the selected pixel
   var h_angle = h_rpp * (width/2-u);
-  var v_angle = v_rpp * (height/2-v);
-  // Convert w of 0-255 to actual meters value
-  var factor = (far-near)/255;
-  var r = factor*w+near + chest_off_axis;
-  var x = r * Math.cos(v_angle) * Math.cos(h_angle) + chest_depth;
-  var y = r * Math.cos(v_angle) * Math.sin(h_angle) + chest_height;
-  var z = r * Math.sin(v_angle) + bodyHeight;
+  var ch = Math.cos(h_angle);
+  var sh = Math.sin(h_angle);
+  
+  var v_angle = -1 * ( v_rpp * v + fov[2]);
+  var cv = Math.cos(v_angle);
+  var sv = Math.sin(v_angle);
+  
+  // default
+  var x = r * cv * ch + chest_depth;
+  var y = r * cv * sh + chest_height;
+  var z = r * sv + bodyHeight;
   
   // rotate for pitch compensation
-  // hack for now for ease
-  pitch = bodyTilt;
-  var cp = Math.cos(pitch);
-  var sp = Math.sin(pitch);
   var xx = cp*x + sp*z;
   var zz = -sp*x + cp*z;
 
   return [xx,y,zz,r];
+  
 }

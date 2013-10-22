@@ -66,7 +66,9 @@ document.addEventListener( "DOMContentLoaded", function(){
 
   // re-add?
   renderer = new THREE.WebGLRenderer( { antialias: false } );
-  renderer.setClearColor( 0x005500, 1 );
+  var night_blue = 0x001133;
+  var sky_blue   = 0x80CCFF;
+  renderer.setClearColor( sky_blue, 1 );
   renderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
   // Add to the container
   container.appendChild( renderer.domElement );
@@ -77,15 +79,15 @@ document.addEventListener( "DOMContentLoaded", function(){
 
   ///////////////
 ///////////////
-var sphereMaterial =
+var groundMaterial =
   new THREE.MeshLambertMaterial(
     {
-      color: 0xFF0000
+      color: 0x7F5217 // red dirt
     });
   var floor_material = new THREE.MeshPhongMaterial({
     ambient: 0x555555, specular: 0x111111, shininess: 200,
     side: THREE.DoubleSide,
-    color: 0xAAAAAA,
+    color: 0x7F5217, // red dirt
     //vertexColors: THREE.VertexColors,
     //wireframe: true,
   });
@@ -95,18 +97,6 @@ var radius = 100,
     rings = 16;
 
 var pl_width = 5000, pl_height = 5000, pl_seg = 100;
-
-// create a new mesh with
-// sphere geometry - we will cover
-// the sphereMaterial next!
-
-var sphere = new THREE.Mesh(
-  new THREE.SphereGeometry(
-    radius,
-    segments,
-    rings),
-  sphereMaterial);
-//scene.add(sphere);
 
 foot_floor = new THREE.Mesh(
 new THREE.PlaneGeometry(pl_width, pl_height),floor_material);
@@ -253,8 +243,7 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
   obj.dep = depths;
   obj.fov = fov;
   obj.use = name;
-  obj.pitch = 12*Math.PI/180;
-  //console.log(obj);
+  obj.pitch = bodyTilt;
   mesh_worker.postMessage(obj,[buf]);
 }
 
@@ -289,7 +278,7 @@ var make_mesh = function(index,position,color,offsets){
   var material = new THREE.MeshPhongMaterial({
     ambient: 0x555555, specular: 0x111111, shininess: 200,
     side: THREE.DoubleSide,
-    color: 0xCCCCCC,
+    color: 0x00CC00,
     //vertexColors: THREE.VertexColors,
     //wireframe: true,
   });

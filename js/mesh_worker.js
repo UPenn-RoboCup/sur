@@ -22,8 +22,7 @@ self.onmessage = function(e) {
   var height = e.data.res[1];
   var near   = e.data.dep[0];
   var far    = e.data.dep[1];
-  var hFOV   = e.data.fov[0];
-  var vFOV   = e.data.fov[1];
+  var fov    = e.data.fov;
   var pitch  = e.data.pitch;
   var factor = (far-near)/255;
 
@@ -68,7 +67,7 @@ self.onmessage = function(e) {
       var w = pixels[pixel_idx];
 
       // Compute the xyz positions
-      var p = get_hokuyo_chest_xyz(i,j,w,width,height,near,far,hFOV,vFOV,pitch);
+      var p = get_hokuyo_chest_xyz(i,j,w,width,height,near,far,fov,pitch);
       //var p = get_hokuyo_head_xyz(i,j,w,width,height,near,far,hFOV,vFOV,pitch)
             
       // saturation check
@@ -171,10 +170,11 @@ self.onmessage = function(e) {
       if(d_position_idx<0){continue;}
       
       // x, y, z of this position
-      a = positions.subarray(a_position_idx, a_position_idx+3);
-      b = positions.subarray(b_position_idx, b_position_idx+3);
-      c = positions.subarray(c_position_idx, c_position_idx+3);
-      d = positions.subarray(d_position_idx, d_position_idx+3);
+      //a = positions.subarray(a_position_idx, a_position_idx+3);
+      //b = positions.subarray(b_position_idx, b_position_idx+3);
+      //c = positions.subarray(c_position_idx, c_position_idx+3);
+      //d = positions.subarray(d_position_idx, d_position_idx+3);
+      //if(positions[a_position_idx]-positions[b_position_idx]>1000){continue;}
       
       // We have a valid quad!
       n_quad++;
