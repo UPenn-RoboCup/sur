@@ -28,7 +28,7 @@ var add_mesh_buttons = function(){
     var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net'
     if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
     // perform the post request for a reliable PNG
-    promise.post( mesh_req_url, {val:JSON.stringify([3,3,90,0])} );
+    promise.post( mesh_req_url, {val:JSON.stringify([3,3,90,1])} );
   }, false);
 
   // switch the type of mesh to request
@@ -283,7 +283,11 @@ document.addEventListener( "DOMContentLoaded", function(){
       var recv_time = e.timeStamp/1e6;
       var latency   = recv_time - fr_metadata.t
       
-      //console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
+      // latency if desired
+      console.log('mesh Latency: '+latency*1000+'ms',fr_metadata);
+      
+      // format the poses data into a typed array? Just iterate?
+      //console.log( fr_metadata.pose );
       
       mesh_depths = fr_metadata.depths.slice(0);
       if(fr_metadata.name=='chest_lidar'){

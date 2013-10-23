@@ -102,21 +102,13 @@ document.addEventListener( "DOMContentLoaded", function(){
   }, false);
   
   // Body follow
-  document.getElementById('body_fsm_follow_btn').addEventListener('click', function() {
-    
-    console.log(waypoints);
-    
+  document.getElementById('body_fsm_follow_btn').addEventListener('click', function() {    
     var rpc_url = rest_root+'/m/hcm/motion/waypoints'
     // perform the post request
     promise.post( rpc_url, {val:JSON.stringify(waypoints)} ).then(function(error, text, xhr) {
       if(error){ return; }
-      var rpc_url = rest_root+'/m/hcm/motion/nwaypoints'
-      promise.post( rpc_url, {val:JSON.stringify([1])} ).then(function(error, text, xhr) {
-        if(error){ return; }
-        console.log('gollow!')
-        var rpc_url = rest_root+'/s'
-        promise.post( rpc_url, {fsm: 'BodyFSM' , evt: 'follow'} ); // waypoints
-      }); // nwaypoints
+      var rpc_url = rest_root+'/s'
+      promise.post( rpc_url, {fsm: 'BodyFSM' , evt: 'follow'} ); // waypoints
     }); // follow
   }, false);
   
@@ -124,7 +116,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   document.getElementById('body_fsm_step_btn').addEventListener('click', function() {
     // if testing with the kinect
     var req_url = rest_root+'/s'
-    console.log('stepover')
     // perform the post request
     promise.post( req_url, {fsm: 'BodyFSM' , evt: 'stepover'} ).then(function(error, text, xhr) {
       if(error){ return; }
