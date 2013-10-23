@@ -55,8 +55,8 @@ foot_steps = []
       new THREE.PlaneGeometry(5000, 5000),
       floor_material
     );
-    foot_floor.rotation.x = -Math.PI/2;
-    scene.add(foot_floor);
+    floor.rotation.x = -Math.PI/2;
+    scene.add(floor);
   }
   
   World.setup = function(){
@@ -72,7 +72,7 @@ foot_steps = []
 
     // setup OrbitControls to move around the view
     controls = new THREE.OrbitControls( camera, container );
-    controls.addEventListener( 'change', render );
+    controls.addEventListener( 'change', World.render );
     controls.target = lookTarget;
 
     // make the scene
@@ -109,17 +109,14 @@ foot_steps = []
       // Set the rendering size
       renderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
       // re-render
-      render();
+      World.render();
     }, false );
-
-    console.log('THREE scene initialized!',this);
-    World.render();
+    animate();
   }
   
   World.handle_webworker = function(){
     // Start the webworker
     mesh_worker.onmessage = function(e) {
-      //console.log(e)
       // The message is the mesh
       var position = new Float32Array(e.data.pos,0,3*e.data.n_el);
       var color    = new Float32Array(e.data.col,0,3*e.data.n_el);
@@ -131,7 +128,7 @@ foot_steps = []
       //var particleSystem = make_particle_system(position, color);
       //scene.add( particleSystem );
       // render the particle system change
-      render();
+      World.render();
     };
   }
   
@@ -193,6 +190,7 @@ foot_steps = []
 
     // Make the new mesh, and return to the user
     var mesh = new THREE.Mesh( geometry, material );
+    return mesh;
   }
 
   // Update the particle system

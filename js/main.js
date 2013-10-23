@@ -7,5 +7,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   World.setup();
   World.append_floor();
   World.handle_webworker();
+  World.render();
   
 });
