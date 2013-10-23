@@ -1,6 +1,6 @@
 var last_mesh_img, mesh_ctx, mesh_svg;
 var head_mesh_raw_ctx, chest_mesh_raw_ctx, kinect_mesh_raw_ctx;
-var mesh_clicks, mesh_points, mesh_depths;
+var mesh_clicks, mesh_points, mesh_depths, mesh_pose;
 var mesh_in_use = 'chest_lidar';
 var mesh_width, mesh_height, mesh_fov = [];
 var mesh_worker;
@@ -216,7 +216,7 @@ var mesh_handler = function(e){
   // Place into 3D coordinates if 3d is available
   if(mesh_to_three!==undefined){
     mesh_to_three(
-      raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov, mesh_in_use
+      raw_ctx,[mesh_width,mesh_height], mesh_depths, mesh_fov, mesh_in_use, mesh_pose
     );
   }
 
@@ -290,6 +290,7 @@ document.addEventListener( "DOMContentLoaded", function(){
       //console.log( fr_metadata.pose );
       
       mesh_depths = fr_metadata.depths.slice(0);
+      mesh_pose   = fr_metadata.pose.slice(0);
       if(fr_metadata.name=='chest_lidar'){
         /*
         mesh_fov[1] = fr_metadata.fov[1]-fr_metadata.fov[0];

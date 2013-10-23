@@ -70,7 +70,7 @@ var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV,pitch){
   return [xx,y,zz,r];
 }
 
-var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch){
+var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   // do not use saturated pixels
   if(w==0||w==255){return;}
   
@@ -104,7 +104,15 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch){
   // rotate for pitch compensation
   var xx = cp*x + sp*z + supportX;
   var zz = -sp*x + cp*z + bodyHeight;
-
-  return [xx,y,zz,r];
+  
+  // Place into global pose
+  var px = pose[0];
+  var py = pose[1];
+  var pa = pose[2];
+  var ca = Math.cos(pa);
+  var sa = Math.sin(pa);
+  return [ px+ca*xx-sa*y, y+sa*xx+ca*y, z, r]
+  
+  //return [xx,y,zz,r];
   
 }

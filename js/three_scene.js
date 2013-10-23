@@ -279,7 +279,7 @@ var select_footstep = function(event){
 // for rotation (look for theta)
 //: view-source:mrdoob.github.io/three.js/examples/webgl_interactive_voxelpainter.html
 
-var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
+var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name, pose ){
   var buf = raw_mesh_ctx.getImageData(1, 1, resolution[0], resolution[1]).data.buffer;
   var obj = {}
   obj.buf = buf;
@@ -288,6 +288,7 @@ var mesh_to_three = function( raw_mesh_ctx, resolution, depths, fov, name ){
   obj.fov = fov;
   obj.use = name;
   obj.pitch = bodyTilt;
+  obj.pose = pose;
   mesh_worker.postMessage(obj,[buf]);
 }
 

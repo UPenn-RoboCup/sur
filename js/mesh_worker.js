@@ -25,6 +25,7 @@ self.onmessage = function(e) {
   var fov    = e.data.fov;
   var pitch  = e.data.pitch;
   var factor = (far-near)/255;
+  var pose   = e.data.pose;
 
 	// TypedArrays to be put into the WebGL buffer
   var positions = new Float32Array( width * height * 3 );
@@ -67,8 +68,7 @@ self.onmessage = function(e) {
       var w = pixels[pixel_idx];
 
       // Compute the xyz positions
-      var p = get_hokuyo_chest_xyz(i,j,w,width,height,near,far,fov,pitch);
-      //var p = get_hokuyo_head_xyz(i,j,w,width,height,near,far,hFOV,vFOV,pitch)
+      var p = get_hokuyo_chest_xyz(i,j,w,width,height,near,far,fov,pitch,pose[i]);
             
       // saturation check
       if(p===undefined){
