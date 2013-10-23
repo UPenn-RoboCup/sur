@@ -1,27 +1,19 @@
 //importScripts('../lib/three.min.js');
 importScripts('../js/util.js');
-
-var ready = false;
 var a,b,c,d;
 var n_quad, n_el, quad_idx;
 
 self.onmessage = function(e) {
-  
-	if (!ready) {
-		ready = true
-    self.postMessage('initialized');
-		return;
-	}
 
   // process the input
   var pixels = new Uint8Array(e.data.buf);
   // max out index ability
   var pixdex = new Uint32Array(e.data.buf);
   // important info
-  var width  = e.data.res[0];
-  var height = e.data.res[1];
-  var near   = e.data.dep[0];
-  var far    = e.data.dep[1];
+  var width  = e.data.width;
+  var height = e.data.height;
+  var near   = e.data.depths[0];
+  var far    = e.data.depths[1];
   var fov    = e.data.fov;
   var pitch  = e.data.pitch;
   var factor = (far-near)/255;

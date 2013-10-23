@@ -111,7 +111,7 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   var pa = pose[2];
   var ca = Math.cos(pa);
   var sa = Math.sin(pa);
-  return [ px+ca*xx-sa*y, y+sa*xx+ca*y, z, r]
+  return [ px+ca*xx-sa*y, y+sa*xx+ca*y, zz, r]
   
   //return [xx,y,zz,r];
   

@@ -21,8 +21,8 @@ var calculate_wheel = function(points){
     var radius = diff.length()/2;
     if (radius>1 || radius<0.10){
       // radius in meters
-        console.log('Radius is too big or too small!',radius);
-        return;
+      console.log('Radius is too big or too small!',radius);
+      return;
     }
 
     // find the yaw/pitch of the wheel
