@@ -1,37 +1,25 @@
+// Make the footstep queue
+// TODO: Use underscore to remove arbitrary footsteps
+foot_geo = new THREE.CubeGeometry( 50, 10, 100 );
+foot_mat = new THREE.MeshLambertMaterial({
+  color: 0xFFAAAA
+});
+foot_steps = []
+
 // http://stackoverflow.com/questions/17044070/three-js-cast-an-picking-array
-var select_footstep = function(event){
-  // find the mouse position (use NDC coordinates, per documentation)
-  var mouse_vector = new THREE.Vector3(
-    ( event.offsetX / CANVAS_WIDTH ) * 2 - 1,
-    -( event.offsetY / CANVAS_HEIGHT ) * 2 + 1);
-  //console.log('Mouse',mouse_vector); // need Vector3, not vector2
-
-  var projector = new THREE.Projector();
-  //console.log('projector',projector)
-  var raycaster = projector.pickingRay(mouse_vector,camera);
-  //console.log('picking raycaster',raycaster)
-
-  // intersect the plane
-  var intersection = raycaster.intersectObjects( [foot_floor,mesh] );
-  // if no intersection
-  //console.log(intersection)
-  if(intersection.length==0){ return; }
-
+var select_footstep = function(intersection){
   // record the position
   var placement = intersection[0].point;
   //console.log(placement);
-
   // make a new footstep
   var new_footstep = new THREE.Mesh( foot_geo, foot_mat );
   scene.add(new_footstep)
-
   // Save the footstep
   new_footstep.position.copy(placement);
   var pos = new_footstep.position;
   new_footstep.robot_frame = new THREE.Vector3(pos.z/1000,pos.x/1000,pos.y/1000);
   foot_steps.push(new_footstep);
   controls.enabled = false;
-  
   // add the transform controls
   var control = new THREE.TransformControls( camera, renderer.domElement );
   control.addEventListener( 'change', render );

@@ -1,12 +1,13 @@
-// Find the right host
-var host, rest_root, URL;
+// Useful (globally accessible) functions
 if(this.document!==undefined){
-  host = this.document.location.host.replace(/:.*/, '');
+  this.host = this.document.location.host.replace(/:.*/, '');
   if( host.length==0 ){ host = "localhost"; }
   // Compatibility layer for URL
-  URL = this.URL || this.webkitURL;
+  this.URL = this.URL || this.webkitURL;
   // assume port 8080 for testing...
-  rest_root = 'http://'+host+':8080';
+  this.rest_root = 'http://'+host+':8080';
+  // http://macwright.org/presentations/dcjq/
+  this.$ = function(x){return document.querySelectorAll(x);};
 }
 
 //////////////////
@@ -111,8 +112,6 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   var pa = pose[2];
   var ca = Math.cos(pa);
   var sa = Math.sin(pa);
-  return [ px+ca*xx-sa*y, y+sa*xx+ca*y, zz, r]
-  
-  //return [xx,y,zz,r];
+  return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz, r]
   
 }

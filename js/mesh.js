@@ -189,13 +189,13 @@
     
     // Websocket Configuration
     //var mesh_port = 9004; // kinect
-    var mesh_port = 9001; // lidar
+    var port = 9001; // lidar
     
     // checksum & metadata
     var fr_sz_checksum, fr_metadata;
     
     // Connect to the websocket server
-    var ws = new WebSocket('ws://' + host + ':' + mesh_port);
+    var ws = new WebSocket('ws://' + host + ':' + port);
     ws.binaryType = "blob";
 
     // Send data to the webworker
@@ -208,6 +208,7 @@
         mesh.latency = e.timeStamp/1e6 - fr_metadata.t;
         mesh.depths  = fr_metadata.depths.slice(0);
         mesh.pose    = fr_metadata.pose.slice(0);
+        console.log(mesh.pose);
         var fov = mesh.fov;
         if(fr_metadata.name=='chest_lidar'){
           fov[0] = fr_metadata.scanlines[0]; // horiz start

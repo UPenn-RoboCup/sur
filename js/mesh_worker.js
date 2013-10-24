@@ -1,7 +1,4 @@
-//importScripts('../lib/three.min.js');
 importScripts('../js/util.js');
-var a,b,c,d;
-var n_quad, n_el, quad_idx;
 
 self.onmessage = function(e) {
 
@@ -38,6 +35,9 @@ self.onmessage = function(e) {
   var pixdex_idx   = 0;
   var position_idx = 0;
   
+  var a,b,c,d;
+  var n_quad, n_el, quad_idx;
+  
   // for chunks
   var n_last_chunk_el = 0;
   
@@ -60,7 +60,7 @@ self.onmessage = function(e) {
       var w = pixels[pixel_idx];
 
       // Compute the xyz positions
-      var p = get_hokuyo_chest_xyz(i,j,w,width,height,near,far,fov,pitch,pose[i]);
+      var p=get_hokuyo_chest_xyz(i,j,w,width,height,near,far,fov,pitch,pose[i]);
             
       // saturation check
       if(p===undefined){
@@ -222,12 +222,5 @@ self.onmessage = function(e) {
 self.onerror = function(message) {
   var obj = {}
   obj.msg = message;
-  obj.a   = a;
-  obj.b   = b;
-  obj.c   = c;
-  obj.d   = d;
-  obj.n_quad = n_quad;
-  obj.n_el = n_el;
-  obj.quad_pos_idx = quad_pos_idx;
 	self.postMessage(obj);
 };

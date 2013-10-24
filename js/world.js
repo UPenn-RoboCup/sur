@@ -1,20 +1,3 @@
-// Setup the THREE scene
-var stats, controls, tcontrols=[];
-// special objects
-var foot_floor, foot_steps, foot_geo, foot_mat, waypoints = [];
-// particle system and mesh
-var particleSystem, mesh;
-
-/*
-// Make the footstep queue
-// TODO: Use underscore to remove arbitrary footsteps
-foot_geo = new THREE.CubeGeometry( 50, 10, 100 );
-foot_mat = new THREE.MeshLambertMaterial({
-  color: 0xFFAAAA
-});
-foot_steps = []
-*/
-
 /*****
  * 3D World for the robot scene
  */
@@ -23,10 +6,13 @@ foot_steps = []
   // Function to hold methods
   function World(){}
   
+  var MAX_NUM_MESHES = 5;
+  
   var CANVAS_WIDTH, CANVAS_HEIGHT;
-  var camera, renderer, scene;
+  var camera, renderer, scene, container, controls;
   // Add the webworker
   var mesh_worker = new Worker("js/mesh_worker.js");
+  var meshes = [], items = [];
   
   // Where to look initially
   var lookTarget = new THREE.Vector3(0,1000,1000);
@@ -34,34 +20,64 @@ foot_steps = []
   // animation takes care of the controls, and is a helper
   var animate = function(){
     // request itself again
-    for(var i=0,j=tcontrols.length;i<j;i++){tcontrols[ i ].update();}
+    //for(var i=0,j=tcontrols.length;i<j;i++){tcontrols[ i ].update();}
     controls.update();
     World.render();
   };
   
+  // Stop moving the view
+  World.disable_orbit = function(){controls.enabled = false;}
+  World.enable_orbit  = function(){controls.enabled = true;}
+  World.toggle_orbit  = function(){controls.enabled = !controls.enabled;}
+  
+  // Change the callback for calculating the intersection
+  World.set_intersection_callback = function(cb){
+    World.intersection_callback = cb;
+  }
+  
+  // Handle doubleclicks - possibly more
   World.handle_events = function(){
-    // double clicking the scene
-    // add event for picking the location of a click on the plane
-    container.addEventListener( 'dblclick', select_footstep, false );
+    var intersect_world = function(){
+      // find the mouse position (use NDC coordinates, per documentation)
+      var mouse_vector = new THREE.Vector3(
+        ( event.offsetX / CANVAS_WIDTH ) * 2 - 1,
+        -( event.offsetY / CANVAS_HEIGHT ) * 2 + 1);
+      //console.log('Mouse',mouse_vector); // need Vector3, not vector2
+      var projector = new THREE.Projector();
+      //console.log('projector',projector)
+      var raycaster = projector.pickingRay(mouse_vector,camera);
+      //console.log('picking raycaster',raycaster)
+      // intersect the plane
+      var intersection = raycaster.intersectObjects( items.concat(meshes) );
+      // if no intersection
+      //console.log(intersection)
+      if(intersection.length==0){ return; }
+      // apply the callback
+      if(typeof World.intersection_callback==="function"){
+        World.intersection_callback(intersection);
+      }
+      
+    }
+    // add event for picking the location of a double click on the plane
+    container.addEventListener( 'dblclick', intersect_world, false );
   }
   
   World.append_floor = function(){
-    var floor_material = new THREE.MeshPhongMaterial({
+    var floor_mat = new THREE.MeshLambertMaterial({
       ambient: 0x555555, specular: 0x111111, shininess: 200,
       side: THREE.DoubleSide,
       color: 0x7F5217, // red dirt
     });
-    var floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(5000, 5000),
-      floor_material
-    );
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(5000, 5000),floor_mat);
     floor.rotation.x = -Math.PI/2;
     scene.add(floor);
+    // Save in the world items
+    items.push(floor);
   }
   
   World.setup = function(){
     // Grab the container
-    var container = document.getElementById( 'world_container' );
+    container = document.getElementById( 'world_container' );
     CANVAS_WIDTH = container.clientWidth;
     CANVAS_HEIGHT = container.clientHeight;
 
@@ -100,7 +116,6 @@ foot_steps = []
     // handle resizing
     window.addEventListener( 'resize', function() {
       // update the width/height
-      var container = document.getElementById( 'three_container' );
       CANVAS_WIDTH  = container.clientWidth;
       CANVAS_HEIGHT = container.clientHeight;
       // update the camera view
@@ -124,7 +139,13 @@ foot_steps = []
       var offset   = e.data.quad_offsets;
       // Make the Mesh or particle system
       var mesh = make_mesh(index,position,color,offset);
-      scene.add( mesh );
+      scene.add(mesh);
+      meshes.push(mesh);
+      if(meshes.length>MAX_NUM_MESHES){
+        // remove first element
+        var old_mesh = meshes.shift();
+        scene.remove(old_mesh);
+      }
       //var particleSystem = make_particle_system(position, color);
       //scene.add( particleSystem );
       // render the particle system change
@@ -137,6 +158,7 @@ foot_steps = []
     renderer.render( scene, camera );
   }
   
+  // From the mesh websockets listener to rendering
   World.digest_mesh = function( mesh ){
     var buf = mesh.ctx.getImageData(1, 1, mesh.width, mesh.height).data.buffer;
     mesh.buf = buf;
