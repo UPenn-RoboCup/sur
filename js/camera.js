@@ -1,5 +1,5 @@
 /*****
- * 3D World for the robot scene
+ * Camera display in the DOM
  */
 (function(ctx){
   
@@ -7,10 +7,11 @@
   function Camera(){}
   
   // Double buffering?
-  var camera_img, last_camera_img, prev_img_src;
+  var camera_img = new Image(), old_imgs = [];
   
   /* Handle the onload of a new camera_image */
   var camera_handler = function(e){
+    //console.log('here!')
     /*
     // grab important properties
     var w = this.width;
@@ -26,7 +27,11 @@
     URL.revokeObjectURL(this.src);
     this.src = '';
     */
-    URL.revokeObjectURL(prev_img_src);
+    //URL.revokeObjectURL(prev_img_src);
+    for(var i=0,j=old_imgs.length-1;i<j;i++){
+      URL.revokeObjectURL( old_imgs.shift() );
+    }
+    
   }
   
   
@@ -34,9 +39,8 @@
   * Websocket setup
   ******/
   Camera.setup = function(){
-    
-    // Grab the DOM element, since... why not?
-    camera_img = new Image();
+    // put image into the dom
+    camera_container.appendChild( camera_img );
     /*
     camera_canvas = document.createElement('canvas');
     camera_canvas_ctx = camera_canvas.getContext('2d');
@@ -47,20 +51,19 @@
     // Websocket Configuration
     //var mesh_port = 9005; // kinect
     var port = 9003; // head cam
-    
     // checksum & metadata
-    var fr_sz_checksum, fr_metadata;
-    
+    var fr_sz_checksum, fr_metadata, last_camera_img;
     // Connect to the websocket server
     var ws = new WebSocket('ws://' + host + ':' + port);
     ws.binaryType = "blob";
-
     // Send data to the webworker
     ws.onmessage = function(e){
       if(typeof e.data === "string"){
-        fr_metadata    = JSON.parse(e.data);
+        fr_metadata = JSON.parse(e.data);
+        /*
         Camera.latency.push( e.timeStamp/1e6-fr_metadata.t );
         if(Camera.latency.length>5){Camera.latency.shift()}
+        */
         return;
       }
       /* Use the size as a sort of checksum
@@ -70,18 +73,20 @@
         console.log('Camera Checksum fail!',fr_metadata.sz,fr_sz_checksum);
         return;
       }
-      
       // Save the last received image, for delayed rendering
       last_camera_img = e.data;
+
+      // Perform a render
       requestAnimationFrame( function(){
-        prev_img_src = camera_img.src;
         // Decompress image via browser
         camera_img.src = URL.createObjectURL(
-          last_camera_img.slice(0,last_camera_img.size,'image/'+fr_metadata.c);
+          last_camera_img.slice(0,last_camera_img.size,'image/'+fr_metadata.c)
         );
+        old_imgs.push(camera_img.src);
         // Trigger processing once the image is fully loaded
         camera_img.onload = camera_handler;
       }); //animframe
+
     };
   } // Websocket handling
 

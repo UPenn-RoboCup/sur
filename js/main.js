@@ -10,4 +10,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   World.handle_events();
   World.render();
   
+  // Setup the camera
+  Camera.setup();
+  
 });
