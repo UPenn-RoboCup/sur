@@ -41,7 +41,7 @@
     controls.removeEventListener('change', World.render);
     controls = null;
   }
-  World.enable_orbit  = function(){
+  World.enable_orbit = function(){
     // setup OrbitControls to move around the view
     controls = new THREE.OrbitControls( camera, container );
     controls.addEventListener( 'change', World.render );

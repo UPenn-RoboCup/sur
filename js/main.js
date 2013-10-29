@@ -23,4 +23,24 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   World.render();
   
+  // button listeners for 3d stuff
+  //document.getElementById('clear_clicks_btn').addEventListener('click', Wheel.clear, false);
+
+  var yes_mod = function(){
+    console.log('MODIFYING!');
+    Wheel.start_modify();
+    // reset
+    this.removeEventListener('click', yes_mod, false);
+    this.addEventListener('click', no_mod, false);
+  };
+  var no_mod = function(){
+    console.log('NO MODIFYING!');
+    Wheel.stop_modify();
+    // reset
+    this.removeEventListener('click', no_mod, false);
+    this.addEventListener('click', yes_mod, false);
+  };
+  // Initial setting
+  document.getElementById('modify_clicks_btn').addEventListener('click', yes_mod, false);
+
 });

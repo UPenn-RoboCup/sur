@@ -63,15 +63,6 @@
       }
     }, false);
 
-    // Calculate where the wheel is; send to the robot
-    document.getElementById('grabwheel_btn').addEventListener('click', function() {
-      var wheel = calculate_wheel(mesh_points);
-      if(wheel===undefined){return;}
-      var wheel_url = rest_root+'/m/hcm/wheel/model'
-      // perform the post request
-      promise.post( wheel_url, {val:JSON.stringify(wheel)} );
-    }, false);
-    
     // Slider for mesh depth ranges
     function brushend() {
       // When the slider is done moving

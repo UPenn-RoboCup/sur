@@ -133,8 +133,6 @@
       World.remove(wheel_mesh);
       // Add to the scene
       World.add( cur_ind );
-      // stop modify
-      Wheel.stop_modify();
     } else {
       // Calculate the wheel
       var hcm_wheel = calculate();
@@ -150,8 +148,6 @@
       // Send the hcm values to the robot
       var rpc_url = rest_root+'/m/hcm/wheel/model'
       promise.post( rpc_url, {val:JSON.stringify(hcm_wheel)} );
-      // modify the mesh (works)
-      Wheel.start_modify();
     }
     // Re-render
     World.render();
@@ -168,15 +164,20 @@
     World.add( tcontrol );
     // listen for a keydown
     ctx.addEventListener( 'keydown', update_tcontrol, false );
+    // Re-render
+    World.render();
   }; // start_modify
   
   Wheel.stop_modify = function(){
     if(tcontrol===null){return;}
     World.remove( tcontrol );
+    tcontrol.detach( wheel_mesh );
     tcontrol.removeEventListener( 'change', World.render );
     tcontrol = null;
     ctx.removeEventListener( 'keydown', update_tcontrol, false );
     World.enable_orbit();
+    // re-render
+    World.render();
   }
 
   // export
