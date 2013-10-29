@@ -9,9 +9,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   World.handle_webworker();
   World.handle_events(Wheel.select);
   
-  // Setup the wheel selection
-  Wheel.setup(World);
-  
   // Setup the camera
   Camera.setup();
   

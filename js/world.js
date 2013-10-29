@@ -25,18 +25,29 @@
     scene.remove(item);
   }
   
-  // animation takes care of the controls, and is a helper
-  var animate = function(){
-    // request itself again
-    //for(var i=0,j=tcontrols.length;i<j;i++){tcontrols[ i ].update();}
-    controls.update();
-    World.render();
-  };
+  World.render = function(){
+    // render the scene using the camera
+    renderer.render( scene, camera );
+  }
+  
+  // Transform control generator
+  World.generate_tcontrol = function(){
+    return new THREE.TransformControls( camera, container );
+  }
   
   // Stop moving the view
-  World.disable_orbit = function(){controls.enabled = false;}
-  World.enable_orbit  = function(){controls.enabled = true;}
-  World.toggle_orbit  = function(){controls.enabled = !controls.enabled;}
+  World.disable_orbit = function(){
+    controls.enabled = false;
+    controls.removeEventListener('change', World.render);
+    controls = null;
+  }
+  World.enable_orbit  = function(){
+    // setup OrbitControls to move around the view
+    controls = new THREE.OrbitControls( camera, container );
+    controls.addEventListener( 'change', World.render );
+    controls.target = lookTarget;
+    controls.update();
+  }
   //
   World.intersection_callback = null;
   
@@ -95,11 +106,6 @@
     camera.position.z = 0;
     camera.position.y = 2000;
 
-    // setup OrbitControls to move around the view
-    controls = new THREE.OrbitControls( camera, container );
-    controls.addEventListener( 'change', World.render );
-    controls.target = lookTarget;
-
     // make the scene
     scene = new THREE.Scene();
 
@@ -135,7 +141,13 @@
       // re-render
       World.render();
     }, false );
-    animate();
+    
+    // initial update
+    // Enable orbiting
+    World.enable_orbit();
+    
+    // render
+    World.render();
   }
   
   World.handle_webworker = function(){
@@ -160,11 +172,6 @@
       // render the particle system change
       World.render();
     };
-  }
-  
-  World.render = function(){
-    // render the scene using the camera
-    renderer.render( scene, camera );
   }
   
   // From the mesh websockets listener to rendering
