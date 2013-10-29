@@ -13,17 +13,15 @@ if(this.document!==undefined){
 //////////////////
 // Robot properties for where the LIDARs are
 //////////////////
-var chest_height   = 0.10; //chest_lidar_height
-var chest_depth    = 0.05; //joint_x
-//var chest_off_axis = 0.015; //offset_x
-var chest_off_axis = 0.0; // no need...
+var chest_height   = 0.10;
+var chest_joint_x  = 0.05;
+var chest_offset_x = 0.0;
+var chest_off_axis = 0.0; // no need... (lidar reception off axis)
 //
 var neck_height    = 0.30;
 var neck_off_axis  = 0.12;
 /* robot bodyHeight, but this can change a LOT */
 var bodyTilt = 11*Math.PI/180;
-//var heightFudge = 0.10; // webots
-//var heightFudge = 0.13; // real robot
 var bodyHeight = 0.9285318; // nominal height
 var supportX = 0.0515184 + 0.01;
 
@@ -102,7 +100,7 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   var sv = Math.sin(-1*v_angle);
   
   // default
-  var x = r * cv * ch + chest_depth;
+  var x = (r * cv + chest_offset_x) * ch + chest_joint_x;
   var y = r * cv * sh;
   var z = r * sv + chest_height;
   
@@ -112,10 +110,31 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   
   // Place into global pose
   var px = pose[0];
-  var py = pose[1];//-.1; // why?????
+  var py = pose[1];
   var pa = pose[2];
   var ca = Math.cos(pa);
   var sa = Math.sin(pa);
-  return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz + bodyHeight, r];
+  return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz + bodyHeight, r]; 
+}
+
+// get a global point, and put it in the torso reference frame
+var point_to_torso = function(x,y,z){
+  z -= bodyHeight;
+  // TODO: remove the pose element
+  //x -= supportX;
+  // Invert bodyTilt
+  var cp = Math.cos(bodyTilt);
+  var sp = Math.sin(-1*bodyTilt);
+  // rotate for pitch compensation
+  var xx =  cp*x + sp*z;
+  var zz = -sp*x + cp*z;
   
+  /*
+  // remove the chest_joint_x
+  xx += chest_joint_x;
+  // remote the chest_height
+  zz += chest_height;
+  */
+  
+  return [xx,y,zz];
 }

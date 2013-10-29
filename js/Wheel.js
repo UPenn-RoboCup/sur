@@ -53,29 +53,31 @@
   
   // Find the wheel parameters based on three clicked points
   var calculate = function(){
-    var left  = ipoints[0];
-    var right = ipoints[1];
-    var top   = ipoints[2];
+    var points = [];    
+    for(var i=0;i<3;i++){
+      var ip = ipoints[i];
+      // convert to robot torso
+      // swap coordinates, since webgl and robot are different
+      points[i] = (new THREE.Vector3()).fromArray(point_to_torso(ip.z/1000, ip.x/1000, ip.y/1000));
+    }
+    var left  = points[0];
+    var right = points[1];
+    var top   = points[2];
+    
     // Find the center of the wheel
     var center = new THREE.Vector3();
     center.addVectors( left, right ).divideScalar(2);
-    
-    // swap coordinates, since webgl and robot are different
-    var rel_x = center.z / 1000;
-    var rel_y = center.x / 1000;
-    var rel_z = center.y / 1000;
-    
     // test for the distance to the wheel
     var min_dist = .1, max_dist = 1;
+    var rel_x = center.x;
     if(rel_x > 1 || rel_x < 0.10){
       // x distance in meters
       console.log(sprintf("Handle is too far or too close: %.3f < %.3f < %.3f", min_dist,rel_x,max_dist));
       //return;
     }
     // Find the radius of the wheel
-    var diff = new THREE.Vector3();
-    diff.subVectors( left, right );
-    var radius = (diff.length()/2) / 1000;
+    var diff   = (new THREE.Vector3()).subVectors( left, right );
+    var radius = diff.length()/2;
     // fudge factor of 1cm for the radius
     radius += 0.020;
     // Check the radius
@@ -86,20 +88,15 @@
       //return;
     }
     // find the yaw/pitch of the wheel
-    // NOTE: Calculation done with webgl/THREEjs coordinates
-    var dx = diff.z, dy = diff.x;
-    var yaw = Math.atan2( dy, dx ) - Math.PI/2;
-    
+    var yaw = Math.atan2( diff.y, diff.x ) - Math.PI/2;
     //
-    var pitch_diff = new THREE.Vector3();
-    pitch_diff.subVectors(top,center);
-    dx = pitch_diff.z, dz = pitch_diff.y;
-    var pitch = Math.atan2( dx, dz);
+    var pitch_diff = (new THREE.Vector3()).subVectors(top,center);
+    var pitch = Math.atan2( pitch_diff.x, pitch_diff.z);
     
     // Modify the geometry of the helper
-    wheel_geo = new THREE.TorusGeometry(1000*radius, 20, 8, 20);
+    wheel_geo  = new THREE.TorusGeometry(1000*radius, 20, 8, 20);
     wheel_mesh = new THREE.Mesh( wheel_geo, wheel_mat );
-    wheel_mesh.position.copy(center);
+    wheel_mesh.position.addVectors( ipoints[0], ipoints[1] ).divideScalar(2);
     wheel_mesh.rotation.set(pitch,yaw,0);
     
     // Vector3's log
@@ -110,10 +107,7 @@
     console.log('diff',diff);
     
     // Format data for hcm
-    pitch -= bodyTilt;
-    rel_x -= supportX; // hack or correct?
-    rel_z -= bodyHeight;
-    return [rel_x, rel_y, rel_z, yaw, pitch, radius];
+    return [rel_x, center.y, center.z, yaw, pitch, radius];
   }
   
   ///////////////////////
