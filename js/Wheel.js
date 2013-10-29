@@ -81,6 +81,9 @@
     console.log('diff',diff);
     
     // Format data for hcm
+    pitch -= bodyTilt;
+    rel_y = 0;
+    rel_x -= supportX;
     radius += 0.010; // fudge factor of 1cm for the radius
     return [rel_x, rel_y, rel_z-bodyHeight0, yaw, pitch, radius];
   }
