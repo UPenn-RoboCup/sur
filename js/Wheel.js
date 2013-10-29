@@ -155,7 +155,16 @@
     World.render();
   }
   Wheel.clear = function(){
-    
+    // remove indicators
+    for(var i=0;i<nIndicators;i++){World.remove(indicators[i]);}
+    // Reset the intersection points
+    ipoints = [];
+    // Remove the wheel
+    World.remove(wheel_mesh);
+    // Stop modifying
+    Wheel.stop_modify();
+    // Re render the scene
+    World.render();
   }
   Wheel.start_modify = function(){
     // stop the normal controls
