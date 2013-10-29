@@ -76,6 +76,9 @@
     var diff = new THREE.Vector3();
     diff.subVectors( left, right );
     var radius = (diff.length()/2) / 1000;
+    // fudge factor of 1cm for the radius
+    radius += 0.020;
+    // Check the radius
     var min_rad = .1, max_rad = 1;
     if (radius>max_rad || radius<min_rad){
       // radius in meters
@@ -100,20 +103,16 @@
     wheel_mesh.rotation.set(pitch,yaw,0);
     
     // Vector3's log
-    /*
     console.log('left',left);
     console.log('right',right);
     console.log('top',top);
     console.log('center',center);
     console.log('diff',diff);
-    */
     
     // Format data for hcm
     pitch -= bodyTilt;
-    rel_y = 0; // hack
     rel_x -= supportX; // hack or correct?
-    rel_z -= bodyHeight0;
-    radius += 0.010; // fudge factor of 1cm for the radius
+    rel_z -= bodyHeight;
     return [rel_x, rel_y, rel_z, yaw, pitch, radius];
   }
   

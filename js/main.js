@@ -12,13 +12,11 @@ document.addEventListener( "DOMContentLoaded", function(){
   Camera.setup();
   
   // Add the robot
-  /*
   Robot.setup(function(){
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
-    Robot.update_skeleton();
+    // Robot.update_skeleton();
   });
-  */
   
   //////////////////////////
   // Modifying the 3D scene

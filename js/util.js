@@ -13,17 +13,18 @@ if(this.document!==undefined){
 //////////////////
 // Robot properties for where the LIDARs are
 //////////////////
-var chest_depth    = 0.05;
-var chest_height   = 0.10;
-var chest_off_axis = 0.015;
+var chest_height   = 0.10; //chest_lidar_height
+var chest_depth    = 0.05; //joint_x
+//var chest_off_axis = 0.015; //offset_x
+var chest_off_axis = 0.0; // no need...
+//
 var neck_height    = 0.30;
 var neck_off_axis  = 0.12;
 /* robot bodyHeight, but this can change a LOT */
 var bodyTilt = 11*Math.PI/180;
-var heightFudge = 0.10; // webots
-var heightFudge = 0.13; // real robot
-var bodyHeight0 = 0.9285318; // nominal height
-var bodyHeight = bodyHeight0 + heightFudge;
+//var heightFudge = 0.10; // webots
+//var heightFudge = 0.13; // real robot
+var bodyHeight = 0.9285318; // nominal height
 var supportX = 0.0515184 + 0.01;
 
 var jet = function(val){
@@ -96,25 +97,25 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   var ch = Math.cos(h_angle);
   var sh = Math.sin(h_angle);
   
-  var v_angle = -1 * ( v_rpp * v + fov[2]);
+  var v_angle = v_rpp * v + fov[2];
   var cv = Math.cos(v_angle);
-  var sv = Math.sin(v_angle);
+  var sv = Math.sin(-1*v_angle);
   
   // default
   var x = r * cv * ch + chest_depth;
-  var y = r * cv * sh + chest_height;
-  var z = r * sv;
+  var y = r * cv * sh;
+  var z = r * sv + chest_height;
   
   // rotate for pitch compensation
   var xx =  cp*x + sp*z + supportX;
-  var zz = -sp*x + cp*z + bodyHeight;
+  var zz = -sp*x + cp*z;
   
   // Place into global pose
   var px = pose[0];
-  var py = pose[1];
+  var py = pose[1];//-.1; // why?????
   var pa = pose[2];
   var ca = Math.cos(pa);
   var sa = Math.sin(pa);
-  return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz, r]
+  return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz + bodyHeight, r];
   
 }
