@@ -117,6 +117,8 @@
     return [rel_x, rel_y, rel_z, yaw, pitch, radius];
   }
   
+  ///////////////////////
+  // object manipulation API
   // set up the intersection handler
   Wheel.select = function(intersections){
     // Just take the first intersection point
@@ -152,7 +154,9 @@
     // Re-render
     World.render();
   }
-  
+  Wheel.clear = function(){
+    
+  }
   Wheel.start_modify = function(){
     // stop the normal controls
     World.disable_orbit();
@@ -167,7 +171,6 @@
     // Re-render
     World.render();
   }; // start_modify
-  
   Wheel.stop_modify = function(){
     if(tcontrol===null){return;}
     World.remove( tcontrol );
@@ -179,6 +182,7 @@
     // re-render
     World.render();
   }
+  ///////////////////////
 
   // export
 	ctx.Wheel = Wheel;

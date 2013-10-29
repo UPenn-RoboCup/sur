@@ -10,6 +10,7 @@
   var old_imgs = []
   var camera_img = new Image();
   camera_img.id = 'head_camera';
+  camera_img.alt = 'No head_camera image yet...'
   
   /* Handle the onload of a new camera_image */
   var camera_handler = function(e){
