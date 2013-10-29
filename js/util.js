@@ -13,14 +13,17 @@ if(this.document!==undefined){
 //////////////////
 // Robot properties for where the LIDARs are
 //////////////////
-var chest_depth    = 0.07;
-var chest_height   = 0.08;
-var chest_off_axis = 0.04;
+var chest_depth    = 0.05;
+var chest_height   = 0.10;
+var chest_off_axis = 0.015;
 var neck_height    = 0.30;
 var neck_off_axis  = 0.12;
 /* robot bodyHeight, but this can change a LOT */
 var bodyTilt = 11*Math.PI/180;
-var bodyHeight = 0.9285318 + 0.13;
+var heightFudge = 0.10; // webots
+var heightFudge = 0.13; // real robot
+var bodyHeight0 = 0.9285318; // nominal height
+var bodyHeight = bodyHeight0 + heightFudge;
 var supportX = 0.0515184 + 0.01;
 
 var jet = function(val){
@@ -103,7 +106,7 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   var z = r * sv;
   
   // rotate for pitch compensation
-  var xx = cp*x + sp*z + supportX;
+  var xx =  cp*x + sp*z + supportX;
   var zz = -sp*x + cp*z + bodyHeight;
   
   // Place into global pose

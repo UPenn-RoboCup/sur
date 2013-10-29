@@ -32,6 +32,10 @@
   
   <!-- Plot the robot-->
   <script src="lib/STLLoader.js"></script>
+  <script src="js/robot.js"></script>
+  
+  <!-- Clicking on objects -->
+  <script src="js/Wheel.js"></script>
   
   <!-- SUR Main JS -->
   <script src="js/main.js"></script>
@@ -42,6 +46,9 @@
 
 <!--https://github.com/necolas/css3-github-buttons-->
 <div id="fsm_container">
+  
+  <div id="camera_container"></div>
+  
   <div id="bodyheight_slider" class="mesh_selection">
     <div class="button-group" id="mesh_btns">
       <a href="#" class="button mesh_selection" id="slow_mesh_btn">Slow</a>
@@ -53,12 +60,11 @@
     <a href="#" class="button mesh_selection" id="switch_mesh_btn">Chest</a>
     <a href="#" class="button mesh_selection" id="clear_mesh_btn">Clear</a>
     <a href="#" class="button mesh_selection" id="grabwheel_btn">Wheel</a>
-    <a href="#" class="button mesh_selection" id="grabtool_btn">Tool</a>
   </div>
 
   <br/>
+  <div>Arm</div>
   <div class="button-group">
-  <span class='big label rss icon'>Arm</span>
   <a href="#" class="big button fsm_selection" id="arm_fsm_init_btn">Init</a>
   <a href="#" class="big button fsm_selection" id="arm_fsm_reset_btn">Reset</a>
   <a href="#" class="big button fsm_selection" id="arm_fsm_ready_btn">Ready</a>
@@ -66,53 +72,33 @@
   </div>
 
   <br/>
+  <div>Head</div>
   <div class="button-group">
-  <span class='big label rss icon'>Head</span>
   <a href="#" class="big button fsm_selection" id="head_fsm_scan_btn">Scan</a>
   <a href="#" class="big button fsm_selection" id="head_fsm_center_btn">Center</a>
   </div>
 
   <br/>
+  <div>Motion</div>
   <div class="button-group">
-  <span class='big label rss icon'>Motion</span>
   <a href="#" class="big button fsm_selection" id="motion_fsm_stand_btn">Stand</a>
   <a href="#" class="big button fsm_selection" id="motion_fsm_walk_btn">Walk</a>
   </div>
 
-  <br/>
+  <div>Body</div>
   <div class="button-group">
-  <span class='big label rss icon'>Body</span>
   <a href="#" class="big button fsm_selection" id="body_fsm_init_btn">Init</a>
   <a href="#" class="big button fsm_selection" id="body_fsm_follow_btn">Follow</a>
   <a href="#" class="big button fsm_selection" id="body_fsm_step_btn">Step</a>
   </div>
 
-  <br/>
+  <div>LIDAR</div>
   <div class="button-group">
-  <span class='big label rss icon'>LIDAR</span>
   <a href="#" class="big button fsm_selection" id="lidar_fsm_pan_btn">Pan</a>
   </div>
 
-  <div id="mesh_clicks">
-  You clicked:
-  </div>
-
 </div>
 
-<div id="wp_container">
-  Waypoint management
-  <br/>
-  <div class="button-group" id="wp_btns">
-    <a href="#" class="button" id="clear_wp_btn">Clear</a>
-    <a href="#" class="button" id="send_wp_btn">Send</a>
-  </div>
-  <div id="wp_status">
-  Current wp:
-  </div>
-  
-</div>
-
-<div id="camera_container"></div>
 <div id="world_container"></div>
 
 </body>

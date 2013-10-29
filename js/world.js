@@ -12,10 +12,18 @@
   var camera, renderer, scene, container, controls;
   // Add the webworker
   var mesh_worker = new Worker("js/mesh_worker.js");
+  // save items
   var meshes = [], items = [];
   
   // Where to look initially
   var lookTarget = new THREE.Vector3(0,1000,1000);
+  
+  World.add = function(item){
+    scene.add(item);
+  }
+  World.remove = function(item){
+    scene.remove(item);
+  }
   
   // animation takes care of the controls, and is a helper
   var animate = function(){
@@ -29,35 +37,36 @@
   World.disable_orbit = function(){controls.enabled = false;}
   World.enable_orbit  = function(){controls.enabled = true;}
   World.toggle_orbit  = function(){controls.enabled = !controls.enabled;}
+  //
+  World.intersection_callback = null;
   
-  // Change the callback for calculating the intersection
-  World.set_intersection_callback = function(cb){
-    World.intersection_callback = cb;
+  // This is the intersection function
+  var intersect_world = function(event){
+    // if no callback, then do nothing
+    if(typeof World.intersection_callback!=="function"){ return; }
+    // find the mouse position (use NDC coordinates, per documentation)
+    var mouse_vector = new THREE.Vector3(
+      ( event.offsetX / CANVAS_WIDTH ) * 2 - 1,
+      -( event.offsetY / CANVAS_HEIGHT ) * 2 + 1);
+    //console.log('Mouse',mouse_vector); // need Vector3, not vector2
+    var projector = new THREE.Projector();
+    //console.log('projector',projector)
+    var raycaster = projector.pickingRay(mouse_vector,camera);
+    //console.log('picking raycaster',raycaster)
+    // intersect the plane
+    var intersection = raycaster.intersectObjects( items.concat(meshes) );
+    // if no intersection
+    //console.log(intersection)
+    if(intersection.length==0){ return; }
+    // apply the callback
+    World.intersection_callback(intersection);
   }
   
   // Handle doubleclicks - possibly more
-  World.handle_events = function(){
-    var intersect_world = function(){
-      // find the mouse position (use NDC coordinates, per documentation)
-      var mouse_vector = new THREE.Vector3(
-        ( event.offsetX / CANVAS_WIDTH ) * 2 - 1,
-        -( event.offsetY / CANVAS_HEIGHT ) * 2 + 1);
-      //console.log('Mouse',mouse_vector); // need Vector3, not vector2
-      var projector = new THREE.Projector();
-      //console.log('projector',projector)
-      var raycaster = projector.pickingRay(mouse_vector,camera);
-      //console.log('picking raycaster',raycaster)
-      // intersect the plane
-      var intersection = raycaster.intersectObjects( items.concat(meshes) );
-      // if no intersection
-      //console.log(intersection)
-      if(intersection.length==0){ return; }
-      // apply the callback
-      if(typeof World.intersection_callback==="function"){
-        World.intersection_callback(intersection);
-      }
-      
-    }
+  World.handle_events = function( cb ){
+    // Change the callback for calculating the intersection
+    container.removeEventListener( 'dblclick', intersect_world, false );
+    World.intersection_callback = cb;
     // add event for picking the location of a double click on the plane
     container.addEventListener( 'dblclick', intersect_world, false );
   }

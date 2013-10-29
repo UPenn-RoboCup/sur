@@ -43,22 +43,29 @@ bridges.push({
 });
 
 bridges.push({
+  name : 'lwrist_camera',
+  ws : 9004,
+  udp: 33334,
+  clients : []
+});
+
+bridges.push({
 	name : 'rgbd_depth',
-	ws : 9004,
+	ws : 9010,
 	udp: 33346,
 	clients : []
 });
 
 bridges.push({
   name : 'rgbd_color',
-  ws : 9005,
+  ws : 9011,
   udp: 33347,
   clients : []
 });
 
 bridges.push({
 	name : 'spacemouse',
-	ws : 9006,
+	ws : 9012,
 	sub: 'spacemouse',
 	clients : []
 });

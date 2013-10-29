@@ -208,7 +208,6 @@
         mesh.latency = e.timeStamp/1e6 - fr_metadata.t;
         mesh.depths  = fr_metadata.depths.slice(0);
         mesh.pose    = fr_metadata.pose.slice(0);
-        console.log(mesh.pose);
         var fov = mesh.fov;
         if(fr_metadata.name=='chest_lidar'){
           fov[0] = fr_metadata.scanlines[0]; // horiz start

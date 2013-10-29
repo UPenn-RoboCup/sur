@@ -6,33 +6,18 @@
   // Function to hold methods
   function Camera(){}
   
-  // Double buffering?
-  var camera_img = new Image(), old_imgs = [];
+  // Make the iamge object
+  var old_imgs = []
+  var camera_img = new Image();
+  camera_img.id = 'head_camera';
   
   /* Handle the onload of a new camera_image */
   var camera_handler = function(e){
-    //console.log('here!')
-    /*
-    // grab important properties
-    var w = this.width;
-    var h = this.height;
-    var img = this;
-
-    // draw to the canvas
-    camera_canvas.width = w;
-    camera_canvas.height = h;
-    camera_canvas_ctx.drawImage(this, 0, 0);
-
-    // Remove the image for memory management reasons
-    URL.revokeObjectURL(this.src);
-    this.src = '';
-    */
-    //URL.revokeObjectURL(prev_img_src);
+    // revoke the object urls for memory management
     for(var i=0,j=old_imgs.length-1;i<j;i++){
       URL.revokeObjectURL( old_imgs.shift() );
     }
-    
-  }
+  } // camera handler
   
   
   /*******
@@ -41,13 +26,7 @@
   Camera.setup = function(){
     // put image into the dom
     camera_container.appendChild( camera_img );
-    /*
-    camera_canvas = document.createElement('canvas');
-    camera_canvas_ctx = camera_canvas.getContext('2d');
-    // add the canvas
-    camera_container.appendChild( camera_canvas );
-    */
-    
+
     // Websocket Configuration
     //var mesh_port = 9005; // kinect
     var port = 9003; // head cam
@@ -74,14 +53,14 @@
         return;
       }
       // Save the last received image, for delayed rendering
-      last_camera_img = e.data;
+      last_camera_img = e.data.slice(
+        0,e.data.size,'image/'+fr_metadata.c
+      );
 
       // Perform a render
       requestAnimationFrame( function(){
         // Decompress image via browser
-        camera_img.src = URL.createObjectURL(
-          last_camera_img.slice(0,last_camera_img.size,'image/'+fr_metadata.c)
-        );
+        camera_img.src = URL.createObjectURL(last_camera_img);
         old_imgs.push(camera_img.src);
         // Trigger processing once the image is fully loaded
         camera_img.onload = camera_handler;

@@ -1,65 +1,35 @@
 body {
   /* background-color: #444; */
+  font-family: helvetica;
+}
+
+/*
+ * FSM and controls
+ */
+#fsm_container {
+  width:  320px;
+}
+
+/*
+ * Camera
+ */
+#camera_container img {
+  width:  320px;
+  height: 180px;
 }
 
 /*
  * Mesh
  */
-
 .mesh_selection {
   float: left;
 }
 
 #world_container {
   position: absolute;
-  left:     0px;
+  left:     340px;
   top:      0px;
-  width:  640px;
-  height: 400px;
+  width:  720px;
+  height: 680px;
   background-color: #080;
-}
-
-/*
- * FSM
- */
-
-#fsm_container {
-  position: absolute;
-  left:     0px;
-  top:    400px;
-  width:  340px;
-  height: 280px;
-}
-
-#fsm_container .label {
-  width: 50px;
-}
-
-/*
- * Waypoints
- */
-
-#wp_container {
-  position: absolute;
-  left:   340px;
-  top:    400px;
-  width:  300px;
-  height: 280px;
-}
-
-#fsm_container .label {
-  width: 50px;
-}
-
-/*
- * Camera
- */
-
-#camera_container {
-  position: absolute;
-  left:   640px;
-  top:      0px;
-  width:  640px;
-  height: 360px;
-  background-color: #800;
 }
