@@ -11,6 +11,9 @@ document.addEventListener( "DOMContentLoaded", function(){
   // Setup the camera
   Camera.setup();
   
+  // Setup the FSM buttons
+  FSM.setup();
+  
   // Add the robot
   Robot.setup(function(){
     var m = Robot.meshes;
