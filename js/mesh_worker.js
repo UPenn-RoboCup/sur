@@ -13,7 +13,6 @@ self.onmessage = function(e) {
   var far    = e.data.depths[1];
   var fov    = e.data.fov;
   var pitch  = e.data.pitch;
-  var factor = (far-near)/255;
   var posex  = e.data.posex;
   var posey  = e.data.posey;
   var posez  = e.data.posez;
@@ -63,7 +62,9 @@ self.onmessage = function(e) {
 
       // Compute the xyz positions
       var pose = [posex[i],posey[i],posez[i]];
-      var p = get_hokuyo_chest_xyz(i,j,w,width,height,near,far,fov,pitch,pose);
+      var p = get_hokuyo_chest_xyz(
+        i,j,w,width,height,near,far,fov,pitch,pose
+      );
             
       // saturation check
       if(p===undefined){

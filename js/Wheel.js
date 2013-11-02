@@ -142,7 +142,7 @@
       World.add( wheel_mesh );
       // Send the hcm values to the robot
       var rpc_url = rest_root+'/m/hcm/wheel/model'
-      promise.post( rpc_url, {val:JSON.stringify(hcm_wheel)} );
+      //qwest.post( rpc_url, {val:JSON.stringify(hcm_wheel)} );
     }
     // Re-render
     World.render();

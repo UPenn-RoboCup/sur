@@ -41,7 +41,7 @@
       var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net'
       if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
       // perform the post request for a reliable PNG
-      promise.post( mesh_req_url, {val:JSON.stringify([3,3,90,1])} );
+      qwest.post( mesh_req_url, {val:JSON.stringify([3,3,90,1])} );
     }, false);
 
     // switch the type of mesh to request
@@ -70,7 +70,7 @@
       var rpc_url = rest_root+'/m/vcm/'+mesh_in_use+'/depths'
       var vals = brush.extent();
       // perform the post request
-      promise.post( rpc_url, {val:JSON.stringify(vals)} );
+      qwest.post( rpc_url, {val:JSON.stringify(vals)} );
     }
     // Actual SVG Markup
     var margin = {top: 0, right: 12, bottom: 18, left: 12},
@@ -197,7 +197,7 @@
         var mesh     = meshes[fr_metadata.name]
         mesh.pitch   = fr_metadata.rpy[1];
         mesh.latency = e.timeStamp/1e6 - fr_metadata.t;
-        mesh.depths  = fr_metadata.depths.slice(0);
+        mesh.depths  = fr_metadata.depths.slice();
         //
         mesh.posex    = fr_metadata.posex.slice();
         mesh.posey    = fr_metadata.posey.slice();

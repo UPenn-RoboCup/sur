@@ -8,6 +8,12 @@ if(this.document!==undefined){
   this.rest_root = 'http://'+host+':8080';
   // http://macwright.org/presentations/dcjq/
   this.$ = function(x){return document.querySelectorAll(x);};
+  this.clicker = function(id,fun){
+    document.getElementById(id).addEventListener('click', fun, false);
+  }
+  this.unclicker = function(id,fun){
+    document.getElementById(id).removeEventListener('click', fun, false);
+  }
 }
 
 //////////////////
@@ -15,7 +21,7 @@ if(this.document!==undefined){
 //////////////////
 var chest_height   = 0.10;
 var chest_joint_x  = 0.05;
-var chest_offset_x = 0.0;
+var chest_offset_x = 0.01;
 var chest_off_axis = 0.0; // no need... (lidar reception off axis)
 //
 var neck_height    = 0.30;
@@ -24,6 +30,8 @@ var neck_off_axis  = 0.12;
 var bodyTilt = 11*Math.PI/180;
 var bodyHeight = 0.9285318; // nominal height
 var supportX = 0.0515184 + 0.01;
+//
+var robot_pose = [0,0,0];
 
 var jet = function(val){
   //val = Math.min(Math.max(val,0),255);
@@ -79,7 +87,7 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   
   // Convert w of 0-255 to actual meters value
   var factor = (far-near)/255;
-  var r = factor*w+near + chest_off_axis;
+  var r = factor*w + near + chest_off_axis;
   
   // bodyTilt compensation (should be pitch in the future)
   var cp = Math.cos(pitch);
@@ -87,14 +95,14 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   
   // radians per pixel
   var hFOV  = fov[1]-fov[0];
-  var vFOV  = fov[3]-fov[2];
   var h_rpp = hFOV / width;
-  var v_rpp = vFOV / height;
-  // angle in radians of the selected pixel
   var h_angle = h_rpp * (width/2-u);
   var ch = Math.cos(h_angle);
   var sh = Math.sin(h_angle);
   
+  // Radians per pixel
+  var vFOV  = fov[3]-fov[2];
+  var v_rpp = vFOV / height;
   var v_angle = v_rpp * v + fov[2];
   var cv = Math.cos(v_angle);
   var sv = Math.sin(-1*v_angle);
@@ -106,7 +114,7 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   
   // rotate for pitch compensation
   var xx =  cp*x + sp*z + supportX;
-  var zz = -sp*x + cp*z;
+  var zz = -sp*x + cp*z + bodyHeight;
   
   // Place into global pose
   var px = pose[0];
@@ -114,27 +122,37 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   var pa = pose[2];
   var ca = Math.cos(pa);
   var sa = Math.sin(pa);
-  return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz + bodyHeight, r]; 
+  return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz, r]; 
 }
 
 // get a global point, and put it in the torso reference frame
 var point_to_torso = function(x,y,z){
+  // Make a relative pose
+  var ca = Math.cos(robot_pose[2]);
+  var sa = Math.sin(robot_pose[2]);
+  var px = x-robot_pose[0];
+  var py = y-robot_pose[1];
+  x =  ca*px + sa*py;
+  y = -sa*px + ca*py;
+  /*
+  var pa = (z-robot_pose[2]) % (2*math.pi);
+  if (pa >= Math.PI){pa = pa - 2*Math.PI;}
+  */
+  
+  // kill off some body transformations
   z -= bodyHeight;
-  // TODO: remove the pose element
-  //x -= supportX;
+  x -= supportX;
+  
   // Invert bodyTilt
   var cp = Math.cos(bodyTilt);
-  var sp = Math.sin(-1*bodyTilt);
+  var sp = Math.sin(bodyTilt);
   // rotate for pitch compensation
-  var xx =  cp*x + sp*z;
-  var zz = -sp*x + cp*z;
+  var xx = cp*x - sp*z;
+  var zz = sp*x + cp*z;
   
-  /*
-  // remove the chest_joint_x
-  xx += chest_joint_x;
-  // remote the chest_height
-  zz += chest_height;
-  */
+  // More body transformations
+  xx -= chest_joint_x;
+  zz -= chest_height;
   
   return [xx,y,zz];
 }
