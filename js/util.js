@@ -81,17 +81,23 @@ var get_hokuyo_head_xyz = function(u,v,w,width,height,near,far,hFOV,vFOV,pitch){
   return [xx,y,zz,r];
 }
 
-var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
+var get_hokuyo_chest_xyz = function(u,v,w,mesh){
   // do not use saturated pixels
   if(w==0||w==255){return;}
   
   // Convert w of 0-255 to actual meters value
+  var near   = mesh.depths[0];
+  var far    = mesh.depths[1];
   var factor = (far-near)/255;
   var r = factor*w + near + chest_off_axis;
   
   // bodyTilt compensation (should be pitch in the future)
+  var pitch  = mesh.pitch;
   var cp = Math.cos(pitch);
   var sp = Math.sin(pitch);
+  
+  // Field of View fixing
+  var fov = mesh.fov;
   
   // radians per pixel
   var hFOV  = fov[1]-fov[0];
@@ -117,9 +123,9 @@ var get_hokuyo_chest_xyz = function(u,v,w,width,height,near,far,fov,pitch,pose){
   var zz = -sp*x + cp*z + bodyHeight;
   
   // Place into global pose
-  var px = pose[0];
-  var py = pose[1];
-  var pa = pose[2];
+  var px = mesh.posex[u];
+  var py = mesh.posey[u];
+  var pa = mesh.posez[u]; // bad z naming convention :P
   var ca = Math.cos(pa);
   var sa = Math.sin(pa);
   return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz, r]; 

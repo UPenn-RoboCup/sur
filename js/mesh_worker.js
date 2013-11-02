@@ -1,21 +1,12 @@
 importScripts('../js/util.js');
 
 self.onmessage = function(e) {
-
   // process the input
-  var pixels = new Uint8Array(e.data.buf);
-  // max out index ability
-  var pixdex = new Uint32Array(e.data.buf);
-  // important info
-  var width  = e.data.width;
-  var height = e.data.height;
-  var near   = e.data.depths[0];
-  var far    = e.data.depths[1];
-  var fov    = e.data.fov;
-  var pitch  = e.data.pitch;
-  var posex  = e.data.posex;
-  var posey  = e.data.posey;
-  var posez  = e.data.posez;
+  var mesh   = e.data;
+  var pixels = new Uint8Array(mesh.buf);
+  var pixdex = new Uint32Array(mesh.buf);
+  var width  = mesh.width;
+  var height = mesh.height;
 
 	// TypedArrays to be put into the WebGL buffer
   var positions = new Float32Array( width * height * 3 );
@@ -61,10 +52,7 @@ self.onmessage = function(e) {
       var w = pixels[pixel_idx];
 
       // Compute the xyz positions
-      var pose = [posex[i],posey[i],posez[i]];
-      var p = get_hokuyo_chest_xyz(
-        i,j,w,width,height,near,far,fov,pitch,pose
-      );
+      var p = get_hokuyo_chest_xyz(i,j,w,mesh);
             
       // saturation check
       if(p===undefined){
