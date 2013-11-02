@@ -6,8 +6,6 @@
   // Function to hold methods
   function Wheel(){}
   
-  // Have the world
-  Wheel.world = null;
   // save the intersection points
   var ipoints = [];
   
