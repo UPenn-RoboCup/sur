@@ -1,4 +1,3 @@
-
 (function(ctx){
   
   // Function to hold methods

@@ -241,12 +241,3 @@
 	ctx.Mesh = Mesh;
 
 })(this);
-/**
- * useful links
- * attributes for new clicks
- * http://mbostock.github.io/d3/tutorial/circle.html
- * Log all points in our debug zone
- * http://alignedleft.com/tutorials/d3/using-your-data
- * jet
- * http://www.metastine.com/?p=7
-*/

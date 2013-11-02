@@ -2,7 +2,7 @@
 importScripts('../js/transform.js');
 
 self.onmessage = function(e) {
-  var el = make_quads(e.data);
+  var el = Transform.make_quads(e.data);
   self.postMessage(el,[el.pos, el.idx, el.col]);
 };
 

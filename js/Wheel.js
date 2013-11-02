@@ -56,7 +56,8 @@
       var ip = ipoints[i];
       // convert to robot torso
       // swap coordinates, since webgl and robot are different
-      points[i] = (new THREE.Vector3()).fromArray(point_to_torso(ip.z/1000, ip.x/1000, ip.y/1000));
+      points[i] = (new THREE.Vector3())
+      .fromArray(Transform.point_to_torso(ip.z/1000, ip.x/1000, ip.y/1000));
     }
     var left  = points[0];
     var right = points[1];
