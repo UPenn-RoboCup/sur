@@ -10,8 +10,7 @@
   
   var CANVAS_WIDTH, CANVAS_HEIGHT;
   var camera, renderer, scene, container, controls;
-  // Add the webworker
-  var mesh_worker = new Worker("js/mesh_worker.js");
+  
   // save items
   var meshes = [], items = [];
   
@@ -150,30 +149,6 @@
     World.render();
   }
   
-  World.handle_webworker = function(){
-    // Start the webworker
-    mesh_worker.onmessage = function(e) {
-      // The message is the mesh
-      var position = new Float32Array(e.data.pos,0,3*e.data.n_el);
-      var color    = new Float32Array(e.data.col,0,3*e.data.n_el);
-      var index    = new Uint16Array(e.data.idx,0,6*e.data.n_quad);
-      var offset   = e.data.quad_offsets;
-      // Make the Mesh or particle system
-      var mesh = make_mesh(index,position,color,offset);
-      scene.add(mesh);
-      meshes.push(mesh);
-      if(meshes.length>MAX_NUM_MESHES){
-        // remove first element
-        var old_mesh = meshes.shift();
-        scene.remove(old_mesh);
-      }
-      //var particleSystem = make_particle_system(position, color);
-      //scene.add( particleSystem );
-      // render the particle system change
-      World.render();
-    };
-  }
-  
   // From the mesh websockets listener to rendering
   World.digest_mesh = function( mesh ){
     var buf = mesh.ctx.getImageData(1, 1, mesh.width, mesh.height).data.buffer;
@@ -188,6 +163,8 @@
     // Restore the objects
     mesh.ctx = ctx;
     mesh.raw = raw;
+    
+    // or in the same thread... must include transform.js somehow, though
   }
   
   // mesh generation helpers
@@ -253,6 +230,34 @@
     var particleSystem = new THREE.ParticleSystem( geometry, mat );
     return particleSystem;
   }
+  
+  var process_lidar_results = function(el){
+    // The message is the mesh
+    var position = new Float32Array(el.pos,0,3*el.n_el);
+    var color    = new Float32Array(el.col,0,3*el.n_el);
+    var index    = new Uint16Array(el.idx,0,6*el.n_quad);
+    var offset   = el.quad_offsets;
+    // Make the Mesh or particle system
+    var mesh = make_mesh(index,position,color,offset);
+    scene.add(mesh);
+    meshes.push(mesh);
+    if(meshes.length>MAX_NUM_MESHES){
+      // remove first element
+      var old_mesh = meshes.shift();
+      scene.remove(old_mesh);
+    }
+    //var particleSystem = make_particle_system(position, color);
+    //scene.add( particleSystem );
+    // render the particle system change
+    World.render();
+  }
+  
+  // Add the webworker
+  var mesh_worker = new Worker("js/mesh_worker.js");
+  mesh_worker.onmessage = function(e) {
+    var el = e.data;
+    process_lidar(el);
+  };
   
   // export
 	ctx.World = World;

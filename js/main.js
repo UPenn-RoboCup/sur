@@ -1,3 +1,20 @@
+// Useful (globally accessible) functions
+this.host = this.document.location.host.replace(/:.*/, '');
+if( host.length==0 ){ host = "localhost"; }
+// Compatibility layer for URL
+this.URL = this.URL || this.webkitURL;
+// assume port 8080 for testing...
+this.rest_root = 'http://'+host+':8080';
+// http://macwright.org/presentations/dcjq/
+this.$ = function(x){return document.querySelectorAll(x);};
+this.clicker = function(id,fun){
+  document.getElementById(id).addEventListener('click', fun, false);
+}
+this.unclicker = function(id,fun){
+  document.getElementById(id).removeEventListener('click', fun, false);
+}
+
+// Once the page is done loading, execute main
 document.addEventListener( "DOMContentLoaded", function(){
   // Setup the mesh handler
   Mesh.handle_buttons();
@@ -6,7 +23,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   // Setup the world
   World.setup();
   World.append_floor();
-  World.handle_webworker();
   
   // Setup the camera
   Camera.setup();
