@@ -36,16 +36,15 @@
     // slow mesh
   
     // request a new mesh
-    document.getElementById('request_mesh_btn').addEventListener('click', function() {
+    clicker('request_mesh_btn',function() {
       // if testing with the kinect
       var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net'
       if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
       // perform the post request for a reliable PNG
       qwest.post( mesh_req_url, {val:JSON.stringify([3,3,90,1])} );
-    }, false);
-
+    });
     // switch the type of mesh to request
-    document.getElementById('switch_mesh_btn').addEventListener('click', function() {
+    clicker('switch_mesh_btn',function() {
       // Change the button text
       switch(this.textContent){
         case 'Head':
@@ -61,7 +60,7 @@
           mesh_in_use = 'kinect';
           break;
       }
-    }, false);
+    });
 
     // Slider for mesh depth ranges
     function brushend() {

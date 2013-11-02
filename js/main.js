@@ -54,9 +54,8 @@ document.addEventListener( "DOMContentLoaded", function(){
     this.addEventListener('click', yes_mod, false);
   };
   // Initial setting
-  document.getElementById('modify_clicks_btn').addEventListener('click', yes_mod, false);
-  // Clearing the object
-  document.getElementById('clear_clicks_btn').addEventListener('click', Wheel.clear, false);
+  clicker('modify_clicks_btn',yes_mod);
+  clicker('clear_clicks_btn',Wheel.clear);
   //////////////////////////
 
   // Finally, render the world!
