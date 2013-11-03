@@ -64,12 +64,16 @@
     var raycaster = projector.pickingRay(mouse_vector,camera);
     //console.log('picking raycaster',raycaster)
     // intersect the plane
-    var intersection = raycaster.intersectObjects( items.concat(meshes) );
+    var intersections = raycaster.intersectObjects( items.concat(meshes) );
     // if no intersection
     //console.log(intersection)
-    if(intersection.length==0){ return; }
+    if(intersections.length==0){ return; }
+    // only give the first intersection point
+    var p = intersections[0].point;
+    // get the robot point
+    var r = Transform.three_to_torso(p);
     // apply the callback
-    World.intersection_callback(intersection);
+    World.intersection_callback(p,r);
   }
   
   // Handle doubleclicks - possibly more

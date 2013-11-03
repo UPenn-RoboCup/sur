@@ -51,17 +51,10 @@
   
   // Find the wheel parameters based on three clicked points
   var calculate = function(){
-    var points = [];    
-    for(var i=0;i<3;i++){
-      var ip = ipoints[i];
-      // convert to robot torso
-      // swap coordinates, since webgl and robot are different
-      points[i] = (new THREE.Vector3())
-      .fromArray(Transform.point_to_torso(ip.z/1000, ip.x/1000, ip.y/1000));
-    }
-    var left  = points[0];
-    var right = points[1];
-    var top   = points[2];
+    // better names for the intersection points
+    var left  = ipoints[0];
+    var right = ipoints[1];
+    var top   = ipoints[2];
     
     // Find the center of the wheel
     var center = new THREE.Vector3();
@@ -92,18 +85,21 @@
     var pitch_diff = (new THREE.Vector3()).subVectors(top,center);
     var pitch = Math.atan2( pitch_diff.x, pitch_diff.z);
     
-    // Modify the geometry of the helper
-    wheel_geo  = new THREE.TorusGeometry(1000*radius, 20, 8, 20);
-    wheel_mesh = new THREE.Mesh( wheel_geo, wheel_mat );
-    wheel_mesh.position.addVectors( ipoints[0], ipoints[1] ).divideScalar(2);
-    wheel_mesh.rotation.set(pitch,yaw,0);
-    
     // Vector3's log
+    /*
     console.log('left',left);
     console.log('right',right);
     console.log('top',top);
     console.log('center',center);
     console.log('diff',diff);
+    */
+    
+    // Modify the geometry of the helper
+    wheel_geo  = new THREE.TorusGeometry(1000*radius, 20, 8, 20);
+    wheel_mesh = new THREE.Mesh( wheel_geo, wheel_mat );
+    var tp = Transform.torso_to_three([rel_x, center.y, center.z]);
+    wheel_mesh.position.fromArray(tp);
+    wheel_mesh.rotation.set(pitch+tp[3],yaw,0);
     
     // Format data for hcm
     return [rel_x, center.y, center.z, yaw, pitch, radius];
@@ -112,11 +108,12 @@
   ///////////////////////
   // object manipulation API
   // set up the intersection handler
-  Wheel.select = function(intersections){
-    // Just take the first intersection point
-    var p = intersections[0].point;
-    // Save the point
-    ipoints.push(p);
+  // point in THREEjs: p
+  // point in robot: r
+  Wheel.select = function(p,r){
+    //console.log(p,r);
+    // Save the point (only the robot frame)
+    ipoints.push((new THREE.Vector3()).fromArray(r));
     var nI = ipoints.length;
     // Do not calculate if no points
     if(nI<nIndicators){
@@ -141,7 +138,7 @@
       World.add( wheel_mesh );
       // Send the hcm values to the robot
       var rpc_url = rest_root+'/m/hcm/wheel/model'
-      //qwest.post( rpc_url, {val:JSON.stringify(hcm_wheel)} );
+      qwest.post( rpc_url, {val:JSON.stringify(hcm_wheel)} );
     }
     // Re-render
     World.render();

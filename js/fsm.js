@@ -26,7 +26,7 @@
       qwest.post( req_url, {fsm: 'ArmFSM' , evt: 'reset'} );
     });
     clicker('arm_fsm_grab_btn',function() {
-      qwest.post( req_url, {fsm: 'ArmFSM' , evt: 'grab'} );
+      qwest.post( req_url, {fsm: 'ArmFSM' , evt: 'wheelgrab'} );
     });
   
     // Motion

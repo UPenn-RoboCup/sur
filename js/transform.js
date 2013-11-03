@@ -78,7 +78,7 @@
     var factor = (far-near)/255;
     var r = factor*w + near + chest_off_axis;
   
-    // bodyTilt compensation (should be pitch in the future)
+    // bodyTilt compensation
     var pitch  = mesh.pitch;
     var cp = Math.cos(pitch);
     var sp = Math.sin(pitch);
@@ -90,11 +90,11 @@
     var width = mesh.width;
     var hFOV  = fov[1]-fov[0];
     var h_rpp = hFOV / width;
-    var h_angle = h_rpp * (width/2-u);
+    var h_angle = fov[1] - h_rpp * u;
     var ch = Math.cos(h_angle);
     var sh = Math.sin(h_angle);
   
-    // Radians per pixel
+    // radians per pixel
     var height = mesh.height;
     var vFOV  = fov[3]-fov[2];
     var v_rpp = vFOV / height;
@@ -119,9 +119,28 @@
     var sa = Math.sin(pa);
     return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz, r]; 
   }
+  
+  Transform.torso_to_three = function(r){
+    var x = r[0], y = r[1], z = r[2];
+    // Body transformations
+    z += chest_height;
+    x += chest_joint_x;
+    // Apply bodyTilt
+    var cp = Math.cos(bodyTilt);
+    var sp = Math.sin(bodyTilt);
+    // rotate for pitch compensation
+    var xx = cp*x + sp*z;
+    var zz = -sp*x + cp*z;
+    // More body transformations
+    zz += bodyHeight;
+    xx += supportX;
+    // TODO: Make into the global pose
+    return [y*1000,zz*1000,xx*1000,bodyTilt];
+  }
 
   // get a global point, and put it in the torso reference frame
-  Transform.point_to_torso = function(x,y,z){
+  Transform.three_to_torso = function(p){
+    var x = p.z/1000, y = p.x/1000, z = p.y/1000;
     // Make a relative pose
     var ca = Math.cos(robot_pose[2]);
     var sa = Math.sin(robot_pose[2]);
@@ -149,6 +168,10 @@
     xx -= chest_joint_x;
     zz -= chest_height;
   
+    // Debugging
+    //console.log('T in',x,y,z);
+    //console.log('T out',xx,y,zz);
+    
     return [xx,y,zz];
   }
 
