@@ -15,8 +15,8 @@ var _       = require('underscore');
 var homepage="index.html"
 
 /* Remote Procedure Call Configuration */
-var rpc_robot     = '192.168.123.26'
-//var rpc_robot     = 'localhost'
+//var rpc_robot     = '192.168.123.26'
+var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555
 var rpc_unreliable_port = 55556
 
@@ -113,7 +113,7 @@ var load_img = function(req, res, next) {
   //console.log('img',req.params,fname);
   var raw = fs.readFile(this.base_dir+'/'+req.params.img, function(err, file) {
     if (err) {
-      console.log(err,file);
+      console.log('Image error',err,file);
       res.writeHead(500);
       return res.end();
     }
@@ -147,14 +147,13 @@ server.get('/css/:css', load_css.bind({base_dir: 'css'}) );
 * */
 var rest_shm = function (req, res, next) {
 
-// debug rest requests for shm
-console.log(req.params);
+  // debug rest requests for shm
+  //console.log(req.params);
 
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
     var ret = mp.unpack(data)
-    console.log(ret)
     if(ret!=null){
       res.json( ret )
     } else {
@@ -211,7 +210,7 @@ var rest_fsm = function (req, res, next) {
 var rest_reliable = function (req, res, next) {
   
   // debug rest requests for fsm
-  console.log('reliable',req.params);
+  //console.log('reliable',req.params);
 
   // grab the bridge
   var my_bridge = reliable_lookup[req.params.reliable];

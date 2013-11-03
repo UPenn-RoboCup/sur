@@ -8,6 +8,7 @@
   
   // Temporary image for handlining incoming Blob URL
   var mesh_img = new Image();
+  var mesh_in_use = 'chest_lidar';
   
   // Setup the meshes we will use
   var meshes = {};
@@ -16,7 +17,7 @@
   
   // Setup common mesh properties
   for(var m in meshes){
-    var mesh = meshes[m]
+    var mesh = meshes[m];
     var raw = document.createElement("canvas");
     // Dummy initial values
     raw.setAttribute('width', 500);
@@ -38,7 +39,7 @@
     // request a new mesh
     clicker('request_mesh_btn',function() {
       // if testing with the kinect
-      var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net'
+      var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net';
       if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
       // perform the post request for a reliable PNG
       qwest.post( mesh_req_url, {val:JSON.stringify([3,3,90,1])} );
@@ -193,14 +194,14 @@
       if(typeof e.data === "string"){
         // Need to save the metadata for next frame
         fr_metadata  = JSON.parse(e.data);
-        var mesh     = meshes[fr_metadata.name]
+        var mesh     = meshes[fr_metadata.name];
         mesh.pitch   = fr_metadata.rpy[1];
         mesh.latency = e.timeStamp/1e6 - fr_metadata.t;
         mesh.depths  = fr_metadata.depths.slice();
         //
-        mesh.posex    = fr_metadata.posex.slice();
-        mesh.posey    = fr_metadata.posey.slice();
-        mesh.posez    = fr_metadata.posez.slice();
+        mesh.posex   = fr_metadata.posex.slice();
+        mesh.posey   = fr_metadata.posey.slice();
+        mesh.posez   = fr_metadata.posez.slice();
         //
         var fov = mesh.fov;
         if(fr_metadata.name=='chest_lidar'){

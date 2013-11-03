@@ -87,6 +87,7 @@
     var fov = mesh.fov;
   
     // radians per pixel
+    var width = mesh.width;
     var hFOV  = fov[1]-fov[0];
     var h_rpp = hFOV / width;
     var h_angle = h_rpp * (width/2-u);
@@ -94,6 +95,7 @@
     var sh = Math.sin(h_angle);
   
     // Radians per pixel
+    var height = mesh.height;
     var vFOV  = fov[3]-fov[2];
     var v_rpp = vFOV / height;
     var v_angle = v_rpp * v + fov[2];
@@ -222,7 +224,7 @@
             
         // jet colors
         //var cm = jet(w);
-        var cm = jet(255*(p[0]/far));
+        var cm = jet(255*(p[0]/mesh.far));
         colors[ position_idx ]     = cm[0];
         colors[ position_idx + 1 ] = cm[1];
         colors[ position_idx + 2 ] = cm[2];

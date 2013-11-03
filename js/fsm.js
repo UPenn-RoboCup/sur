@@ -16,16 +16,16 @@
     });
 
     // Arm
-    clicker('head_fsm_init_btn',function() {
-      qwest.post( req_url, {fsm: 'HeadFSM' , evt: 'init'} );
+    clicker('arm_fsm_init_btn',function() {
+      qwest.post( req_url, {fsm: 'ArmFSM' , evt: 'init'} );
     });
-    clicker('head_fsm_ready_btn',function() {
+    clicker('arm_fsm_ready_btn',function() {
       qwest.post( req_url, {fsm: 'ArmFSM' , evt: 'ready'} );
     });
-    clicker('head_fsm_reset_btn',function() {
+    clicker('arm_fsm_reset_btn',function() {
       qwest.post( req_url, {fsm: 'ArmFSM' , evt: 'reset'} );
     });
-    clicker('head_fsm_grab_btn',function() {
+    clicker('arm_fsm_grab_btn',function() {
       qwest.post( req_url, {fsm: 'ArmFSM' , evt: 'grab'} );
     });
   

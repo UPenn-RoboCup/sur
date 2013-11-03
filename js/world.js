@@ -149,24 +149,6 @@
     World.render();
   }
   
-  // From the mesh websockets listener to rendering
-  World.digest_mesh = function( mesh ){
-    var buf = mesh.ctx.getImageData(1, 1, mesh.width, mesh.height).data.buffer;
-    mesh.buf = buf;
-    // Remove illegal worker objects
-    var ctx = mesh.ctx;
-    mesh.ctx = null;
-    var raw = mesh.raw;
-    mesh.raw = null;
-    // Post the object
-    mesh_worker.postMessage(mesh,[buf]);
-    // Restore the objects
-    mesh.ctx = ctx;
-    mesh.raw = raw;
-    
-    // or in the same thread... must include transform.js somehow, though
-  }
-  
   // mesh generation helpers
   // BufferGeometry of the mesh
   var make_mesh = function(index,position,color,offsets,old_mesh){
@@ -252,11 +234,34 @@
     World.render();
   }
   
+  // From the mesh websockets listener to rendering
+  World.digest_mesh = function( mesh ){
+    var buf = mesh.ctx.getImageData(1, 1, mesh.width, mesh.height).data.buffer;
+    mesh.buf = buf;
+    
+    /*
+    // Remove illegal worker objects
+    var ctx = mesh.ctx;
+    mesh.ctx = null;
+    var raw = mesh.raw;
+    mesh.raw = null;
+    // Post the object
+    mesh_worker.postMessage(mesh,[buf]);
+    // Restore the objects
+    mesh.ctx = ctx;
+    mesh.raw = raw;
+    */
+    
+    // Not using WebWorkers (for debugging)
+    var el = Transform.make_quads(mesh);
+    process_lidar_results(el);
+  }
+  
   // Add the webworker
   var mesh_worker = new Worker("js/mesh_worker.js");
   mesh_worker.onmessage = function(e) {
     var el = e.data;
-    process_lidar(el);
+    process_lidar_results(el);
   };
   
   // export
