@@ -29,8 +29,6 @@ bridges.push({
 	name : 'mesh', // reliable name
 	ws : 9001,
 	udp: 33344,
-  // reliable request forwards same place
-  //req: 33345,
   tcp: 33345,
 	clients : []
 });
@@ -297,21 +295,21 @@ var zmq_message = function(metadata,payload){
   bridge_send_ws(this.id,meta,payload);
 };
 
-/***************
+/**
 * UDP robot data receiving
 */
 var udp_message = function(msg,rinfo){
-  //console.log('got im')
+  //console.log('got udp',rinfo);
   /* msgpack -> JSON */
   /* the jpeg is right after the messagepacked metadata (concatenated) */
-  var meta = mp.unpack(msg)
-  var payload_len = mp.unpack.bytes_remaining
-  var payload = msg.slice(msg.length - payload_len) // offset
+  var meta = mp.unpack(msg);
+  var payload_len = mp.unpack.bytes_remaining;
+  var payload = msg.slice(msg.length - payload_len); // offset
   /* Add the payload sz parameter to the metadata */
   meta.sz = 0;
   if(payload!==undefined){meta.sz = payload_len;}
+  //console.log('sending...', this.id);
 	bridge_send_ws(this.id,meta,payload);
-
 }
 
 /* Bridge to  websockets */
@@ -335,10 +333,10 @@ for( var w=0; w<bridges.length; w++) {
 		}
 
 		if( b.udp !== undefined ){
+      console.log('\tUDP Bridge',b.udp);
 			var udp_recv_skt = dgram.createSocket("udp4");
 			udp_recv_skt.bind( b.udp );
 			udp_recv_skt.on( "message", udp_message.bind({id:w}) );
-			console.log('\tUDP Bridge',b.udp);
 		}
 
     if( b.req !== undefined ) {
