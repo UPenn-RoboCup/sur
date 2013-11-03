@@ -362,8 +362,8 @@ for( var w=0; w<bridges.length; w++) {
 
 /* Setup the REST routes */
 // shared memory
-server.get('/m/:shm/:segment/:key', rest_shm);
-server.post('/m/:shm/:segment/:key',rest_shm);
+server.get('/m/:shm/:segment/:key',  rest_shm);
+server.post('/m/:shm/:segment/:key', rest_shm);
 // state machines
 //server.get('/s/:fsm', rest_fsm);
 //server.post('/s/:fsm',rest_fsm);

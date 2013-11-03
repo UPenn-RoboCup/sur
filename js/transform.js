@@ -13,12 +13,6 @@
   //
   var neck_height    = 0.30;
   var neck_off_axis  = 0.12;
-  /* robot bodyHeight, but this can change a LOT */
-  var bodyTilt = 11*Math.PI/180;
-  var bodyHeight = 0.9285318; // nominal height
-  var supportX = 0.0515184 + 0.01;
-  //
-  var robot_pose = [0,0,0];
 
   var jet = function(val){
     //val = Math.min(Math.max(val,0),255);
@@ -68,20 +62,16 @@
     return [xx,y,zz,r];
   }
 
+  // Returns a point in xyz of the torso frame
   var get_hokuyo_chest_xyz = function(u,v,w,mesh){
     // do not use saturated pixels
-    if(w==0||w==255){return;}
+    if(w==0||w==255){return null;}
   
     // Convert w of 0-255 to actual meters value
     var near   = mesh.depths[0];
     var far    = mesh.depths[1];
     var factor = (far-near)/255;
     var r = factor*w + near + chest_off_axis;
-  
-    // bodyTilt compensation
-    var pitch  = mesh.pitch;
-    var cp = Math.cos(pitch);
-    var sp = Math.sin(pitch);
   
     // Field of View fixing
     var fov = mesh.fov;
@@ -98,84 +88,69 @@
     var height = mesh.height;
     var vFOV  = fov[3]-fov[2];
     var v_rpp = vFOV / height;
-    var v_angle = v_rpp * v + fov[2];
+    var v_angle = -1*(v_rpp * v + fov[2]);
     var cv = Math.cos(v_angle);
-    var sv = Math.sin(-1*v_angle);
+    var sv = Math.sin(v_angle);
   
-    // default
+    // Place in the frame of the torso
     var x = (r * cv + chest_offset_x) * ch + chest_joint_x;
     var y = r * cv * sh;
     var z = r * sv + chest_height;
   
-    // rotate for pitch compensation
-    var xx =  cp*x + sp*z + supportX;
-    var zz = -sp*x + cp*z + bodyHeight;
+    // Return the point in the torso frame
+    return [x,y,z];
+  }
   
+  // x, y, z in the torso (upper body) frame
+  // robot: pose (px,py,pa element) and bodyTilt elements
+  var torso_to_three = function(x,y,z,robot){
+    // Apply bodyTilt
+    var bodyTilt = robot.bodyTilt;
+    var cp = Math.cos(bodyTilt);
+    var sp = Math.sin(bodyTilt);
+    // Also add supportX and bodyHeight parameters
+    var xx =  cp*x + sp*z + robot.supportX;
+    var zz = -sp*x + cp*z + robot.bodyHeight;    
     // Place into global pose
-    var px = mesh.posex[u];
-    var py = mesh.posey[u];
-    var pa = mesh.posez[u]; // bad z naming convention :P
+    var pa = robot.pa;
     var ca = Math.cos(pa);
     var sa = Math.sin(pa);
-    return [ px + ca*xx-sa*y, py + sa*xx+ca*y, zz, r]; 
-  }
-  
-  Transform.torso_to_three = function(r){
-    var x = r[0], y = r[1], z = r[2];
-    // Body transformations
-    z += chest_height;
-    x += chest_joint_x;
-    // Apply bodyTilt
-    var cp = Math.cos(bodyTilt);
-    var sp = Math.sin(bodyTilt);
-    // rotate for pitch compensation
-    var xx = cp*x + sp*z;
-    var zz = -sp*x + cp*z;
-    // More body transformations
-    zz += bodyHeight;
-    xx += supportX;
-    // TODO: Make into the global pose
-    return [y*1000,zz*1000,xx*1000,bodyTilt];
+    var gx = robot.px + ca*xx - sa*y;
+    var gy = robot.py + sa*xx + ca*y;
+    // Return in mm, since THREEjs uses that
+    // Also, swap the coordinates
+    return [ gy*1000, zz*1000, gx*1000 ];  
   }
 
-  // get a global point, and put it in the torso reference frame
-  Transform.three_to_torso = function(p){
+  // get a global (THREEjs) point, and put it in the torso reference frame
+  Transform.three_to_torso = function(p,robot){
+    // Scale the point
     var x = p.z/1000, y = p.x/1000, z = p.y/1000;
     // Make a relative pose
-    var ca = Math.cos(robot_pose[2]);
-    var sa = Math.sin(robot_pose[2]);
-    var px = x-robot_pose[0];
-    var py = y-robot_pose[1];
+    var pa = robot.pa;
+    var ca = Math.cos(pa);
+    var sa = Math.sin(pa);
+    var px = x - robot.px;
+    var py = y - robot.py;
     x =  ca*px + sa*py;
     y = -sa*px + ca*py;
-    /*
-    var pa = (z-robot_pose[2]) % (2*math.pi);
-    if (pa >= Math.PI){pa = pa - 2*Math.PI;}
-    */
-  
     // kill off some body transformations
-    z -= bodyHeight;
-    x -= supportX;
-  
+    x -= robot.supportX;
+    z -= robot.bodyHeight;
     // Invert bodyTilt
+    var bodyTilt = -1*robot.bodyTilt;
     var cp = Math.cos(bodyTilt);
     var sp = Math.sin(bodyTilt);
-    // rotate for pitch compensation
-    var xx = cp*x - sp*z;
-    var zz = sp*x + cp*z;
-  
-    // More body transformations
-    xx -= chest_joint_x;
-    zz -= chest_height;
-  
-    // Debugging
-    //console.log('T in',x,y,z);
-    //console.log('T out',xx,y,zz);
-    
-    return [xx,y,zz];
+    var xx =  cp*x + sp*z;
+    var zz = -sp*x + cp*z;
+    // Yield the torso coordinates
+    // Unsure why 0.03...
+    return [xx+0.03,y,zz];
   }
 
   Transform.make_quads = function(mesh){
+    
+    console.log('Mesh',mesh);
   
     // Format our data
     var pixels = new Uint8Array(mesh.buf);
@@ -230,20 +205,28 @@
         var p = get_hokuyo_chest_xyz(i,j,w,mesh);
             
         // saturation check
-        if(p===undefined){
+        if(p===null){
           // u32 index. start @1, so we can make things invalid with 0
           pixdex[pixdex_idx] = 0;
           continue;
         }
+        
+        var threep = torso_to_three(p[0],p[1],p[2],{
+          px: mesh.posex[i],
+          py: mesh.posey[i],
+          pa: mesh.posez[i], // actually correct name for now; mesh_wizard
+          bodyTilt: mesh.pitch,
+          // TODO: This is hard coded! Should come from mesh!
+          supportX: 0.0515184,
+          bodyHeight: 0.9285318
+        });
       
         // Save the pixel particle, since it is valid
         n_el++;
-      
-        // Transformed to THREEjs coordinates
-        // fast?
-        positions[position_idx]   = p[1] * 1000;
-        positions[position_idx+1] = p[2] * 1000;
-        positions[position_idx+2] = p[0] * 1000;
+        // Could make this faster?
+        positions[position_idx]   = threep[0];
+        positions[position_idx+1] = threep[1];
+        positions[position_idx+2] = threep[2];
             
         // jet colors
         //var cm = jet(w);
@@ -386,6 +369,7 @@
   }
 
   // export
+  Transform.torso_to_three = torso_to_three;
 	ctx.Transform = Transform;
   
 })(this);

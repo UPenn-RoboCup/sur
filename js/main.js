@@ -11,8 +11,14 @@ this.clicker = function(id,fun){
   document.getElementById(id).addEventListener('click', fun, false);
 }
 this.unclicker = function(id,fun){
-  document.getElementById(id).removeEventListener('click', fun, false);
+  if(fun!==undefined){
+    document.getElementById(id).removeEventListener('click', fun, false);
+  } else {
+    
+  }
 }
+this.DEG_TO_RAD = Math.PI/180;
+this.RAD_TO_DEG = 180/Math.PI;
 
 // Once the page is done loading, execute main
 document.addEventListener( "DOMContentLoaded", function(){

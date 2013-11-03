@@ -74,7 +74,7 @@
     }
     // Actual SVG Markup
     var margin = {top: 0, right: 12, bottom: 18, left: 12},
-        width = 200 - margin.left - margin.right,
+        width = 204 - margin.left - margin.right,
         height = 40 - margin.top - margin.bottom;
     var x = d3.scale.pow().exponent(.5).range([0, width]).domain([0, 30]);
     var y = d3.random.normal(height / 2, height / 8);
@@ -93,7 +93,7 @@
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.svg.axis().scale(x).orient("bottom")
-        .tickValues([0,.2,1,3,5,10,20,30]).tickFormat(d3.format("g"))
+        .tickValues([.2,1,3,5,10,20,30]).tickFormat(d3.format("g"))
       );
     var brushg = svg.append("g")
         .attr("class", "brush")

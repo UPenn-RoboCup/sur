@@ -45,8 +45,9 @@
   
   <div id="bodyheight_slider" class="mesh_selection">
     <div class="button-group" id="mesh_btns">
-      <a href="#" class="button mesh_selection" id="slow_mesh_btn">Slow</a>
-      <a href="#" class="button mesh_selection" id="fast_mesh_btn">Fast</a>
+      <a href="#" class="button mesh_selection" id="slow_mesh_btn">1x</a>
+      <a href="#" class="button mesh_selection" id="medium_mesh_btn">2x</a>
+      <a href="#" class="button mesh_selection" id="fast_mesh_btn">4x</a>
     </div>
   </div>
   <div class="button-group" id="mesh_btns">
@@ -57,36 +58,27 @@
   </div>
 
   <br/>
-  <div>Arm</div>
-  <div class="button-group">
+  <div class="button-group armfsm">
   <a href="#" class="big button fsm_selection" id="arm_fsm_init_btn">Init</a>
   <a href="#" class="big button fsm_selection" id="arm_fsm_reset_btn">Reset</a>
   <a href="#" class="big button fsm_selection" id="arm_fsm_ready_btn">Ready</a>
-  <a href="#" class="big button fsm_selection" id="arm_fsm_grab_btn">Grab</a>
+  <a href="#" class="big button fsm_selection" id="arm_fsm_wheelgrab_btn">Grab</a>
   </div>
 
   <br/>
-  <div>Head</div>
-  <div class="button-group">
-  <a href="#" class="big button fsm_selection" id="head_fsm_scan_btn">Scan</a>
+  <div class="button-group headfsm">
+  <a href="#" class="big button fsm_selection" id="head_fsm_tiltscan_btn">Scan</a>
   <a href="#" class="big button fsm_selection" id="head_fsm_center_btn">Center</a>
-  <a href="#" class="big button fsm_selection" id="head_fsm_telep   _btn">Teleop</a>
+  <a href="#" class="big button fsm_selection" id="head_fsm_teleop   _btn">Teleop</a>
   </div>
-
+  
   <br/>
-  <div>Motion</div>
-  <div class="button-group">
-  <a href="#" class="big button fsm_selection" id="motion_fsm_stand_btn">Stand</a>
-  <a href="#" class="big button fsm_selection" id="motion_fsm_walk_btn">Walk</a>
-  </div>
-
-  <div>Body</div>
-  <div class="button-group">
+  <div class="button-group bodyfsm">
   <a href="#" class="big button fsm_selection" id="body_fsm_init_btn">Init</a>
-  <a href="#" class="big button fsm_selection" id="body_fsm_follow_btn">Follow</a>
-  <a href="#" class="big button fsm_selection" id="body_fsm_step_btn">Step</a>
+  <a href="#" class="big button fsm_selection" id="body_fsm_approach_btn">Approach</a>
+  <a href="#" class="big button fsm_selection" id="body_fsm_stepover_btn">Stepover</a>
   </div>
-
+  <a href="#" class="big button fsm_selection" id="body_fsm_approach_btn">Approach</a>
 
 </div>
 

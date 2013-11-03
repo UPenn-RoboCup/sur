@@ -95,11 +95,12 @@
     */
     
     // Modify the geometry of the helper
+    // Good gut check on the transform, since this should line up well
     wheel_geo  = new THREE.TorusGeometry(1000*radius, 20, 8, 20);
     wheel_mesh = new THREE.Mesh( wheel_geo, wheel_mat );
-    var tp = Transform.torso_to_three([rel_x, center.y, center.z]);
+    var tp = Transform.torso_to_three(rel_x, center.y, center.z, Robot);
     wheel_mesh.position.fromArray(tp);
-    wheel_mesh.rotation.set(pitch+tp[3],yaw,0);
+    wheel_mesh.rotation.set(pitch+Robot.bodyTilt,yaw,0);
     
     // Format data for hcm
     return [rel_x, center.y, center.z, yaw, pitch, radius];

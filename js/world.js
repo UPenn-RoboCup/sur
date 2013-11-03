@@ -71,7 +71,11 @@
     // only give the first intersection point
     var p = intersections[0].point;
     // get the robot point
-    var r = Transform.three_to_torso(p);
+    var r = Transform.three_to_torso(p, Robot);
+    
+    // debugging
+    console.log('Intersection:',p,r);
+    
     // apply the callback
     World.intersection_callback(p,r);
   }

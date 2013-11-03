@@ -6,6 +6,15 @@
   // Object to hold our various setup/interaction methods from main.js
   function Robot(){}
   
+  /* robot bodyHeight, but this can change a LOT */
+  Robot.bodyTilt = 0.19343411939444208;//11*Math.PI/180;
+  Robot.bodyHeight = 0.9285318; // nominal height
+  Robot.supportX = 0.0515184;
+  // pose
+  Robot.px = 0;
+  Robot.py = 0;
+  Robot.pa = 0;
+  
   var n_loaded = 0, nstl = 0;
   var is_loaded_cb, is_loaded = false;
   Robot.meshes = [];
