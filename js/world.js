@@ -107,7 +107,10 @@
     container = document.getElementById( 'world_container' );
     CANVAS_WIDTH = container.clientWidth;
     CANVAS_HEIGHT = container.clientHeight;
-
+    /*
+    CANVAS_WIDTH = window.innerWidth;
+    CANVAS_HEIGHT = window.innerHeight;
+    */
     // setup the camera
     camera = new THREE.PerspectiveCamera( 60, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
     camera.position.z = 0;
@@ -137,9 +140,13 @@
 
     // handle resizing
     window.addEventListener( 'resize', function() {
-      // update the width/height
+      // update the width/heightheight: 100%;
       CANVAS_WIDTH  = container.clientWidth;
       CANVAS_HEIGHT = container.clientHeight;
+      /*
+      CANVAS_WIDTH = window.innerWidth;
+      CANVAS_HEIGHT = window.innerHeight;
+      */
       // update the camera view
       camera.aspect = CANVAS_WIDTH / CANVAS_HEIGHT;
       camera.updateProjectionMatrix();

@@ -1,13 +1,18 @@
-body {
+html, body {
   /* background-color: #444; */
   font-family: helvetica;
+  height: 100%;
 }
 
 /*
  * FSM and controls
  */
-#fsm_container {
+#left_side {
   width:  320px;
+  float: left;
+  position: absolute;
+  left: 4px;
+  top: 8px;
 }
 
 /*
@@ -25,11 +30,13 @@ body {
   float: left;
 }
 
+/*
+ * 3D scene container
+ */
+
 #world_container {
-  position: absolute;
-  left:     340px;
-  top:      0px;
-  width:  400px;
-  height: 400px;
+  margin-left: 320px;
+  margin-right: 10px;
   background-color: #080;
+  height: 95%;
 }

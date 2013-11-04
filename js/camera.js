@@ -6,11 +6,20 @@
   // Function to hold methods
   function Camera(){}
   
-  // Make the iamge object
+  // Make the image object
   var old_imgs = []
   var camera_img = new Image();
   camera_img.id = 'head_camera';
   camera_img.alt = 'No head_camera image yet...'
+  var camera_container;
+  
+  // Camera characteristics
+  var h_fov = 60;
+  var v_fov = 60;
+  var focal_base = 320;
+  var focal_length = 260;
+  //
+  var cam_width, cam_height, cam_mid_x, cam_mid_y;
   
   /* Handle the onload of a new camera_image */
   var camera_handler = function(e){
@@ -20,13 +29,41 @@
     }
   } // camera handler
   
+  var head_look = function(e){
+    var ang_url = rest_root+'/m/hcm/motion/headangle';
+    // Adjust the angle based on the previous angle from the robot
+    qwest.get(ang_url).success(function(cur_headangle){
+      //console.log('Current desired angle',cur_headangle);
+      var x = (e.offsetX-cam_mid_x)/cam_width  * h_fov * DEG_TO_RAD;
+      var y = (e.offsetY-cam_mid_y)/cam_height * v_fov * DEG_TO_RAD;
+      x+=cur_headangle[0];
+      y+=cur_headangle[1];
+      //console.log('New Angle',x,y);
+      // send to the robot
+      qwest.post(ang_url,{val: JSON.stringify([x,y])});
+    });
+    
+    /*
+    var pan  = Math.atan2( focal_length, e.offsetX-cam_mid_x ) * RAD_TO_DEG;
+    var tilt = Math.atan2( focal_length, e.offsetY-cam_mid_y ) * RAD_TO_DEG;
+    console.log(pan,tilt);
+    */
+  }
   
   /*******
   * Websocket setup
   ******/
   Camera.setup = function(){
     // put image into the dom
-    camera_container.appendChild( camera_img );
+    camera_container = $('#camera_container')[0];
+    $('#camera_container')[0].appendChild( camera_img );
+    clicker('camera_container',head_look);
+    
+    // Save some variables
+    cam_width  = camera_container.clientWidth;
+    cam_height = camera_container.clientHeight;
+    cam_mid_x = cam_width/2;
+    cam_mid_y = cam_height/2;
 
     // Websocket Configuration
     //var mesh_port = 9005; // kinect
