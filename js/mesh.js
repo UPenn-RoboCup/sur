@@ -33,17 +33,47 @@
    */
   // NOTE: Must have access to the DOM
   Mesh.handle_buttons = function(){
-  
-    // slow mesh
+    
+    // Clear all meshes
+    clicker('clear_mesh_btn',World.clear_meshes);
+    
+    // Fast or slow
+    // TODO: JUST FOR CHEST AT THE MOMENT!
+    var scanlines_val = [-1.0472, 1.0472, 5/DEG_TO_RAD];
+    qwest.get(rest_root+'/m/vcm/chest_lidar/scanlines')
+    .success( function(response){ scanlines_val = response.slice(); });
+    
+    clicker('fast_mesh_btn',function() {
+      scanlines_val[2] = 2/DEG_TO_RAD;
+      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
+    });
+    clicker('medium_mesh_btn',function() {
+      scanlines_val[2] = 5/DEG_TO_RAD;
+      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
+    });
+    clicker('slow_mesh_btn',function() {
+      scanlines_val[2] = 10/DEG_TO_RAD;
+      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
+    });
   
     // request a new mesh
     clicker('request_mesh_btn',function() {
       // if testing with the kinect
       var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net';
       if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
-      // perform the post request for a reliable PNG
+      // perform the post request for a reliable single PNG
       qwest.post( mesh_req_url, {val:JSON.stringify([3,3,90,1])} );
     });
+    
+    // stream a mesh
+    clicker('stream_mesh_btn',function() {
+      // if testing with the kinect
+      var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net';
+      if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
+      // perform the post request for a reliable interval PNG
+      qwest.post( mesh_req_url, {val:JSON.stringify([4,3,90,1])} );
+    });
+    
     // switch the type of mesh to request
     clicker('switch_mesh_btn',function() {
       // Change the button text

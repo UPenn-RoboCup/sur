@@ -149,8 +149,6 @@
   }
 
   Transform.make_quads = function(mesh){
-    
-    console.log('Mesh',mesh);
   
     // Format our data
     var pixels = new Uint8Array(mesh.buf);

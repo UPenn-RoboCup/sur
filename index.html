@@ -24,6 +24,7 @@
 
   <!-- SUR data JS -->
   <script src="js/main.js"></script>
+  <script src="js/manipulation.js"></script>
   <script src="js/camera.js"></script>
   <script src="js/world.js"></script>
   <script src="js/mesh.js"></script>
@@ -50,37 +51,50 @@
       <a href="#" class="button mesh_selection" id="fast_mesh_btn">4x</a>
     </div>
   </div>
+  <br/>
+  
   <div class="button-group" id="mesh_btns">
-    <a href="#" class="button mesh_selection" id="request_mesh_btn">Acquire</a>
     <a href="#" class="button mesh_selection" id="switch_mesh_btn">Chest</a>
+    <a href="#" class="button mesh_selection" id="request_mesh_btn">Once</a>
+    <a href="#" class="button mesh_selection" id="stream_mesh_btn">Stream</a>
+    <a href="#" class="button mesh_selection" id="clear_mesh_btn">Clear All</a>
+  </div>
+  <br/>
+
+  <div class="button-group" id="click_btns">
+    <a href="#" class="button mesh_selection" id="obj_clicks_btn">Wheel</a>
     <a href="#" class="button mesh_selection" id="clear_clicks_btn">Clear</a>
     <a href="#" class="button mesh_selection" id="modify_clicks_btn">Modify</a>
   </div>
-
   <br/>
+  
   <div class="button-group armfsm">
   <a href="#" class="big button fsm_selection" id="arm_fsm_init_btn">Init</a>
   <a href="#" class="big button fsm_selection" id="arm_fsm_reset_btn">Reset</a>
   <a href="#" class="big button fsm_selection" id="arm_fsm_ready_btn">Ready</a>
   <a href="#" class="big button fsm_selection" id="arm_fsm_wheelgrab_btn">Grab</a>
   </div>
-
   <br/>
+  
   <div class="button-group headfsm">
   <a href="#" class="button fsm_selection" id="head_fsm_tiltscan_btn">Scan</a>
   <a href="#" class="button fsm_selection" id="head_fsm_center_btn">Center</a>
   <a href="#" class="button fsm_selection" id="head_fsm_teleop   _btn">Teleop</a>
   </div>
-    
   <br/>
-  <div class="button-group bodyfsm">
-  <a href="#" class="big button fsm_selection" id="body_fsm_init_btn">Init</a>
-  <a href="#" class="big button fsm_selection" id="body_fsm_approach_btn">Approach</a>
-  <a href="#" class="big button fsm_selection" id="body_fsm_stepover_btn">Stepover</a>
-  </div>
   
   <div class="button-group bodyfsm">
-  <a href="#" class="big button fsm_selection" id="body_fsm_navigate_btn">Navigate</a>
+  <a href="#" class="big button fsm_selection" id="body_fsm_init_btn">
+    Init</a>
+  <a href="#" class="big button fsm_selection" id="body_fsm_approach_btn">
+    Approach</a>
+  <a href="#" class="big button fsm_selection" id="body_fsm_navigate_btn">
+    Navigate</a>
+  </div>
+  <br/>
+  <div class="button-group bodyfsm">
+  <a href="#" class="big button fsm_selection" id="body_fsm_stepover_btn">
+    Stepover</a>
   </div>
   
 </div>

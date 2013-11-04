@@ -36,6 +36,7 @@
   
   // Stop moving the view
   World.disable_orbit = function(){
+    console.log(controls);
     controls.enabled = false;
     controls.removeEventListener('change', World.render);
     controls = null;
@@ -81,7 +82,7 @@
   }
   
   // Handle doubleclicks - possibly more
-  World.handle_events = function( cb ){
+  World.handle_intersection = function( cb ){
     // Change the callback for calculating the intersection
     container.removeEventListener( 'dblclick', intersect_world, false );
     World.intersection_callback = cb;
@@ -249,12 +250,16 @@
     World.render();
   }
   
+  World.clear_meshes = function(){
+    for(var i=0, j=meshes.length; i<j; i++){scene.remove(meshes[i]);}
+    meshes = [];
+    World.render();
+  }
+  
   // From the mesh websockets listener to rendering
   World.digest_mesh = function( mesh ){
     var buf = mesh.ctx.getImageData(1, 1, mesh.width, mesh.height).data.buffer;
     mesh.buf = buf;
-    
-    /*
     // Remove illegal worker objects
     var ctx = mesh.ctx;
     mesh.ctx = null;
@@ -265,11 +270,13 @@
     // Restore the objects
     mesh.ctx = ctx;
     mesh.raw = raw;
-    */
-    
+
+/*    
     // Not using WebWorkers (for debugging)
     var el = Transform.make_quads(mesh);
     process_lidar_results(el);
+*/
+    
   }
   
   // Add the webworker

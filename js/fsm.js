@@ -52,25 +52,6 @@
       );
     }// for
     
-    // Mesh
-    var scanlines_val = [-1.0472, 1.0472, 5/DEG_TO_RAD];
-    qwest.get(rest_root+'/m/vcm/chest_lidar/scanlines')
-    .success( function(response){
-      scanlines_val = response.slice();
-    });
-    clicker('fast_mesh_btn',function() {
-      scanlines_val[2] = 2/DEG_TO_RAD;
-      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
-    });
-    clicker('medium_mesh_btn',function() {
-      scanlines_val[2] = 5/DEG_TO_RAD;
-      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
-    });
-    clicker('slow_mesh_btn',function() {
-      scanlines_val[2] = 10/DEG_TO_RAD;
-      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
-    });
-    
   };
   
   // export

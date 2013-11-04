@@ -11,11 +11,7 @@ this.clicker = function(id,fun){
   document.getElementById(id).addEventListener('click', fun, false);
 }
 this.unclicker = function(id,fun){
-  if(fun!==undefined){
-    document.getElementById(id).removeEventListener('click', fun, false);
-  } else {
-    
-  }
+  document.getElementById(id).removeEventListener('click', fun, false);
 }
 this.DEG_TO_RAD = Math.PI/180;
 this.RAD_TO_DEG = 180/Math.PI;
@@ -43,26 +39,9 @@ document.addEventListener( "DOMContentLoaded", function(){
     // Robot.update_skeleton();
   });
   
-  //////////////////////////
-  // Modifying the 3D scene
-  // (common API, so we can switch from wheel to drill, etc.)
-  World.handle_events(Wheel.select);
-  var yes_mod = function(){
-    Wheel.start_modify();
-    // reset
-    this.removeEventListener('click', yes_mod, false);
-    this.addEventListener('click', no_mod, false);
-  };
-  var no_mod = function(){
-    Wheel.stop_modify();
-    // reset
-    this.removeEventListener('click', no_mod, false);
-    this.addEventListener('click', yes_mod, false);
-  };
-  // Initial setting
-  clicker('modify_clicks_btn',yes_mod);
-  clicker('clear_clicks_btn',Wheel.clear);
-  //////////////////////////
+  // Add items to be manipulated
+  Manipulation.add_item(Wheel);
+  Manipulation.setup();
 
   // Finally, render the world!
   World.render();

@@ -5,6 +5,8 @@
   
   // Function to hold methods
   function Wheel(){}
+  // For manipulation
+  Wheel.item_name = 'Wheel';
   
   // save the intersection points
   var ipoints = [];

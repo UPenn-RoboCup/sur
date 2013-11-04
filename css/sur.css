@@ -1,14 +1,14 @@
 html, body {
   /* background-color: #444; */
   font-family: helvetica;
-  height: 100%;
+  height: 98%;
 }
 
 /*
  * FSM and controls
  */
 #left_side {
-  width:  320px;
+  width: 320px;
   float: left;
   position: absolute;
   left: 4px;
@@ -38,5 +38,5 @@ html, body {
   margin-left: 320px;
   margin-right: 10px;
   background-color: #080;
-  height: 95%;
+  height: 98%;
 }
