@@ -21,9 +21,11 @@
   
   // Skeleton
   var skeleton = {
+    stl: 'CHEST',
     q: new THREE.Quaternion(0,0,0,1),
     p: new THREE.Vector3(0, 1155, 0),
-    children: []
+    children: [
+    ]
   };
   var neck_chain = {
     stl: 'NECK',
@@ -31,23 +33,116 @@
     p: new THREE.Vector3(0, 50, 0),
     children: [
       {stl: 'CAM',
-      p: new THREE.Vector3(0, 161, 0),
+      p: new THREE.Vector3(0, 111, 0),
       q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(-1,0,0)), -0.17 ) }
     ]
   }
   skeleton.children.push(neck_chain);
   //
-  var larm_chain = {
+  var rarm_chain = {
     stl: 'RIGHT_SHOULDER_PITCH',
-    q: new THREE.Quaternion(0,0,0,1),
-    p: new THREE.Vector3(50, 0, 0),
+    p: new THREE.Vector3(-184, -8, 0),
+    q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,0,1)), -1.5708 ),
     children: [
       {stl: 'RIGHT_SHOULDER_ROLL',
-      p: new THREE.Vector3(0, 0, 24),
-      q: new THREE.Quaternion(0,0,0,1)}
+      p: new THREE.Vector3(0, -50, 24),
+      q: new THREE.Quaternion(0,0,0,1),
+      children: [
+        {// yaw
+        p: new THREE.Vector3(0, 0, 0),
+        q: new THREE.Quaternion(0,0,0,1),
+        children: [
+          {stl: 'RIGHT_ARM',
+          p: new THREE.Vector3(0, -27, -24),
+          q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
+          children: [
+            {stl: 'RIGHT_ELBOW',
+            p: new THREE.Vector3(0, -246+27, 0),
+            q: new THREE.Quaternion(0,0,0,1),
+            children: [
+              {stl: 'RIGHT_WRIST',
+              p: new THREE.Vector3(0, -216, 0),
+              q: new THREE.Quaternion(0,0,0,1),}
+            ]
+          }
+          ]
+        }
+        ]
+      }
+      ]
+    }
+    ]
+  }
+  skeleton.children.push(rarm_chain);
+  //
+  var larm_chain = {
+    stl: 'RIGHT_SHOULDER_PITCH',
+    p: new THREE.Vector3(184, -8, 0),
+    q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,0,1)), 1.5708 ),
+    children: [
+      {stl: 'RIGHT_SHOULDER_ROLL',
+      p: new THREE.Vector3(0, -50, 24),
+      q: new THREE.Quaternion(0,0,0,1),
+      children: [
+        {// yaw
+        p: new THREE.Vector3(0, 0, 0),
+        q: new THREE.Quaternion(0,0,0,1),
+        children: [
+          {stl: 'RIGHT_ARM',
+          p: new THREE.Vector3(0, -27, -24),
+          q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
+          children: [
+            {stl: 'RIGHT_ELBOW',
+            p: new THREE.Vector3(0, -246+27, 0),
+            q: new THREE.Quaternion(0,0,0,1),
+            children: [
+              {stl: 'RIGHT_WRIST',
+              p: new THREE.Vector3(0, -216, 0),
+              q: new THREE.Quaternion(0,0,0,1),}
+            ]
+          }
+          ]
+        }
+        ]
+      }
+      ]
+    }
     ]
   }
   skeleton.children.push(larm_chain);
+  //
+  var waist_chain = {
+    stl: 'PELVIS',
+    q: new THREE.Quaternion(0,0,0,1),
+    p: new THREE.Vector3(0, -295.5, 0),
+    children:[{ stl: 'TORSO_PITCH_SERVO',
+      q: new THREE.Quaternion(0,0,0,1),
+      p: new THREE.Vector3(0, 86, 0),
+    }]
+  };
+  skeleton.children.push(waist_chain);
+  //
+  var rleg_chain = {
+    stl: 'LEFT_HIP_YAW',
+    q: new THREE.Quaternion(0,0,0,1),
+    p: new THREE.Vector3(72, -312-64, 0),
+    children:[{
+      stl: 'RIGHT_HIP_ROLL',
+      q: new THREE.Quaternion(0,0,0,1),
+      p: new THREE.Vector3(0, -64, 0),
+      children:[{
+        stl: 'L_THIGH',
+        q: new THREE.Quaternion(0,0,0,1),
+        p: new THREE.Vector3(0, 0, 0),
+        children:[{
+          stl: 'L_LEG',
+          q: new THREE.Quaternion(0,0,0,1),
+          p: new THREE.Vector3(0, 0, 0),
+        }]
+      }]
+    }]
+  };
+  skeleton.children.push(rleg_chain);
   
   var material = new THREE.MeshPhongMaterial({
     ambient: 0x555555, color: 0xAAAAAA, specular: 0x111111, shininess: 200
@@ -92,15 +187,19 @@
     // update the transform
     var chain_tr = new THREE.Matrix4();
     chain_tr.makeRotationFromQuaternion(root.q).setPosition(root.p);
+    //chain_tr.setPosition(root.p);
     
     if(root.parent!==undefined){
-      chain_tr.multiply( root.parent.chain_tr );
+      //chain_tr.multiply( root.parent.chain_tr );
+      chain_tr.multiplyMatrices( root.parent.chain_tr, chain_tr );
     }
 
     // update the transform of the mesh
     var mesh = root.mesh;
     if(mesh!==undefined){
       mesh.position.getPositionFromMatrix(chain_tr);
+      mesh.rotation.setFromRotationMatrix(chain_tr);
+      console.log(mesh)
     }
 
     // Save the chain'd tr

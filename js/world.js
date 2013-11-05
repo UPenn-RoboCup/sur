@@ -15,7 +15,8 @@
   var meshes = [], items = [];
   
   // Where to look initially
-  var lookTarget = new THREE.Vector3(0,1000,1000);
+  //var lookTarget = new THREE.Vector3(0,1000,1000);
+  var lookTarget = new THREE.Vector3(0,1000,0);
   
   World.add = function(item){
     scene.add(item);
