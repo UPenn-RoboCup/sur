@@ -20,7 +20,6 @@
     new THREE.Vector2(-20,0),
     new THREE.Vector2(20,0),
     new THREE.Vector2(50,-20),
-    //new THREE.Vector2(-50,0),
   ]);
   var wp_shape = wp_path.toShapes();
   var wp_geo  = new THREE.ExtrudeGeometry(

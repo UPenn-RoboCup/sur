@@ -108,7 +108,7 @@
         height = 40 - margin.top - margin.bottom;
     var x = d3.scale.pow().exponent(.5).range([0, width]).domain([0, 30]);
     var y = d3.random.normal(height / 2, height / 8);
-    var brush = d3.svg.brush().x(x).extent([.1, 5]).on("brushend", brushend);
+    var brush = d3.svg.brush().x(x).extent([.5, 3]).on("brushend", brushend);
     // Make the handle
     var arc = d3.svg.arc()
         .outerRadius(height / 2)

@@ -145,7 +145,8 @@
     var zz = -sp*x + cp*z;
     // Yield the torso coordinates
     // Unsure why 0.03...
-    return [xx+0.03,y,zz];
+    //return [xx+0.03,y,zz];
+    return [xx,y,zz];
   }
 
   Transform.make_quads = function(mesh){
