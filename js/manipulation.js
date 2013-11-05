@@ -43,6 +43,8 @@
     cur_item = items[cur_item_id];
     // Update the display of the button
     $('#obj_clicks_btn')[0].textContent = cur_item.item_name;
+    // Handle intersections with meshes in the world
+    World.handle_intersection(cur_item.select);
     // Re-render the world
     World.render();
   }
@@ -51,6 +53,7 @@
     // initialize the element
     cur_item_id = items.length - 1;
     cur_item    = items[cur_item_id];
+    $('#obj_clicks_btn')[0].textContent = cur_item.item_name;
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
     // Handle the button clicks

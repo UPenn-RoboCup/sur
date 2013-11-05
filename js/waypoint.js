@@ -6,8 +6,10 @@
   // Function to hold methods
   function Waypoint(){}
   // For manipulation
-  Waypoint.item_name = 'Wheel';
-  var wp = new THREE.Vector3();
+  Waypoint.item_name = 'Waypoint';
+  var wp = [0,0,0];
+  // Sending to the robot
+  var rpc_url = rest_root+'/m/hcm/motion/waypoints'
   
   // make the waypoint
   var wp_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
@@ -66,7 +68,9 @@
     //
     wp_mesh.position.y = 100;
     //
-    wp.z = wp_angle.z;
+    wp[0] = wp_mesh.position.z/1000; // x
+    wp[1] = wp_mesh.position.x/1000; // y
+    wp[2] = -wp_angle.z; // a
   }
   
   ///////////////////////
@@ -75,23 +79,19 @@
   // point in THREEjs: p
   // point in robot: r
   Waypoint.select = function(p,r){
-    wp.x = r[0];
-    wp.y = r[1];
-    // no wp.a yet
+    wp[0] = r[0];
+    wp[1] = r[1];
+    // keep the same pose as the robot on the initial click
+    wp[2] = Robot.pa;
     wp_mesh.position.copy(p);
     // Always above ground a bit
     wp_mesh.position.y = 100;
-    // Send the hcm values to the robot
-    //var rpc_url = rest_root+'/m/hcm/wheel/model'
-    //qwest.post( rpc_url, {val:JSON.stringify(hcm_wheel)} );
-    // DEBUG
-    console.log('wp',p,r);
+    // Send the waypoint to robot when selecting
+    qwest.post( rpc_url, {val:JSON.stringify(wp)} );
     // Re-render
     World.render();
   }
   Waypoint.clear = function(){
-    // Clear the point
-    World.remove( wp_mesh );
     // Stop modifying
     Wheel.stop_modify();
     // Re render the scene
@@ -123,9 +123,8 @@
     World.enable_orbit();
     // re-render
     World.render();
-    
     // Send the waypoint to robot when done modifying
-    
+    qwest.post( rpc_url, {val:JSON.stringify(wp)} );
   }
   ///////////////////////
   
