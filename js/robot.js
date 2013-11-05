@@ -19,6 +19,8 @@
   var is_loaded_cb, is_loaded = false;
   Robot.meshes = [];
   
+  var shown = true;
+  
   // Skeleton
   var skeleton = {
     stl: 'CHEST',

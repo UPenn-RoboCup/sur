@@ -15,8 +15,8 @@
   var meshes = [], items = [];
   
   // Where to look initially
-  //var lookTarget = new THREE.Vector3(0,1000,1000);
-  var lookTarget = new THREE.Vector3(0,1000,0);
+  var lookPosition = new THREE.Vector3(500,2000,-500);
+  var lookTarget   = new THREE.Vector3(0,0,1500);
   
   World.add = function(item){
     scene.add(item);
@@ -28,6 +28,18 @@
   World.render = function(){
     // render the scene using the camera
     renderer.render( scene, camera );
+  }
+  
+  World.set_view = function(pos,target){
+    // cam position
+    lookPosition.fromArray(pos);
+    camera.position.copy(lookPosition);
+    // target
+    lookTarget.fromArray(target);
+    controls.target = lookTarget;
+    // updatea nd render
+    controls.update();
+    World.render();
   }
   
   // Transform control generator
@@ -104,6 +116,7 @@
   }
   
   World.setup = function(){
+    
     // Grab the container
     container = document.getElementById( 'world_container' );
     CANVAS_WIDTH = container.clientWidth;
@@ -114,8 +127,7 @@
     */
     // setup the camera
     camera = new THREE.PerspectiveCamera( 60, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
-    camera.position.z = 0;
-    camera.position.y = 2000;
+    camera.position.copy(lookPosition);
 
     // make the scene
     scene = new THREE.Scene();
@@ -156,6 +168,9 @@
       // re-render
       World.render();
     }, false );
+    
+    // handle buttons
+    handle_buttons();
     
     // initial update
     // Enable orbiting
@@ -285,6 +300,21 @@
     var el = e.data;
     process_lidar_results(el);
   };
+  
+  var handle_buttons = function(){
+    clicker('vantage_top_btn',function() {
+      // pos then target
+      World.set_view([0,2000,0],[0,0,0]);
+    });
+    clicker('vantage_front_btn',function() {
+      // pos then target
+      World.set_view([0,1000,0],[0,1000,1000]);
+    });
+    clicker('vantage_def_btn',function() {
+      // pos then target
+      World.set_view([500,2000,-500],[0,0,1500]);
+    });
+  }
   
   // export
 	ctx.World = World;
