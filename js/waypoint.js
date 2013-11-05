@@ -24,11 +24,9 @@
   var wp_geo  = new THREE.ExtrudeGeometry(
     wp_shape, {}
   );
-  var wp_mesh = new THREE.Mesh( wp_geo, wp_mat );
-  console.log(wp_mesh)
-  wp_mesh.quaternion.setFromEuler(
-    new THREE.Euler( Math.PI/2, 0, 0 )
-  );
+  var wp_mesh  = new THREE.Mesh( wp_geo, wp_mat );
+  var wp_angle = new THREE.Euler( Math.PI/2, 0, 0 )
+  wp_mesh.quaternion.setFromEuler( wp_angle );
 
   // TransformControl
   var tcontrol = null;
@@ -58,6 +56,19 @@
     }
   };
   
+  // Constrain the angles to 2D (i.e. one angle)
+  var update_angle = function(){
+    //
+    wp_angle.setFromQuaternion(wp_mesh.quaternion);
+    wp_angle.x = Math.PI/2;
+    wp_angle.y = 0;
+    wp_mesh.quaternion.setFromEuler( wp_angle );
+    //
+    wp_mesh.position.y = 100;
+    //
+    wp.z = wp_angle.z;
+  }
+  
   ///////////////////////
   // object manipulation API
   // set up the intersection handler
@@ -70,8 +81,6 @@
     wp_mesh.position.copy(p);
     // Always above ground a bit
     wp_mesh.position.y = 100;
-    
-    World.add( wp_mesh );
     // Send the hcm values to the robot
     //var rpc_url = rest_root+'/m/hcm/wheel/model'
     //qwest.post( rpc_url, {val:JSON.stringify(hcm_wheel)} );
@@ -95,6 +104,7 @@
     tcontrol = World.generate_tcontrol();
     // Setup the transformcontrols
     tcontrol.addEventListener( 'change', World.render );
+    tcontrol.addEventListener( 'modify', update_angle );
     tcontrol.attach( wp_mesh );
     World.add( tcontrol );
     // listen for a keydown
@@ -107,13 +117,22 @@
     World.remove( tcontrol );
     tcontrol.detach( wp_mesh );
     tcontrol.removeEventListener( 'change', World.render );
+    tcontrol.removeEventListener( 'modify', update_angle );
     tcontrol = null;
     ctx.removeEventListener( 'keydown', update_tcontrol, false );
     World.enable_orbit();
     // re-render
     World.render();
+    
+    // Send the waypoint to robot when done modifying
+    
   }
   ///////////////////////
+  
+  Waypoint.setup = function(){
+    // Always presetn in the world
+    World.add( wp_mesh );
+  }
 
   // export
 	ctx.Waypoint = Waypoint;

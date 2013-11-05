@@ -42,6 +42,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Add items to be manipulated
   Manipulation.add_item(Wheel);
+  Waypoint.setup();
   Manipulation.add_item(Waypoint);
   Manipulation.setup();
 
