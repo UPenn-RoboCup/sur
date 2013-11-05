@@ -6,7 +6,7 @@
   // Function to hold methods
   function World(){}
   
-  var MAX_NUM_MESHES = 5;
+  var MAX_NUM_MESHES = 3;
   
   var CANVAS_WIDTH, CANVAS_HEIGHT;
   var camera, renderer, scene, container, controls;

@@ -6,10 +6,9 @@
   //////////////////
   // Robot properties for where the LIDARs are
   //////////////////
-  var chest_height   = 0.10;
-  var chest_joint_x  = 0.05;
-  var chest_offset_x = 0.01;
-  var chest_off_axis = 0.0; // no need... (lidar reception off axis)
+  var chest_height   = 0.09;
+  var chest_joint_x  = 0.06;
+  var chest_off_axis = 0.02;
   //
   var neck_height    = 0.30;
   var neck_off_axis  = 0.12;
@@ -71,6 +70,7 @@
     var near   = mesh.depths[0];
     var far    = mesh.depths[1];
     var factor = (far-near)/255;
+    // Rotates a *bit* off axis
     var r = factor*w + near + chest_off_axis;
   
     // Field of View fixing
@@ -93,7 +93,8 @@
     var sv = Math.sin(v_angle);
   
     // Place in the frame of the torso
-    var x = (r * cv + chest_offset_x) * ch + chest_joint_x;
+    //var x = (r * cv + chest_offset_x) * ch + chest_joint_x;
+    var x = r * cv * ch + chest_joint_x;
     var y = r * cv * sh;
     var z = r * sv + chest_height;
   

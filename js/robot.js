@@ -7,8 +7,8 @@
   function Robot(){}
   
   /* robot bodyHeight, but this can change a LOT */
-  Robot.bodyTilt = 0.19343411939444208;//11*Math.PI/180;
-  Robot.bodyHeight = 0.9285318; // nominal height
+  Robot.bodyTilt = 11*Math.PI/180;
+  Robot.bodyHeight = 0.9285318;
   Robot.supportX = 0.0515184;
   // pose
   Robot.px = 0;
@@ -241,6 +241,9 @@
       var feedback = JSON.parse(e.data);
       //console.log(feedback.pose,feedback.pose_odom,feedback.pose_slam)
       Robot.set_pose(feedback.pose);
+      Robot.bodyHeight = feedback.body_height;
+      // Use rpy for bodyTilt
+      Robot.bodyTilt = feedback.rpy[1];
     }
   }
   

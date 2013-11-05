@@ -224,6 +224,8 @@
       if(typeof e.data === "string"){
         // Need to save the metadata for next frame
         fr_metadata  = JSON.parse(e.data);
+        //console.log('fr_metadata debug',fr_metadata);
+        
         var mesh     = meshes[fr_metadata.name];
         mesh.pitch   = fr_metadata.rpy[1];
         mesh.latency = e.timeStamp/1e6 - fr_metadata.t;
