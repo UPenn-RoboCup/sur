@@ -36,12 +36,13 @@ document.addEventListener( "DOMContentLoaded", function(){
   Robot.setup(function(){
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
-    Robot.update_skeleton();
-    World.render();
+    // x,y,a pose
+    Robot.set_pose(0,0,0);
   });
   
   // Add items to be manipulated
   Manipulation.add_item(Wheel);
+  Manipulation.add_item(Waypoint);
   Manipulation.setup();
 
   // Finally, render the world!

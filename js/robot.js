@@ -199,7 +199,6 @@
     if(mesh!==undefined){
       mesh.position.getPositionFromMatrix(chain_tr);
       mesh.rotation.setFromRotationMatrix(chain_tr);
-      console.log(mesh)
     }
 
     // Save the chain'd tr
@@ -212,14 +211,24 @@
     }
   } // update skeleton
   
+  // Move the robot (given robot coord, not THREEjs)
+  Robot.set_pose = function(x,y,a){
+    // save pose
+    Robot.px = x;
+    Robot.py = y;
+    Robot.pa = a;
+    // Update the skeleton model
+    skeleton.p.x = 1000*Robot.py;
+    skeleton.p.z = 1000*Robot.px;
+    update_skeleton();
+    World.render();
+  }
   
   Robot.setup = function(cb){
     is_loaded_cb = cb;
     n_stl = load_skeleton(skeleton)
   }
   
-  Robot.update_skeleton = update_skeleton;
-
   // export
 	ctx.Robot = Robot;
 
