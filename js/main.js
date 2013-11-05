@@ -37,7 +37,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
     // x,y,a pose
-    Robot.set_pose(0,0,0);
+    Robot.set_pose([0,0,0]);
   });
   
   // Add items to be manipulated

@@ -214,11 +214,11 @@
   } // update skeleton
   
   // Move the robot (given robot coord, not THREEjs)
-  Robot.set_pose = function(x,y,a){
+  Robot.set_pose = function(pose){
     // save pose
-    Robot.px = x;
-    Robot.py = y;
-    Robot.pa = a;
+    Robot.px = pose[0];
+    Robot.py = pose[1];
+    Robot.pa = pose[2];
     // Update the skeleton model
     skeleton.p.x = 1000*Robot.py;
     skeleton.p.z = 1000*Robot.px;
@@ -228,7 +228,20 @@
   
   Robot.setup = function(cb){
     is_loaded_cb = cb;
-    n_stl = load_skeleton(skeleton)
+    n_stl = load_skeleton(skeleton);
+    
+    // Websocket Configuration for feedback
+    var port = 9013;
+    // Connect to the websocket server
+    var ws = new WebSocket('ws://' + host + ':' + port);
+    // Should not need this...
+    ws.binaryType = "arraybuffer";
+    ws.onmessage = function(e){
+      //console.log(e);
+      var feedback = JSON.parse(e.data);
+      //console.log(feedback.pose,feedback.pose_odom,feedback.pose_slam)
+      Robot.set_pose(feedback.pose);
+    }
   }
   
   // export

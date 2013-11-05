@@ -68,6 +68,15 @@ bridges.push({
 	clients : []
 });
 
+bridges.push({
+	name : 'feedback',
+	ws : 9013,
+	udp: 54329,
+	clients : []
+});
+
+
+
 // rest look up table for the objects
 var reliable_lookup = {}
 
