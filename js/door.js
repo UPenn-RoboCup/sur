@@ -1,30 +1,37 @@
 /*****
- * 3D tool model
+ * 3D door model
  */
 (function(ctx){
   
   // Function to hold methods
-  function Tool(){}
+  function Door(){}
   // For manipulation
-  Tool.item_name = 'Tool';
+  Door.item_name = 'Door';
   // Sending to the robot
-  var rpc_url = rest_root+'/m/hcm/tool/model'
+  var rpc_url = rest_root+'/m/hcm/door/model'
   
-  // make the master item (i.e. grip handle)
-  var item_mat   = new THREE.MeshLambertMaterial({color: 0xFFD801});
-  var item_geo   = new THREE.CylinderGeometry(25,25,140,12,1,false);
-  // Drill direction
-  var item2_mesh = new THREE.Mesh(new THREE.CylinderGeometry(30,30,240,12,1));
+  // make the master item (i.e. hinge)
+  var item_mat = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
+  var item_geo = new THREE.CylinderGeometry(25,25,2000,8,1,false);
+  
+  // Door itself
+  var item3_mesh = new THREE.Mesh(new THREE.CubeGeometry(1000,2000,30));
+  item3_mesh.position.set(500,0,0);
+  THREE.GeometryUtils.merge( item_geo, item3_mesh );
+  
+  // Door handle
+  var item2_mesh = new THREE.Mesh(new THREE.CylinderGeometry(15,15,30,12,1));
   // This also used as tmp variable
   var item_angle = new THREE.Euler( Math.PI/2, 0, 0 );
   item2_mesh.quaternion.setFromEuler( item_angle );
-  item2_mesh.position.set(0,85,30);
+  item2_mesh.position.set(960,0,-30);
   THREE.GeometryUtils.merge( item_geo, item2_mesh );
-  // Drill base
-  var item3_mesh = new THREE.Mesh(new THREE.CubeGeometry(80,70,120));
-  item3_mesh.position.set(0,-90,0);
-  THREE.GeometryUtils.merge( item_geo, item3_mesh );
-
+  
+  // Door handle
+  var item4_mesh = new THREE.Mesh(new THREE.CubeGeometry(100,15,10));
+  item4_mesh.position.set(920,0,-40);
+  THREE.GeometryUtils.merge( item_geo, item4_mesh );
+  
   // Instantiate the master
   var item_mesh  = new THREE.Mesh( item_geo, item_mat );
 
@@ -59,9 +66,12 @@
   var send_model_to_robot = function(){
     // Acquire the model
     item_angle.setFromQuaternion(item_mesh.quaternion);
+    console.log('item angle',item_angle);
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
     model.push(item_angle.y);
+    console.log('Model',model);
+    console.log('Robot',Robot.bodyHeight);
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
   
@@ -70,7 +80,7 @@
   // set up the intersection handler
   // point in THREEjs: p
   // point in robot: r
-  Tool.select = function(p,r){
+  Door.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
     // Add to the world
@@ -80,7 +90,7 @@
     // 
     send_model_to_robot();
   }
-  Tool.clear = function(){
+  Door.clear = function(){
     // Stop modifying
     Wheel.stop_modify();
     // Remove the tool
@@ -88,7 +98,7 @@
     // Re render the scene
     World.render();
   }
-  Tool.start_modify = function(){
+  Door.start_modify = function(){
     // stop the normal controls
     World.disable_orbit();
     // grab a tcontrol
@@ -103,7 +113,7 @@
     // Re-render
     World.render();
   }; // start_modify
-  Tool.stop_modify = function(){
+  Door.stop_modify = function(){
     if(tcontrol===null){return;}
     World.remove( tcontrol );
     tcontrol.detach( item_mesh );
@@ -119,10 +129,10 @@
   }
   ///////////////////////
   
-  Tool.setup = function(){
+  Door.setup = function(){
   }
 
   // export
-	ctx.Tool = Tool;
+	ctx.Door = Door;
 
 })(this);

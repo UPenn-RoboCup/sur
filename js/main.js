@@ -42,10 +42,12 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Add items to be manipulated
   Manipulation.add_item(Wheel);
+  Manipulation.add_item(Tool);
   Waypoint.setup();
   Manipulation.add_item(Waypoint);
-  Manipulation.add_item(Tool);
   Manipulation.setup();
+  
+  Manipulation.add_item(Door);
 
   // Finally, render the world!
   World.render();
