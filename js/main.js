@@ -44,6 +44,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   Manipulation.add_item(Wheel);
   Waypoint.setup();
   Manipulation.add_item(Waypoint);
+  Manipulation.add_item(Tool);
   Manipulation.setup();
 
   // Finally, render the world!

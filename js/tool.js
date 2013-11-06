@@ -1,35 +1,32 @@
 /*****
- * 3D wheel model
+ * 3D tool model
  */
 (function(ctx){
   
   // Function to hold methods
-  function Waypoint(){}
+  function Tool(){}
   // For manipulation
-  Waypoint.item_name = 'Waypoint';
-  var wp = [0,0,0];
+  Tool.item_name = 'Tool';
   // Sending to the robot
-  var rpc_url = rest_root+'/m/hcm/motion/waypoints'
+  var rpc_url = rest_root+'/m/hcm/tool/model'
   
-  // make the waypoint
-  var item_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
-  var item_path    = new THREE.Path();
-  item_path.fromPoints([
-    new THREE.Vector2(0,100),
-    new THREE.Vector2(-50,-20),
-    new THREE.Vector2(-20,0),
-    new THREE.Vector2(20,0),
-    new THREE.Vector2(50,-20),
-  ]);
-  var item_shape = item_path.toShapes();
-  var item_geo  = new THREE.ExtrudeGeometry(
-    item_shape, {}
-  );
+  // make the master item (i.e. grip handle)
+  var item_mat   = new THREE.MeshLambertMaterial({color: 0xFFD801});
+  var item_geo   = new THREE.CylinderGeometry(25,25,140,12,1,false);
+  // Drill direction
+  var item2_mesh = new THREE.Mesh(new THREE.CylinderGeometry(30,30,240,12,1));
+  // This also used as tmp variable
+  var item_angle = new THREE.Euler( Math.PI/2, 0, 0 );
+  item2_mesh.quaternion.setFromEuler( item_angle );
+  item2_mesh.position.set(0,85,30);
+  THREE.GeometryUtils.merge( item_geo, item2_mesh );
+  // Drill base
+  var item3_mesh = new THREE.Mesh(new THREE.CubeGeometry(80,70,120));
+  item3_mesh.position.set(0,-90,0);
+  THREE.GeometryUtils.merge( item_geo, item3_mesh );
+
+  // Instantiate the master
   var item_mesh  = new THREE.Mesh( item_geo, item_mat );
-  var item_angle = new THREE.Euler( Math.PI/2, 0, 0 )
-  item_mesh.quaternion.setFromEuler( item_angle );
-  // Set above the ground
-  item_mesh.position.y = 100;
 
   // TransformControl
   var tcontrol = null;
@@ -59,19 +56,15 @@
     }
   };
   
-  // Constrain the angles to 2D (i.e. one angle)
-  var update_angle = function(){
-    //
+  var send_model_to_robot = function(){
+    // Acquire the model
     item_angle.setFromQuaternion(item_mesh.quaternion);
-    item_angle.x = Math.PI/2;
-    item_angle.y = 0;
-    item_mesh.quaternion.setFromEuler( item_angle );
-    //
-    item_mesh.position.y = 100;
-    //
-    wp[0] = item_mesh.position.z/1000; // x
-    wp[1] = item_mesh.position.x/1000; // y
-    wp[2] = -item_angle.z; // a
+    console.log('item angle',item_angle);
+    // Points in THREEjs to torso frame
+    var model = Transform.three_to_torso(item_mesh.position,Robot);
+    model.push(item_angle.y);
+    console.log('Model',model)
+    qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
   
   ///////////////////////
@@ -79,33 +72,32 @@
   // set up the intersection handler
   // point in THREEjs: p
   // point in robot: r
-  Waypoint.select = function(p,r){
-    wp[0] = r[0];
-    wp[1] = r[1];
-    // keep the same pose as the robot on the initial click
-    wp[2] = Robot.pa;
+  Tool.select = function(p,r){
+    // Set the position
     item_mesh.position.copy(p);
-    // Always above ground a bit
-    item_mesh.position.y = 100;
-    // Send the waypoint to robot when selecting
-    qwest.post( rpc_url, {val:JSON.stringify(wp)} );
+    // Add to the world
+    World.add(item_mesh);
     // Re-render
     World.render();
+    // 
+    send_model_to_robot()
   }
-  Waypoint.clear = function(){
+  Tool.clear = function(){
     // Stop modifying
     Wheel.stop_modify();
+    // Remove the tool
+    World.remove(item_mesh);
     // Re render the scene
     World.render();
   }
-  Waypoint.start_modify = function(){
+  Tool.start_modify = function(){
     // stop the normal controls
     World.disable_orbit();
     // grab a tcontrol
     tcontrol = World.generate_tcontrol();
     // Setup the transformcontrols
     tcontrol.addEventListener( 'change', World.render );
-    tcontrol.addEventListener( 'modify', update_angle );
+    //tcontrol.addEventListener( 'modify', update_angle );
     tcontrol.attach( item_mesh );
     World.add( tcontrol );
     // listen for a keydown
@@ -113,28 +105,26 @@
     // Re-render
     World.render();
   }; // start_modify
-  Waypoint.stop_modify = function(){
+  Tool.stop_modify = function(){
     if(tcontrol===null){return;}
     World.remove( tcontrol );
     tcontrol.detach( item_mesh );
     tcontrol.removeEventListener( 'change', World.render );
-    tcontrol.removeEventListener( 'modify', update_angle );
+    //tcontrol.removeEventListener( 'modify', update_angle );
     tcontrol = null;
     ctx.removeEventListener( 'keydown', update_tcontrol, false );
     World.enable_orbit();
     // re-render
     World.render();
-    // Send the waypoint to robot when done modifying
-    qwest.post( rpc_url, {val:JSON.stringify(wp)} );
+    // Send to the robot
+    send_model_to_robot();
   }
   ///////////////////////
   
-  Waypoint.setup = function(){
-    // Always presetn in the world
-    World.add( item_mesh );
+  Tool.setup = function(){
   }
 
   // export
-	ctx.Waypoint = Waypoint;
+	ctx.Tool = Tool;
 
 })(this);

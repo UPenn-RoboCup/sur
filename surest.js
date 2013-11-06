@@ -166,8 +166,11 @@ var rest_shm = function (req, res, next) {
     } else {
       res.send()
     }
+    // Stop this emitter listener
+    //zmq_req_rest_skt.removeListener('message', this.cb);
   }
-  zmq_req_skt.once('message', reply_handler);
+  //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
+  zmq_req_rest_skt.once('message', reply_handler);
   
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
@@ -175,7 +178,7 @@ var rest_shm = function (req, res, next) {
   if(req.params.val!==undefined){
     req.params.val = JSON.parse( req.params.val );
   }
-  zmq_req_skt.send( mp.pack(req.params) );
+  zmq_req_rest_skt.send( mp.pack(req.params) );
   
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
   
@@ -199,42 +202,16 @@ var rest_fsm = function (req, res, next) {
     } else {
       res.send();
     }
+    // Stop this emitter listener
+    //zmq_req_rest_skt.removeListener('message', this.cb);
   }
-  zmq_req_skt.once('message', reply_handler);
+  //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
+  zmq_req_rest_skt.once('message', reply_handler);
   
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
-  zmq_req_skt.send( mp.pack(req.params) );
-  
-  // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
-  return next();
-}
-
-/* Reliable large data
-* reliable_mesh:send('')
-* */
-var rest_reliable = function (req, res, next) {
-  
-  // debug rest requests for fsm
-  //console.log('reliable',req.params);
-
-  // grab the bridge
-  var my_bridge = reliable_lookup[req.params.reliable];
-  //console.log(my_bridge)
-  
-  // Send the reply to the host
-  var reply_handler = function(metadata,payload){
-    // TODO: Add any timestamp information or anything?
-    var meta = mp.unpack(metadata);
-    // TODO: Not sure if safe to use my_bridge
-    bridge_send_ws(my_bridge,meta,payload);
-    res.send();
-  }
-  zmq_req_skt.once('message', reply_handler);
-  
-  // Send over the ZMQ REQ/REP
-  my_bridge.requester.send( mp.pack(req.params) );
+  zmq_req_rest_skt.send( mp.pack(req.params) );
   
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
   return next();
@@ -377,12 +354,10 @@ server.post('/m/:shm/:segment/:key', rest_shm);
 //server.get('/s/:fsm', rest_fsm);
 //server.post('/s/:fsm',rest_fsm);
 server.post('/s',rest_fsm);
-// Reliable large data
-server.post('/r/:reliable',rest_reliable);
 
 /* Connect to the RPC server */
-var zmq_req_skt = zmq.socket('req');
-var ret = zmq_req_skt.connect('tcp://'+rpc_robot+':'+rpc_reliable_port);
+var zmq_req_rest_skt = zmq.socket('req');
+var ret = zmq_req_rest_skt.connect('tcp://'+rpc_robot+':'+rpc_reliable_port);
 console.log('\nRESTful reliable RPC connected to ',rpc_robot,rpc_reliable_port);
 
 /*

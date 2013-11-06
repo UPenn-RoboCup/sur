@@ -138,9 +138,15 @@
     scene.add( dirLight );
 
     // ambient light for the whole scene
+    // TODO: Move the light with the robot
+    // ground
     var light = new THREE.PointLight( 0xffffff, 1, 10000 );
     light.position.set( 0, 0, 0 );
     scene.add( light );
+    // sky
+    var light2 = new THREE.PointLight( 0xaaaaaa, 1, 100000 );
+    light2.position.set( 0, 70000, 1000 );
+    scene.add( light2 );
 
     // make the renderer
     renderer = new THREE.WebGLRenderer( { antialias: false } );
