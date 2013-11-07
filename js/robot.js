@@ -19,6 +19,8 @@
   var is_loaded_cb, is_loaded = false;
   Robot.meshes = [];
   
+  var jangles = [0,.78];
+  
   var shown = true;
   
   // Skeleton
@@ -33,10 +35,16 @@
     stl: 'NECK',
     q: new THREE.Quaternion(0,0,0,1),
     p: new THREE.Vector3(0, 50, 0),
+    axel: new THREE.Vector3(0,1,0),
+    id: 2,
     children: [
       {stl: 'CAM',
       p: new THREE.Vector3(0, 111, 0),
-      q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(-1,0,0)), -0.17 ) }
+      q: new THREE.Quaternion(0,0,0,1),
+      axel: new THREE.Vector3(1,0,0),
+      id: 1,
+      //q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 0.17 ),
+      }
     ]
   }
   skeleton.children.push(neck_chain);
@@ -221,8 +229,26 @@
     if(root===undefined){root=skeleton;}
     // update the transform
     var chain_tr = new THREE.Matrix4();
-    chain_tr.makeRotationFromQuaternion(root.q).setPosition(root.p);
-    //chain_tr.setPosition(root.p);
+    
+    // Move the motors based on the joint feedback
+    if (root.id!==undefined){
+      var servo_rot = (new THREE.Quaternion())
+      .setFromAxisAngle(root.axel, jangles[root.id-1] );
+      // Offset
+      var offset_pos = new THREE.Vector3();
+      offset_pos.copy(root.p);
+      console.log('rootp',root.p);
+      console.log('offset_pos',offset_pos);
+      offset_pos.applyQuaternion( servo_rot );
+      console.log('offset_pos',offset_pos);
+      
+      //offset_pos.multiplyScalar( -1 );
+      // Full rotation
+      var offset_rot = (new THREE.Quaternion()).multiplyQuaternions(servo_rot,root.q);
+      chain_tr.makeRotationFromQuaternion(offset_rot).setPosition(root.p);
+    } else {
+      chain_tr.makeRotationFromQuaternion(root.q).setPosition(root.p);
+    }
     
     if(root.parent!==undefined){
       //chain_tr.multiply( root.parent.chain_tr );
