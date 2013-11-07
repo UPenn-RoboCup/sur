@@ -20,8 +20,8 @@
   Robot.meshes = [];
   
   var jangles = [
-    0, .78,
-    .78
+    0, 0,
+    0,0,0,0,0
   ];
   
   var shown = true;
@@ -98,10 +98,14 @@
       {stl: 'RIGHT_SHOULDER_ROLL',
       p: new THREE.Vector3(0, -50, 24),
       q: new THREE.Quaternion(0,0,0,1),
+      axel: new THREE.Vector3(0,0,1),
+      id: 4,
       children: [
         {// yaw
         p: new THREE.Vector3(0, 0, 0),
         q: new THREE.Quaternion(0,0,0,1),
+        axel: new THREE.Vector3(0,1,0),
+        id: 5,
         children: [
           {stl: 'RIGHT_ARM',
           p: new THREE.Vector3(0, -27, -24),
@@ -110,19 +114,19 @@
             {stl: 'RIGHT_ELBOW',
             p: new THREE.Vector3(0, -246+27, 0),
             q: new THREE.Quaternion(0,0,0,1),
+            axel: new THREE.Vector3(1,0,0),
+            id: 6,
             children: [
               {stl: 'RIGHT_WRIST',
               p: new THREE.Vector3(0, -216, 0),
-              q: new THREE.Quaternion(0,0,0,1),}
-            ]
-          }
-          ]
-        }
-        ]
-      }
-      ]
-    }
-    ]
+              q: new THREE.Quaternion(0,0,0,1),
+              axel: new THREE.Vector3(0,1,0),
+              id: 7,
+            }]
+          }]
+        }]
+      }]
+    }]
   }
   skeleton.children.push(larm_chain);
   //
