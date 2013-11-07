@@ -11,10 +11,12 @@
   var rpc_url = rest_root+'/m/hcm/door/model'
   
   var item_angle = new THREE.Euler();
+  var item_mesh;
   
   // hcm (i.e. robot) coordinates in meters
   // Should be a function of two indicator points, like wheel
-  var make_door = function(radius,dx,dz){
+  
+  var make_door = function(radius,dx,dz,yaw){
     // make the master item (i.e. hinge)
     var door_height = 2;
     var item_mat = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
@@ -49,11 +51,17 @@
     item4_mesh.position.set(off_x-handle_width/2,off_y,-off_z-(door_thinkness+10)/2);
     THREE.GeometryUtils.merge( item_geo, item4_mesh );
     
-    return new THREE.Mesh( item_geo, item_mat );
+    // mesh, with some rotation
+    item_mesh = new THREE.Mesh( item_geo, item_mat );
+    item_angle.x = 0;
+    item_angle.y = yaw;
+    item_angle.z = 0;
+    item_mesh.quaternion.setFromEuler( item_angle );
+
   }
   
   // Instantiate the master
-  var item_mesh = make_door(.7,0.10,1);
+  make_door(.7,0.10,1,Math.PI/6);
 
   // TransformControl
   var tcontrol = null;
