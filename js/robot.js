@@ -19,7 +19,10 @@
   var is_loaded_cb, is_loaded = false;
   Robot.meshes = [];
   
-  var jangles = [0,.78];
+  var jangles = [
+    0, .78,
+    .78
+  ];
   
   var shown = true;
   
@@ -36,13 +39,13 @@
     q: new THREE.Quaternion(0,0,0,1),
     p: new THREE.Vector3(0, 50, 0),
     axel: new THREE.Vector3(0,1,0),
-    id: 2,
+    id: 1,
     children: [
       {stl: 'CAM',
       p: new THREE.Vector3(0, 111, 0),
       q: new THREE.Quaternion(0,0,0,1),
       axel: new THREE.Vector3(1,0,0),
-      id: 1,
+      id: 2,
       //q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 0.17 ),
       }
     ]
@@ -89,6 +92,8 @@
     stl: 'RIGHT_SHOULDER_PITCH',
     p: new THREE.Vector3(184, -8, 0),
     q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,0,1)), 1.5708 ),
+    axel: new THREE.Vector3(1,0,0),
+    id: 3,
     children: [
       {stl: 'RIGHT_SHOULDER_ROLL',
       p: new THREE.Vector3(0, -50, 24),
