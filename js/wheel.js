@@ -87,15 +87,6 @@
     var pitch_diff = (new THREE.Vector3()).subVectors(top,center);
     var pitch = Math.atan2( pitch_diff.x, pitch_diff.z);
     
-    // Vector3's log
-    /*
-    console.log('left',left);
-    console.log('right',right);
-    console.log('top',top);
-    console.log('center',center);
-    console.log('diff',diff);
-    */
-    
     // Modify the geometry of the helper
     // Good gut check on the transform, since this should line up well
     item_geo  = new THREE.TorusGeometry(1000*radius, 20, 8, 20);

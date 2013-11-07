@@ -147,7 +147,8 @@
   skeleton.children.push(rleg_chain);
   
   var material = new THREE.MeshPhongMaterial({
-    ambient: 0x555555, color: 0xAAAAAA, specular: 0x111111, shininess: 200
+    // Black knight! http://encycolorpedia.com/313637
+    ambient: 0xFDEEF4, color: 0x313637, specular: 0x111111, shininess: 200
   });
   
   var cb = function ( event ) {

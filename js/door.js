@@ -19,7 +19,7 @@
   var make_door = function(radius,dx,dz,yaw){
     // make the master item (i.e. hinge)
     var door_height = 2;
-    var item_mat = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
+    var item_mat = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x333333});
     var item_geo = new THREE.CylinderGeometry(25,25,door_height*1000,8,1,false);
     // Door itself
     var door_width = 1000*(radius+.050);
