@@ -34,7 +34,6 @@
     // Door handle
     var off_x = radius*1000;
     var off_y = (dz-door_height/2)*1000;
-    console.log(dz,door_height,off_y);
     var off_z = dx*1000;
     var item2_mesh = new THREE.Mesh(
       new THREE.CylinderGeometry(15,15,off_z,12,1)

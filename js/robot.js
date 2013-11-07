@@ -20,8 +20,12 @@
   Robot.meshes = [];
   
   var jangles = [
-    0, 0,
-    0,0,0,0,0
+    0, 0, //head
+    0,0,0,0,0,0,0, //larm
+    0,0,0,0,0,0, //lleg
+    0,0,0,0,0,0, //rleg
+    0,0,0,0,0,0,0, //rarm
+    0,0, //waist
   ];
   
   var shown = true;
@@ -34,6 +38,23 @@
     children: [
     ]
   };
+  
+  // TODO: This right now has no effect on the robot... have different root
+  var waist_chain = {
+    stl: 'PELVIS',
+    q: new THREE.Quaternion(0,0,0,1),
+    p: new THREE.Vector3(0, -295.5, 0),
+    axel: new THREE.Vector3(0,1,0),
+    id: 29,
+    children:[{ stl: 'TORSO_PITCH_SERVO',
+      q: new THREE.Quaternion(0,0,0,1),
+      p: new THREE.Vector3(0, 86, 0),
+      axel: new THREE.Vector3(1,0,0),
+      id: 30,
+    }]
+  };
+  skeleton.children.push(waist_chain);
+  
   var neck_chain = {
     stl: 'NECK',
     q: new THREE.Quaternion(0,0,0,1),
@@ -52,42 +73,6 @@
   }
   skeleton.children.push(neck_chain);
   //
-  var rarm_chain = {
-    stl: 'RIGHT_SHOULDER_PITCH',
-    p: new THREE.Vector3(-184, -8, 0),
-    q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,0,1)), -1.5708 ),
-    children: [
-      {stl: 'RIGHT_SHOULDER_ROLL',
-      p: new THREE.Vector3(0, -50, 24),
-      q: new THREE.Quaternion(0,0,0,1),
-      children: [
-        {// yaw
-        p: new THREE.Vector3(0, 0, 0),
-        q: new THREE.Quaternion(0,0,0,1),
-        children: [
-          {stl: 'RIGHT_ARM',
-          p: new THREE.Vector3(0, -27, -24),
-          q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
-          children: [
-            {stl: 'RIGHT_ELBOW',
-            p: new THREE.Vector3(0, -246+27, 0),
-            q: new THREE.Quaternion(0,0,0,1),
-            children: [
-              {stl: 'RIGHT_WRIST',
-              p: new THREE.Vector3(0, -216, 0),
-              q: new THREE.Quaternion(0,0,0,1),}
-            ]
-          }
-          ]
-        }
-        ]
-      }
-      ]
-    }
-    ]
-  }
-  skeleton.children.push(rarm_chain);
-  //
   var larm_chain = {
     stl: 'RIGHT_SHOULDER_PITCH',
     p: new THREE.Vector3(184, -8, 0),
@@ -104,7 +89,7 @@
         {// yaw
         p: new THREE.Vector3(0, 0, 0),
         q: new THREE.Quaternion(0,0,0,1),
-        axel: new THREE.Vector3(0,1,0),
+        axel: new THREE.Vector3(0,-1,0),
         id: 5,
         children: [
           {stl: 'RIGHT_ARM',
@@ -130,37 +115,87 @@
   }
   skeleton.children.push(larm_chain);
   //
-  var waist_chain = {
-    stl: 'PELVIS',
+  var lleg_chain = {
+    stl: 'LEFT_HIP_YAW',
     q: new THREE.Quaternion(0,0,0,1),
-    p: new THREE.Vector3(0, -295.5, 0),
-    children:[{ stl: 'TORSO_PITCH_SERVO',
+    p: new THREE.Vector3(72, -312-64, 0),
+    axel: new THREE.Vector3(0,1,0),
+    id: 10,
+    children:[{
+      stl: 'RIGHT_HIP_ROLL',
       q: new THREE.Quaternion(0,0,0,1),
-      p: new THREE.Vector3(0, 86, 0),
+      p: new THREE.Vector3(0, -64, 0),
+      axel: new THREE.Vector3(0,0,1),
+      id: 11,
+      children:[{
+        stl: 'L_THIGH',
+        q: new THREE.Quaternion(0,0,0,1),
+        p: new THREE.Vector3(0, 0, 0),
+        axel: new THREE.Vector3(1,0,0),
+        id: 12,
+        children:[{
+          stl: 'L_LEG',
+          q: new THREE.Quaternion(0,0,0,1),
+          p: new THREE.Vector3(0, -300, 0),
+          axel: new THREE.Vector3(1,0,0),
+          id: 13,
+          children:[{
+            stl: 'LEFT_ANKLE',
+            q: new THREE.Quaternion(0,0,0,1),
+            p: new THREE.Vector3(0, -300, 0),
+            axel: new THREE.Vector3(1,0,0),
+            id: 14,
+            children:[{
+              stl: 'FOOT',
+              q: new THREE.Quaternion(0,0,0,1),
+              p: new THREE.Vector3(0, 0, 0),
+              axel: new THREE.Vector3(0,0,1),
+              id: 15,
+            }]
+          }]
+        }]
+      }]
     }]
   };
-  skeleton.children.push(waist_chain);
+  skeleton.children.push(lleg_chain);
   //
   var rleg_chain = {
     stl: 'LEFT_HIP_YAW',
     q: new THREE.Quaternion(0,0,0,1),
     p: new THREE.Vector3(-72, -312-64, 0),
+    axel: new THREE.Vector3(0,1,0),
+    id: 16,
     children:[{
       stl: 'RIGHT_HIP_ROLL',
       q: new THREE.Quaternion(0,0,0,1),
       p: new THREE.Vector3(0, -64, 0),
+      axel: new THREE.Vector3(0,0,1),
+      id: 17,
       children:[{
         stl: 'R_THIGH',
         q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
         p: new THREE.Vector3(0, 0, 0),
+        axel: new THREE.Vector3(1,0,0),
+        id: 18,
         children:[{
           stl: 'R_LEG',
           q: new THREE.Quaternion(0,0,0,1),
           p: new THREE.Vector3(0, -300, 0),
+          axel: new THREE.Vector3(-1,0,0),
+          id: 19,
           children:[{
-            stl: 'FOOT',
+            stl: 'LEFT_ANKLE',
             q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
             p: new THREE.Vector3(0, -300, 0),
+            axel: new THREE.Vector3(-1,0,0),
+            id: 20,
+            children:[{
+              stl: 'FOOT',
+              q: new THREE.Quaternion(0,0,0,1),
+              p: new THREE.Vector3(0, 0, 0),
+              axel: new THREE.Vector3(0,0,1),
+              id: 21,
+            }]
           }]
         }]
       }]
@@ -168,32 +203,47 @@
   };
   skeleton.children.push(rleg_chain);
   //
-  var lleg_chain = {
-    stl: 'LEFT_HIP_YAW',
-    q: new THREE.Quaternion(0,0,0,1),
-    p: new THREE.Vector3(72, -312-64, 0),
-    children:[{
-      stl: 'RIGHT_HIP_ROLL',
+  var rarm_chain = {
+    stl: 'RIGHT_SHOULDER_PITCH',
+    p: new THREE.Vector3(-184, -8, 0),
+    q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,0,1)), -1.5708 ),
+    axel: new THREE.Vector3(1,0,0),
+    id: 22,
+    children: [
+      {stl: 'RIGHT_SHOULDER_ROLL',
+      p: new THREE.Vector3(0, -50, 24),
       q: new THREE.Quaternion(0,0,0,1),
-      p: new THREE.Vector3(0, -64, 0),
-      children:[{
-        stl: 'L_THIGH',
-        q: new THREE.Quaternion(0,0,0,1),
+      axel: new THREE.Vector3(0,0,1),
+      id: 23,
+      children: [
+        {// yaw
         p: new THREE.Vector3(0, 0, 0),
-        children:[{
-          stl: 'L_LEG',
-          q: new THREE.Quaternion(0,0,0,1),
-          p: new THREE.Vector3(0, -300, 0),
-          children:[{
-            stl: 'FOOT',
+        q: new THREE.Quaternion(0,0,0,1),
+        axel: new THREE.Vector3(0,1,0),
+        id: 23,
+        children: [
+          {stl: 'RIGHT_ARM',
+          p: new THREE.Vector3(0, -27, -24),
+          q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
+          children: [
+            {stl: 'RIGHT_ELBOW',
+            p: new THREE.Vector3(0, -246+27, 0),
             q: new THREE.Quaternion(0,0,0,1),
-            p: new THREE.Vector3(0, -300, 0),
+            axel: new THREE.Vector3(1,0,0),
+            id: 24,
+            children: [
+              {stl: 'RIGHT_WRIST',
+              p: new THREE.Vector3(0, -216, 0),
+              q: new THREE.Quaternion(0,0,0,1),
+              axel: new THREE.Vector3(0,1,0),
+              id: 25,
+            }]
           }]
         }]
       }]
     }]
-  };
-  skeleton.children.push(lleg_chain);
+  }
+  skeleton.children.push(rarm_chain);
   
   var material = new THREE.MeshPhongMaterial({
     // Black knight! http://encycolorpedia.com/313637
@@ -246,10 +296,10 @@
       // Offset
       var offset_pos = new THREE.Vector3();
       offset_pos.copy(root.p);
-      console.log('rootp',root.p);
-      console.log('offset_pos',offset_pos);
+      //console.log('rootp',root.p);
+      //console.log('offset_pos',offset_pos);
       offset_pos.applyQuaternion( servo_rot );
-      console.log('offset_pos',offset_pos);
+      //console.log('offset_pos',offset_pos);
       
       //offset_pos.multiplyScalar( -1 );
       // Full rotation
@@ -307,11 +357,19 @@
     ws.onmessage = function(e){
       //console.log(e);
       var feedback = JSON.parse(e.data);
-      //console.log(feedback.pose,feedback.pose_odom,feedback.pose_slam)
+      //console.log(feedback);
+      // set the robot stuff
       Robot.set_pose(feedback.pose);
-      Robot.bodyHeight = feedback.body_height;
+      
       // Use rpy for bodyTilt
       Robot.bodyTilt = feedback.rpy[1];
+      // Update the skeleton root
+      Robot.bodyHeight = feedback.body_height;
+      skeleton.p.setY(1000*Robot.bodyHeight+120);
+      // Update jangles
+      jangles = feedback.neckangle.concat(feedback.larmangle,feedback.llegangle,feedback.rlegangle,feedback.rarmangle,feedback.waistangle)
+      update_skeleton();
+      World.render();
     }
   }
   
