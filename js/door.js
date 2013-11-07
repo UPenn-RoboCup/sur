@@ -10,30 +10,50 @@
   // Sending to the robot
   var rpc_url = rest_root+'/m/hcm/door/model'
   
-  // make the master item (i.e. hinge)
-  var item_mat = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
-  var item_geo = new THREE.CylinderGeometry(25,25,2000,8,1,false);
+  var item_angle = new THREE.Euler();
   
-  // Door itself
-  var item3_mesh = new THREE.Mesh(new THREE.CubeGeometry(1000,2000,30));
-  item3_mesh.position.set(500,0,0);
-  THREE.GeometryUtils.merge( item_geo, item3_mesh );
+  // hcm (i.e. robot) coordinates in meters
+  // Should be a function of two indicator points, like wheel
+  var make_door = function(radius,dx,dz){
+    // make the master item (i.e. hinge)
+    var door_height = 2;
+    var item_mat = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
+    var item_geo = new THREE.CylinderGeometry(25,25,door_height*1000,8,1,false);
+    // Door itself
+    var door_width = 1000*(radius+.050);
+    
+    var door_thinkness = 30;
+    var item3_mesh = new THREE.Mesh(
+      new THREE.CubeGeometry(door_width,door_height*1000,door_thinkness)
+    );
+    item3_mesh.position.set(door_width/2,0,0);
+    THREE.GeometryUtils.merge( item_geo, item3_mesh );
+    
+    // Door handle
+    var off_x = radius*1000;
+    var off_y = (dz-door_height/2)*1000;
+    console.log(dz,door_height,off_y);
+    var off_z = dx*1000;
+    var item2_mesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(15,15,off_z,12,1)
+    );
+    // This also used as tmp variable
+    item_angle = new THREE.Euler( Math.PI/2, 0, 0 );
+    item2_mesh.quaternion.setFromEuler( item_angle );
+    item2_mesh.position.set(off_x,off_y,-(off_z+door_thinkness)/2);
+    THREE.GeometryUtils.merge( item_geo, item2_mesh );
   
-  // Door handle
-  var item2_mesh = new THREE.Mesh(new THREE.CylinderGeometry(15,15,30,12,1));
-  // This also used as tmp variable
-  var item_angle = new THREE.Euler( Math.PI/2, 0, 0 );
-  item2_mesh.quaternion.setFromEuler( item_angle );
-  item2_mesh.position.set(960,0,-30);
-  THREE.GeometryUtils.merge( item_geo, item2_mesh );
-  
-  // Door handle
-  var item4_mesh = new THREE.Mesh(new THREE.CubeGeometry(100,15,10));
-  item4_mesh.position.set(920,0,-40);
-  THREE.GeometryUtils.merge( item_geo, item4_mesh );
+    // Door handle
+    var handle_width = 100;
+    var item4_mesh = new THREE.Mesh(new THREE.CubeGeometry(100,15,10));
+    item4_mesh.position.set(off_x-handle_width/2,off_y,-off_z-(door_thinkness+10)/2);
+    THREE.GeometryUtils.merge( item_geo, item4_mesh );
+    
+    return new THREE.Mesh( item_geo, item_mat );
+  }
   
   // Instantiate the master
-  var item_mesh  = new THREE.Mesh( item_geo, item_mat );
+  var item_mesh = make_door(.7,0.10,1);
 
   // TransformControl
   var tcontrol = null;
@@ -66,12 +86,9 @@
   var send_model_to_robot = function(){
     // Acquire the model
     item_angle.setFromQuaternion(item_mesh.quaternion);
-    console.log('item angle',item_angle);
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
     model.push(item_angle.y);
-    console.log('Model',model);
-    console.log('Robot',Robot.bodyHeight);
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
   
