@@ -127,6 +127,33 @@
   var rleg_chain = {
     stl: 'LEFT_HIP_YAW',
     q: new THREE.Quaternion(0,0,0,1),
+    p: new THREE.Vector3(-72, -312-64, 0),
+    children:[{
+      stl: 'RIGHT_HIP_ROLL',
+      q: new THREE.Quaternion(0,0,0,1),
+      p: new THREE.Vector3(0, -64, 0),
+      children:[{
+        stl: 'R_THIGH',
+        q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
+        p: new THREE.Vector3(0, 0, 0),
+        children:[{
+          stl: 'R_LEG',
+          q: new THREE.Quaternion(0,0,0,1),
+          p: new THREE.Vector3(0, -300, 0),
+          children:[{
+            stl: 'FOOT',
+            q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
+            p: new THREE.Vector3(0, -300, 0),
+          }]
+        }]
+      }]
+    }]
+  };
+  skeleton.children.push(rleg_chain);
+  //
+  var lleg_chain = {
+    stl: 'LEFT_HIP_YAW',
+    q: new THREE.Quaternion(0,0,0,1),
     p: new THREE.Vector3(72, -312-64, 0),
     children:[{
       stl: 'RIGHT_HIP_ROLL',
@@ -139,12 +166,17 @@
         children:[{
           stl: 'L_LEG',
           q: new THREE.Quaternion(0,0,0,1),
-          p: new THREE.Vector3(0, 0, 0),
+          p: new THREE.Vector3(0, -300, 0),
+          children:[{
+            stl: 'FOOT',
+            q: new THREE.Quaternion(0,0,0,1),
+            p: new THREE.Vector3(0, -300, 0),
+          }]
         }]
       }]
     }]
   };
-  skeleton.children.push(rleg_chain);
+  skeleton.children.push(lleg_chain);
   
   var material = new THREE.MeshPhongMaterial({
     // Black knight! http://encycolorpedia.com/313637
