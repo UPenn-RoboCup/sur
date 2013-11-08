@@ -99,7 +99,7 @@
             {stl: 'RIGHT_ELBOW',
             p: new THREE.Vector3(0, -246+27, 0),
             q: new THREE.Quaternion(0,0,0,1),
-            axel: new THREE.Vector3(1,0,0),
+            axel: new THREE.Vector3(-1,0,0),
             id: 6,
             children: [
               {stl: 'RIGHT_WRIST',
@@ -220,7 +220,7 @@
         p: new THREE.Vector3(0, 0, 0),
         q: new THREE.Quaternion(0,0,0,1),
         axel: new THREE.Vector3(0,1,0),
-        id: 23,
+        id: 24,
         children: [
           {stl: 'RIGHT_ARM',
           p: new THREE.Vector3(0, -27, -24),
@@ -229,14 +229,14 @@
             {stl: 'RIGHT_ELBOW',
             p: new THREE.Vector3(0, -246+27, 0),
             q: new THREE.Quaternion(0,0,0,1),
-            axel: new THREE.Vector3(1,0,0),
-            id: 24,
+            axel: new THREE.Vector3(-1,0,0),
+            id: 25,
             children: [
               {stl: 'RIGHT_WRIST',
               p: new THREE.Vector3(0, -216, 0),
               q: new THREE.Quaternion(0,0,0,1),
               axel: new THREE.Vector3(0,1,0),
-              id: 25,
+              id: 26,
             }]
           }]
         }]
@@ -366,6 +366,18 @@
       // Update the skeleton root
       Robot.bodyHeight = feedback.body_height;
       skeleton.p.setY(1000*Robot.bodyHeight+120);
+      // Joint angle offsets
+      feedback.larmangle[0] += Math.PI/2;
+      feedback.rarmangle[0] += Math.PI/2;
+      //
+      feedback.larmangle[1] += Math.PI/4;
+      feedback.rarmangle[1] -= Math.PI/4;
+      //
+      feedback.larmangle[2] += Math.PI;
+      feedback.rarmangle[2] += Math.PI
+      //
+      //feedback.larmangle[3] += Math.PI;
+            
       // Update jangles
       jangles = feedback.neckangle.concat(feedback.larmangle,feedback.llegangle,feedback.rlegangle,feedback.rarmangle,feedback.waistangle)
       update_skeleton();
