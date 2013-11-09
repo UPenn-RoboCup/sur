@@ -22,7 +22,7 @@
   Robot.meshes = [];
   
   var jangles = [
-    0, 1.2, //head
+    0, 0, //head
     0,0,0,0,0,0,0, //larm
     0,0,0,0,0,0, //lleg
     0,0,0,0,0,0, //rleg
@@ -61,7 +61,7 @@
     stl: 'NECK',
     q: new THREE.Quaternion(0,0,0,1),
     p: new THREE.Vector3(0, 50, 0),
-    axel: new THREE.Vector3(0,1,0),
+    axel: new THREE.Vector3(0,-1,0),
     id: 1,
     children: [{
       stl: 'CAM',
@@ -325,7 +325,7 @@
 
     // head camera
     if(root.camera!==undefined){
-      console.log('Camera!',root.camera)
+      //console.log('Camera!',root.camera)
       root.camera.position.getPositionFromMatrix(chain_tr);
       root.camera.rotation.setFromRotationMatrix(chain_tr);
       root.camera.updateProjectionMatrix();
@@ -373,12 +373,14 @@
       //console.log(feedback);
       // set the robot stuff
       Robot.set_pose(feedback.pose);
-      
       // Use rpy for bodyTilt
       Robot.bodyTilt = feedback.rpy[1];
       // Update the skeleton root
       Robot.bodyHeight = feedback.body_height;
+      // Update the skeleton
       skeleton.p.setY(1000*Robot.bodyHeight+120);
+      skeleton.q.setFromAxisAngle((new THREE.Vector3(1,0,0)), Robot.bodyTilt )
+      
       // Joint angle offsets
       feedback.larmangle[0] += Math.PI/2;
       feedback.rarmangle[0] += Math.PI/2;

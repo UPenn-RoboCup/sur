@@ -16,6 +16,7 @@
   <script src="lib/d3.min.js"></script>
   <script src="lib/qwest-0.4.2.min.js"></script>
   <script src="lib/sprintf.min.js"></script>
+  <script src="lib/hammer.min.js"></script>
 
   <!-- THREE.js helpers -->
   <script src="lib/OrbitControls.js"></script>
@@ -48,10 +49,10 @@
   <div id="camera_container"></div>
   
   <div id="bodyheight_slider" class="mesh_selection">
-    <div class="button-group" id="mesh_btns">
-      <a href="#" class="button mesh_selection" id="slow_mesh_btn">1x</a>
-      <a href="#" class="button mesh_selection" id="medium_mesh_btn">2x</a>
-      <a href="#" class="button mesh_selection" id="fast_mesh_btn">4x</a>
+    <div class="button-group minor-group" id="mesh_speed_btns">
+      <a href="#" class="button pill mesh_selection" id="slow_mesh_btn">1x</a>
+      <a href="#" class="button pill mesh_selection" id="medium_mesh_btn">2x</a>
+      <a href="#" class="button pill mesh_selection" id="fast_mesh_btn">4x</a>
     </div>
   </div>
   <br/>
@@ -65,9 +66,14 @@
   <br/>
 
   <div class="button-group" id="click_btns">
-    <a href="#" class="button mesh_selection" id="obj_clicks_btn">Wheel</a>
-    <a href="#" class="button mesh_selection" id="clear_clicks_btn">Clear</a>
-    <a href="#" class="button mesh_selection" id="modify_clicks_btn">Modify</a>
+    <a href="#" class="button primary mesh_selection" id="obj_clicks_btn">Wheel</a>
+    <a href="#" class="button icon remove danger mesh_selection" id="clear_clicks_btn">
+      Clear</a>
+    <a href="#" class="button icon move mesh_selection" id="modify_clicks_btn">
+      Modify</a>
+    <a href="#" class="button mesh_selection" id="cam_clicks_btn">
+      CamClick
+    </a>
   </div>
   <br/>
   
@@ -83,6 +89,7 @@
   <a href="#" class="button fsm_selection" id="head_fsm_tiltscan_btn">Scan</a>
   <a href="#" class="button fsm_selection" id="head_fsm_center_btn">Center</a>
   <a href="#" class="button fsm_selection" id="head_fsm_teleop   _btn">Teleop</a>
+    
   </div>
   <br/>
   
@@ -103,7 +110,8 @@
   
   <div class="button-group worldscene">
   <a href="#" class="big button fsm_selection" id="vantage_top_btn">Top</a>
-  <a href="#" class="big button fsm_selection" id="vantage_front_btn">Front</a>
+  <a href="#" class="big button fsm_selection" id="vantage_chest_btn">Chest</a>
+  <a href="#" class="big button fsm_selection" id="vantage_robot_btn">Robot</a>
   <a href="#" class="big button fsm_selection" id="vantage_def_btn">Default</a>
   </div>
   

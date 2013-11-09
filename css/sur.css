@@ -30,6 +30,15 @@ html, body {
   float: left;
 }
 
+#obj_clicks_btn {
+  width: 40pt;
+}
+
+#mesh_speed_btns {
+  position: relative;
+  top: -5px;
+}
+
 /*
  * 3D scene container
  */

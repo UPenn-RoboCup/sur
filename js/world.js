@@ -10,6 +10,7 @@
   
   var CANVAS_WIDTH, CANVAS_HEIGHT;
   var camera, renderer, scene, container, controls;
+  var is_robot_camera = false;
   
   // save items
   var meshes = [], items = [];
@@ -27,8 +28,7 @@
   
   World.render = function(){
     // render the scene using the camera
-    if(Robot.head_camera!=null){
-      console.log('render!',Robot.head_camera)
+    if(is_robot_camera){
       renderer.render( scene, Robot.head_camera );
     } else {
       renderer.render( scene, camera );
@@ -37,14 +37,19 @@
   }
   
   World.set_view = function(pos,target){
-    // cam position
-    lookPosition.fromArray(pos);
-    camera.position.copy(lookPosition);
-    // target
-    lookTarget.fromArray(target);
-    controls.target = lookTarget;
-    // updatea nd render
-    controls.update();
+    if(pos=='robot'){
+      is_robot_camera = true;
+    } else {
+      is_robot_camera = false;
+      // cam position
+      lookPosition.fromArray(pos);
+      camera.position.copy(lookPosition);
+      // target
+      lookTarget.fromArray(target);
+      controls.target = lookTarget;
+      // update and render
+      controls.update();
+    }
     World.render();
   }
   
@@ -70,9 +75,10 @@
   World.intersection_callback = null;
   
   // This is the intersection function
-  var intersect_world = function(event){
+  var intersect_world = function(e){
+    var event = e.gesture.touches[0];
     // if no callback, then do nothing
-    if(typeof World.intersection_callback!=="function"){ return; }
+    if(typeof World.intersection_callback!=="function"){ return; }    
     // find the mouse position (use NDC coordinates, per documentation)
     var mouse_vector = new THREE.Vector3(
       ( event.offsetX / CANVAS_WIDTH ) * 2 - 1,
@@ -80,7 +86,12 @@
     //console.log('Mouse',mouse_vector); // need Vector3, not vector2
     var projector = new THREE.Projector();
     //console.log('projector',projector)
-    var raycaster = projector.pickingRay(mouse_vector,camera);
+    var raycaster = null;
+    if(is_robot_camera){
+      raycaster = projector.pickingRay(mouse_vector,Robot.head_camera);
+    } else {
+      raycaster = projector.pickingRay(mouse_vector,camera);
+    }
     //console.log('picking raycaster',raycaster)
     // intersect the plane
     var intersections = raycaster.intersectObjects( items.concat(meshes) );
@@ -102,10 +113,10 @@
   // Handle doubleclicks - possibly more
   World.handle_intersection = function( cb ){
     // Change the callback for calculating the intersection
-    container.removeEventListener( 'dblclick', intersect_world, false );
+    //container.removeEventListener( 'dblclick', intersect_world, false );
     World.intersection_callback = cb;
     // add event for picking the location of a double click on the plane
-    container.addEventListener( 'dblclick', intersect_world, false );
+    //container.addEventListener( 'dblclick', intersect_world, false );
   }
   
   World.append_floor = function(){
@@ -125,6 +136,10 @@
     
     // Grab the container
     container = document.getElementById( 'world_container' );
+    
+    // Double clicking for the intersection
+    Hammer(container).on("doubletap", intersect_world);
+    
     CANVAS_WIDTH = container.clientWidth;
     CANVAS_HEIGHT = container.clientHeight;
     /*
@@ -318,13 +333,17 @@
       // pos then target
       World.set_view([0,2000,0],[0,0,0]);
     });
-    clicker('vantage_front_btn',function() {
+    clicker('vantage_chest_btn',function() {
       // pos then target
       World.set_view([0,1000,0],[0,1000,1000]);
     });
     clicker('vantage_def_btn',function() {
       // pos then target
       World.set_view([500,2000,-500],[0,0,1500]);
+    });
+    clicker('vantage_robot_btn',function() {
+      // pos then target
+      World.set_view('robot');
     });
   }
   

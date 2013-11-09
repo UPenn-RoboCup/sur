@@ -17,7 +17,7 @@
   var h_fov = 60;
   var v_fov = 60;
   var focal_base = 320;
-  var focal_length = 260;
+  var focal_length = 180;
   //
   var cam_width, cam_height, cam_mid_x, cam_mid_y;
   
@@ -30,12 +30,13 @@
   } // camera handler
   
   var head_look = function(e){
+    var event = e.gesture.touches[0];
     var ang_url = rest_root+'/m/hcm/motion/headangle';
     // Adjust the angle based on the previous angle from the robot
     qwest.get(ang_url).success(function(cur_headangle){
       //console.log('Current desired angle',cur_headangle);
-      var x = (e.offsetX-cam_mid_x)/cam_width  * h_fov * DEG_TO_RAD;
-      var y = (e.offsetY-cam_mid_y)/cam_height * v_fov * DEG_TO_RAD;
+      var x = (event.offsetX-cam_mid_x)/cam_width  * h_fov * DEG_TO_RAD;
+      var y = (event.offsetY-cam_mid_y)/cam_height * v_fov * DEG_TO_RAD;
       x+=cur_headangle[0];
       y+=cur_headangle[1];
       //console.log('New Angle',x,y);
@@ -50,6 +51,10 @@
     */
   }
   
+  var camera_click_toggle = function(){
+    
+  }
+  
   /*******
   * Websocket setup
   ******/
@@ -58,7 +63,14 @@
     camera_container = $('#camera_container')[0];
     camera_container.appendChild( camera_img );
     // Single click looks somewhere
-    Hammer(camera_container).on("tap", head_look);
+    var hammertime = Hammer(camera_container);
+    hammertime.on("tap", head_look);
+    // click image selects a point or moves the camera
+    clicker('cam_clicks_btn',function(){
+      console.log('camclick',this)
+      hammertime.off("tap", head_look);
+      hammertime.on("doubletap", head_look);
+    })
     
     // Save some variables
     cam_width  = camera_container.clientWidth;
