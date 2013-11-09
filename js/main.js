@@ -8,10 +8,12 @@ this.rest_root = 'http://'+host+':8080';
 // http://macwright.org/presentations/dcjq/
 this.$ = function(x){return document.querySelectorAll(x);};
 this.clicker = function(id,fun){
-  document.getElementById(id).addEventListener('click', fun, false);
+  Hammer(document.getElementById(id)).on('tap',fun);
+  //document.getElementById(id).addEventListener('click', fun, false);
 }
 this.unclicker = function(id,fun){
-  document.getElementById(id).removeEventListener('click', fun, false);
+  Hammer(document.getElementById(id)).off('tap',fun);
+  //document.getElementById(id).removeEventListener('click', fun, false);
 }
 this.DEG_TO_RAD = Math.PI/180;
 this.RAD_TO_DEG = 180/Math.PI;
@@ -24,6 +26,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Setup the world
   World.setup();
+  
   World.append_floor();
   
   // Setup the camera
@@ -31,14 +34,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Setup the FSM buttons
   FSM.setup();
-  
-  // Add the robot
-  Robot.setup(function(){
-    var m = Robot.meshes;
-    for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
-    // x,y,a pose
-    Robot.set_pose([0,0,0]);
-  });
   
   // Add items to be manipulated
   Manipulation.add_item(Wheel);
@@ -48,6 +43,14 @@ document.addEventListener( "DOMContentLoaded", function(){
   Manipulation.setup();
   
   Manipulation.add_item(Door);
+  
+  // Add the robot
+  Robot.setup(function(){
+    var m = Robot.meshes;
+    for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
+    // x,y,a pose
+    Robot.set_pose([0,0,0]);
+  });
 
   // Finally, render the world!
   World.render();

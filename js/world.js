@@ -27,7 +27,13 @@
   
   World.render = function(){
     // render the scene using the camera
-    renderer.render( scene, camera );
+    if(Robot.head_camera!=null){
+      console.log('render!',Robot.head_camera)
+      renderer.render( scene, Robot.head_camera );
+    } else {
+      renderer.render( scene, camera );
+    }
+    
   }
   
   World.set_view = function(pos,target){
@@ -108,7 +114,7 @@
       side: THREE.DoubleSide,
       color: 0x7F5217, // red dirt
     });
-    var floor = new THREE.Mesh(new THREE.PlaneGeometry(5000, 5000),floor_mat);
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(50000, 50000),floor_mat);
     floor.rotation.x = -Math.PI/2;
     scene.add(floor);
     // Save in the world items

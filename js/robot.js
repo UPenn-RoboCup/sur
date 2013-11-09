@@ -14,13 +14,15 @@
   Robot.px = 0;
   Robot.py = 0;
   Robot.pa = 0;
+  // camera
+  Robot.head_camera = null;
   
   var n_loaded = 0, nstl = 0;
   var is_loaded_cb, is_loaded = false;
   Robot.meshes = [];
   
   var jangles = [
-    0, 0, //head
+    0, 1.2, //head
     0,0,0,0,0,0,0, //larm
     0,0,0,0,0,0, //lleg
     0,0,0,0,0,0, //rleg
@@ -61,17 +63,23 @@
     p: new THREE.Vector3(0, 50, 0),
     axel: new THREE.Vector3(0,1,0),
     id: 1,
-    children: [
-      {stl: 'CAM',
+    children: [{
+      stl: 'CAM',
       p: new THREE.Vector3(0, 111, 0),
       q: new THREE.Quaternion(0,0,0,1),
       axel: new THREE.Vector3(1,0,0),
       id: 2,
-      //q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 0.17 ),
-      }
+      children: [{
+      // camera (measured to be OK)
+      p: new THREE.Vector3(0, 70, 85),
+      q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
+      camera: new THREE.PerspectiveCamera( 60, 320 / 260, 10, 100000 ),
+    },]
+    },
     ]
   }
   skeleton.children.push(neck_chain);
+  
   //
   var larm_chain = {
     stl: 'RIGHT_SHOULDER_PITCH',
@@ -219,7 +227,7 @@
         {// yaw
         p: new THREE.Vector3(0, 0, 0),
         q: new THREE.Quaternion(0,0,0,1),
-        axel: new THREE.Vector3(0,1,0),
+        axel: new THREE.Vector3(0,-1,0),
         id: 24,
         children: [
           {stl: 'RIGHT_ARM',
@@ -296,12 +304,7 @@
       // Offset
       var offset_pos = new THREE.Vector3();
       offset_pos.copy(root.p);
-      //console.log('rootp',root.p);
-      //console.log('offset_pos',offset_pos);
       offset_pos.applyQuaternion( servo_rot );
-      //console.log('offset_pos',offset_pos);
-      
-      //offset_pos.multiplyScalar( -1 );
       // Full rotation
       var offset_rot = (new THREE.Quaternion()).multiplyQuaternions(servo_rot,root.q);
       chain_tr.makeRotationFromQuaternion(offset_rot).setPosition(root.p);
@@ -310,7 +313,6 @@
     }
     
     if(root.parent!==undefined){
-      //chain_tr.multiply( root.parent.chain_tr );
       chain_tr.multiplyMatrices( root.parent.chain_tr, chain_tr );
     }
 
@@ -321,14 +323,21 @@
       mesh.rotation.setFromRotationMatrix(chain_tr);
     }
 
+    // head camera
+    if(root.camera!==undefined){
+      console.log('Camera!',root.camera)
+      root.camera.position.getPositionFromMatrix(chain_tr);
+      root.camera.rotation.setFromRotationMatrix(chain_tr);
+      root.camera.updateProjectionMatrix();
+    }
+
     // Save the chain'd tr
     root.chain_tr = chain_tr;
 
-    if(root.children===undefined){return;}
     // transform children
-    for(var c=0;c<root.children.length;c++){
-      update_skeleton(root.children[c]);
-    }
+    if(root.children===undefined){return;}
+    for(var c=0;c<root.children.length;c++){update_skeleton(root.children[c]);}
+    
   } // update skeleton
   
   // Move the robot (given robot coord, not THREEjs)
@@ -342,11 +351,15 @@
     skeleton.p.z = 1000*Robot.px;
     update_skeleton();
     World.render();
-  }
+  };
   
   Robot.setup = function(cb){
     is_loaded_cb = cb;
     n_stl = load_skeleton(skeleton);
+    Robot.head_camera = neck_chain.children[0].children[0].camera;
+    // add to the world
+    World.add(Robot.head_camera);
+    //Robot.head_camera.lookAt(0,0,1000);
     
     // Websocket Configuration for feedback
     var port = 9013;

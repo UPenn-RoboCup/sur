@@ -56,14 +56,15 @@
   Camera.setup = function(){
     // put image into the dom
     camera_container = $('#camera_container')[0];
-    $('#camera_container')[0].appendChild( camera_img );
-    clicker('camera_container',head_look);
+    camera_container.appendChild( camera_img );
+    // Single click looks somewhere
+    Hammer(camera_container).on("tap", head_look);
     
     // Save some variables
     cam_width  = camera_container.clientWidth;
     cam_height = camera_container.clientHeight;
-    cam_mid_x = cam_width/2;
-    cam_mid_y = cam_height/2;
+    cam_mid_x  = cam_width/2;
+    cam_mid_y  = cam_height/2;
 
     // Websocket Configuration
     //var mesh_port = 9005; // kinect
