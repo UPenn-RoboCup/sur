@@ -14,6 +14,8 @@
   
   // save items
   var meshes = [], items = [];
+  World.items = items;
+  World.meshes = meshes;
   
   // Where to look initially
   var lookPosition = new THREE.Vector3(500,2000,-500);
@@ -33,7 +35,6 @@
     } else {
       renderer.render( scene, camera );
     }
-    
   }
   
   World.set_view = function(pos,target){
@@ -126,7 +127,7 @@
       side: THREE.DoubleSide,
       color: 0x7F5217, // red dirt
     });
-    var floor = new THREE.Mesh(new THREE.PlaneGeometry(50000, 50000),floor_mat);
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(100000, 100000),floor_mat);
     floor.rotation.x = -Math.PI/2;
     scene.add(floor);
     // Save in the world items
@@ -332,11 +333,12 @@
   var handle_buttons = function(){
     clicker('vantage_top_btn',function() {
       // pos then target
-      World.set_view([0,2000,0],[0,0,0]);
+      World.set_view([0,2000,0],[0,0,1]);
     });
     clicker('vantage_chest_btn',function() {
       // pos then target
-      World.set_view([0,1000,0],[0,1000,1000]);
+      var dz = 1000*Robot.bodyHeight / Math.tan(Robot.bodyTilt);
+      World.set_view([0,Robot.bodyHeight*1000,220],[0,0,dz]);
     });
     clicker('vantage_def_btn',function() {
       // pos then target

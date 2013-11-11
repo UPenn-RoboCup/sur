@@ -53,8 +53,36 @@
     */
   }
   
+  // This is the intersection function
   var head_intersect = function(e){
-    console.log('head_intersect',e)
+    var event = e.gesture.touches[0];
+    // if no callback, then do nothing
+    if(typeof World.intersection_callback!=="function"){ return; }    
+    // find the mouse position (use NDC coordinates, per documentation)
+    var mouse_vector = new THREE.Vector3(
+      ( event.offsetX / cam_width ) * 2 - 1,
+      -( event.offsetY / cam_height ) * 2 + 1);
+    //console.log('Mouse',mouse_vector); // need Vector3, not vector2
+    var projector = new THREE.Projector();
+    //console.log('projector',projector)
+    var raycaster = projector.pickingRay(mouse_vector,Robot.head_camera);
+    //console.log('picking raycaster',raycaster)
+    // intersect the plane
+    var intersections = raycaster.intersectObjects( World.items.concat(World.meshes) );
+    // if no intersection
+    //console.log(intersections)
+    if(intersections.length==0){ return; }
+    //console.log('cam int',intersections);
+    // only give the first intersection point
+    var p = intersections[0].point;
+    // get the robot point
+    var r = Transform.three_to_torso(p, Robot);
+    
+    // debugging
+    console.log('Camera Intersection:',p,r);
+    
+    // apply the callback
+    World.intersection_callback(p,r);
   }
 
   /*******
