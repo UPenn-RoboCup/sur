@@ -333,7 +333,7 @@
   var handle_buttons = function(){
     clicker('vantage_top_btn',function() {
       // pos then target
-      World.set_view([0,2000,0],[0,0,1]);
+      World.set_view([0,2000,500],[0,0,501]);
     });
     clicker('vantage_chest_btn',function() {
       // pos then target
