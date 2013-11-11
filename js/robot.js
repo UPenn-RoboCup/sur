@@ -34,33 +34,43 @@
   
   // Skeleton
   var skeleton = {
-    stl: 'CHEST',
     q: new THREE.Quaternion(0,0,0,1),
-    p: new THREE.Vector3(0, 1155, 0),
+    p: new THREE.Vector3(0, 0, 0),
+    axel: new THREE.Vector3(1,0,0),
+    id: 30,
     children: [
+    {
+      stl: 'CHEST',
+      q: new THREE.Quaternion(0,0,0,1),
+      p: new THREE.Vector3(0, 170, 0),
+      children: [
+      ]
+    },
+    {
+      stl: 'PELVIS',
+      q: new THREE.Quaternion(0,0,0,1),
+      p: new THREE.Vector3(0, -128, 0),
+      axel: new THREE.Vector3(0,1,0),
+      id: 29,
+      children: [
+      ]
+    },
+    {
+      stl: 'TORSO_PITCH_SERVO',
+      q: new THREE.Quaternion(0,0,0,1),
+      p: new THREE.Vector3(0, -40, 0),
+    }
     ]
   };
   
-  // TODO: This right now has no effect on the robot... have different root
-  var waist_chain = {
-    stl: 'PELVIS',
-    q: new THREE.Quaternion(0,0,0,1),
-    p: new THREE.Vector3(0, -295.5, 0),
-    axel: new THREE.Vector3(0,1,0),
-    id: 29,
-    children:[{ stl: 'TORSO_PITCH_SERVO',
-      q: new THREE.Quaternion(0,0,0,1),
-      p: new THREE.Vector3(0, 86, 0),
-      axel: new THREE.Vector3(1,0,0),
-      id: 30,
-    }]
-  };
-  skeleton.children.push(waist_chain);
+  // upper and lower body
+  var upper_body_chest = skeleton.children[0];
+  var lower_body_pelvis = skeleton.children[1];
   
   var neck_chain = {
     stl: 'NECK',
     q: new THREE.Quaternion(0,0,0,1),
-    p: new THREE.Vector3(0, 50, 0),
+    p: new THREE.Vector3(0, 40, 0),
     axel: new THREE.Vector3(0,-1,0),
     id: 1,
     children: [{
@@ -78,7 +88,7 @@
     },
     ]
   }
-  skeleton.children.push(neck_chain);
+  upper_body_chest.children.push(neck_chain);
   
   //
   var larm_chain = {
@@ -121,12 +131,12 @@
       }]
     }]
   }
-  skeleton.children.push(larm_chain);
+  upper_body_chest.children.push(larm_chain);
   //
   var lleg_chain = {
     stl: 'LEFT_HIP_YAW',
     q: new THREE.Quaternion(0,0,0,1),
-    p: new THREE.Vector3(72, -312-64, 0),
+    p: new THREE.Vector3(72, -16-64, 0),
     axel: new THREE.Vector3(0,1,0),
     id: 10,
     children:[{
@@ -165,12 +175,13 @@
       }]
     }]
   };
-  skeleton.children.push(lleg_chain);
+  lower_body_pelvis.children.push(lleg_chain);
+  
   //
   var rleg_chain = {
     stl: 'LEFT_HIP_YAW',
     q: new THREE.Quaternion(0,0,0,1),
-    p: new THREE.Vector3(-72, -312-64, 0),
+    p: new THREE.Vector3(-72, -16-64, 0),
     axel: new THREE.Vector3(0,1,0),
     id: 16,
     children:[{
@@ -209,7 +220,7 @@
       }]
     }]
   };
-  skeleton.children.push(rleg_chain);
+  lower_body_pelvis.children.push(rleg_chain);
   //
   var rarm_chain = {
     stl: 'RIGHT_SHOULDER_PITCH',
@@ -251,7 +262,7 @@
       }]
     }]
   }
-  skeleton.children.push(rarm_chain);
+  upper_body_chest.children.push(rarm_chain);
   
   var material = new THREE.MeshPhongMaterial({
     // Black knight! http://encycolorpedia.com/313637
@@ -377,8 +388,9 @@
       Robot.bodyTilt = feedback.rpy[1];
       // Update the skeleton root
       Robot.bodyHeight = feedback.body_height;
+      //console.log('bH',Robot.bodyHeight)
       // Update the skeleton
-      skeleton.p.setY(1000*Robot.bodyHeight+120);
+      skeleton.p.setY(1000*Robot.bodyHeight);
       skeleton.q.setFromAxisAngle((new THREE.Vector3(1,0,0)), Robot.bodyTilt )
       
       // Joint angle offsets
