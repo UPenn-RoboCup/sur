@@ -125,6 +125,11 @@
               q: new THREE.Quaternion(0,0,0,1),
               axel: new THREE.Vector3(0,1,0),
               id: 7,
+              children:[{
+                stl: 'LEFT_GRIPPER',
+                q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
+                p: new THREE.Vector3(0, -200, 0),
+              }]
             }]
           }]
         }]
@@ -264,6 +269,11 @@
               q: new THREE.Quaternion(0,0,0,1),
               axel: new THREE.Vector3(0,1,0),
               id: 26,
+              children:[{
+                stl: 'RIGHT_GRIPPER',
+                q: new THREE.Quaternion(0,0,0,1),
+                p: new THREE.Vector3(0, -200, 0),
+              }]
             }]
           }]
         }]
@@ -376,9 +386,12 @@
     is_loaded_cb = cb;
     n_stl = load_skeleton(skeleton);
     Robot.head_camera = neck_chain.children[0].children[0].camera;
+    //Robot.head_camera.setLens( 70, 75 )
     // add to the world
     World.add(Robot.head_camera);
     //Robot.head_camera.lookAt(0,0,1000);
+    var help = new THREE.CameraHelper(Robot.head_camera );
+    World.add(help);
     
     // Websocket Configuration for feedback
     var port = 9013;
