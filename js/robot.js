@@ -152,23 +152,27 @@
         axel: new THREE.Vector3(1,0,0),
         id: 12,
         children:[{
-          stl: 'L_LEG',
           q: new THREE.Quaternion(0,0,0,1),
-          p: new THREE.Vector3(0, -300, 0),
+          p: new THREE.Vector3(0, -300, -25),
           axel: new THREE.Vector3(1,0,0),
           id: 13,
           children:[{
-            stl: 'LEFT_ANKLE',
+            stl: 'L_LEG',
             q: new THREE.Quaternion(0,0,0,1),
-            p: new THREE.Vector3(0, -300, 0),
-            axel: new THREE.Vector3(1,0,0),
-            id: 14,
+            p: new THREE.Vector3(0, 0, 25),
             children:[{
-              stl: 'FOOT',
+              stl: 'LEFT_ANKLE',
               q: new THREE.Quaternion(0,0,0,1),
-              p: new THREE.Vector3(0, 0, 0),
-              axel: new THREE.Vector3(0,0,1),
-              id: 15,
+              p: new THREE.Vector3(0, -300, 0),
+              axel: new THREE.Vector3(1,0,0),
+              id: 14,
+              children:[{
+                stl: 'FOOT',
+                q: new THREE.Quaternion(0,0,0,1),
+                p: new THREE.Vector3(0, 0, 0),
+                axel: new THREE.Vector3(0,0,1),
+                id: 15,
+              }]
             }]
           }]
         }]
@@ -197,23 +201,27 @@
         axel: new THREE.Vector3(1,0,0),
         id: 18,
         children:[{
-          stl: 'R_LEG',
-          q: new THREE.Quaternion(0,0,0,1),
-          p: new THREE.Vector3(0, -300, 0),
           axel: new THREE.Vector3(-1,0,0),
           id: 19,
+          q: new THREE.Quaternion(0,0,0,1),
+          p: new THREE.Vector3(0, -300, 25),
           children:[{
-            stl: 'LEFT_ANKLE',
-            q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
-            p: new THREE.Vector3(0, -300, 0),
-            axel: new THREE.Vector3(-1,0,0),
-            id: 20,
+            stl: 'R_LEG',
+            q: new THREE.Quaternion(0,0,0,1),
+            p: new THREE.Vector3(0, 0, -25),
             children:[{
-              stl: 'FOOT',
-              q: new THREE.Quaternion(0,0,0,1),
-              p: new THREE.Vector3(0, 0, 0),
-              axel: new THREE.Vector3(0,0,1),
-              id: 21,
+              stl: 'LEFT_ANKLE',
+              q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
+              p: new THREE.Vector3(0, -300, 0),
+              axel: new THREE.Vector3(-1,0,0),
+              id: 20,
+              children:[{
+                stl: 'FOOT',
+                q: new THREE.Quaternion(0,0,0,1),
+                p: new THREE.Vector3(0, 0, 0),
+                axel: new THREE.Vector3(0,0,1),
+                id: 21,
+              }]
             }]
           }]
         }]
