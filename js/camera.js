@@ -20,6 +20,8 @@
   var focal_length = 180;
   //
   var cam_width, cam_height, cam_mid_x, cam_mid_y;
+  //
+  var is_camclick = false;
   
   /* Handle the onload of a new camera_image */
   var camera_handler = function(e){
@@ -51,10 +53,10 @@
     */
   }
   
-  var camera_click_toggle = function(){
-    
+  var head_intersect = function(e){
+    console.log('head_intersect',e)
   }
-  
+
   /*******
   * Websocket setup
   ******/
@@ -67,9 +69,16 @@
     hammertime.on("tap", head_look);
     // click image selects a point or moves the camera
     clicker('cam_clicks_btn',function(){
-      console.log('camclick',this)
-      hammertime.off("tap", head_look);
-      hammertime.on("doubletap", head_look);
+      is_camclick = !is_camclick;
+      if(is_camclick){
+        this.textContent = 'CamRay';
+        hammertime.on("doubletap", head_intersect);
+        hammertime.off("tap", head_look);
+      } else {
+        this.textContent = 'CamGaze';
+        hammertime.off("doubletap", head_intersect);
+        hammertime.on("tap", head_look);
+      }
     })
     
     // Save some variables

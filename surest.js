@@ -274,7 +274,7 @@ var zmq_message = function(metadata,payload){
   //console.log('zmq message!!')
   /* msgpack -> JSON */
   var meta = mp.unpack(metadata);
-  //console.log(meta)
+  //console.log('ZMQ!',meta)
   /* Add the payload sz parameter to the metadata */
   meta.sz = 0;
   if(payload!==undefined){meta.sz = payload.length;}
@@ -312,7 +312,7 @@ for( var w=0; w<bridges.length; w++) {
 
 		if( b.sub !== undefined ) {
 			var zmq_recv_skt = zmq.socket('sub');
-			zmq_recv_skt.connect('ipc:///tmp/'+b.ipc);
+			zmq_recv_skt.connect('ipc:///tmp/'+b.sub);
 			zmq_recv_skt.subscribe('');
 			zmq_recv_skt.on('message', zmq_message.bind({id:w}) );
 			console.log('\tSubscriber Bridge',b.sub);

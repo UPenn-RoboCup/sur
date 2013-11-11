@@ -16,16 +16,18 @@
   
   // Functions to start/stop modifying
   var yes_mod = function(){
+    console.log('yes mod!')
     cur_item.start_modify();
     // reset
-    this.removeEventListener('click', yes_mod, false);
-    this.addEventListener('click', no_mod, false);
+    unclicker(this,yes_mod);
+    clicker(this,no_mod);
   };
   var no_mod = function(){
+    console.log('no mod!')
     cur_item.stop_modify();
     // reset
-    this.removeEventListener('click', no_mod, false);
-    this.addEventListener('click', yes_mod, false);
+    unclicker(this,no_mod);
+    clicker(this,yes_mod);
   };
   // Function to clear manipulation points/objects
   var clear_manip = function(){
@@ -60,6 +62,18 @@
     clicker('modify_clicks_btn',yes_mod);
     clicker('clear_clicks_btn',clear_manip);
     clicker('obj_clicks_btn',cycle_item);
+    // Spacemouse
+    var port = 9012;
+    // Connect to the websocket server
+    var ws = new WebSocket('ws://' + host + ':' + port);
+    ws.binaryType = "arraybuffer";
+    ws.onmessage = function(e){
+      var sp_mouse = JSON.parse(e.data);
+      //console.log('spacemouse'.e,sp_mouse);
+      // Move the current item mesh
+      
+    };
+    // spacemouse end
   }
 
   // export

@@ -8,12 +8,18 @@ this.rest_root = 'http://'+host+':8080';
 // http://macwright.org/presentations/dcjq/
 this.$ = function(x){return document.querySelectorAll(x);};
 this.clicker = function(id,fun){
-  Hammer(document.getElementById(id)).on('tap',fun);
-  //document.getElementById(id).addEventListener('click', fun, false);
+  if(typeof id==='string'){
+    Hammer(document.getElementById(id)).on('tap',fun);
+  } else {
+    Hammer(id).on('tap',fun);
+  }
 }
 this.unclicker = function(id,fun){
-  Hammer(document.getElementById(id)).off('tap',fun);
-  //document.getElementById(id).removeEventListener('click', fun, false);
+  if(typeof id==='string'){
+    Hammer(document.getElementById(id)).off('tap',fun);
+  } else {
+    Hammer(id).off('tap',fun);
+  }
 }
 this.DEG_TO_RAD = Math.PI/180;
 this.RAD_TO_DEG = 180/Math.PI;

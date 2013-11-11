@@ -73,7 +73,7 @@
       // camera (measured to be OK)
       p: new THREE.Vector3(0, 70, 85),
       q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
-      camera: new THREE.PerspectiveCamera( 60, 320 / 260, 10, 100000 ),
+      camera: new THREE.PerspectiveCamera( 60, 320 / 180, 10, 100000 ),
     },]
     },
     ]
