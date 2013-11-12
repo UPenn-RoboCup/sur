@@ -15,8 +15,8 @@ var _       = require('underscore');
 var homepage="index.html"
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.26'
-var rpc_robot     = 'localhost'
+var rpc_robot     = '192.168.123.26'
+//var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555
 var rpc_unreliable_port = 55556
 
@@ -37,6 +37,7 @@ bridges.push({
   name : 'head_camera',
   ws : 9003,
   udp: 33333,
+  tcp : 33334,
   clients : []
 });
 

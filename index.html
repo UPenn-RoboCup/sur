@@ -90,7 +90,7 @@
   </div>
   <br/>
   <!-- Proceed FSM Events -->
-  <div class="button-group minor-group proceedfsm">
+  <div class="button-group minor-group proceed">
     <a href="#" class="button" id="proceed_reverse">Reverse</a>
     <a href="#" class="button" id="proceed_proceed">Proceed</a>
     <a href="#" class="button" id="proceed_notify">Notify</a>
@@ -98,25 +98,25 @@
   <hr/>
   
   <!-- Head FSM Events -->
-  <div class="button-group headfsm">
-    <a href="#" class="button" id="head_fsm_tiltscan">Scan</a>
-    <a href="#" class="button" id="head_fsm_center">Center</a>
-    <a href="#" class="button" id="head_fsm_teleop">Teleop</a>
-  </div>
-  <br/>
-  
-  <!-- Arm FSM Events -->
-  <div class="button-group armfsm">
-    <a href="#" class="big button" id="arm_fsm_init">Init</a>
-    <a href="#" class="big button" id="arm_fsm_grab">Grab</a>
-  </div>
-  <br/>
-  
-  <!-- Body FSM Events -->
-  <div class="button-group bodyfsm">
-    <a href="#" class="big button" id="body_fsm_init">Init</a>
-    <a href="#" class="big button" id="body_fsm_follow">Follow</a>
-    <a href="#" class="big button" id="body_fsm_stepover">Stepover</a>
+  <div id='fsm_events'>
+    <div class="button-group fsm">
+      <a href="#" class="button" id="head_tiltscan">Scan</a>
+      <a href="#" class="button" id="head_center">Center</a>
+      <a href="#" class="button" id="head_teleop">Teleop</a>
+    </div>
+    <br/>
+    <!-- Arm FSM Events -->
+    <div class="button-group fsm">
+      <a href="#" class="big button" id="arm_init">Init</a>
+      <a href="#" class="big button" id="arm_grab">Grab</a>
+    </div>
+    <br/>
+    <!-- Body FSM Events -->
+    <div class="button-group fsm">
+      <a href="#" class="big button" id="body_init">Init</a>
+      <a href="#" class="big button" id="body_follow">Follow</a>
+      <a href="#" class="big button" id="body_stepover">Stepover</a>
+    </div>
   </div>
   <hr/>
   

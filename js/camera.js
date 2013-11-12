@@ -9,9 +9,12 @@
   // Make the image object
   var old_imgs = []
   var camera_img = new Image();
-  camera_img.id = 'head_camera';
+  camera_img.id  = 'head_camera';
   camera_img.alt = 'No head_camera image yet...'
   var camera_container;
+  
+  // network settings for the camera
+  var rpc_url = rest_root+'/m/vcm/head_camera/net'
   
   // Camera characteristics
   var h_fov = 60;
@@ -45,12 +48,6 @@
       // send to the robot
       qwest.post(ang_url,{val: JSON.stringify([x,y])});
     });
-    
-    /*
-    var pan  = Math.atan2( focal_length, e.offsetX-cam_mid_x ) * RAD_TO_DEG;
-    var tilt = Math.atan2( focal_length, e.offsetY-cam_mid_y ) * RAD_TO_DEG;
-    console.log(pan,tilt);
-    */
   }
   
   // This is the intersection function
@@ -62,25 +59,17 @@
     var mouse_vector = new THREE.Vector3(
       ( event.offsetX / cam_width ) * 2 - 1,
       -( event.offsetY / cam_height ) * 2 + 1);
-    //console.log('Mouse',mouse_vector); // need Vector3, not vector2
     var projector = new THREE.Projector();
-    //console.log('projector',projector)
     var raycaster = projector.pickingRay(mouse_vector,Robot.head_camera);
-    //console.log('picking raycaster',raycaster)
     // intersect the plane
     var intersections = raycaster.intersectObjects( World.items.concat(World.meshes) );
     // if no intersection
     //console.log(intersections)
     if(intersections.length==0){ return; }
-    //console.log('cam int',intersections);
     // only give the first intersection point
     var p = intersections[0].point;
     // get the robot point
     var r = Transform.three_to_torso(p, Robot);
-    
-    // debugging
-    //console.log('Camera Intersection:',p,r);
-    
     // apply the callback
     World.intersection_callback(p,r);
   }
@@ -95,7 +84,7 @@
     // Single click looks somewhere
     var hammertime = Hammer(camera_container);
     hammertime.on("tap", head_look);
-    // click image selects a point or moves the camera
+    // Clicking image selects a point or moves the camera
     clicker('gaze_cam',function(){
       is_camclick = !is_camclick;
       if(is_camclick){
@@ -107,7 +96,21 @@
         hammertime.off("doubletap", head_intersect);
         hammertime.on("tap", head_look);
       }
-    })
+    });
+    // Buttons to control streaming of the camera
+    var stream_cam = $('#stream_cam')[0];
+    clicker('single_cam',function(){
+      stream_cam.classList.remove('special');
+      stream_cam.classList.add('record');
+      // Perform a single frame request
+      qwest.post( rpc_url, {val:JSON.stringify([3,1,95])} );
+    });
+    clicker('stream_cam',function(){
+      this.classList.remove('record');
+      this.classList.add('special');
+      // Request the stream be enabled
+      qwest.post( rpc_url, {val:JSON.stringify([2,1,75])} );
+    });
     
     // Save some variables
     cam_width  = camera_container.clientWidth;
