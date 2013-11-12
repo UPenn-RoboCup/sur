@@ -17,6 +17,7 @@
   // Instantiate the master
   var item_mesh = null;
   var item_mesh_default_rot = new THREE.Quaternion();
+  var item_mesh_default_rot_inv = new THREE.Quaternion();
 
   // TransformControl
   var tcontrol = null;
@@ -48,11 +49,14 @@
   
   var send_model_to_robot = function(){
     // Acquire the model
-    item_angle.setFromQuaternion(item_mesh.quaternion);
-    // Points in THREEjs to torso frame
-    var model = Transform.three_to_torso(item_mesh.position,Robot);
-    model.push(item_angle.y);
-    qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
+    var q = (new THREE.Quaternion()).setFromEuler(item_mesh.rotation)
+    var q_robot = (new THREE.Quaternion()).multiplyQuaternions(q,item_mesh_default_rot_inv);
+    var rpy = (new THREE.Euler()).setFromQuaternion(q_robot);
+    var tr = Transform.three_to_torso(item_mesh.position,Robot)
+    tr.push(rpy.z, rpy.x, rpy.y)
+    //var tr = [pos.z/1000,pos.x/1000,pos.y/1000, rpy.z, rpy.x, rpy.y ];
+    console.log('new tr',tr);
+    qwest.post( rpc_url_rset, {val:JSON.stringify(tr)} );
   }
   
   ///////////////////////
@@ -112,7 +116,6 @@
     qwest.get( rpc_url_rget ).success(function(tr){
       // Convert the position to THREEjs
       var pos_array = Transform.torso_to_three(tr[0],tr[1],tr[2],Robot);
-      //var rot_q = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(tr[3],tr[4],tr[5]));
       var rot_q = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(tr[4],tr[5],tr[3]));
       var full_rot = new THREE.Quaternion();
       full_rot.multiplyQuaternions(rot_q,item_mesh_default_rot)
@@ -126,12 +129,6 @@
       // Re-render
       World.render();
     });
-    qwest.get( rpc_url_lget ).success(function(tr){
-      // Convert the position to THREEjs
-      var pos_array = Transform.torso_to_three(tr[0],tr[1],tr[2],Robot);
-      var rot_array = new THREE.Euler(tr[3],tr[4],tr[5]);
-      //
-    });
   }
   ///////////////////////
   
@@ -140,6 +137,7 @@
     // Right as defult for now
     item_mesh = item_meshes.right;
     item_mesh_default_rot.setFromEuler(item_mesh.rotation);
+    item_mesh_default_rot_inv.copy(item_mesh_default_rot).inverse();
   }
 
   // export

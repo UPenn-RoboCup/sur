@@ -52,6 +52,11 @@
     World.render();
   }
   
+  var reload_item = function(){
+    if(cur_item.deinit!==undefined){cur_item.deinit();}
+    if(cur_item.init!==undefined){cur_item.init();}
+  }
+  
   Manipulation.setup = function(){
     // initialize the element
     cur_item_id = items.length - 1;
@@ -63,6 +68,7 @@
     clicker('modify_clicks_btn',yes_mod);
     clicker('clear_clicks_btn',clear_manip);
     clicker('obj_clicks_btn',cycle_item);
+    clicker('reload_clicks_btn',reload_item);
     // Spacemouse
     var port = 9012;
     // Connect to the websocket server
