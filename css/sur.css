@@ -1,18 +1,16 @@
+/*
+ * Establish main layout where the 3d scene is and where the buttons are
+ */
 html, body {
   font-family: helvetica;
   height: 98%;
 }
-
-/*
- * Establish main layout where the 3d scene is and where the buttons are
- */
 #world_container {
   margin-left: 320px;
   margin-right: 10px;
   background-color: #080;
   height: 98%;
 }
-
 #left_side {
   width: 320px;
   float: left;
@@ -21,22 +19,20 @@ html, body {
   top: 8px;
 }
 
-/*
- * Camera size definition and specific button overrides
- */
+/* Camera size definition */
 #camera_container img {
   width:  320px;
   height: 180px;
 }
-
+/* Object name has same width, so lots of cycling has predictable button */
 #cycle_obj {
   width: 40pt;
 }
-
+/* Center these buttons */
 #proceed, #world {
   margin-left: 20%;
 }
-
+/* There is a slight offset with the slider, make things seem centered */
 #vision div {
   position: relative;
   top: -5px;

@@ -76,5 +76,17 @@ document.addEventListener( "DOMContentLoaded", function(){
       }).bind({evt:evt,fsm:fsm})
     );
   } // for each
+  
+  // Proceed buttons
+  var rpc_url_proceed = rest_root+'/m/hcm/state/proceed'
+  clicker('proceed_reverse',function(){
+    qwest.post( rpc_url_proceed, {val:JSON.stringify(-1)} )
+  })
+  clicker('proceed_proceed',function(){
+    qwest.post( rpc_url_proceed, {val:JSON.stringify(1)} )
+  })
+  clicker('proceed_notify',function(){
+    qwest.post( rpc_url_proceed, {val:JSON.stringify(2)} )
+  })
 
 });

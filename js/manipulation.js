@@ -57,6 +57,8 @@
     if(cur_item.init!==undefined){cur_item.init();}
   }
   
+  
+  
   Manipulation.setup = function(){
     // initialize the element
     cur_item_id = items.length - 1;
@@ -77,8 +79,6 @@
     ws.onmessage = function(e){
       var sp_mouse = JSON.parse(e.data);
       //console.log('spacemouse'.e,sp_mouse);
-      // Move the current item mesh
-      
     };
     // spacemouse end
   }

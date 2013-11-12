@@ -13,8 +13,6 @@
   //
   var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr_target'
   var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target'
-  //
-  var rpc_url_proceed = rest_root+'/m/hcm/state/proceed'
 
   // Instantiate the master
   var item_mesh = null;
@@ -56,10 +54,7 @@
     var rpy = (new THREE.Euler()).setFromQuaternion(q_robot);
     var tr = Transform.three_to_torso(item_mesh.position,Robot)
     tr.push(rpy.z, rpy.x, rpy.y)
-    qwest.post( rpc_url_rset, {val:JSON.stringify(tr)} )
-    .complete(function(){
-      qwest.post( rpc_url_proceed, {val:JSON.stringify(2)} )
-    });
+    qwest.post( rpc_url_rset, {val:JSON.stringify(tr)} );
   }
   
   ///////////////////////

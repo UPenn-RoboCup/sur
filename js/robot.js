@@ -465,7 +465,7 @@
       skeleton.q.setFromAxisAngle((new THREE.Vector3(1,0,0)), Robot.bodyTilt )
       
       // Joint angle offsets
-      feedback.neckangle[0] = 0;
+      //feedback.neckangle[0] = 0;
       //
       feedback.larmangle[0] += Math.PI/2;
       feedback.rarmangle[0] += Math.PI/2;
