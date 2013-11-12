@@ -116,7 +116,7 @@
         .outerRadius(height / 2)
         .startAngle(0)
         .endAngle(function(d, i) { return i ? -Math.PI : Math.PI; });
-    var svg = d3.select("#bodyheight_slider").append("svg")
+    var svg = d3.select("#vision").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")

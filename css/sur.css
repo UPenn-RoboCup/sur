@@ -33,11 +33,11 @@ html, body {
   width: 40pt;
 }
 
-.proceed, .worldscene {
+#proceed, #world {
   margin-left: 20%;
 }
 
-#cameras {
+#vision div {
   position: relative;
   top: -5px;
 }

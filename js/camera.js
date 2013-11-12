@@ -99,17 +99,17 @@
     });
     // Buttons to control streaming of the camera
     var stream_cam = $('#stream_cam')[0];
-    clicker('single_cam',function(){
-      stream_cam.classList.remove('special');
-      stream_cam.classList.add('record');
-      // Perform a single frame request
-      qwest.post( rpc_url, {val:JSON.stringify([3,1,95])} );
-    });
-    clicker('stream_cam',function(){
+    clicker(stream_cam,function(){
+      // Request the stream be enabled
       this.classList.remove('record');
       this.classList.add('special');
-      // Request the stream be enabled
       qwest.post( rpc_url, {val:JSON.stringify([2,1,75])} );
+    });
+    clicker('single_cam',function(){
+      // Perform a single frame request
+      stream_cam.classList.remove('special');
+      stream_cam.classList.add('record');
+      qwest.post( rpc_url, {val:JSON.stringify([3,1,95])} );
     });
     
     // Save some variables
