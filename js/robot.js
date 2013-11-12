@@ -36,13 +36,13 @@
   var skeleton = {
     q: new THREE.Quaternion(0,0,0,1),
     p: new THREE.Vector3(0, 0, 0),
-    axel: new THREE.Vector3(1,0,0),
-    id: 30,
     children: [
     {
       stl: 'CHEST',
       q: new THREE.Quaternion(0,0,0,1),
       p: new THREE.Vector3(0, 170, 0),
+      axel: new THREE.Vector3(1,0,0),
+      id: 30,
       children: [
       ]
     },
@@ -126,9 +126,22 @@
               axel: new THREE.Vector3(0,1,0),
               id: 7,
               children:[{
-                stl: 'LEFT_GRIPPER',
-                q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
-                p: new THREE.Vector3(0, -200, 0),
+                q: new THREE.Quaternion(0,0,0,1),
+                p: new THREE.Vector3(0, 0, 0),
+                axel: new THREE.Vector3(0,0,-1),
+                id: 8,
+                children:[{
+                  stl: 'RIGHT_WRIST',
+                  q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 3.14159/2 ),
+                  p: new THREE.Vector3(0, -65, 0),
+                  axel: new THREE.Vector3(0,1,0),
+                  id: 9,
+                  children:[{
+                    stl: 'LEFT_GRIPPER',
+                    q: (new THREE.Quaternion()).setFromEuler( new THREE.Euler(Math.PI/2,0,-Math.PI) ),
+                    p: new THREE.Vector3(0, 0, 18),
+                  }]
+                }]
               }]
             }]
           }]
@@ -137,6 +150,9 @@
     }]
   }
   upper_body_chest.children.push(larm_chain);
+  var right_hand = null;
+  var lgripper = larm_chain;
+  while(lgripper.children!==undefined){lgripper = lgripper.children[0];}
   //
   var lleg_chain = {
     stl: 'LEFT_HIP_YAW',
@@ -185,7 +201,6 @@
     }]
   };
   lower_body_pelvis.children.push(lleg_chain);
-  
   //
   var rleg_chain = {
     stl: 'LEFT_HIP_YAW',
@@ -270,9 +285,22 @@
               axel: new THREE.Vector3(0,1,0),
               id: 26,
               children:[{
-                stl: 'RIGHT_GRIPPER',
                 q: new THREE.Quaternion(0,0,0,1),
-                p: new THREE.Vector3(0, -200, 0),
+                p: new THREE.Vector3(0, 0, 0),
+                axel: new THREE.Vector3(0,0,-1),
+                id: 27,
+                children:[{
+                  stl: 'RIGHT_WRIST',
+                  q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 3.14159/2 ),
+                  p: new THREE.Vector3(0, -65, 0),
+                  axel: new THREE.Vector3(0,-1,0),
+                  id: 28,
+                  children:[{
+                    stl: 'RIGHT_GRIPPER',
+                    q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), -3.14159/2 ),
+                    p: new THREE.Vector3(0, 0, 18),
+                  }]
+                }]
               }]
             }]
           }]
@@ -281,6 +309,8 @@
     }]
   }
   upper_body_chest.children.push(rarm_chain);
+  var rgripper = rarm_chain;
+  while(rgripper.children!==undefined){rgripper = rgripper.children[0];}
   
   var material = new THREE.MeshPhongMaterial({
     // Black knight! http://encycolorpedia.com/313637
@@ -354,7 +384,6 @@
 
     // head camera
     if(root.camera!==undefined){
-      //console.log('Camera!',root.camera)
       root.camera.position.getPositionFromMatrix(chain_tr);
       root.camera.rotation.setFromRotationMatrix(chain_tr);
       root.camera.updateProjectionMatrix();
@@ -381,6 +410,12 @@
     update_skeleton();
     World.render();
   };
+  
+  Robot.make_virtual_hands = function(){
+    console.log('Virtual hands!',lgripper,rgripper);
+    // Copy the hand and its position
+    return;
+  }
   
   Robot.setup = function(cb){
     is_loaded_cb = cb;
@@ -422,8 +457,8 @@
       feedback.larmangle[0] += Math.PI/2;
       feedback.rarmangle[0] += Math.PI/2;
       //
-      feedback.larmangle[1] += Math.PI/4;
-      feedback.rarmangle[1] -= Math.PI/4;
+      //feedback.larmangle[1] += 0*Math.PI/4;
+      //feedback.rarmangle[1] -= 0*Math.PI/4;
       //
       feedback.larmangle[2] += Math.PI;
       feedback.rarmangle[2] += Math.PI
