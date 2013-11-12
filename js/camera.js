@@ -79,7 +79,7 @@
     var r = Transform.three_to_torso(p, Robot);
     
     // debugging
-    console.log('Camera Intersection:',p,r);
+    //console.log('Camera Intersection:',p,r);
     
     // apply the callback
     World.intersection_callback(p,r);

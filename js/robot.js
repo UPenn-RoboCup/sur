@@ -83,7 +83,7 @@
       // camera (measured to be OK)
       p: new THREE.Vector3(0, 70, 85),
       q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
-      camera: new THREE.PerspectiveCamera( 60, 320 / 180, 10, 100000 ),
+      camera: new THREE.PerspectiveCamera( 43.3, 16/9, 10, 30000 ),
     },]
     },
     ]
@@ -421,7 +421,7 @@
     is_loaded_cb = cb;
     n_stl = load_skeleton(skeleton);
     Robot.head_camera = neck_chain.children[0].children[0].camera;
-    Robot.head_camera.setLens( 31.2, 18 );
+    Robot.head_camera.setLens( 3.67, 2.914 );
     // add to the world
     World.add(Robot.head_camera);
     //Robot.head_camera.lookAt(0,0,1000);
@@ -447,12 +447,12 @@
       //console.log('bH',Robot.bodyHeight)
       // Update the skeleton
       //console.log('rp',skeleton.p)
-      skeleton.p.setY(1000*Robot.bodyHeight);
+      skeleton.p.setY(1000*Robot.bodyHeight-15);
       //skeleton.p.z-=100;
       skeleton.q.setFromAxisAngle((new THREE.Vector3(1,0,0)), Robot.bodyTilt )
       
       // Joint angle offsets
-      feedback.neckangle[1] += .13;
+      feedback.neckangle[0] = 0;
       //
       feedback.larmangle[0] += Math.PI/2;
       feedback.rarmangle[0] += Math.PI/2;
