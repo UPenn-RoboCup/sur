@@ -100,7 +100,7 @@
       {stl: 'RIGHT_SHOULDER_ROLL',
       p: new THREE.Vector3(0, -50, 24),
       q: new THREE.Quaternion(0,0,0,1),
-      axel: new THREE.Vector3(0,0,1),
+      axel: new THREE.Vector3(0,0,-1),
       id: 4,
       children: [
         {// yaw
@@ -259,7 +259,7 @@
       {stl: 'RIGHT_SHOULDER_ROLL',
       p: new THREE.Vector3(0, -50, 24),
       q: new THREE.Quaternion(0,0,0,1),
-      axel: new THREE.Vector3(0,0,1),
+      axel: new THREE.Vector3(0,0,-1),
       id: 23,
       children: [
         {// yaw
@@ -470,8 +470,8 @@
       feedback.larmangle[0] += Math.PI/2;
       feedback.rarmangle[0] += Math.PI/2;
       //
-      //feedback.larmangle[1] += 0*Math.PI/4;
-      //feedback.rarmangle[1] -= 0*Math.PI/4;
+      feedback.larmangle[1] -= Math.PI/2;
+      feedback.rarmangle[1] += Math.PI/2;
       //
       feedback.larmangle[2] += Math.PI;
       feedback.rarmangle[2] += Math.PI

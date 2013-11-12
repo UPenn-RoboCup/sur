@@ -61,22 +61,20 @@ document.addEventListener( "DOMContentLoaded", function(){
   World.render();
   
   // Attach click bindings to the FSM buttons
-  (function fsm_init(a){
-    var a = $('#fsm_events a');
-    for(var i=0, j=a.length; i<j; i++){
-      var btn = a[i];
-      var id  = btn.id;
-      var sep = id.indexOf('_');
-      var evt = id.substring(sep+1);
-      var sm = id.substring(0,sep);
-      var fsm = sm.charAt(0).toUpperCase() + sm.slice(1) + 'FSM';
-      // Add the listener
-      clicker(
-        btn,
-        (function(){qwest.post(fsm_url,{fsm: this.fsm , evt: this.evt});})
-        .bind({evt:evt,fsm:fsm})
-      );
-    } // for each
-  })();
+  var a = $('#fsm a');
+  for(var i=0, j=a.length; i<j; i++){
+    var btn = a[i];
+    var id  = btn.id;
+    var sep = id.indexOf('_');
+    var evt = id.substring(sep+1);
+    var sm = id.substring(0,sep);
+    var fsm = sm.charAt(0).toUpperCase() + sm.slice(1) + 'FSM';
+    // Add the listener
+    clicker(btn,
+      (function(){
+        qwest.post(fsm_url,{fsm: this.fsm , evt: this.evt});
+      }).bind({evt:evt,fsm:fsm})
+    );
+  } // for each
 
 });
