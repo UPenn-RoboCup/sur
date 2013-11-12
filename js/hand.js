@@ -13,6 +13,8 @@
   //
   var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr_target'
   var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target'
+  //
+  var rpc_url_proceed = rest_root+'/m/hcm/state/proceed'
 
   // Instantiate the master
   var item_mesh = null;
@@ -54,9 +56,10 @@
     var rpy = (new THREE.Euler()).setFromQuaternion(q_robot);
     var tr = Transform.three_to_torso(item_mesh.position,Robot)
     tr.push(rpy.z, rpy.x, rpy.y)
-    //var tr = [pos.z/1000,pos.x/1000,pos.y/1000, rpy.z, rpy.x, rpy.y ];
-    console.log('new tr',tr);
-    qwest.post( rpc_url_rset, {val:JSON.stringify(tr)} );
+    qwest.post( rpc_url_rset, {val:JSON.stringify(tr)} )
+    .complete(function(){
+      qwest.post( rpc_url_proceed, {val:JSON.stringify(2)} )
+    });
   }
   
   ///////////////////////
@@ -122,8 +125,6 @@
       //
       item_mesh.rotation.setFromQuaternion(full_rot);
       item_mesh.position.fromArray(pos_array);
-      //
-      console.log('get hcm rhand',pos_array,rot_q);
       // Add to the world
       World.add(item_mesh);
       // Re-render
