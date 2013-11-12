@@ -16,14 +16,12 @@
   
   // Functions to start/stop modifying
   var yes_mod = function(){
-    console.log('yes mod!')
     cur_item.start_modify();
     // reset
     unclicker(this,yes_mod);
     clicker(this,no_mod);
   };
   var no_mod = function(){
-    console.log('no mod!')
     cur_item.stop_modify();
     // reset
     unclicker(this,no_mod);
@@ -42,9 +40,12 @@
     // find the next item
     cur_item_id++;
     if(cur_item_id>=items.length){cur_item_id=0;}
+    if(cur_item.deinit!==undefined){cur_item.deinit();}
     cur_item = items[cur_item_id];
+    if(cur_item.init!==undefined){cur_item.init();}
     // Update the display of the button
     $('#obj_clicks_btn')[0].textContent = cur_item.item_name;
+    
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
     // Re-render the world

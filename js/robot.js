@@ -412,9 +412,23 @@
   };
   
   Robot.make_virtual_hands = function(){
-    console.log('Virtual hands!',lgripper,rgripper);
+    //console.log('Virtual hands!',lgripper,rgripper);
+    var lg2 = new THREE.Mesh(
+      lgripper.mesh.geometry.clone(),
+      new THREE.MeshPhongMaterial({
+        ambient: 0xFDEEF4, color: 0xFF0000, specular: 0x111111, shininess: 200
+      })
+    );
+    var rg2 = new THREE.Mesh(
+      rgripper.mesh.geometry.clone(),
+      new THREE.MeshPhongMaterial({
+        ambient: 0xFDEEF4, color: 0xFF0000, specular: 0x111111, shininess: 200
+      })
+    );
+    // Rotate correctly
+    rg2.rotation.set(-Math.PI/2,Math.PI,0);
     // Copy the hand and its position
-    return;
+    return {left: lg2, right: rg2};
   }
   
   Robot.setup = function(cb){

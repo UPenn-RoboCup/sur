@@ -61,7 +61,6 @@
   
   // Stop moving the view
   World.disable_orbit = function(){
-    console.log()
     controls.enabled = false;
     controls.removeEventListener('change', World.render);
     controls = null;
