@@ -44,7 +44,7 @@
     cur_item = items[cur_item_id];
     if(cur_item.init!==undefined){cur_item.init();}
     // Update the display of the button
-    $('#obj_clicks_btn')[0].textContent = cur_item.item_name;
+    $('#cycle_obj')[0].textContent = cur_item.item_name;
     
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
@@ -61,14 +61,14 @@
     // initialize the element
     cur_item_id = items.length - 1;
     cur_item    = items[cur_item_id];
-    $('#obj_clicks_btn')[0].textContent = cur_item.item_name;
+    $('#cycle_obj')[0].textContent = cur_item.item_name;
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
     // Handle the button clicks
-    clicker('modify_clicks_btn',yes_mod);
-    clicker('clear_clicks_btn',clear_manip);
-    clicker('obj_clicks_btn',cycle_item);
-    clicker('reload_clicks_btn',reload_item);
+    clicker('modify_obj',yes_mod);
+    clicker('clear_obj',clear_manip);
+    clicker('cycle_obj',cycle_item);
+    clicker('reload_obj',reload_item);
     // Spacemouse
     var port = 9012;
     // Connect to the websocket server

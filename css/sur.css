@@ -1,12 +1,18 @@
 html, body {
-  /* background-color: #444; */
   font-family: helvetica;
   height: 98%;
 }
 
 /*
- * FSM and controls
+ * Establish main layout where the 3d scene is and where the buttons are
  */
+#world_container {
+  margin-left: 320px;
+  margin-right: 10px;
+  background-color: #080;
+  height: 98%;
+}
+
 #left_side {
   width: 320px;
   float: left;
@@ -16,36 +22,22 @@ html, body {
 }
 
 /*
- * Camera
+ * Camera size definition and specific button overrides
  */
 #camera_container img {
   width:  320px;
   height: 180px;
 }
 
-/*
- * Mesh
- */
-.mesh_selection {
-  float: left;
-}
-
-#obj_clicks_btn {
+#cycle_obj {
   width: 40pt;
 }
 
-#mesh_speed_btns {
-  position: relative;
-  top: -5px;
+.proceedfsm, .worldscene {
+  margin-left: 20%;
 }
 
-/*
- * 3D scene container
- */
-
-#world_container {
-  margin-left: 320px;
-  margin-right: 10px;
-  background-color: #080;
-  height: 98%;
+#cameras {
+  position: relative;
+  top: -5px;
 }

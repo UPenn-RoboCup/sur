@@ -336,7 +336,7 @@
 .button + .button-group,
 .button-group + .button,
 .button-group + .button-group {
-    margin-left: 15px;
+    margin-left: 5px;
 }
 
 .button-group li {

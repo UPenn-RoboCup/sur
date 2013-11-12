@@ -8,6 +8,7 @@
   
   <!-- CSS for Styling the page -->
   <link rel="stylesheet" type="text/css" href="css/gh-buttons.css">
+  <link rel="stylesheet" type="text/css" href="css/fb-buttons.css">
   <link rel="stylesheet" type="text/css" href="css/sur.css">
   <link rel="stylesheet" type="text/css" href="css/slider.css">
   
@@ -47,77 +48,81 @@
 <!--https://github.com/necolas/css3-github-buttons-->
 <div id="left_side">
   
+  <!-- Camera Image Stream -->
   <div id="camera_container"></div>
   
+  <!-- Camera Streaming Settings and laser scanner ranges -->
   <div id="bodyheight_slider" class="mesh_selection">
-    <div class="button-group minor-group" id="mesh_speed_btns">
-      <a href="#" class="button pill mesh_selection" id="slow_mesh_btn">1x</a>
-      <a href="#" class="button pill mesh_selection" id="medium_mesh_btn">2x</a>
-      <a href="#" class="button pill mesh_selection" id="fast_mesh_btn">4x</a>
+    <div class="uibutton-group minor-group" id="cameras">
+      <a href="#" class="large uibutton" id="single_cam">1</a>
+      <a href="#" class="uibutton large special" id="stream_cam">&infin;</a>
+      <a href="#" class="uibutton large" id="gaze_cam">Gaze</a>
     </div>
   </div>
-  <br/>
+  <!-- World view vantage points -->
+  <div class="uibutton-group worldscene">
+    <a href="#" class="uibutton confirm" id="vantage_top">Top</a>
+    <a href="#" class="uibutton confirm" id="vantage_chest">Chest</a>
+    <a href="#" class="uibutton confirm" id="vantage_robot">Robot</a>
+    <a href="#" class="uibutton confirm" id="vantage_def">Default</a>
+  </div>
+  <!-- Mesh Streaming Settings -->
+  <div class='button-container'>
+    <div class="button-group" id="meshs">
+      <a href="#" class="button primary" id="switch_mesh">Chest</a>
+      <a href="#" class="button" id="request_mesh">Once</a>
+      <a href="#" class="button" id="stream_mesh">Stream</a>
+      <a href="#" class="button" id="wipe_mesh">Wipe</a>
+    </div>
+    <div class="button-group minor-group" id="mesh_speeds">
+      <a href="#" class="button pill" id="slow_mesh">Slow</a>
+      <a href="#" class="button pill" id="fast_mesh">Fast</a>
+    </div>
+  </div>
+  <hr/>
   
-  <div class="button-group" id="mesh_btns">
-    <a href="#" class="button mesh_selection" id="switch_mesh_btn">Chest</a>
-    <a href="#" class="button mesh_selection" id="request_mesh_btn">Once</a>
-    <a href="#" class="button mesh_selection" id="stream_mesh_btn">Stream</a>
-    <a href="#" class="button mesh_selection" id="clear_mesh_btn">Clear All</a>
-    <a href="#" class="button mesh_selection" id="cam_clicks_btn">CamGaze</a>
+  <!-- Object modification Settings -->
+  <div class="button-group" id="clicks">
+    <a href="#" class="button primary" id="cycle_obj">Wheel</a>
+    <a href="#" class="button icon remove danger" id="clear_obj">Clear</a>
+    <a href="#" class="button icon move" id="modify_obj">Modify</a>
+    <a href="#" class="button icon reload" id="reload_obj">Reload</a>
   </div>
   <br/>
-
-  <div class="button-group" id="click_btns">
-    <a href="#" class="button primary mesh_selection" id="obj_clicks_btn">Wheel</a>
-    <a href="#" class="button icon remove danger mesh_selection" id="clear_clicks_btn">
-      Clear</a>
-    <a href="#" class="button icon move mesh_selection" id="modify_clicks_btn">
-      Modify</a>
-    <a href="#" class="button icon reload mesh_selection" id="reload_clicks_btn">
-      Reload</a>
+  <!-- Proceed FSM Events -->
+  <div class="button-group minor-group proceedfsm">
+    <a href="#" class="button" id="proceed_reverse">Reverse</a>
+    <a href="#" class="button" id="proceed_proceed">Proceed</a>
+    <a href="#" class="button" id="proceed_notify">Notify</a>
   </div>
-  <br/>
+  <hr/>
   
-  <div class="button-group armfsm">
-  <a href="#" class="big button fsm_selection" id="arm_fsm_init_btn">Init</a>
-  <a href="#" class="big button fsm_selection" id="arm_fsm_reset_btn">Reset</a>
-  <a href="#" class="big button fsm_selection" id="arm_fsm_ready_btn">Ready</a>
-  <a href="#" class="big button fsm_selection" id="arm_fsm_wheelgrab_btn">Grab</a>
-  </div>
-  <br/>
-  
+  <!-- Head FSM Events -->
   <div class="button-group headfsm">
-  <a href="#" class="button fsm_selection" id="head_fsm_tiltscan_btn">Scan</a>
-  <a href="#" class="button fsm_selection" id="head_fsm_center_btn">Center</a>
-  <a href="#" class="button fsm_selection" id="head_fsm_teleop   _btn">Teleop</a>
-    
+    <a href="#" class="button" id="head_fsm_tiltscan">Scan</a>
+    <a href="#" class="button" id="head_fsm_center">Center</a>
+    <a href="#" class="button" id="head_fsm_teleop">Teleop</a>
   </div>
   <br/>
   
-  <div class="button-group bodyfsm">
-  <a href="#" class="big button fsm_selection" id="body_fsm_init_btn">
-    Init</a>
-  <a href="#" class="big button fsm_selection" id="body_fsm_approach_btn">
-    Approach</a>
-  <a href="#" class="big button fsm_selection" id="body_fsm_follow_btn">
-    Follow</a>
-  </div>
-  <br/>
-  <div class="button-group bodyfsm">
-  <a href="#" class="big button fsm_selection" id="body_fsm_stepover_btn">
-    Stepover</a>
+  <!-- Arm FSM Events -->
+  <div class="button-group armfsm">
+    <a href="#" class="big button" id="arm_fsm_init">Init</a>
+    <a href="#" class="big button" id="arm_fsm_grab">Grab</a>
   </div>
   <br/>
   
-  <div class="button-group worldscene">
-  <a href="#" class="big button fsm_selection" id="vantage_top_btn">Top</a>
-  <a href="#" class="big button fsm_selection" id="vantage_chest_btn">Chest</a>
-  <a href="#" class="big button fsm_selection" id="vantage_robot_btn">Robot</a>
-  <a href="#" class="big button fsm_selection" id="vantage_def_btn">Default</a>
+  <!-- Body FSM Events -->
+  <div class="button-group bodyfsm">
+    <a href="#" class="big button" id="body_fsm_init">Init</a>
+    <a href="#" class="big button" id="body_fsm_follow">Follow</a>
+    <a href="#" class="big button" id="body_fsm_stepover">Stepover</a>
   </div>
+  <hr/>
   
 </div>
 
+<!-- 3D scene -->
 <div id="world_container"></div>
 
 </body>

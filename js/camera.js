@@ -96,14 +96,14 @@
     var hammertime = Hammer(camera_container);
     hammertime.on("tap", head_look);
     // click image selects a point or moves the camera
-    clicker('cam_clicks_btn',function(){
+    clicker('gaze_cam',function(){
       is_camclick = !is_camclick;
       if(is_camclick){
-        this.textContent = 'CamRay';
+        this.textContent = 'Ray';
         hammertime.on("doubletap", head_intersect);
         hammertime.off("tap", head_look);
       } else {
-        this.textContent = 'CamGaze';
+        this.textContent = 'Gaze';
         hammertime.off("doubletap", head_intersect);
         hammertime.on("tap", head_look);
       }

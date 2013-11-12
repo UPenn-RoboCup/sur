@@ -330,20 +330,20 @@
   };
   
   var handle_buttons = function(){
-    clicker('vantage_top_btn',function() {
+    clicker('vantage_top',function() {
       // pos then target
       World.set_view([0,2000,500],[0,0,501]);
     });
-    clicker('vantage_chest_btn',function() {
+    clicker('vantage_chest',function() {
       // pos then target
       var dz = 1000*Robot.bodyHeight / Math.tan(Robot.bodyTilt);
       World.set_view([0,Robot.bodyHeight*1000,220],[0,0,dz]);
     });
-    clicker('vantage_def_btn',function() {
+    clicker('vantage_def',function() {
       // pos then target
       World.set_view([500,2000,-500],[0,0,1500]);
     });
-    clicker('vantage_robot_btn',function() {
+    clicker('vantage_robot',function() {
       // pos then target
       World.set_view('robot');
     });

@@ -35,7 +35,7 @@
   Mesh.handle_buttons = function(){
     
     // Clear all meshes
-    clicker('clear_mesh_btn',World.clear_meshes);
+    clicker('wipe_mesh',World.clear_meshes);
     
     // Fast or slow
     // TODO: JUST FOR CHEST AT THE MOMENT!
@@ -43,21 +43,23 @@
     qwest.get(rest_root+'/m/vcm/chest_lidar/scanlines')
     .success( function(response){ scanlines_val = response.slice(); });
     
-    clicker('fast_mesh_btn',function() {
+    clicker('fast_mesh',function() {
       scanlines_val[2] = 2/DEG_TO_RAD;
       qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
     });
-    clicker('medium_mesh_btn',function() {
+    clicker('slow_mesh',function() {
       scanlines_val[2] = 5/DEG_TO_RAD;
       qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
     });
-    clicker('slow_mesh_btn',function() {
+    /*
+    clicker('slow_mesh',function() {
       scanlines_val[2] = 10/DEG_TO_RAD;
       qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
     });
+    */
   
     // request a new mesh
-    clicker('request_mesh_btn',function() {
+    clicker('request_mesh',function() {
       // if testing with the kinect
       var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net';
       if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
@@ -66,7 +68,7 @@
     });
     
     // stream a mesh
-    clicker('stream_mesh_btn',function() {
+    clicker('stream_mesh',function() {
       // if testing with the kinect
       var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net';
       if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
@@ -75,7 +77,7 @@
     });
     
     // switch the type of mesh to request
-    clicker('switch_mesh_btn',function() {
+    clicker('switch_mesh',function() {
       // Change the button text
       switch(this.textContent){
         case 'Head':
@@ -104,8 +106,8 @@
     }
     // Actual SVG Markup
     var margin = {top: 0, right: 12, bottom: 18, left: 12},
-        width = 204 - margin.left - margin.right,
-        height = 40 - margin.top - margin.bottom;
+        width = 170 - margin.left - margin.right,
+        height = 36 - margin.top - margin.bottom;
     var x = d3.scale.pow().exponent(.5).range([0, width]).domain([0, 30]);
     var y = d3.random.normal(height / 2, height / 8);
     var brush = d3.svg.brush().x(x).extent([.5, 3]).on("brushend", brushend);

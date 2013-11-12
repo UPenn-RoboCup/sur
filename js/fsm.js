@@ -8,9 +8,9 @@
 
   FSM.setup = function(){
     // Head
-    var head_fsm_btns = $('.headfsm a');
-    for(var i=0,j=head_fsm_btns.length;i<j;i++){
-      var btn = head_fsm_btns[i];
+    var head_fsms = $('.headfsm a');
+    for(var i=0,j=head_fsms.length;i<j;i++){
+      var btn = head_fsms[i];
       // Get the event, with no whitespaces
       var btn_id = btn.id.replace(/\s/g, "");
       var evt = btn_id.substring(9,btn_id.length-4);
@@ -23,9 +23,9 @@
     }// for
     
     // Arm
-    var arm_fsm_btns = $('.armfsm a');
-    for(var i=0,j=arm_fsm_btns.length;i<j;i++){
-      var btn = arm_fsm_btns[i];
+    var arm_fsms = $('.armfsm a');
+    for(var i=0,j=arm_fsms.length;i<j;i++){
+      var btn = arm_fsms[i];
       // Get the event, with no whitespaces
       var btn_id = btn.id.replace(/\s/g, "");
       var evt = btn_id.substring(8,btn_id.length-4);
@@ -38,9 +38,9 @@
     }// for
 
     // Body
-    var body_fsm_btns = $('.bodyfsm a');
-    for(var i=0,j=body_fsm_btns.length;i<j;i++){
-      var btn = body_fsm_btns[i];
+    var body_fsms = $('.bodyfsm a');
+    for(var i=0,j=body_fsms.length;i<j;i++){
+      var btn = body_fsms[i];
       // Get the event, with no whitespaces
       var btn_id = btn.id.replace(/\s/g, "");
       var evt = btn_id.substring(9,btn_id.length-4);

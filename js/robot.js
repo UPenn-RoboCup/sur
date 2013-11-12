@@ -9,7 +9,6 @@
   /* robot bodyHeight, but this can change a LOT */
   Robot.bodyTilt = 11*Math.PI/180;
   Robot.bodyHeight = 0.9285318;
-  Robot.supportX = 0.0515184;
   // pose
   Robot.px = 0;
   Robot.py = 0;

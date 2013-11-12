@@ -110,7 +110,7 @@
     var cp = Math.cos(bodyTilt);
     var sp = Math.sin(bodyTilt);
     // Also add supportX and bodyHeight parameters
-    var xx =  cp*x + sp*z + robot.supportX;
+    var xx =  cp*x + sp*z;// + robot.supportX;
     var zz = -sp*x + cp*z + robot.bodyHeight;    
     // Place into global pose
     var pa = robot.pa;
@@ -136,7 +136,7 @@
     x =  ca*px + sa*py;
     y = -sa*px + ca*py;
     // kill off some body transformations
-    x -= robot.supportX;
+    //x -= robot.supportX;
     z -= robot.bodyHeight;
     // Invert bodyTilt
     var bodyTilt = -1*robot.bodyTilt;

@@ -13,13 +13,13 @@
   
   // make the waypoint
   var item_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
-  var item_path    = new THREE.Path();
+  var item_path = new THREE.Path();
   item_path.fromPoints([
-    new THREE.Vector2(0,100),
-    new THREE.Vector2(-50,-20),
-    new THREE.Vector2(-20,0),
-    new THREE.Vector2(20,0),
-    new THREE.Vector2(50,-20),
+    new THREE.Vector2(0,0), // tip of the arrow
+    new THREE.Vector2(-50,-120),
+    new THREE.Vector2(-20,-100),
+    new THREE.Vector2(20,-100),
+    new THREE.Vector2(50,-120),
   ]);
   var item_shape = item_path.toShapes();
   var item_geo  = new THREE.ExtrudeGeometry(
