@@ -11,23 +11,23 @@
   Manipulation.add_item = function(item){
     items.push(item);
   }
-  var is_mod = false;
+  Manipulation.is_mod = false;
   var cur_item_id = -1;
   var cur_item = null;
   var grab_btn, cycle_btn;
   
   // Functions to start/stop modifying
   var yes_mod = function(){
-    if(is_mod){return;}
-    is_mod = true;
+    if(Manipulation.is_mod){return;}
+    Manipulation.is_mod = true;
     cur_item.start_modify();
     // reset
     unclicker(this,yes_mod);
     clicker(this,no_mod);
   };
   var no_mod = function(){
-    if(!is_mod){return;}
-    is_mod = false;
+    if(!Manipulation.is_mod){return;}
+    Manipulation.is_mod = false;
     cur_item.stop_modify();
     // reset
     unclicker(this,no_mod);

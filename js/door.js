@@ -12,56 +12,7 @@
   var rpc_url = rest_root+'/m/hcm/door/model'
   
   var item_angle = new THREE.Euler();
-  var item_mesh;
-  
-  // hcm (i.e. robot) coordinates in meters
-  // Should be a function of two indicator points, like wheel
-  
-  var make_door = function(radius,dx,dz,yaw){
-    // make the master item (i.e. hinge)
-    var door_height = 2;
-    var item_mat = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x333333});
-    var item_geo = new THREE.CylinderGeometry(25,25,door_height*1000,8,1,false);
-    // Door itself
-    var door_width = 1000*(radius+.050);
-    
-    var door_thinkness = 30;
-    var item3_mesh = new THREE.Mesh(
-      new THREE.CubeGeometry(door_width,door_height*1000,door_thinkness)
-    );
-    item3_mesh.position.set(door_width/2,0,0);
-    THREE.GeometryUtils.merge( item_geo, item3_mesh );
-    
-    // Door handle
-    var off_x = radius*1000;
-    var off_y = (dz-door_height/2)*1000;
-    var off_z = dx*1000;
-    var item2_mesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(15,15,off_z,12,1)
-    );
-    // This also used as tmp variable
-    item_angle = new THREE.Euler( Math.PI/2, 0, 0 );
-    item2_mesh.quaternion.setFromEuler( item_angle );
-    item2_mesh.position.set(off_x,off_y,-(off_z+door_thinkness)/2);
-    THREE.GeometryUtils.merge( item_geo, item2_mesh );
-  
-    // Door handle
-    var handle_width = 100;
-    var item4_mesh = new THREE.Mesh(new THREE.CubeGeometry(100,15,10));
-    item4_mesh.position.set(off_x-handle_width/2,off_y,-off_z-(door_thinkness+10)/2);
-    THREE.GeometryUtils.merge( item_geo, item4_mesh );
-    
-    // mesh, with some rotation
-    item_mesh = new THREE.Mesh( item_geo, item_mat );
-    item_angle.x = 0;
-    item_angle.y = yaw;
-    item_angle.z = 0;
-    item_mesh.quaternion.setFromEuler( item_angle );
-
-  }
-  
-  // Instantiate the master
-  make_door(.7,0.10,1,Math.PI/6);
+  var item_mesh, hinge_mesh, door_mesh, knob_mesh, handle_mesh;
   
   var make_door2 = function(hinge_pos,door_radius,handle_pos,handle_endpos){
     // From the THREE-ized hcm model, make the set of door meshes
@@ -70,45 +21,56 @@
     var hinge_height    = 25; // mm
     var hinge_thickness = 8; //mm
     // First, the hinge
-    var hinge_mat  = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
-    var hinge_geo  = new THREE.CylinderGeometry(25,25,door_height,8,1,false);
-    var hinge_mesh = new THREE.Mesh( hinge_geo, hinge_mat );
+    var hinge_mat  = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x888888,side: THREE.DoubleSide});
+    var hinge_geo  = new THREE.CylinderGeometry(door_thickness/2,door_thickness/2,door_height,8,1,true);
+    hinge_mesh = new THREE.Mesh( hinge_geo, hinge_mat );
     hinge_mesh.position.copy(hinge_pos);
+    // Move the door up to be on the ground
     hinge_mesh.position.y = door_height/2;
+    // front surface of door is in hcm
+    hinge_mesh.position.z += door_thickness/2;
     // Second, the door itself
     var door_geo = new THREE.CubeGeometry(Math.abs(door_radius),door_height,door_thickness);
-    var door_mat = new THREE.MeshBasicMaterial({color: 0xBBBBBB});
-    var door_mesh = new THREE.Mesh( door_geo, door_mat );
-    door_mesh.position.copy(hinge_pos);
+    var door_mat = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x888888});
+    door_mesh = new THREE.Mesh( door_geo, door_mat );
     door_mesh.position.x += door_radius/2;
-    door_mesh.position.y = door_height/2;
-    // Third, the door handle
+    // Third, the door knob
+    var handle_offset = handle_pos.z - hinge_pos.z;
+    var knob_rad = 10;
+    var knob_mat  = new THREE.MeshPhongMaterial({color: 0x4488FF,side: THREE.DoubleSide});
+    var knob_geo  = new THREE.CylinderGeometry(knob_rad,knob_rad,handle_offset,8,1,true);
+    knob_mesh = new THREE.Mesh( knob_geo, knob_mat );
+    knob_mesh.rotation.set( Math.PI/2,0,0 );
+    knob_mesh.position.x = door_radius;
+    knob_mesh.position.z -= (door_thickness-handle_offset)/2;
+    // Fourth, the door handle
     var handle_diff = (new THREE.Vector3()).subVectors(handle_endpos,handle_pos);
-    var handle_geo = new THREE.CubeGeometry(handle_diff.length(),hinge_height,hinge_thickness);
-    var handle_mat = new THREE.MeshBasicMaterial({color: 0x555555});
-    var handle_mesh = new THREE.Mesh( handle_geo, handle_mat );
-    handle_diff.divideScalar(2).add(handle_pos);
-    handle_mesh.position.copy(handle_diff);
-    handle_mesh.position.x += door_radius;
-    handle_mesh.position.z -= (hinge_thickness + door_thickness)/2;
-    
-    //
-    World.add(hinge_mesh);
-    World.add(door_mesh);
-    World.add(handle_mesh);
-    World.render();
+    var handle_len = handle_diff.length();
+    var handle_geo = new THREE.CubeGeometry(handle_len,hinge_thickness,2*knob_rad);
+    var handle_mat = new THREE.MeshPhongMaterial({color: 0x4488FF});
+    handle_mesh = new THREE.Mesh( handle_geo, handle_mat );
+    handle_mesh.position.x = handle_len/2;
+    handle_mesh.position.y = (handle_offset+hinge_thickness)/2;
+    // Scene graph time!
+    knob_mesh.add(handle_mesh);
+    hinge_mesh.add(knob_mesh);
+    hinge_mesh.add(door_mesh);
+    // update the item
+    item_mesh = hinge_mesh;
   }
   
-  var model_to_three = function(model){
-    console.log('Input model:',model);
-    
-    var hinge_pos = Transform.torso_to_three(model[0],model[1],model[2],Robot);
-    var door_radius = 1000*model[3]; // negative: left hinge | positive: right hinge
-    var handle_pos = Transform.torso_to_three(model[0]+model[4],model[1],model[2],Robot);
-    var handle_endpos = Transform.torso_to_three(model[0]+model[4],model[1]+model[5],model[2],Robot);
-    
-    console.log('Output THREE data:',hinge_pos,door_radius,handle_pos,handle_endpos);
-    
+  var model_to_three = function(model){    
+    var hinge_pos = [0,1000,500], 
+    door_radius = 500, 
+    handle_pos = [-50,1000,500], 
+    handle_endpos = [-50,900,500];
+    if(model!==undefined){    
+      hinge_pos = Transform.torso_to_three(model[0],model[1],model[2],Robot);
+      // negative: left hinge | positive: right hinge
+      door_radius = 1000*model[3];
+      handle_pos = Transform.torso_to_three(model[0]+model[4],model[1],model[2],Robot);
+      handle_endpos = Transform.torso_to_three(model[0]+model[4],model[1]+model[5],model[2],Robot);    
+    }
     // Make the model
     make_door2(
       (new THREE.Vector3()).fromArray(hinge_pos),
@@ -116,8 +78,9 @@
       (new THREE.Vector3()).fromArray(handle_pos),
       (new THREE.Vector3()).fromArray(handle_endpos)
     );
-    
   }
+  
+  //model_to_three();
 
   // TransformControl
   var tcontrol = null;
@@ -161,24 +124,8 @@
   // set up the intersection handler
   // point in THREEjs: p
   // point in robot: r
-  Door.select = function(p,r){
-    // Set the position
-    item_mesh.position.copy(p);
-    // Add to the world
-    World.add(item_mesh);
-    // Re-render
-    World.render();
-    // 
-    send_model_to_robot();
-  }
-  Door.clear = function(){
-    // Stop modifying
-    Wheel.stop_modify();
-    // Remove the tool
-    World.remove(item_mesh);
-    // Re render the scene
-    World.render();
-  }
+  Door.select = function(p,r){}
+  Door.clear = function(){}
   Door.start_modify = function(){
     // stop the normal controls
     World.disable_orbit();
@@ -206,7 +153,7 @@
     // re-render
     World.render();
     // Send to the robot
-    send_model_to_robot();
+    //send_model_to_robot();
   }
   
   Door.init = function(){
@@ -214,13 +161,37 @@
     qwest.get( rpc_url,{},{},function(){
       // Use a 1 second timeout for the XHR2 request for getting the model
       this.timeout = 1000; // ms
-    }).success(model_to_three);
+    })
+    .success(function(model){
+      model_to_three(model);
+      World.add(item_mesh);
+      World.render();
+    })
+    .error(function(msg){
+      // default door model
+      model_to_three();
+      World.add(item_mesh);
+      World.render();
+    })
+    // Add the item back to the scene
+  }
+  
+  Door.deinit = function(){
+    World.remove(item_mesh);
   }
   
   Door.loop = function(){
     // Just reload the model from the robot
-    if(!Manipulation.is_mod){Door.init();return;}
-    
+    if(Manipulation.is_mod==false){Door.init();return;}
+    // cycle the tcontrol
+    if(item_mesh===hinge_mesh){
+      tcontrol.detach( item_mesh );
+      item_mesh = handle_mesh;
+    } else {
+      tcontrol.detach( item_mesh );
+      item_mesh = hinge_mesh;
+    }
+    tcontrol.attach( item_mesh );
   }
   ///////////////////////
   
