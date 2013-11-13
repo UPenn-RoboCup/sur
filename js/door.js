@@ -7,6 +7,7 @@
   function Door(){}
   // For manipulation
   Door.item_name = 'Door';
+  Door.grab_evt = 'doorgrab';
   // Sending to the robot
   var rpc_url = rest_root+'/m/hcm/door/model'
   
@@ -61,6 +62,62 @@
   
   // Instantiate the master
   make_door(.7,0.10,1,Math.PI/6);
+  
+  var make_door2 = function(hinge_pos,door_radius,handle_pos,handle_endpos){
+    // From the THREE-ized hcm model, make the set of door meshes
+    var door_height     = 1500; // mm
+    var door_thickness  = 30;   // mm
+    var hinge_height    = 25; // mm
+    var hinge_thickness = 8; //mm
+    // First, the hinge
+    var hinge_mat  = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
+    var hinge_geo  = new THREE.CylinderGeometry(25,25,door_height,8,1,false);
+    var hinge_mesh = new THREE.Mesh( hinge_geo, hinge_mat );
+    hinge_mesh.position.copy(hinge_pos);
+    hinge_mesh.position.y = door_height/2;
+    // Second, the door itself
+    var door_geo = new THREE.CubeGeometry(Math.abs(door_radius),door_height,door_thickness);
+    var door_mat = new THREE.MeshBasicMaterial({color: 0xBBBBBB});
+    var door_mesh = new THREE.Mesh( door_geo, door_mat );
+    door_mesh.position.copy(hinge_pos);
+    door_mesh.position.x += door_radius/2;
+    door_mesh.position.y = door_height/2;
+    // Third, the door handle
+    var handle_diff = (new THREE.Vector3()).subVectors(handle_endpos,handle_pos);
+    var handle_geo = new THREE.CubeGeometry(handle_diff.length(),hinge_height,hinge_thickness);
+    var handle_mat = new THREE.MeshBasicMaterial({color: 0x555555});
+    var handle_mesh = new THREE.Mesh( handle_geo, handle_mat );
+    handle_diff.divideScalar(2).add(handle_pos);
+    handle_mesh.position.copy(handle_diff);
+    handle_mesh.position.x += door_radius;
+    handle_mesh.position.z -= (hinge_thickness + door_thickness)/2;
+    
+    //
+    World.add(hinge_mesh);
+    World.add(door_mesh);
+    World.add(handle_mesh);
+    World.render();
+  }
+  
+  var model_to_three = function(model){
+    console.log('Input model:',model);
+    
+    var hinge_pos = Transform.torso_to_three(model[0],model[1],model[2],Robot);
+    var door_radius = 1000*model[3]; // negative: left hinge | positive: right hinge
+    var handle_pos = Transform.torso_to_three(model[0]+model[4],model[1],model[2],Robot);
+    var handle_endpos = Transform.torso_to_three(model[0]+model[4],model[1]+model[5],model[2],Robot);
+    
+    console.log('Output THREE data:',hinge_pos,door_radius,handle_pos,handle_endpos);
+    
+    // Make the model
+    make_door2(
+      (new THREE.Vector3()).fromArray(hinge_pos),
+      door_radius,
+      (new THREE.Vector3()).fromArray(handle_pos),
+      (new THREE.Vector3()).fromArray(handle_endpos)
+    );
+    
+  }
 
   // TransformControl
   var tcontrol = null;
@@ -150,6 +207,20 @@
     World.render();
     // Send to the robot
     send_model_to_robot();
+  }
+  
+  Door.init = function(){
+    // Get the model from the robot (could be pesky...?)
+    qwest.get( rpc_url,{},{},function(){
+      // Use a 1 second timeout for the XHR2 request for getting the model
+      this.timeout = 1000; // ms
+    }).success(model_to_three);
+  }
+  
+  Door.loop = function(){
+    // Just reload the model from the robot
+    if(!Manipulation.is_mod){Door.init();return;}
+    
   }
   ///////////////////////
   

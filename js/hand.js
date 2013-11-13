@@ -126,6 +126,8 @@
       World.render();
     });
   }
+  // Loop just resets the hand position to the initial
+  Hand.loop = Hand.init;
   ///////////////////////
   
   Hand.setup = function(){

@@ -7,6 +7,7 @@
   function Tool(){}
   // For manipulation
   Tool.item_name = 'Tool';
+  Tool.grab_evt = 'toolgrab';
   // Sending to the robot
   var rpc_url = rest_root+'/m/hcm/tool/model'
   

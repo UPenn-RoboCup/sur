@@ -65,6 +65,8 @@ document.addEventListener( "DOMContentLoaded", function(){
   for(var i=0, j=a.length; i<j; i++){
     var btn = a[i];
     var id  = btn.id;
+    // Grab is a special button
+    if(id=='arm_grab'){continue;}
     var sep = id.indexOf('_');
     var evt = id.substring(sep+1);
     var sm = id.substring(0,sep);

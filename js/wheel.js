@@ -7,6 +7,7 @@
   function Wheel(){}
   // For manipulation
   Wheel.item_name = 'Wheel';
+  Wheel.grab_evt = 'wheelgrab';
   
   // save the intersection points
   var ipoints = [];
