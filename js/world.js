@@ -19,7 +19,7 @@
   
   // Where to look initially
   var lookPosition = new THREE.Vector3(500,2000,-500);
-  var lookTarget   = new THREE.Vector3(0,0,1500);
+  var lookTarget   = new THREE.Vector3(0,0,500);
   
   World.add = function(item){
     scene.add(item);
@@ -148,7 +148,7 @@
     CANVAS_HEIGHT = window.innerHeight;
     */
     // setup the camera
-    camera = new THREE.PerspectiveCamera( 60, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
+    camera = new THREE.PerspectiveCamera( 75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
     camera.position.copy(lookPosition);
 
     // make the scene
@@ -344,7 +344,7 @@
     });
     clicker('vantage_def',function() {
       // pos then target
-      World.set_view([500,2000,-500],[0,0,1500]);
+      World.set_view([500,2000,-500],[0,0,500]);
     });
     clicker('vantage_robot',function() {
       // pos then target

@@ -105,22 +105,26 @@
   // x, y, z in the torso (upper body) frame
   // robot: pose (px,py,pa element) and bodyTilt elements
   var torso_to_three = function(x,y,z,robot){
+    /*
     // Apply bodyTilt
     var bodyTilt = robot.bodyTilt;
     var cp = Math.cos(bodyTilt);
     var sp = Math.sin(bodyTilt);
     // Also add supportX and bodyHeight parameters
     var xx =  cp*x + sp*z;// + robot.supportX;
-    var zz = -sp*x + cp*z + robot.bodyHeight;    
+    var zz = -sp*x + cp*z + robot.bodyHeight;
+    */
     // Place into global pose
     var pa = robot.pa;
     var ca = Math.cos(pa);
     var sa = Math.sin(pa);
-    var gx = robot.px + ca*xx - sa*y;
-    var gy = robot.py + sa*xx + ca*y;
+    // THREE coords
+    var tx = robot.px + ca*x - sa*y;
+    var ty = robot.py + sa*x + ca*y;
+    var tz = z + robot.bodyHeight;
     // Return in mm, since THREEjs uses that
     // Also, swap the coordinates
-    return [ gy*1000, zz*1000, gx*1000 ];  
+    return [ ty*1000, tz*1000, tx*1000 ];  
   }
 
   // get a global (THREEjs) point, and put it in the torso reference frame
@@ -138,6 +142,7 @@
     // kill off some body transformations
     //x -= robot.supportX;
     z -= robot.bodyHeight;
+    /*
     // Invert bodyTilt
     var bodyTilt = -1*robot.bodyTilt;
     var cp = Math.cos(bodyTilt);
@@ -145,9 +150,8 @@
     var xx =  cp*x + sp*z;
     var zz = -sp*x + cp*z;
     // Yield the torso coordinates
-    // Unsure why 0.03...
-    //return [xx+0.03,y,zz];
-    return [xx,y,zz];
+    */
+    return [x,y,z];
   }
 
   Transform.make_quads = function(mesh){

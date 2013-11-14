@@ -14,12 +14,15 @@
   var item_angle = new THREE.Euler();
   var item_mesh, hinge_mesh, door_mesh, knob_mesh, handle_mesh;
   
-  var make_door2 = function(hinge_pos,door_radius,handle_pos,handle_endpos){
+  // mm positions
+  var door_height     = 1500;
+  var door_thickness  = 30;
+  var hinge_height    = 25;
+  var hinge_thickness = 8;
+  var knob_rad        = 10;
+  
+  var make_door = function(hinge_pos,door_radius,handle_pos,handle_endpos){
     // From the THREE-ized hcm model, make the set of door meshes
-    var door_height     = 1500; // mm
-    var door_thickness  = 30;   // mm
-    var hinge_height    = 25; // mm
-    var hinge_thickness = 8; //mm
     // First, the hinge
     var hinge_mat  = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x888888,side: THREE.DoubleSide});
     var hinge_geo  = new THREE.CylinderGeometry(door_thickness/2,door_thickness/2,door_height,8,1,true);
@@ -33,10 +36,9 @@
     var door_geo = new THREE.CubeGeometry(Math.abs(door_radius),door_height,door_thickness);
     var door_mat = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x888888});
     door_mesh = new THREE.Mesh( door_geo, door_mat );
-    door_mesh.position.x += door_radius/2;
+    door_mesh.position.x = door_radius/2;
     // Third, the door knob
     var handle_offset = handle_pos.z - hinge_pos.z;
-    var knob_rad = 10;
     var knob_mat  = new THREE.MeshPhongMaterial({color: 0x4488FF,side: THREE.DoubleSide});
     var knob_geo  = new THREE.CylinderGeometry(knob_rad,knob_rad,handle_offset,8,1,true);
     knob_mesh = new THREE.Mesh( knob_geo, knob_mat );
@@ -59,7 +61,8 @@
     item_mesh = hinge_mesh;
   }
   
-  var model_to_three = function(model){    
+  var model_to_three = function(model){
+    console.log('Model0',model);
     var hinge_pos = [0,1000,500], 
     door_radius = 500, 
     handle_pos = [-50,1000,500], 
@@ -72,7 +75,7 @@
       handle_endpos = Transform.torso_to_three(model[0]+model[4],model[1]+model[5],model[2],Robot);    
     }
     // Make the model
-    make_door2(
+    make_door(
       (new THREE.Vector3()).fromArray(hinge_pos),
       door_radius,
       (new THREE.Vector3()).fromArray(handle_pos),
@@ -80,8 +83,26 @@
     );
   }
   
-  //model_to_three();
-
+  // Recover model parameters from an updated model
+  var three_to_model = function(){
+    var model = [0,1000,500,500,-50,900];
+    // Grab the position of the hinge
+    var p = (new THREE.Vector3()).copy(hinge_mesh.position);
+    p.z -= door_thickness/2;
+    var robot_hinge = Transform.three_to_torso(p,Robot);
+    console.log(hinge_mesh.position,robot_hinge)
+    model[0] = robot_hinge[0];
+    model[1] = robot_hinge[1];
+    model[2] = robot_hinge[2]; // not really correct...
+    // Grab the radius
+    model[3] = knob_mesh.position.x / 1000;
+    // Grab the x offset
+    model[4] = (2*handle_mesh.position.y - hinge_thickness)/1000;
+    // Grab the y knob offset
+    model[5] = handle_mesh.geometry.width/1000;
+    return model;
+  }
+  
   // TransformControl
   var tcontrol = null;
   var update_tcontrol = function ( event ) {
@@ -111,12 +132,20 @@
   };
   
   var send_model_to_robot = function(){
+    var m = three_to_model();
+    console.log('Model',m);
+    /*
     // Acquire the model
     item_angle.setFromQuaternion(item_mesh.quaternion);
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
     model.push(item_angle.y);
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    */
+  }
+  
+  var item_modify = function(){
+    
   }
   
   ///////////////////////
@@ -133,7 +162,7 @@
     tcontrol = World.generate_tcontrol();
     // Setup the transformcontrols
     tcontrol.addEventListener( 'change', World.render );
-    //tcontrol.addEventListener( 'modify', update_angle );
+    tcontrol.addEventListener( 'modify', item_modify );
     tcontrol.attach( item_mesh );
     World.add( tcontrol );
     // listen for a keydown
@@ -153,7 +182,7 @@
     // re-render
     World.render();
     // Send to the robot
-    //send_model_to_robot();
+    send_model_to_robot();
   }
   
   Door.init = function(){
