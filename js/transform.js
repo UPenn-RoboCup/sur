@@ -105,15 +105,6 @@
   // x, y, z in the torso (upper body) frame
   // robot: pose (px,py,pa element) and bodyTilt elements
   var torso_to_three = function(x,y,z,robot){
-    /*
-    // Apply bodyTilt
-    var bodyTilt = robot.bodyTilt;
-    var cp = Math.cos(bodyTilt);
-    var sp = Math.sin(bodyTilt);
-    // Also add supportX and bodyHeight parameters
-    var xx =  cp*x + sp*z;// + robot.supportX;
-    var zz = -sp*x + cp*z + robot.bodyHeight;
-    */
     // Place into global pose
     var pa = robot.pa;
     var ca = Math.cos(pa);
@@ -122,6 +113,29 @@
     var tx = robot.px + ca*x - sa*y;
     var ty = robot.py + sa*x + ca*y;
     var tz = z + robot.bodyHeight;
+    // Return in mm, since THREEjs uses that
+    // Also, swap the coordinates
+    return [ ty*1000, tz*1000, tx*1000 ];  
+  }
+  
+  // x, y, z in the torso (upper body) frame
+  // robot: pose (px,py,pa element) and bodyTilt elements
+  var lidar_to_three = function(x,y,z,robot){
+    // Apply bodyTilt
+    var bodyTilt = robot.bodyTilt;
+    var cp = Math.cos(bodyTilt);
+    var sp = Math.sin(bodyTilt);
+    // Also add supportX and bodyHeight parameters
+    var xx =  cp*x + sp*z;// + robot.supportX;
+    var zz = -sp*x + cp*z + robot.bodyHeight;
+    // Place into global pose
+    var pa = robot.pa;
+    var ca = Math.cos(pa);
+    var sa = Math.sin(pa);
+    // THREE coords
+    var tx = robot.px + ca*xx - sa*y;
+    var ty = robot.py + sa*xx + ca*y;
+    var tz = zz;// + robot.bodyHeight;
     // Return in mm, since THREEjs uses that
     // Also, swap the coordinates
     return [ ty*1000, tz*1000, tx*1000 ];  
@@ -215,7 +229,7 @@
           continue;
         }
         
-        var threep = torso_to_three(p[0],p[1],p[2],{
+        var threep = lidar_to_three(p[0],p[1],p[2],{
           px: mesh.posex[i],
           py: mesh.posey[i],
           pa: mesh.posez[i], // actually correct name for now; mesh_wizard

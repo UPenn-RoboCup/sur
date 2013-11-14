@@ -122,7 +122,7 @@
               {stl: 'RIGHT_WRIST',
               p: new THREE.Vector3(0, -216, 0),
               q: new THREE.Quaternion(0,0,0,1),
-              axel: new THREE.Vector3(0,1,0),
+              axel: new THREE.Vector3(0,-1,0),
               id: 7,
               children:[{
                 q: new THREE.Quaternion(0,0,0,1),
@@ -133,7 +133,7 @@
                   stl: 'RIGHT_WRIST',
                   q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 3.14159/2 ),
                   p: new THREE.Vector3(0, -65, 0),
-                  axel: new THREE.Vector3(0,1,0),
+                  axel: new THREE.Vector3(0,-1,0),
                   id: 9,
                   children:[{
                     stl: 'LEFT_GRIPPER',
@@ -281,7 +281,7 @@
               {stl: 'RIGHT_WRIST',
               p: new THREE.Vector3(0, -216, 0),
               q: new THREE.Quaternion(0,0,0,1),
-              axel: new THREE.Vector3(0,1,0),
+              axel: new THREE.Vector3(0,-1,0),
               id: 26,
               children:[{
                 q: new THREE.Quaternion(0,0,0,1),

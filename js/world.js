@@ -212,8 +212,10 @@
   // BufferGeometry of the mesh
   var make_mesh = function(index,position,color,offsets,old_mesh){
     // Remove old mesh if present
-    scene.remove( old_mesh );
-    old_mesh.geometry.dispose();
+    if(old_mesh!==undefined){
+      scene.remove( old_mesh );
+      old_mesh.geometry.dispose();
+    }
     var geometry = new THREE.BufferGeometry();
     // Dynamic, because we will do raycasting
     geometry.dynamic = true;
@@ -288,7 +290,7 @@
       // remove first element
       var old_mesh = meshes.shift();
       scene.remove(old_mesh);
-      old_mesh.geometry.displose();
+      old_mesh.geometry.dispose();
     }
     //var particleSystem = make_particle_system(position, color);
     //scene.add( particleSystem );

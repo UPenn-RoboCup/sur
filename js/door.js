@@ -54,7 +54,7 @@
     handle_mesh = new THREE.Mesh( handle_geo, handle_mat );
     handle_mesh.position.x = door_radius + handle_len/2;
     handle_mesh.position.z = (handle_thickness-door_thickness)/2 + handle_offset;
-    handle_mesh.position.y = (hinge_pos.y - door_height/2);
+    handle_mesh.position.y = hinge_pos.y - door_height/2;
     //(handle_offset+handle_thickness)/2;
     // Scene graph time!
     hinge_mesh.add(handle_mesh);
@@ -102,7 +102,8 @@
     // Grab the x offset
     model[4] = (handle_mesh.position.z - (handle_thickness-door_thickness)/2)/1000
     // Grab the y knob offset
-    model[5] = handle_mesh.geometry.width/1000;
+    //model[5] = handle_mesh.geometry.width/1000;
+    model[5] = 2*(handle_mesh.position.x - 2*door_mesh.position.x)/1000;
     return model;
   }
   
