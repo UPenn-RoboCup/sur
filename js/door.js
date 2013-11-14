@@ -24,7 +24,7 @@
   var make_door = function(hinge_pos,door_radius,handle_pos,handle_endpos){
     // From the THREE-ized hcm model, make the set of door meshes
     // First, the hinge
-    var hinge_mat  = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x888888,side: THREE.DoubleSide});
+    var hinge_mat  = new THREE.MeshPhongMaterial({color: 0x111111,emissive:0x222222,side: THREE.DoubleSide});
     var hinge_geo  = new THREE.CylinderGeometry(door_thickness/2,door_thickness/2,door_height,8,1,true);
     hinge_mesh = new THREE.Mesh( hinge_geo, hinge_mat );
     hinge_mesh.position.copy(hinge_pos);
@@ -52,7 +52,11 @@
     var handle_geo = new THREE.CubeGeometry(handle_len,2*knob_rad,handle_thickness);
     var handle_mat = new THREE.MeshPhongMaterial({color: 0x4488FF});
     handle_mesh = new THREE.Mesh( handle_geo, handle_mat );
-    handle_mesh.position.x = door_radius + handle_len/2;
+    if(door_radius>0){
+      handle_mesh.position.x = door_radius - handle_len/2;
+    } else {
+      handle_mesh.position.x = door_radius + handle_len/2;
+    }
     handle_mesh.position.z = (handle_thickness-door_thickness)/2 + handle_offset;
     handle_mesh.position.y = hinge_pos.y - door_height/2;
     //(handle_offset+handle_thickness)/2;
