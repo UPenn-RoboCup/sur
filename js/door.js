@@ -18,7 +18,7 @@
   var door_height     = 1500;
   var door_thickness  = 30;
   var hinge_height    = 25;
-  var hinge_thickness = 8;
+  var handle_thickness = 8;
   var knob_rad        = 10;
   
   var make_door = function(hinge_pos,door_radius,handle_pos,handle_endpos){
@@ -44,17 +44,20 @@
     knob_mesh = new THREE.Mesh( knob_geo, knob_mat );
     knob_mesh.rotation.set( Math.PI/2,0,0 );
     knob_mesh.position.x = door_radius;
-    knob_mesh.position.z -= (door_thickness-handle_offset)/2;
+    knob_mesh.position.z = (handle_offset-door_thickness)/2;
+    knob_mesh.position.y = (hinge_pos.y - door_height/2);
     // Fourth, the door handle
     var handle_diff = (new THREE.Vector3()).subVectors(handle_endpos,handle_pos);
     var handle_len = handle_diff.length();
-    var handle_geo = new THREE.CubeGeometry(handle_len,hinge_thickness,2*knob_rad);
+    var handle_geo = new THREE.CubeGeometry(handle_len,2*knob_rad,handle_thickness);
     var handle_mat = new THREE.MeshPhongMaterial({color: 0x4488FF});
     handle_mesh = new THREE.Mesh( handle_geo, handle_mat );
-    handle_mesh.position.x = handle_len/2;
-    handle_mesh.position.y = (handle_offset+hinge_thickness)/2;
+    handle_mesh.position.x = door_radius + handle_len/2;
+    handle_mesh.position.z = (handle_thickness-door_thickness)/2 + handle_offset;
+    handle_mesh.position.y = (hinge_pos.y - door_height/2);
+    //(handle_offset+handle_thickness)/2;
     // Scene graph time!
-    knob_mesh.add(handle_mesh);
+    hinge_mesh.add(handle_mesh);
     hinge_mesh.add(knob_mesh);
     hinge_mesh.add(door_mesh);
     // update the item
@@ -97,7 +100,7 @@
     // Grab the radius
     model[3] = knob_mesh.position.x / 1000;
     // Grab the x offset
-    model[4] = (2*handle_mesh.position.y - hinge_thickness)/1000;
+    model[4] = (handle_mesh.position.z - (handle_thickness-door_thickness)/2)/1000
     // Grab the y knob offset
     model[5] = handle_mesh.geometry.width/1000;
     return model;
