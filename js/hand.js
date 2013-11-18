@@ -14,10 +14,25 @@
   var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr_target'
   var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target'
 
-  // Instantiate the master
-  var item_mesh = null;
   var item_mesh_default_rot = new THREE.Quaternion();
   var item_mesh_default_rot_inv = new THREE.Quaternion();
+  // Mesh is a drawing, from the tip as the zero
+  var item_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
+  var item_path = new THREE.Path();
+  item_path.fromPoints([
+    new THREE.Vector2(0,0), // tip of the hand
+    new THREE.Vector2(20,0),
+    new THREE.Vector2(20,-100),
+    new THREE.Vector2(10,-100),
+    new THREE.Vector2(10,-10),
+    new THREE.Vector2(0,-10),
+  ]);
+  var item_shape = item_path.toShapes();
+  var item_geo  = new THREE.ExtrudeGeometry(
+    item_shape, {amount:20}
+  );
+  var item_mesh  = new THREE.Mesh( item_geo, item_mat );
+  item_mesh.rotation.set( Math.PI/2, 0, 0 );
 
   // TransformControl
   var tcontrol = null;
@@ -48,6 +63,7 @@
   };
   
   var send_model_to_robot = function(){
+    /*
     // Acquire the model
     var q = (new THREE.Quaternion()).setFromEuler(item_mesh.rotation)
     var q_robot = (new THREE.Quaternion()).multiplyQuaternions(q,item_mesh_default_rot_inv);
@@ -55,6 +71,7 @@
     var tr = Transform.three_to_torso(item_mesh.position,Robot)
     tr.push(rpy.z, rpy.x, rpy.y)
     qwest.post( rpc_url_rset, {val:JSON.stringify(tr)} );
+    */
   }
   
   ///////////////////////
@@ -131,9 +148,9 @@
   ///////////////////////
   
   Hand.setup = function(){
-    var item_meshes = Robot.make_virtual_hands();
-    // Right as defult for now
-    item_mesh = item_meshes.right;
+    //var item_meshes = Robot.make_virtual_hands();
+    // Right as default for now
+    //item_mesh = item_meshes.right;
     item_mesh_default_rot.setFromEuler(item_mesh.rotation);
     item_mesh_default_rot_inv.copy(item_mesh_default_rot).inverse();
   }

@@ -68,6 +68,22 @@
     qwest.post(fsm_url,{fsm: 'ArmFSM', evt: grab_evt});
   }
   
+  Manipulation.get_vantage = function(){
+    var cp = cur_item.get_position;
+    if(cp!==undefined){
+      var p = cp();
+      var v = {
+        position: p.position.toArray(),
+        target: p.position.toArray(),
+      };
+      v.position[2] = v.position[2] - 200;
+    }
+    else
+    {
+      return {position: [0,1000,250], target: [0,1000,500]};
+    }
+  }
+  
   Manipulation.setup = function(){
     // Acquire buttons
     cycle_btn = $('#cycle_obj')[0];
