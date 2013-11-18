@@ -54,7 +54,6 @@ document.addEventListener( "DOMContentLoaded", function(){
     for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
     // x,y,a pose
     Robot.set_pose([0,0,0]);
-    Hand.setup();
   });
 
   // Finally, render the world!

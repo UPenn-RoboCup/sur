@@ -14,8 +14,6 @@
   var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr_target'
   var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target'
 
-  var item_mesh_default_rot = new THREE.Quaternion();
-  var item_mesh_default_rot_inv = new THREE.Quaternion();
   // Mesh is a drawing, from the tip as the zero
   var item_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
   var item_path = new THREE.Path();
@@ -33,6 +31,11 @@
   );
   var item_mesh  = new THREE.Mesh( item_geo, item_mat );
   item_mesh.rotation.set( Math.PI/2, 0, 0 );
+  //
+  var item_mesh_default_rot = new THREE.Quaternion();
+  var item_mesh_default_rot_inv = new THREE.Quaternion();
+  item_mesh_default_rot.setFromEuler(item_mesh.rotation);
+  item_mesh_default_rot_inv.copy(item_mesh_default_rot).inverse();
 
   // TransformControl
   var tcontrol = null;
@@ -142,18 +145,61 @@
       // Re-render
       World.render();
     });
+    
+    keypress.register_many(my_combos);
+  }
+  Hand.deinit = function(){
+    keypress.unregister_many(my_combos);
   }
   // Loop just resets the hand position to the initial
   Hand.loop = Hand.init;
   ///////////////////////
   
-  Hand.setup = function(){
-    //var item_meshes = Robot.make_virtual_hands();
-    // Right as default for now
-    //item_mesh = item_meshes.right;
-    item_mesh_default_rot.setFromEuler(item_mesh.rotation);
-    item_mesh_default_rot_inv.copy(item_mesh_default_rot).inverse();
+  //////
+  // Keypressing hotkeys
+  var my_combos = [
+  {
+    "keys"          : "i",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        item_mesh.position.z += 10;
+        World.render();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : ",",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        item_mesh.position.z -= 10;
+        World.render();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "j",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        item_mesh.position.x += 10;
+        World.render();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "l",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        item_mesh.position.x -= 10;
+        World.render();
+    },
+    "this"          : ctx
   }
+  ];
+  //////
 
   // export
 	ctx.Hand = Hand;
