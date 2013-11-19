@@ -58,31 +58,31 @@
   };
   // Function to clear manipulation points/objects
   var clear_manip = function(){
-    cur_item.clear();
+    cur_item.clear(tcontrol);
   }
   // Function to cycle manipulation item
   var cycle_item = function(){
-    // Clear the current helpers
-    clear_manip();
     // Stop modifying
-    //no_mod();
-    // find the next item
-    cur_item_id++;
-    if(cur_item_id>=items.length){cur_item_id=0;}
-    if(cur_item.deinit!==undefined){cur_item.deinit();}
-    
+    no_mod();
     // Detach the tcontrol
     tcontrol.detach( cur_item.get_mesh() );
     // Remove the event listener
     tcontrol.removeEventListener( 'modify', cur_item.mod_callback );
+    // De-init
+    cur_item.deinit();
     
+    // find the next item
+    cur_item_id++;
+    if(cur_item_id>=items.length){cur_item_id=0;}
     cur_item = items[cur_item_id];
     if(cur_item.init!==undefined){cur_item.init();}
     // Update the display of the button
     cycle_btn.textContent = cur_item.item_name;
     
     // Attach the new tcontrol
-    tcontrol.attach( cur_item.get_mesh() );
+    var cur_mesh = cur_item.get_mesh();
+    console.log('cur_mesh',cur_mesh);
+    tcontrol.attach( cur_mesh );
     // Add the event listener
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );
     

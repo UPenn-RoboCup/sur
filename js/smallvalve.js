@@ -125,7 +125,7 @@
     })
     // Add the item back to the scene
   }
-  Door.deinit = function(){
+  SmallValve.deinit = function(){
     World.remove(item_mesh);
   }
   

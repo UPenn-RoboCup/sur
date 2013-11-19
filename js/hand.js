@@ -169,8 +169,6 @@
   Hand.deinit = function(){
     keypress.unregister_many(hotkeys);
     World.remove(item_mesh);
-    // Re render the scene
-    World.render();
   }
   
   // send to robot
