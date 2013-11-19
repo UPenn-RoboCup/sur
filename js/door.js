@@ -1,38 +1,37 @@
-/*****
- * 3D door model
- */
 (function(ctx){
   
   // Function to hold methods
   function Door(){}
-  // Sending to the robot
+
+  //////////////
+  // RPC URLs //
+  //////////////
   var rpc_url = rest_root+'/m/hcm/door/model'
-  
-  var item_angle = new THREE.Euler();
+
+  /////////////////////
+  // Mesh definition //
+  /////////////////////
   var hinge_mesh,
   door_mesh,
   knob_mesh,
   handle_mesh,
   item_mesh;
-  
+  var item_angle = new THREE.Euler();
   // mm positions
   var door_height     = 1500;
   var door_thickness  = 30;
   var hinge_height    = 25;
   var handle_thickness = 8;
   var knob_rad        = 10;
-  
   var make_door = function(hinge_pos,door_radius,handle_pos,handle_endpos){
-
     if(hinge_mesh!==undefined){
-      World.remove(hinge_mesh);
       // Disposal for memory reasons
+      World.remove(hinge_mesh);
       hinge_mesh.geometry.dispose();
       door_mesh.geometry.dispose();
       knob_mesh.geometry.dispose();
       handle_mesh.geometry.dispose();
     }
-    
     // From the THREE-ized hcm model, make the set of door meshes
     // First, the hinge
     var hinge_mat  = new THREE.MeshPhongMaterial({color: 0x111111,emissive:0x222222,side: THREE.DoubleSide});
@@ -93,6 +92,9 @@
     item_mesh = hinge_mesh;
   }
   
+  //////////////////////
+  // Model converters //
+  //////////////////////
   var model_to_three = function(model){
     var hinge_pos = [0,1000,500], 
     door_radius = 500, 
@@ -113,8 +115,6 @@
       (new THREE.Vector3()).fromArray(handle_endpos)
     );
   }
-  
-  // Recover model parameters from an updated model
   var three_to_model = function(){
     var model = [0,1000,500,500,-50,900];
     // Grab the position of the hinge
@@ -135,19 +135,10 @@
     //console.log('Model',model);
     return model;
   }
-  
-  Door.send = function(){
-    var m = three_to_model();
-    // Acquire the model
-    item_angle.setFromQuaternion(item_mesh.quaternion);
-    // Points in THREEjs to torso frame
-    var model = Transform.three_to_torso(item_mesh.position,Robot);
-    model.push(item_angle.y);
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
-  }
-  
-  ///////////////////////
-  // object manipulation API
+
+  /////////////////////////////
+  // Object manipulation API //
+  /////////////////////////////
   Door.select = function(p,r){
     
   }
@@ -182,6 +173,16 @@
   Door.deinit = function(){
     World.remove(hinge_mesh);
   }
+  // send to the robot
+  Door.send = function(){
+    var m = three_to_model();
+    // Acquire the model
+    item_angle.setFromQuaternion(item_mesh.quaternion);
+    // Points in THREEjs to torso frame
+    var model = Transform.three_to_torso(item_mesh.position,Robot);
+    model.push(item_angle.y);
+    qwest.post( rpc_url, {val:JSON.stringify(model)} );
+  }
   // loop the tcontrol
   Door.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
@@ -199,17 +200,17 @@
     }
     tcontrol.attach( item_mesh );
   }
-  
   // get the mesh
   Door.get_mesh = function(){
     return item_mesh;
   }
-  
   Door.mod_callback = function(){
     
   }
 
-  // For manipulation
+  /////////////////////////
+  // Metadata and Export //
+  /////////////////////////
   Door.item_name = 'Door';
   Door.grab_evt  = 'doorgrab';
   // export

@@ -1,14 +1,17 @@
-/*****
- * 3D tool model
- */
 (function(ctx){
   
   // Function to hold methods
   function Tool(){}
-  // Sending to the robot
+
+  //////////////
+  // RPC URLs //
+  //////////////
   var rpc_url = rest_root+'/m/hcm/tool/model'
   
-  // make the master item (i.e. grip handle)
+  /////////////////////
+  // Mesh definition //
+  /////////////////////
+  // master
   var item_mat   = new THREE.MeshLambertMaterial({color: 0xFFD801});
   var item_geo   = new THREE.CylinderGeometry(25,25,140,12,1,false);
   // Drill direction
@@ -22,11 +25,13 @@
   var item3_mesh = new THREE.Mesh(new THREE.CubeGeometry(80,70,120));
   item3_mesh.position.set(0,-90,0);
   THREE.GeometryUtils.merge( item_geo, item3_mesh );
-
   // Instantiate the master
   var item_mesh  = new THREE.Mesh( item_geo, item_mat );
   
-  var three_to_robot = function(){
+  //////////////////////
+  // Model converters //
+  //////////////////////
+  var three_to_model = function(){
     // Acquire the model
     item_angle.setFromQuaternion(item_mesh.quaternion);
     // Points in THREEjs to torso frame
@@ -34,23 +39,18 @@
     model.push(item_angle.y);
     return model;
   }
-  var robot_to_three = function(model){
+  var model_to_three = function(model){
+    //var yaw = 
   }
   
-  ///////////////////////
-  // object manipulation API
-  // set up the intersection handler
-  // point in THREEjs: p
-  // point in robot: r
+  /////////////////////////////
+  // Object manipulation API //
+  /////////////////////////////
   Tool.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
     // Re-render
     World.render();
-  }
-  Tool.send = function(){
-    var model = three_to_robot();
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
   Tool.clear = function(){
 
@@ -63,6 +63,10 @@
     // Add to the world
     World.remove(item_mesh);
   }
+  Tool.send = function(){
+    var model = three_to_model();
+    qwest.post( rpc_url, {val:JSON.stringify(model)} );
+  }
   Tool.get_mesh = function(){
     return item_mesh;
   }
@@ -72,8 +76,10 @@
   Tool.mod_callback = function(){
     
   }
-  ///////////////////////
 
+  /////////////////////////
+  // Metadata and Export //
+  /////////////////////////
   Tool.item_name = 'Tool';
   Tool.grab_evt = 'toolgrab';
   // export
