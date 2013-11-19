@@ -9,15 +9,11 @@
   var rpc_url = rest_root+'/m/hcm/door/model'
   
   var item_angle = new THREE.Euler();
-  var hinge_mesh = new THREE.Mesh(),
-  door_mesh = new THREE.Mesh(),
-  knob_mesh = new THREE.Mesh(),
-  handle_mesh = new THREE.Mesh();
-  // Scene graph time!
-  hinge_mesh.add(handle_mesh);
-  hinge_mesh.add(knob_mesh);
-  hinge_mesh.add(door_mesh);
-  var item_mesh = hinge_mesh;
+  var hinge_mesh,
+  door_mesh,
+  knob_mesh,
+  handle_mesh,
+  item_mesh;
   
   // mm positions
   var door_height     = 1500;
@@ -28,8 +24,9 @@
   
   var make_door = function(hinge_pos,door_radius,handle_pos,handle_endpos){
 
-    // Disposal for memory reasons
-    if(hinge_mesh.geometry!==undefined){
+    if(hinge_mesh!==undefined){
+      World.remove(hinge_mesh);
+      // Disposal for memory reasons
       hinge_mesh.geometry.dispose();
       door_mesh.geometry.dispose();
       knob_mesh.geometry.dispose();
@@ -40,9 +37,10 @@
     // First, the hinge
     var hinge_mat  = new THREE.MeshPhongMaterial({color: 0x111111,emissive:0x222222,side: THREE.DoubleSide});
     var hinge_geo  = new THREE.CylinderGeometry(door_thickness/2,door_thickness/2,door_height,8,1,true);
-    //hinge_mesh = new THREE.Mesh( hinge_geo, hinge_mat );
-    hinge_mesh.geometry = hinge_geo;
-    hinge_mesh.material = hinge_mat;
+    hinge_mesh = new THREE.Mesh( hinge_geo, hinge_mat );
+    //hinge_mesh.geometry = hinge_geo;
+    //hinge_mesh.material = hinge_mat;
+    hinge_mesh = new THREE.Mesh(hinge_geo,hinge_mat),
     hinge_mesh.position.copy(hinge_pos);
     // Move the door up to be on the ground
     hinge_mesh.position.y = door_height/2;
@@ -51,15 +49,17 @@
     // Second, the door itself
     var door_geo = new THREE.CubeGeometry(Math.abs(door_radius),door_height,door_thickness);
     var door_mat = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x888888});
-    door_mesh.geometry = door_geo;
-    door_mesh.material = door_mat;
+    door_mesh = new THREE.Mesh( door_geo, door_mat );
+    //door_mesh.geometry = door_geo;
+    //door_mesh.material = door_mat;
     door_mesh.position.x = door_radius/2;
     // Third, the door knob
     var handle_offset = handle_pos.z - hinge_pos.z;
     var knob_mat  = new THREE.MeshPhongMaterial({color: 0x4488FF,side: THREE.DoubleSide});
     var knob_geo  = new THREE.CylinderGeometry(knob_rad,knob_rad,handle_offset,8,1,true);
-    knob_mesh.geometry = knob_geo;
-    knob_mesh.material = knob_mat;
+    knob_mesh = new THREE.Mesh( knob_geo, knob_mat );
+    //knob_mesh.geometry = knob_geo;
+    //knob_mesh.material = knob_mat;
     knob_mesh.rotation.set( Math.PI/2,0,0 );
     knob_mesh.position.x = door_radius;
     knob_mesh.position.z = (handle_offset-door_thickness)/2;
@@ -69,8 +69,9 @@
     var handle_len = handle_diff.length();
     var handle_geo = new THREE.CubeGeometry(handle_len,2*knob_rad,handle_thickness);
     var handle_mat = new THREE.MeshPhongMaterial({color: 0x4488FF});
-    handle_mesh.geometry = handle_geo;
-    handle_mesh.material = handle_mat;    
+    handle_mesh = new THREE.Mesh( handle_geo, handle_mat );
+    //handle_mesh.geometry = handle_geo;
+    //handle_mesh.material = handle_mat;    
     if(door_radius>0){
       handle_mesh.position.x = door_radius - handle_len/2;
     } else {
@@ -79,6 +80,15 @@
     handle_mesh.position.z = (handle_thickness-door_thickness)/2 + handle_offset;
     handle_mesh.position.y = hinge_pos.y - door_height/2;
     //(handle_offset+handle_thickness)/2;
+    
+    // Scene graph time!
+    hinge_mesh.add(handle_mesh);
+    hinge_mesh.add(knob_mesh);
+    hinge_mesh.add(door_mesh);
+    
+    // add to the world
+    World.add(hinge_mesh);
+    
     // update the item
     item_mesh = hinge_mesh;
   }
@@ -168,7 +178,6 @@
   Door.init = function(){
     // Initial silly model
     model_to_three();
-    World.add(item_mesh);
   }
   // exit
   Door.deinit = function(){
@@ -176,9 +185,9 @@
   }
   // loop the tcontrol
   Door.loop = function(tcontrol){
-    // Just reload the model from the robot
     if(Manipulation.is_mod==false){
-      //Door.init();
+      // Just reload the model from the robot
+      Door.clear();
       return;
     }
     // cycle the tcontrol
