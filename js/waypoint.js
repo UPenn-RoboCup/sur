@@ -5,8 +5,6 @@
   
   // Function to hold methods
   function Waypoint(){}
-  // For manipulation
-  Waypoint.item_name = 'Waypoint';
   var wp = [0,0,0];
   // Sending to the robot
   var rpc_url = rest_root+'/m/hcm/motion/waypoints'
@@ -83,6 +81,7 @@
     return item_mesh;
   }
 
+  Waypoint.item_name = 'Waypoint';
   // export
 	ctx.Waypoint = Waypoint;
 

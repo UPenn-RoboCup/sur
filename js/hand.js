@@ -13,9 +13,7 @@
   //
   var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr_target'
   var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target'
-  //
-  var tcontrol = null;
-
+  
   // Mesh is a drawing, from the tip as the zero
   var item_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
   var item_path = new THREE.Path();
@@ -38,7 +36,6 @@
   var item_mesh_default_rot_inv = new THREE.Quaternion();
   item_mesh_default_rot.setFromEuler(item_mesh.rotation);
   item_mesh_default_rot_inv.copy(item_mesh_default_rot).inverse();
-  
   
   // converters (model is a transform)
   var model_to_three = function(tr){
@@ -136,12 +133,8 @@
   Hand.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
-    // Add to the world
-    World.add(item_mesh);
     // Re-render
     World.render();
-    // 
-    //send_model_to_robot();
   }
   
   // reset the hand
@@ -151,6 +144,10 @@
       // Convert the position to THREEjs
       model_to_three(model);
     });
+  }
+  
+  Hand.loop = function(tcontrol){
+    
   }
   
   // enter stage
