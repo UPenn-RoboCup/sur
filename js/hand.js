@@ -151,11 +151,13 @@
   }
   
   // enter stage
-  Hand.init = function(){
+  Hand.init = function(tcontrol){
     // Grab the current transform
     qwest.get( rpc_url_rget ).success(function(model){
       // Convert the position to THREEjs
       model_to_three(model);
+      // Must update the position of the transform controls
+      tcontrol.update();
     });
     // Add to the world
     World.add(item_mesh);

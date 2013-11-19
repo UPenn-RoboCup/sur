@@ -21,12 +21,13 @@
   
   // Functions to start/stop modifying
   var yes_mod = function(){
-    if(Manipulation.is_mod){return;}
+    if(Manipulation.is_mod===true){return;}
     Manipulation.is_mod = true;
+    
+    World.add( tcontrol );
     
     // stop the normal controls
     World.disable_orbit();
-    World.add( tcontrol );
     
     // Keyboard shortcuts
     keypress.register_many(tcontrol_hotkeys);
@@ -38,9 +39,9 @@
     clicker(this,no_mod);
   };
   var no_mod = function(){
-    if(!Manipulation.is_mod){return;}
+    if(Manipulation.is_mod===false){return;}
     Manipulation.is_mod = false;
-    
+
     // Remove the tcontrol
     World.remove( tcontrol );
     World.enable_orbit();
@@ -63,9 +64,11 @@
   // Function to cycle manipulation item
   var cycle_item = function(){
     // Stop modifying
-    no_mod();
+    //no_mod();
     // Detach the tcontrol
-    tcontrol.detach( cur_item.get_mesh() );
+    var cur_mesh = cur_item.get_mesh();
+    //console.log('cur_mesh',cur_mesh);
+    tcontrol.detach( cur_mesh );
     // Remove the event listener
     tcontrol.removeEventListener( 'modify', cur_item.mod_callback );
     // De-init
@@ -75,13 +78,15 @@
     cur_item_id++;
     if(cur_item_id>=items.length){cur_item_id=0;}
     cur_item = items[cur_item_id];
-    if(cur_item.init!==undefined){cur_item.init();}
     // Update the display of the button
     cycle_btn.textContent = cur_item.item_name;
     
+    // Init the item
+    cur_item.init(tcontrol);
+    
     // Attach the new tcontrol
     var cur_mesh = cur_item.get_mesh();
-    console.log('cur_mesh',cur_mesh);
+    //console.log('cur_mesh',cur_mesh);
     tcontrol.attach( cur_mesh );
     // Add the event listener
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );

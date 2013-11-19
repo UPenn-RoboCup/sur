@@ -94,7 +94,6 @@
   }
   
   var model_to_three = function(model){
-    console.log('Model0',model);
     var hinge_pos = [0,1000,500], 
     door_radius = 500, 
     handle_pos = [-50,1000,500], 
