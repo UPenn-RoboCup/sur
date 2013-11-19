@@ -39,101 +39,30 @@
   item_mesh_default_rot.setFromEuler(item_mesh.rotation);
   item_mesh_default_rot_inv.copy(item_mesh_default_rot).inverse();
   
-  var send_model_to_robot = function(){
-    /*
-    // Acquire the model
+  
+  // converters (model is a transform)
+  var model_to_three = function(tr){
+    var pos_array = Transform.torso_to_three(tr[0],tr[1],tr[2],Robot);
+    var rot_q = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(tr[4],tr[5],tr[3]));
+    var full_rot = new THREE.Quaternion();
+    var full_pos = new THREE.Vector3();
+    full_rot.multiplyQuaternions(rot_q,item_mesh_default_rot)
+    full_pos.fromArray(pos_array);
+    // Update the mesh
+    item_mesh.rotation.setFromQuaternion(full_rot);
+    item_mesh.position.copy(full_pos);
+  }
+  
+  var three_to_model = function(){
     var q = (new THREE.Quaternion()).setFromEuler(item_mesh.rotation)
     var q_robot = (new THREE.Quaternion()).multiplyQuaternions(q,item_mesh_default_rot_inv);
     var rpy = (new THREE.Euler()).setFromQuaternion(q_robot);
     var tr = Transform.three_to_torso(item_mesh.position,Robot)
     tr.push(rpy.z, rpy.x, rpy.y)
-    qwest.post( rpc_url_rset, {val:JSON.stringify(tr)} );
-    */
+    return tr;
   }
   
-  ///////////////////////
-  // object manipulation API
-  // set up the intersection handler
-  // point in THREEjs: p
-  // point in robot: r
-  Hand.select = function(p,r){
-    // Set the position
-    item_mesh.position.copy(p);
-    // Add to the world
-    World.add(item_mesh);
-    // Re-render
-    World.render();
-    // 
-    //send_model_to_robot();
-  }
-  Hand.clear = function(){
-    // reset the transform
-    qwest.get( rpc_url_rget ).success(function(tr){
-      // Convert the position to THREEjs
-      var pos_array = Transform.torso_to_three(tr[0],tr[1],tr[2],Robot);
-      var rot_q = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(tr[4],tr[5],tr[3]));
-      var full_rot = new THREE.Quaternion();
-      full_rot.multiplyQuaternions(rot_q,item_mesh_default_rot)
-      item_mesh.rotation.setFromQuaternion(full_rot);
-      item_mesh.position.fromArray(pos_array);
-    });
-  }
-  Hand.start_modify = function(){
-    // stop the normal controls
-    World.disable_orbit();
-    // grab a tcontrol
-    tcontrol = World.generate_tcontrol();
-    // Setup the transformcontrols
-    tcontrol.addEventListener( 'change', World.render );
-    //tcontrol.addEventListener( 'modify', update_angle );
-    tcontrol.attach( item_mesh );
-    World.add( tcontrol );
-    // Re-render
-    World.render();
-  }; // start_modify
-  Hand.stop_modify = function(){
-    if(tcontrol===null){return;}
-    World.remove( tcontrol );
-    tcontrol.detach( item_mesh );
-    tcontrol.removeEventListener( 'change', World.render );
-    //tcontrol.removeEventListener( 'modify', update_angle );
-    tcontrol = null;
-    World.enable_orbit();
-    // re-render
-    World.render();
-    // Send to the robot
-    send_model_to_robot();
-  }
-  Hand.init = function(){
-    // Grab the current transform
-    qwest.get( rpc_url_rget ).success(function(tr){
-      // Convert the position to THREEjs
-      var pos_array = Transform.torso_to_three(tr[0],tr[1],tr[2],Robot);
-      var rot_q = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(tr[4],tr[5],tr[3]));
-      var full_rot = new THREE.Quaternion();
-      full_rot.multiplyQuaternions(rot_q,item_mesh_default_rot)
-      //
-      item_mesh.rotation.setFromQuaternion(full_rot);
-      item_mesh.position.fromArray(pos_array);
-      // Add to the world
-      World.add(item_mesh);
-      // Re-render
-      World.render();
-    });
-    
-    keypress.register_many(hotkeys);
-  }
-  Hand.deinit = function(){
-    keypress.unregister_many(hotkeys);
-    World.remove(item_mesh);
-    // Re render the scene
-    World.render();
-  }
-  // Loop just resets the hand position to the initial
-  Hand.loop = Hand.init;
-  ///////////////////////
   
-  //////
   // Keypressing hotkeys
   var hotkeys = [
   {
@@ -196,48 +125,66 @@
     },
     "this"          : ctx
   },
-  {
-    // swap global/local for visual cue
-    "keys"          : "`",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        tcontrol.setSpace( tcontrol.space == "local" ? "world" : "local" );
-    },
-    "this"          : ctx
-  },
-  {
-    // translation
-    "keys"          : "t",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        tcontrol.setMode( "translate" );
-    },
-    "this"          : ctx
-  },
-  {
-    // rotation
-    "keys"          : "r",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        tcontrol.setMode( "rotate" );
-    },
-    "this"          : ctx
-  },
-  {
-    // scale
-    "keys"          : "y",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        tcontrol.setMode( "scale" );
-    },
-    "this"          : ctx
-  },
   ];
-  //////
+  
+  
+  /////////////////////////////
+  // Object manipulation API //
+  /////////////////////////////
+  
+  // intersection handler
+  Hand.select = function(p,r){
+    // Set the position
+    item_mesh.position.copy(p);
+    // Add to the world
+    World.add(item_mesh);
+    // Re-render
+    World.render();
+    // 
+    //send_model_to_robot();
+  }
+  
+  // reset the hand
+  Hand.clear = function(){
+    // reset the transform
+    qwest.get( rpc_url_rget ).success(function(model){
+      // Convert the position to THREEjs
+      model_to_three(model);
+    });
+  }
+  
+  // enter stage
+  Hand.init = function(){
+    // Grab the current transform
+    qwest.get( rpc_url_rget ).success(function(model){
+      // Convert the position to THREEjs
+      model_to_three(model);
+    });
+    // Add to the world
+    World.add(item_mesh);
+    // Re-render
+    World.render();
+    // register keypresses
+    keypress.register_many(hotkeys);
+  }
+  
+  // exit stage
+  Hand.deinit = function(){
+    keypress.unregister_many(hotkeys);
+    World.remove(item_mesh);
+    // Re render the scene
+    World.render();
+  }
+  
+  // send to robot
+  Hand.send = function(){
+    // Acquire the model
+    var model = three_to_model();
+    qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
+  }
+  // Loop just resets the hand position to the initial
+  Hand.loop = Hand.clear;
+  ///////////////////////
 
   // export
 	ctx.Hand = Hand;

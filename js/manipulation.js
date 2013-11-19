@@ -6,6 +6,9 @@
   // Function to hold methods
   function Manipulation(){}
   
+  // Make the modifying visual
+  var tcontrol;
+  
   // Manipulatable items
   var items = [];
   Manipulation.add_item = function(item){
@@ -20,7 +23,16 @@
   var yes_mod = function(){
     if(Manipulation.is_mod){return;}
     Manipulation.is_mod = true;
-    cur_item.start_modify();
+    
+    // stop the normal controls
+    World.disable_orbit();
+    World.add( tcontrol );
+    
+    // Keyboard shortcuts
+    keypress.register_many(tcontrol_hotkeys);
+    
+    World.render();
+    
     // reset
     unclicker(this,yes_mod);
     clicker(this,no_mod);
@@ -28,7 +40,18 @@
   var no_mod = function(){
     if(!Manipulation.is_mod){return;}
     Manipulation.is_mod = false;
-    cur_item.stop_modify();
+    
+    // Remove the tcontrol
+    World.remove( tcontrol );
+    World.enable_orbit();
+    World.render();
+    
+    // Keyboard shortcuts
+    keypress.unregister_many(tcontrol_hotkeys);
+    
+    // send the model to the robot
+    cur_item.send();
+    
     // reset
     unclicker(this,no_mod);
     clicker(this,yes_mod);
@@ -47,10 +70,21 @@
     cur_item_id++;
     if(cur_item_id>=items.length){cur_item_id=0;}
     if(cur_item.deinit!==undefined){cur_item.deinit();}
+    
+    // Detach the tcontrol
+    tcontrol.detach( cur_item.get_mesh() );
+    // Remove the event listener
+    tcontrol.removeEventListener( 'modify', cur_item.mod_callback );
+    
     cur_item = items[cur_item_id];
     if(cur_item.init!==undefined){cur_item.init();}
     // Update the display of the button
     cycle_btn.textContent = cur_item.item_name;
+    
+    // Attach the new tcontrol
+    tcontrol.attach( cur_item.get_mesh() );
+    // Add the event listener
+    tcontrol.addEventListener( 'modify', cur_item.mod_callback );
     
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
@@ -59,7 +93,7 @@
   }
   
   var loop_item = function(){
-    if(cur_item.loop!==undefined){cur_item.loop();}
+    cur_item.loop(tcontrol);
   }
   
   var grab_item = function(){
@@ -101,6 +135,10 @@
     cur_item_id = items.length - 1;
     cur_item    = items[cur_item_id];
     cycle_btn.textContent = cur_item.item_name;
+    
+    // init
+    cur_item.init();
+    
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
     
@@ -114,7 +152,58 @@
       //console.log('spacemouse'.e,sp_mouse);
     };
     
+    // Make a tcontrol
+    tcontrol = World.generate_tcontrol();
+    tcontrol.attach( cur_item.get_mesh() );
+    tcontrol.addEventListener( 'change', World.render );
+    tcontrol.addEventListener( 'modify', cur_item.mod_callback );
+    
   } // setup
+
+  //////
+  // Keypressing hotkeys
+  var tcontrol_hotkeys = [
+    {
+      // swap global/local for visual cue
+      "keys"          : "`",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          tcontrol.setSpace( tcontrol.space == "local" ? "world" : "local" );
+      },
+      "this"          : ctx
+    },
+    {
+      // translation
+      "keys"          : "t",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          tcontrol.setMode( "translate" );
+      },
+      "this"          : ctx
+    },
+    {
+      // rotation
+      "keys"          : "r",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          tcontrol.setMode( "rotate" );
+      },
+      "this"          : ctx
+    },
+    {
+      // scale
+      "keys"          : "y",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          tcontrol.setMode( "scale" );
+      },
+      "this"          : ctx
+    },
+  ];
 
   // export
 	ctx.Manipulation = Manipulation;

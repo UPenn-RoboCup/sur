@@ -44,7 +44,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   Manipulation.add_item(Tool);
   Manipulation.add_item(Door);
   Manipulation.add_item(Hand);
-  Waypoint.setup();
   Manipulation.add_item(Waypoint);
   Manipulation.setup();
   
