@@ -5,9 +5,6 @@
   
   // Function to hold methods
   function Tool(){}
-  // For manipulation
-  Tool.item_name = 'Tool';
-  Tool.grab_evt = 'toolgrab';
   // Sending to the robot
   var rpc_url = rest_root+'/m/hcm/tool/model'
   
@@ -28,42 +25,16 @@
 
   // Instantiate the master
   var item_mesh  = new THREE.Mesh( item_geo, item_mat );
-
-  // TransformControl
-  var tcontrol = null;
-  var update_tcontrol = function ( event ) {
-    switch ( event.keyCode ) {
-      case 81: // Q
-        tcontrol.setSpace( tcontrol.space == "local" ? "world" : "local" );
-        break;
-      case 87: // W
-        tcontrol.setMode( "translate" );
-        break;
-      case 69: // E
-        tcontrol.setMode( "rotate" );
-        break;
-      case 82: // R
-        tcontrol.setMode( "scale" );
-        break;
-      // size stuff
-      case 187:
-      case 107: // +,=,num+
-        tcontrol.setSize( tcontrol.size + 0.1 );
-        break;
-      case 189:
-      case 10: // -,_,num-
-        tcontrol.setSize( Math.max(tcontrol.size - 0.1, 0.1 ) );
-        break;
-    }
-  };
   
-  var send_model_to_robot = function(){
+  var three_to_robot = function(){
     // Acquire the model
     item_angle.setFromQuaternion(item_mesh.quaternion);
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
     model.push(item_angle.y);
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    return model;
+  }
+  var robot_to_three = function(model){
   }
   
   ///////////////////////
@@ -74,55 +45,37 @@
   Tool.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
-    // Add to the world
-    World.add(item_mesh);
     // Re-render
     World.render();
-    // 
-    send_model_to_robot();
+  }
+  Tool.send = function(){
+    var model = three_to_robot();
+    qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
   Tool.clear = function(){
-    // Stop modifying
-    Wheel.stop_modify();
-    // Remove the tool
-    World.remove(item_mesh);
-    // Re render the scene
-    World.render();
+
   }
-  Tool.start_modify = function(){
-    // stop the normal controls
-    World.disable_orbit();
-    // grab a tcontrol
-    tcontrol = World.generate_tcontrol();
-    // Setup the transformcontrols
-    tcontrol.addEventListener( 'change', World.render );
-    //tcontrol.addEventListener( 'modify', update_angle );
-    tcontrol.attach( item_mesh );
-    World.add( tcontrol );
-    // listen for a keydown
-    ctx.addEventListener( 'keydown', update_tcontrol, false );
-    // Re-render
-    World.render();
-  }; // start_modify
-  Tool.stop_modify = function(){
-    if(tcontrol===null){return;}
-    World.remove( tcontrol );
-    tcontrol.detach( item_mesh );
-    tcontrol.removeEventListener( 'change', World.render );
-    //tcontrol.removeEventListener( 'modify', update_angle );
-    tcontrol = null;
-    ctx.removeEventListener( 'keydown', update_tcontrol, false );
-    World.enable_orbit();
-    // re-render
-    World.render();
-    // Send to the robot
-    send_model_to_robot();
+  Tool.init = function(){
+    // Add to the world
+    World.add(item_mesh);
+  }
+  Tool.deinit = function(){
+    // Add to the world
+    World.remove(item_mesh);
+  }
+  Tool.get_mesh = function(){
+    return item_mesh;
+  }
+  Tool.loop = function(){
+    
+  }
+  Tool.mod_callback = function(){
+    
   }
   ///////////////////////
-  
-  Tool.setup = function(){
-  }
 
+  Tool.item_name = 'Tool';
+  Tool.grab_evt = 'toolgrab';
   // export
 	ctx.Tool = Tool;
 
