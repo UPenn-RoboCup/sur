@@ -5,9 +5,6 @@
   
   // Function to hold methods
   function SmallValve(){}
-  // For manipulation
-  SmallValve.item_name = 'SmallValve';
-  SmallValve.grab_evt = 'smallvalvegrab';
   var rpc_url = rest_root+'/m/hcm/wheel/model'
   
   // make the wheel
@@ -27,34 +24,6 @@
   THREE.GeometryUtils.merge( item_geo, vert_mesh );
   THREE.GeometryUtils.merge( item_geo, horiz_mesh );
   var item_mesh = new THREE.Mesh( item_geo, item_mat );
-
-  // TransformControl
-  var tcontrol = null;
-  var update_tcontrol = function ( event ) {
-    switch ( event.keyCode ) {
-      case 81: // Q
-        tcontrol.setSpace( tcontrol.space == "local" ? "world" : "local" );
-        break;
-      case 87: // W
-        tcontrol.setMode( "translate" );
-        break;
-      case 69: // E
-        tcontrol.setMode( "rotate" );
-        break;
-      case 82: // R
-        tcontrol.setMode( "scale" );
-        break;
-      // size stuff
-      case 187:
-      case 107: // +,=,num+
-        tcontrol.setSize( tcontrol.size + 0.1 );
-        break;
-      case 189:
-      case 10: // -,_,num-
-        tcontrol.setSize( Math.max(tcontrol.size - 0.1, 0.1 ) );
-        break;
-    }
-  };
   
   ///////////////////////
   // object manipulation API
@@ -68,69 +37,35 @@
 
     // Re-render
     World.render();
-    
-    // Make the hcm model from the mesh
-    var hcm_model = make_model();
-    
-    // Send the updated model to the robot
-    qwest.post( rpc_url, {val:JSON.stringify(hcm_model)} );
 
   }
+  // modification loop
+  SmallValve.loop = function(){
+    
+  }
+  // send data to the robot
+  SmallValve.send = function(){
+    
+  }
+  // clear the item
   SmallValve.clear = function(){
-    // Nothing happens on clear...
+    
   }
-  
-  SmallValve.start_modify = function(){
-    // stop the normal controls
-    World.disable_orbit();
-    // grab a tcontrol
-    tcontrol = World.generate_tcontrol();
-    // Setup the transformcontrols
-    tcontrol.addEventListener( 'change', World.render );
-    tcontrol.attach( item_mesh );
-    World.add( tcontrol );
-    // listen for a keydown
-    ctx.addEventListener( 'keydown', update_tcontrol, false );
-    // Re-render
-    World.render();
-  }; // start_modify
-  SmallValve.stop_modify = function(){
-    if(tcontrol===null){return;}
-    World.remove( tcontrol );
-    tcontrol.detach( item_mesh );
-    tcontrol.removeEventListener( 'change', World.render );
-    tcontrol = null;
-    ctx.removeEventListener( 'keydown', update_tcontrol, false );
-    World.enable_orbit();
-    // re-render
-    World.render();
-  }
-  
+  // enter
   SmallValve.init = function(){
-    // Get the model from the robot (could be pesky...?)
-    qwest.get( rpc_url,{},{},function(){
-      // Use a 1 second timeout for the XHR2 request for getting the model
-      this.timeout = 1000; // ms
-    })
-    .success(function(model){
-      model_to_three(model);
-      World.add(item_mesh);
-      World.render();
-    })
-    .error(function(msg){
-      // default door model
-      model_to_three();
-      World.add(item_mesh);
-      World.render();
-    })
-    // Add the item back to the scene
+    World.add(item_mesh);
   }
+  // exit
   SmallValve.deinit = function(){
     World.remove(item_mesh);
   }
-  
+  SmallValve.get_mesh = function(){
+    return item_mesh;
+  }
   ///////////////////////
 
+  SmallValve.item_name = 'Mini Valve';
+  SmallValve.grab_evt = 'smallvalvegrab';
   // export
 	ctx.SmallValve = SmallValve;
 

@@ -137,7 +137,8 @@
     clicker(grab_btn, grab_item);
     
     // initialize the element
-    cur_item_id = items.length - 1;
+    //cur_item_id = items.length - 1;
+    cur_item_id = 0;
     cur_item    = items[cur_item_id];
     cycle_btn.textContent = cur_item.item_name;
     
