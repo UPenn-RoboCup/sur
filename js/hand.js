@@ -13,6 +13,8 @@
   //
   var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr_target'
   var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target'
+  //
+  var tcontrol = null;
 
   // Mesh is a drawing, from the tip as the zero
   var item_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
@@ -36,34 +38,6 @@
   var item_mesh_default_rot_inv = new THREE.Quaternion();
   item_mesh_default_rot.setFromEuler(item_mesh.rotation);
   item_mesh_default_rot_inv.copy(item_mesh_default_rot).inverse();
-
-  // TransformControl
-  var tcontrol = null;
-  var update_tcontrol = function ( event ) {
-    switch ( event.keyCode ) {
-      case 81: // Q
-        tcontrol.setSpace( tcontrol.space == "local" ? "world" : "local" );
-        break;
-      case 87: // W
-        tcontrol.setMode( "translate" );
-        break;
-      case 69: // E
-        tcontrol.setMode( "rotate" );
-        break;
-      case 82: // R
-        tcontrol.setMode( "scale" );
-        break;
-      // size stuff
-      case 187:
-      case 107: // +,=,num+
-        tcontrol.setSize( tcontrol.size + 0.1 );
-        break;
-      case 189:
-      case 10: // -,_,num-
-        tcontrol.setSize( Math.max(tcontrol.size - 0.1, 0.1 ) );
-        break;
-    }
-  };
   
   var send_model_to_robot = function(){
     /*
@@ -93,12 +67,16 @@
     //send_model_to_robot();
   }
   Hand.clear = function(){
-    // Stop modifying
-    Wheel.stop_modify();
-    // Remove the tool
-    World.remove(item_mesh);
-    // Re render the scene
-    World.render();
+    // reset the transform
+    qwest.get( rpc_url_rget ).success(function(tr){
+      // Convert the position to THREEjs
+      var pos_array = Transform.torso_to_three(tr[0],tr[1],tr[2],Robot);
+      var rot_q = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(tr[4],tr[5],tr[3]));
+      var full_rot = new THREE.Quaternion();
+      full_rot.multiplyQuaternions(rot_q,item_mesh_default_rot)
+      item_mesh.rotation.setFromQuaternion(full_rot);
+      item_mesh.position.fromArray(pos_array);
+    });
   }
   Hand.start_modify = function(){
     // stop the normal controls
@@ -110,8 +88,6 @@
     //tcontrol.addEventListener( 'modify', update_angle );
     tcontrol.attach( item_mesh );
     World.add( tcontrol );
-    // listen for a keydown
-    ctx.addEventListener( 'keydown', update_tcontrol, false );
     // Re-render
     World.render();
   }; // start_modify
@@ -122,7 +98,6 @@
     tcontrol.removeEventListener( 'change', World.render );
     //tcontrol.removeEventListener( 'modify', update_angle );
     tcontrol = null;
-    ctx.removeEventListener( 'keydown', update_tcontrol, false );
     World.enable_orbit();
     // re-render
     World.render();
@@ -146,10 +121,13 @@
       World.render();
     });
     
-    keypress.register_many(my_combos);
+    keypress.register_many(hotkeys);
   }
   Hand.deinit = function(){
-    keypress.unregister_many(my_combos);
+    keypress.unregister_many(hotkeys);
+    World.remove(item_mesh);
+    // Re render the scene
+    World.render();
   }
   // Loop just resets the hand position to the initial
   Hand.loop = Hand.init;
@@ -157,7 +135,7 @@
   
   //////
   // Keypressing hotkeys
-  var my_combos = [
+  var hotkeys = [
   {
     "keys"          : "i",
     "is_exclusive"  : true,
@@ -197,7 +175,67 @@
         World.render();
     },
     "this"          : ctx
-  }
+  },
+  {
+    "keys"          : "u",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        item_mesh.position.y += 10;
+        World.render();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "m",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        item_mesh.position.y -= 10;
+        World.render();
+    },
+    "this"          : ctx
+  },
+  {
+    // swap global/local for visual cue
+    "keys"          : "`",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        tcontrol.setSpace( tcontrol.space == "local" ? "world" : "local" );
+    },
+    "this"          : ctx
+  },
+  {
+    // translation
+    "keys"          : "t",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        tcontrol.setMode( "translate" );
+    },
+    "this"          : ctx
+  },
+  {
+    // rotation
+    "keys"          : "r",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        tcontrol.setMode( "rotate" );
+    },
+    "this"          : ctx
+  },
+  {
+    // scale
+    "keys"          : "y",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        tcontrol.setMode( "scale" );
+    },
+    "this"          : ctx
+  },
   ];
   //////
 
