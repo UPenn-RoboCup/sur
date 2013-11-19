@@ -40,8 +40,8 @@ document.addEventListener( "DOMContentLoaded", function(){
   Camera.setup();
   
   // Add items to be manipulated
-  Manipulation.add_item(Wheel);
-  Manipulation.add_item(Tool);
+  //Manipulation.add_item(Wheel);
+  //Manipulation.add_item(Tool);
   Manipulation.add_item(Door);
   Manipulation.add_item(Hand);
   Manipulation.add_item(Waypoint);

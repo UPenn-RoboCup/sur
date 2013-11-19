@@ -182,6 +182,15 @@
     var model = three_to_model();
     qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
   }
+  
+  Hand.mod_callback = function(){
+    
+  }
+  
+  // get the mesh
+  Hand.get_mesh = function(){
+    return item_mesh;
+  }
   // Loop just resets the hand position to the initial
   Hand.loop = Hand.clear;
   ///////////////////////

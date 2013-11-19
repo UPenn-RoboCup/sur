@@ -5,9 +5,6 @@
   
   // Function to hold methods
   function Door(){}
-  // For manipulation
-  Door.item_name = 'Door';
-  Door.grab_evt = 'doorgrab';
   // Sending to the robot
   var rpc_url = rest_root+'/m/hcm/door/model'
   
@@ -89,6 +86,8 @@
       (new THREE.Vector3()).fromArray(handle_endpos)
     );
   }
+  // Initial model
+  model_to_three();
   
   // Recover model parameters from an updated model
   var three_to_model = function(){
@@ -97,7 +96,7 @@
     var p = (new THREE.Vector3()).copy(hinge_mesh.position);
     p.z -= door_thickness/2;
     var robot_hinge = Transform.three_to_torso(p,Robot);
-    console.log(hinge_mesh.position,robot_hinge)
+    // console.log(hinge_mesh.position,robot_hinge)
     model[0] = robot_hinge[0];
     model[1] = robot_hinge[1];
     model[2] = robot_hinge[2]; // not really correct...
@@ -108,92 +107,26 @@
     // Grab the y knob offset
     //model[5] = handle_mesh.geometry.width/1000;
     model[5] = 2*(handle_mesh.position.x - 2*door_mesh.position.x)/1000;
+    //console.log('Model',model);
     return model;
   }
   
-  // TransformControl
-  var tcontrol = null;
-  var update_tcontrol = function ( event ) {
-    switch ( event.keyCode ) {
-      case 81: // Q
-        tcontrol.setSpace( tcontrol.space == "local" ? "world" : "local" );
-        break;
-      case 87: // W
-        tcontrol.setMode( "translate" );
-        break;
-      case 69: // E
-        tcontrol.setMode( "rotate" );
-        break;
-      case 82: // R
-        tcontrol.setMode( "scale" );
-        break;
-      // size stuff
-      case 187:
-      case 107: // +,=,num+
-        tcontrol.setSize( tcontrol.size + 0.1 );
-        break;
-      case 189:
-      case 10: // -,_,num-
-        tcontrol.setSize( Math.max(tcontrol.size - 0.1, 0.1 ) );
-        break;
-    }
-  };
-  
-  var send_model_to_robot = function(){
+  Door.send = function(){
     var m = three_to_model();
-    console.log('Model',m);
-    /*
     // Acquire the model
     item_angle.setFromQuaternion(item_mesh.quaternion);
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
     model.push(item_angle.y);
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
-    */
-  }
-  
-  var item_modify = function(){
-    
   }
   
   ///////////////////////
   // object manipulation API
-  // set up the intersection handler
-  // point in THREEjs: p
-  // point in robot: r
-  Door.select = function(p,r){}
-  Door.clear = function(){}
-  Door.start_modify = function(){
-    // stop the normal controls
-    World.disable_orbit();
-    // grab a tcontrol
-    tcontrol = World.generate_tcontrol();
-    // Setup the transformcontrols
-    tcontrol.addEventListener( 'change', World.render );
-    tcontrol.addEventListener( 'modify', item_modify );
-    tcontrol.attach( item_mesh );
-    World.add( tcontrol );
-    // listen for a keydown
-    ctx.addEventListener( 'keydown', update_tcontrol, false );
-    // Re-render
-    World.render();
-  }; // start_modify
-  Door.stop_modify = function(){
-    if(tcontrol===null){return;}
-    World.remove( tcontrol );
-    tcontrol.detach( item_mesh );
-    tcontrol.removeEventListener( 'change', World.render );
-    //tcontrol.removeEventListener( 'modify', update_angle );
-    tcontrol = null;
-    ctx.removeEventListener( 'keydown', update_tcontrol, false );
-    World.enable_orbit();
-    // re-render
-    World.render();
-    // Send to the robot
-    send_model_to_robot();
+  Door.select = function(p,r){
+    
   }
-  
-  Door.init = function(){
+  Door.clear = function(){
     // Get the model from the robot (could be pesky...?)
     qwest.get( rpc_url,{},{},function(){
       // Use a 1 second timeout for the XHR2 request for getting the model
@@ -201,23 +134,26 @@
     })
     .success(function(model){
       model_to_three(model);
-      World.add(item_mesh);
       World.render();
     })
     .error(function(msg){
       // default door model
       model_to_three();
-      World.add(item_mesh);
       World.render();
-    })
-    // Add the item back to the scene
+    });
   }
-  
+  // enter
+  Door.init = function(){
+    Door.clear();
+    item_mesh = hinge_mesh;
+    World.add(item_mesh);
+  }
+  // exit
   Door.deinit = function(){
     World.remove(item_mesh);
   }
-  
-  Door.loop = function(){
+  // loop the tcontrol
+  Door.loop = function(tcontrol){
     // Just reload the model from the robot
     if(Manipulation.is_mod==false){Door.init();return;}
     // cycle the tcontrol
@@ -230,11 +166,19 @@
     }
     tcontrol.attach( item_mesh );
   }
-  ///////////////////////
   
-  Door.setup = function(){
+  // get the mesh
+  Door.get_mesh = function(){
+    return item_mesh;
+  }
+  
+  Door.mod_callback = function(){
+    
   }
 
+  // For manipulation
+  Door.item_name = 'Door';
+  Door.grab_evt  = 'doorgrab';
   // export
 	ctx.Door = Door;
 
