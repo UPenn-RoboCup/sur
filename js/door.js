@@ -199,6 +199,8 @@
       item_mesh = hinge_mesh;
     }
     tcontrol.attach( item_mesh );
+    tcontrol.update();
+    World.render();
   }
   // get the mesh
   Door.get_mesh = function(){
