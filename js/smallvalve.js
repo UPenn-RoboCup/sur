@@ -107,6 +107,8 @@
   SmallValve.get_mesh = function(){
     return item_mesh;
   }
+  SmallValve.mod_callback = function(){
+  }
 
   /////////////////////////
   // Metadata and Export //

@@ -24,16 +24,18 @@
     if(Manipulation.is_mod===true){return;}
     Manipulation.is_mod = true;
     
-    World.add( tcontrol );
-    
     // stop the normal controls
     World.disable_orbit();
+    
+    World.add( tcontrol );
+    tcontrol.update();
     
     // Keyboard shortcuts
     keypress.register_many(tcontrol_hotkeys);
     
+    // Re-render
     World.render();
-    
+        
     // reset
     unclicker(this,yes_mod);
     clicker(this,no_mod);
