@@ -58,6 +58,8 @@
   item_mesh.add(start_mesh);
   item_mesh.add(stop_mesh);
   
+  var mod_mesh = item_mesh;
+  
   //////////////////////
   // Model converters //
   //////////////////////
@@ -85,8 +87,27 @@
 
   }
   // modification loop
-  SmallValve.loop = function(){
-    
+  SmallValve.loop = function(tcontrol){
+    if(Manipulation.is_mod==false){
+      // Just reload the model from the robot
+      SmallValve.clear();
+      return;
+    }
+    // cycle the tcontrol
+    if(mod_mesh===item_mesh){
+      tcontrol.detach( item_mesh );
+      mod_mesh = start_mesh;
+    } else if(mod_mesh===start_mesh){
+      tcontrol.detach( start_mesh );
+      mod_mesh = stop_mesh;
+    } else {
+      tcontrol.detach( stop_mesh );
+      mod_mesh = item_mesh;
+    }
+    tcontrol.attach( mod_mesh );
+    tcontrol.update();
+    World.render();
+
   }
   // send data to the robot
   SmallValve.send = function(){
@@ -105,7 +126,7 @@
     World.remove(item_mesh);
   }
   SmallValve.get_mesh = function(){
-    return item_mesh;
+    return mod_mesh;
   }
   SmallValve.mod_callback = function(){
   }
