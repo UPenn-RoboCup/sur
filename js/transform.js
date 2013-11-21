@@ -102,6 +102,12 @@
     return [x,y,z];
   }
   
+  var mod_angle = function(a){
+    // Reduce angle to [-pi, pi)
+    var b = a % (2*Math.PI);
+    return (b >= Math.PI) ? (b - 2*Math.PI) : b;
+  }
+  
   // x, y, z in the torso (upper body) frame
   // robot: pose (px,py,pa element) and bodyTilt elements
   var torso_to_three = function(x,y,z,robot){
@@ -113,9 +119,10 @@
     var tx = robot.px + ca*x - sa*y;
     var ty = robot.py + sa*x + ca*y;
     var tz = z + robot.bodyHeight;
+    //var ta = mod_angle(a-pa);
     // Return in mm, since THREEjs uses that
     // Also, swap the coordinates
-    return [ ty*1000, tz*1000, tx*1000 ];  
+    return [ ty*1000, tz*1000, tx*1000 ];
   }
   
   // x, y, z in the torso (upper body) frame

@@ -42,15 +42,23 @@
   // Model converters //
   //////////////////////
   var model_to_three = function(tr){
+    // Make into easy formats
     var pos_array = Transform.torso_to_three(tr[0],tr[1],tr[2],Robot);
     var rot_q = (new THREE.Quaternion()).setFromEuler(new THREE.Euler(tr[4],tr[5],tr[3]));
+    
+    // Make the rotation
     var full_rot = new THREE.Quaternion();
-    var full_pos = new THREE.Vector3();
-    full_rot.multiplyQuaternions(rot_q,item_mesh_default_rot)
-    full_pos.fromArray(pos_array);
+    full_rot.multiplyQuaternions(rot_q,item_mesh_default_rot);
+    
+    // Incorporate pose
+    var q_pose = (new THREE.Quaternion()).setFromAxisAngle(
+      (new THREE.Vector3(0,1,0)), Robot.pa )
+    var full_rot2 = new THREE.Quaternion();
+    full_rot2.multiplyQuaternions(q_pose,full_rot);
+
     // Update the mesh
-    item_mesh.rotation.setFromQuaternion(full_rot);
-    item_mesh.position.copy(full_pos);
+    item_mesh.rotation.setFromQuaternion(full_rot2);
+    item_mesh.position.fromArray(pos_array);
   }
   var three_to_model = function(){
     var q = (new THREE.Quaternion()).setFromEuler(item_mesh.rotation)
