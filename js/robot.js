@@ -397,19 +397,6 @@
     
   } // update skeleton
   
-  // Move the robot (given robot coord, not THREEjs)
-  Robot.set_pose = function(pose){
-    // save pose
-    Robot.px = pose[0];
-    Robot.py = pose[1];
-    Robot.pa = pose[2];
-    // Update the skeleton model
-    skeleton.p.x = 1000*Robot.py;
-    skeleton.p.z = 1000*Robot.px;
-    update_skeleton();
-    World.render();
-  };
-  
   Robot.make_virtual_hands = function(){
     //console.log('Virtual hands!',lgripper,rgripper);
     var lg2 = new THREE.Mesh(
@@ -451,21 +438,29 @@
       //console.log(e);
       var feedback = JSON.parse(e.data);
       //console.log(feedback);
-      // set the robot stuff
-      Robot.set_pose(feedback.pose);
+      
+      // save pose
+      var pose = feedback.pose;
+      Robot.px = pose[0];
+      Robot.py = pose[1];
+      Robot.pa = pose[2];
+      // Update the skeleton model
+      skeleton.p.x = 1000*Robot.py;
+      skeleton.p.z = 1000*Robot.px;
+      Robot.bodyHeight = feedback.body_height;
+      // Update the skeleton
+      skeleton.p.setY(1000*Robot.bodyHeight-15);
       // Use rpy for bodyTilt
       Robot.bodyTilt = feedback.rpy[1];
-      // Update the skeleton root
-      Robot.bodyHeight = feedback.body_height;
-      //console.log('bH',Robot.bodyHeight)
-      // Update the skeleton
-      //console.log('rp',skeleton.p)
-      skeleton.p.setY(1000*Robot.bodyHeight-15);
-      //skeleton.p.z-=100;
-      skeleton.q.setFromAxisAngle((new THREE.Vector3(1,0,0)), Robot.bodyTilt )
+
+      // Orientation
+      var q_pose = (new THREE.Quaternion()).setFromAxisAngle(
+        (new THREE.Vector3(0,1,0)), Robot.pa )
+      var q_tilt = (new THREE.Quaternion()).setFromAxisAngle(
+        (new THREE.Vector3(1,0,0)), Robot.bodyTilt );
+      skeleton.q.multiplyQuaternions(q_pose,q_tilt);
       
       // Joint angle offsets
-      //feedback.neckangle[0] = 0;
       //
       feedback.larmangle[0] += Math.PI/2;
       feedback.rarmangle[0] += Math.PI/2;
@@ -474,9 +469,8 @@
       feedback.rarmangle[1] += Math.PI/2;
       //
       feedback.larmangle[2] += Math.PI;
-      feedback.rarmangle[2] += Math.PI
+      feedback.rarmangle[2] += Math.PI;
       //
-      //feedback.larmangle[3] += Math.PI;
             
       // Update jangles
       jangles = feedback.neckangle.concat(feedback.larmangle,feedback.llegangle,feedback.rlegangle,feedback.rarmangle,feedback.waistangle)

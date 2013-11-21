@@ -52,8 +52,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   Robot.setup(function(){
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
-    // x,y,a pose
-    Robot.set_pose([0,0,0]);
   });
 
   // Finally, render the world!
