@@ -52,7 +52,7 @@
     
     // Incorporate pose
     var q_pose = (new THREE.Quaternion()).setFromAxisAngle(
-      (new THREE.Vector3(0,1,0)), Robot.pa )
+      (new THREE.Vector3(0,1,0)), Robot.pa );
     var full_rot2 = new THREE.Quaternion();
     full_rot2.multiplyQuaternions(q_pose,full_rot);
 

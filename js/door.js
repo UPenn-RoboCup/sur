@@ -116,6 +116,14 @@
       (new THREE.Vector3()).fromArray(handle_pos),
       (new THREE.Vector3()).fromArray(handle_endpos)
     );
+    
+    // apply some yaw based upon our pose
+    var q_pose = (new THREE.Quaternion()).setFromAxisAngle(
+      (new THREE.Vector3(0,1,0)), Robot.pa );
+    var q_door = (new THREE.Quaternion()).setFromEuler(hinge_mesh.rotation);
+    var q_yaw = (new THREE.Quaternion()).multiplyQuaternions(q_pose,q_door);
+    hinge_mesh.rotation.setFromQuaternion(q_yaw);
+    
   }
   var three_to_model = function(){
     var model = [0,1000,500,500,-50,900];
@@ -132,6 +140,15 @@
     model[4] = (handle_mesh.position.z - (handle_thickness-door_thickness)/2)/1000
     // Grab the y knob offset
     model[5] = 2*(handle_mesh.position.x - 2*door_mesh.position.x)/1000;
+    
+    // kill off the yaw from the pose
+    var q_pose_inv = (new THREE.Quaternion()).setFromAxisAngle(
+      (new THREE.Vector3(0,1,0)), Robot.pa ).inverse();
+    var q_door = (new THREE.Quaternion()).setFromEuler(hinge_mesh.rotation);
+    var q_yaw = (new THREE.Quaternion()).multiplyQuaternions(q_pose_inv,q_door);
+    var e_door = (new THREE.Euler()).setFromQuaternion(q_yaw);
+    var yaw = e_door.y;
+    
     return model;
   }
 
@@ -148,18 +165,14 @@
       this.timeout = 1000; // ms
     })
     .success(function(model){
-      tcontrol.detach( item_mesh );
       model_to_three(model);
       item_mesh = hinge_mesh;
-      tcontrol.attach( item_mesh );
       World.render();
     })
     .error(function(msg){
       console.log('Error loading door!',msg);
-      tcontrol.detach( item_mesh );
       model_to_three();
       item_mesh = hinge_mesh;
-      tcontrol.attach( item_mesh );
       World.render();
     });
   }
@@ -174,12 +187,7 @@
   }
   // send to the robot
   Door.send = function(){
-    var m = three_to_model();
-    // Acquire the model
-    item_angle.setFromQuaternion(item_mesh.quaternion);
-    // Points in THREEjs to torso frame
-    var model = Transform.three_to_torso(item_mesh.position,Robot);
-    model.push(item_angle.y);
+    var model = three_to_model();
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
   // loop the tcontrol
