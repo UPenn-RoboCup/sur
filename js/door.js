@@ -76,6 +76,7 @@
     } else {
       handle_mesh.position.x = door_radius + handle_len/2;
     }
+    //console.log('door handle',handle_offset,handle_thickness,door_thickness)
     handle_mesh.position.z = (handle_thickness-door_thickness)/2 + handle_offset;
     handle_mesh.position.y = hinge_pos.y - door_height/2;
     //(handle_offset+handle_thickness)/2;
@@ -98,15 +99,16 @@
   var model_to_three = function(model){
     var hinge_pos = [0,1000,500], 
     door_radius = 500, 
-    handle_pos = [-50,1000,500], 
-    handle_endpos = [-50,900,500];
-    if(model!==undefined){    
+    handle_pos = [-50,1000,450], 
+    handle_endpos = [-50,900,450];
+    if(model!==undefined){
       hinge_pos = Transform.torso_to_three(model[0],model[1],model[2],Robot);
       // negative: left hinge | positive: right hinge
       door_radius = 1000*model[3];
       handle_pos = Transform.torso_to_three(model[0]+model[4],model[1],model[2],Robot);
       handle_endpos = Transform.torso_to_three(model[0]+model[4],model[1]+model[5],model[2],Robot);    
     }
+    //console.log(hinge_pos,handle_pos,handle_endpos)
     // Make the model
     make_door(
       (new THREE.Vector3()).fromArray(hinge_pos),
@@ -121,7 +123,6 @@
     var p = (new THREE.Vector3()).copy(hinge_mesh.position);
     p.z -= door_thickness/2;
     var robot_hinge = Transform.three_to_torso(p,Robot);
-    // console.log(hinge_mesh.position,robot_hinge)
     model[0] = robot_hinge[0];
     model[1] = robot_hinge[1];
     model[2] = robot_hinge[2]; // not really correct...
@@ -130,9 +131,7 @@
     // Grab the x offset
     model[4] = (handle_mesh.position.z - (handle_thickness-door_thickness)/2)/1000
     // Grab the y knob offset
-    //model[5] = handle_mesh.geometry.width/1000;
     model[5] = 2*(handle_mesh.position.x - 2*door_mesh.position.x)/1000;
-    //console.log('Model',model);
     return model;
   }
 

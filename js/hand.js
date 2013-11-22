@@ -61,8 +61,21 @@
     item_mesh.position.fromArray(pos_array);
   }
   var three_to_model = function(){
-    var q = (new THREE.Quaternion()).setFromEuler(item_mesh.rotation)
-    var q_robot = (new THREE.Quaternion()).multiplyQuaternions(q,item_mesh_default_rot_inv);
+    var q = (new THREE.Quaternion()).setFromEuler(item_mesh.rotation);
+    
+    // Undo the pose orientation
+    var q_pose = (new THREE.Quaternion()).setFromAxisAngle(
+      (new THREE.Vector3(0,1,0)), Robot.pa );
+    var q_pose_inv = q_pose.inverse();
+    
+    // Relative
+    var q_rel = (new THREE.Quaternion()).multiplyQuaternions(q_pose_inv,q);
+    
+    // Put into the robot frame
+    var q_robot = (new THREE.Quaternion())
+    .multiplyQuaternions(q_rel,item_mesh_default_rot_inv);
+    
+    
     var rpy = (new THREE.Euler()).setFromQuaternion(q_robot);
     var tr = Transform.three_to_torso(item_mesh.position,Robot)
     tr.push(rpy.z, rpy.x, rpy.y)

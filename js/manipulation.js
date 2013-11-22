@@ -27,6 +27,10 @@
     // stop the normal controls
     World.disable_orbit();
     
+    // attach
+    var cur_mesh = cur_item.get_mesh();
+    tcontrol.attach( cur_mesh );
+    
     World.add( tcontrol );
     tcontrol.update();
     
@@ -46,6 +50,11 @@
 
     // Remove the tcontrol
     World.remove( tcontrol );
+    
+    // detach
+    var cur_mesh = cur_item.get_mesh();
+    tcontrol.detach( cur_mesh );
+    
     World.enable_orbit();
     World.render();
     
@@ -67,10 +76,6 @@
   var cycle_item = function(){
     // Stop modifying
     //no_mod();
-    // Detach the tcontrol
-    var cur_mesh = cur_item.get_mesh();
-    //console.log('cur_mesh',cur_mesh);
-    tcontrol.detach( cur_mesh );
     // Remove the event listener
     tcontrol.removeEventListener( 'modify', cur_item.mod_callback );
     // De-init
@@ -86,10 +91,6 @@
     // Init the item
     cur_item.init(tcontrol);
     
-    // Attach the new tcontrol
-    var cur_mesh = cur_item.get_mesh();
-    //console.log('cur_mesh',cur_mesh);
-    tcontrol.attach( cur_mesh );
     // Add the event listener
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );
     
