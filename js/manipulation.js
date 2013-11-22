@@ -64,9 +64,12 @@
     // send the model to the robot
     cur_item.send();
     
-    // reset
-    unclicker(this,no_mod);
-    clicker(this,yes_mod);
+    // reset... uh "this" could be bad...
+    // quick fix for now...
+    if(this!==ctx){
+      unclicker(this,no_mod);
+      clicker(this,yes_mod);
+    }
   };
   // Function to clear manipulation points/objects
   var clear_manip = function(){
@@ -173,6 +176,16 @@
   // Keypressing hotkeys
   var tcontrol_hotkeys = [
     {
+      // Escape modifications
+      "keys"          : "escape",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          no_mod();
+      },
+      "this"          : ctx
+    },
+    {
       // swap global/local for visual cue
       "keys"          : "`",
       "is_exclusive"  : true,
@@ -202,8 +215,9 @@
       },
       "this"          : ctx
     },
+    /*
     {
-      // scale
+      // scale (should never use)
       "keys"          : "y",
       "is_exclusive"  : true,
       "on_keyup"      : function(event) {
@@ -212,6 +226,7 @@
       },
       "this"          : ctx
     },
+    */
   ];
 
   // export

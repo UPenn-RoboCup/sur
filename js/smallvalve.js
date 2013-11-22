@@ -157,6 +157,15 @@
     return mod_mesh;
   }
   SmallValve.mod_callback = function(){
+    // Retain the same angles
+    item_mesh.rotation.x = 0;
+    item_mesh.rotation.y = 0;
+    start_mesh.rotation.x = 0;
+    start_mesh.rotation.y = 0;
+    stop_mesh.rotation.x = 0;
+    stop_mesh.rotation.y = 0;
+    // Retain the same height
+    item_mesh.position.y = 100;
   }
 
   /////////////////////////

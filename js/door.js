@@ -236,6 +236,16 @@
     return item_mesh;
   }
   Door.mod_callback = function(){
+    // no rotation
+    hinge_mesh.rotation.x = 0;
+    hinge_mesh.rotation.z = 0;
+    // Not even yaw allowed... assume we get to perfect yaw=0
+    //hinge_mesh.rotation.y = 0;
+    // need robot pose...
+    
+    // no up and down movement
+    hinge_mesh.position.y = door_height/2;
+    
     
   }
 
