@@ -11,22 +11,23 @@
   /////////////////////
   // Mesh definition //
   /////////////////////
-  // make the wheel
-  var radius0  = 300;
-  var tube_dia = 20;
+  // make the wheel (some params known a priori)
+  var radius0  = 105;
+  var ind_sz   = 10;
+  var tube_dia = 25/2;
   var item_geo = new THREE.TorusGeometry(radius0, tube_dia, 8, 20 );
   var item_mat = new THREE.MeshLambertMaterial({color: 0x5C5858});
   // Vertical spoke
-  var vert_mesh = new THREE.Mesh(new THREE.CylinderGeometry(30,30,2*radius0,12,1));
+  var vert_mesh = new THREE.Mesh(new THREE.CylinderGeometry(tube_dia/2,tube_dia/2,2*radius0,12,1));
   // Horizontal Spoke
-  var horiz_mesh = new THREE.Mesh(new THREE.CylinderGeometry(30,30,2*radius0,12,1));
+  var horiz_mesh = new THREE.Mesh(new THREE.CylinderGeometry(tube_dia/2,tube_dia/2,2*radius0,12,1));
   horiz_mesh.rotation.set(0, 0, Math.PI/2);
   // Full mesh
   THREE.GeometryUtils.merge( item_geo, vert_mesh );
   THREE.GeometryUtils.merge( item_geo, horiz_mesh );
   var item_mesh = new THREE.Mesh( item_geo, item_mat );
   // Roll indicators should be a submesh
-  var start_mat  = new THREE.MeshLambertMaterial({color: 0x00FF00});
+  var start_mat  = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
   var start_path = new THREE.Path();
   start_path.fromPoints([
     new THREE.Vector2(0,0), // tip of the arrow
@@ -36,9 +37,10 @@
   ]);
   var start_shape = start_path.toShapes();
   var start_geo  = new THREE.ExtrudeGeometry(
-    start_shape, {}
+    start_shape, {amount: ind_sz}
   );
   var start_mesh  = new THREE.Mesh( start_geo, start_mat );
+  start_mesh.position.setZ(-ind_sz/2);
   //
   var stop_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
   var stop_path = new THREE.Path();
@@ -50,9 +52,10 @@
   ]);
   var stop_shape = stop_path.toShapes();
   var stop_geo  = new THREE.ExtrudeGeometry(
-    stop_shape, {}
+    stop_shape, {amount: ind_sz}
   );
   var stop_mesh  = new THREE.Mesh( stop_geo, stop_mat );
+  stop_mesh.position.setZ(-ind_sz/2);
   stop_mesh.rotation.set(0, 0, Math.PI/2);
   // append to the valve
   item_mesh.add(start_mesh);
@@ -68,10 +71,21 @@
   }
   var model_to_three = function(model){
     // {pos(3) roll_start roll_end}
-    var p = new THREE.Vector3();
-    p.fromArray(model);
+    var p = Transform.torso_to_three(model[0],model[1],model[2],Robot);
+    item_mesh.position.fromArray(p);
+    
+    // apply some yaw based upon our pose
+    var q_pose = (new THREE.Quaternion()).setFromAxisAngle(
+      (new THREE.Vector3(0,1,0)), Robot.pa );
+    var q_item = (new THREE.Quaternion()).setFromEuler(item_mesh.rotation);
+    var q_yaw = (new THREE.Quaternion()).multiplyQuaternions(q_pose,q_item);
+    item_mesh.rotation.setFromQuaternion(q_yaw);
+    
     var roll_start = model[3];
-    var roll_end = model[4];
+    var roll_end   = model[4];
+    start_mesh.rotation.set(0, 0, roll_start);
+    stop_mesh.rotation.set(0, 0, roll_end);
+    //console.log('roll tide!',roll_start,roll_end,model);
   }
   
   /////////////////////////////
@@ -115,7 +129,16 @@
   }
   // clear the item
   SmallValve.clear = function(){
-    
+    // Get the model from the robot (could be pesky...?)
+    qwest.get( rpc_url,{},{},function(){
+      // Use a 1 second timeout for the XHR2 request for getting the model
+      this.timeout = 1000; // ms
+    })
+    .success(function(model){
+      model_to_three(model);
+      mod_mesh = item_mesh;
+      World.render();
+    })
   }
   // enter
   SmallValve.init = function(){
