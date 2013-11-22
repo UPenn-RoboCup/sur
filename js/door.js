@@ -3,10 +3,22 @@
   // Function to hold methods
   function Door(){}
 
+  // ASSUMPTIONS
+  // 84 cm from hinge to handle
+  // 6 cm from door surface to handle
+  // 5 cm from handle axis to grip point in y direction
+  // Handle height is 40 cm
+  var door_width = 0.84;
+  var handle_offset_x = -0.06;
+  var handle_offset_y = 0.05;
+  var handle_height = 1.016;
+
   //////////////
   // RPC URLs //
   //////////////
-  var rpc_url = rest_root+'/m/hcm/door/model'
+  var rpc_url = rest_root+'/m/hcm/door/model';
+  // Assume just zero yaw? I mean, for real...
+  var rpc_url_yaw = rest_root+'/m/hcm/door/yaw';
 
   /////////////////////
   // Mesh definition //
@@ -97,17 +109,27 @@
   // Model converters //
   //////////////////////
   var model_to_three = function(model){
-    var hinge_pos = [0,1000,500], 
-    door_radius = 500, 
-    handle_pos = [-50,1000,450], 
-    handle_endpos = [-50,900,450];
-    if(model!==undefined){
-      hinge_pos = Transform.torso_to_three(model[0],model[1],model[2],Robot);
-      // negative: left hinge | positive: right hinge
-      door_radius = 1000*model[3];
-      handle_pos = Transform.torso_to_three(model[0]+model[4],model[1],model[2],Robot);
-      handle_endpos = Transform.torso_to_three(model[0]+model[4],model[1]+model[5],model[2],Robot);    
+    // undefined door goes to the default
+    if(model===undefined){
+      model = [0.45,0.85,handle_height-Robot.bodyHeight, //Hinge XYZ pos from robot frame
+    	door_width, //Door radius, negative - left hinge, positive - right hinge
+    	handle_offset_x, //The X offset of the door handle (from door surface)
+    	handle_offset_y, //The Y offset of the knob axis (from gripping pos)
+      ];
     }
+      
+    // overrides due to assumptions!
+    if(model[3]<0) {model[3] = -door_width;} else {model[3] = door_width;}
+    model[4] = handle_offset_x;
+    model[5] = handle_offset_y;
+    
+    // Make into THREE coords
+    hinge_pos = Transform.torso_to_three(model[0],model[1],model[2],Robot);
+    // negative: left hinge | positive: right hinge
+    door_radius = 1000*model[3];
+    handle_pos = Transform.torso_to_three(model[0]+model[4],model[1],model[2],Robot);
+    handle_endpos = Transform.torso_to_three(model[0]+model[4],model[1]+model[5],model[2],Robot);    
+    
     //console.log(hinge_pos,handle_pos,handle_endpos)
     // Make the model
     make_door(
@@ -126,20 +148,17 @@
     
   }
   var three_to_model = function(){
-    var model = [0,1000,500,500,-50,900];
+    var model = [0,1000,500,door_width,handle_offset_x,handle_offset_y];
     // Grab the position of the hinge
     var p = (new THREE.Vector3()).copy(hinge_mesh.position);
-    p.z -= door_thickness/2;
+    // Put to the ground
+    p.y = 0;
     var robot_hinge = Transform.three_to_torso(p,Robot);
     model[0] = robot_hinge[0];
     model[1] = robot_hinge[1];
-    model[2] = robot_hinge[2]; // not really correct...
-    // Grab the radius
-    model[3] = knob_mesh.position.x / 1000;
-    // Grab the x offset
-    model[4] = (handle_mesh.position.z - (handle_thickness-door_thickness)/2)/1000
-    // Grab the y knob offset
-    model[5] = 2*(handle_mesh.position.x - 2*door_mesh.position.x)/1000;
+    
+    // Need to use the current robot bodyHeight
+    model[2] = handle_height - Robot.bodyHeight;
     
     // kill off the yaw from the pose
     var q_pose_inv = (new THREE.Quaternion()).setFromAxisAngle(
@@ -148,6 +167,9 @@
     var q_yaw = (new THREE.Quaternion()).multiplyQuaternions(q_pose_inv,q_door);
     var e_door = (new THREE.Euler()).setFromQuaternion(q_yaw);
     var yaw = e_door.y;
+    
+    // Check the yaw to set the door radius...
+    //if(model[3]<0){model[3] = -door_width;}else{model[3] = door_width;}
     
     return model;
   }
