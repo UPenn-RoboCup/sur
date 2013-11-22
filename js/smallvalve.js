@@ -67,7 +67,12 @@
   // Model converters //
   //////////////////////
   var three_to_model = function(){
-    return [];
+    var roll_start = start_mesh.rotation.z;
+    var roll_end = stop_mesh.rotation.z;
+    var p = Transform.three_to_torso(item_mesh.position,Robot);
+    p.push(roll_start);
+    p.push(roll_end);
+    return p;
   }
   var model_to_three = function(model){
     // {pos(3) roll_start roll_end}
@@ -85,7 +90,6 @@
     var roll_end   = model[4];
     start_mesh.rotation.set(0, 0, roll_start);
     stop_mesh.rotation.set(0, 0, roll_end);
-    //console.log('roll tide!',roll_start,roll_end,model);
   }
   
   /////////////////////////////
@@ -125,7 +129,8 @@
   }
   // send data to the robot
   SmallValve.send = function(){
-    
+    var model = three_to_model();
+    qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
   // clear the item
   SmallValve.clear = function(){
