@@ -43,6 +43,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   Manipulation.add_item(Waypoint);
   Manipulation.add_item(Hand);
   Manipulation.add_item(SmallValve);
+  Manipulation.add_item(BarValve);
   Manipulation.add_item(Door);
   Manipulation.add_item(Tool);
   //Manipulation.add_item(Wheel);
