@@ -12,6 +12,7 @@
   // Mesh definition //
   /////////////////////
   // make the wheel (some params known a priori)
+  var off_ground = 1010;
   var radius0  = 105;
   var ind_sz   = 10;
   var tube_dia = 25/2;
@@ -26,6 +27,7 @@
   THREE.GeometryUtils.merge( item_geo, vert_mesh );
   THREE.GeometryUtils.merge( item_geo, horiz_mesh );
   var item_mesh = new THREE.Mesh( item_geo, item_mat );
+  item_mesh.position.y = off_ground;
   // Roll indicators should be a submesh
   var start_mat  = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
   var start_path = new THREE.Path();
@@ -165,7 +167,7 @@
     stop_mesh.rotation.x = 0;
     stop_mesh.rotation.y = 0;
     // Retain the same height
-    item_mesh.position.y = 100;
+    item_mesh.position.y = off_ground;
   }
 
   /////////////////////////
