@@ -75,7 +75,8 @@
   }
   //exit
   Waypoint.deinit = function(){
-    World.remove( item_mesh );
+    // Never remove :P
+    //World.remove( item_mesh );
   }
   // Constrain the angles to 2D (i.e. one angle)
   Waypoint.mod_callback = function(){
@@ -98,6 +99,14 @@
   // get the mesh
   Waypoint.get_mesh = function(){
     return item_mesh;
+  }
+  Waypoint.set = function(p,pa){
+    item_mesh.position.copy(p);
+    item_mesh.position.y = 100;
+    item_mesh.rotation.z = pa;
+  }
+  Waypoint.get_robot = function(){
+    return three_to_model();
   }
 
   /////////////////////////

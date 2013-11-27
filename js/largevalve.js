@@ -7,13 +7,17 @@
   // RPC URLs //
   //////////////
   var rpc_url = rest_root+'/m/hcm/largevalve/model'
+
+  // Relative waypoint offset in ROBOT coordinates
+  // but with THREE scale (mm)
+  var offset = new THREE.Vector2(690,270);
   
   /////////////////////
   // Mesh definition //
   /////////////////////
   // make the wheel (some params known a priori)
   var off_ground = 1010;
-  var radius0  = 130;
+  var radius0  = 220;
   var ind_sz   = 10;
   var tube_dia = 25/2;
   var item_geo = new THREE.TorusGeometry(radius0, tube_dia, 8, 20 );
@@ -63,7 +67,9 @@
   item_mesh.add(start_mesh);
   item_mesh.add(stop_mesh);
   
+  // Mesh that is undergoing modification
   var mod_mesh = item_mesh;
+  // Item mesh remains always the base mesh
   
   //////////////////////
   // Model converters //
@@ -93,6 +99,25 @@
     var roll_end   = model[4];
     start_mesh.rotation.set(0, 0, roll_start);
     stop_mesh.rotation.set(0, 0, roll_end);
+  }
+  // Adjust the waypoint to the *perfect* position
+  var wp_callback = function(){
+    // Grab the (global) orientation of the mesh
+    var pa = -1*item_mesh.rotation.y;
+    // Acquire the position of the tip:
+    var p = (new THREE.Vector3()).copy(item_mesh.position);
+    
+    // Make the global offset from the object    
+    var dx = offset.x*Math.cos(pa) + offset.y*Math.sin(pa);
+    var dy = offset.y*Math.cos(pa) - offset.x*Math.sin(pa);
+
+    // Change the THREE coordinates of the desired waypoint
+    p.x -= dy;
+    p.z -= dx;
+
+    // Update the Waypoint in the scene
+    Waypoint.set(p,pa);
+
   }
   
   /////////////////////////////
@@ -162,20 +187,21 @@
   LargeValve.mod_callback = function(){
     // Retain the same angles
     item_mesh.rotation.x = 0;
-    item_mesh.rotation.y = 0;
+    //item_mesh.rotation.y = 0;
     start_mesh.rotation.x = 0;
     start_mesh.rotation.y = 0;
     stop_mesh.rotation.x = 0;
     stop_mesh.rotation.y = 0;
     // Retain the same height
-    item_mesh.position.y = off_ground;
+    //item_mesh.position.y = off_ground;
+    // Update the global waypoint
+    wp_callback();
   }
-
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
   LargeValve.item_name = 'Big Valve';
-  LargeValve.grab_evt = 'smallvalvegrab';
+  LargeValve.grab_evt = 'largevalvegrab';
   // export
 	ctx.LargeValve = LargeValve;
 

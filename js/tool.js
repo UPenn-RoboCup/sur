@@ -37,6 +37,7 @@
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
     model.push(item_angle.y);
+    console.log('tool',model);
     return model;
   }
   var model_to_three = function(model){
@@ -75,6 +76,9 @@
   }
   Tool.mod_callback = function(){
     
+  }
+  Tool.gen_wp = function(){
+    // yield the optimal waypoint
   }
 
   /////////////////////////

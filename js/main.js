@@ -43,6 +43,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   Manipulation.add_item(Waypoint);
   Manipulation.add_item(Hand);
   Manipulation.add_item(SmallValve);
+  Manipulation.add_item(LargeValve);
   Manipulation.add_item(BarValve);
   Manipulation.add_item(Door);
   Manipulation.add_item(Tool);
@@ -70,11 +71,27 @@ document.addEventListener( "DOMContentLoaded", function(){
     var sm = id.substring(0,sep);
     var fsm = sm.charAt(0).toUpperCase() + sm.slice(1) + 'FSM';
     // Add the listener
-    clicker(btn,
+    if(fsm=='BodyFSM'&&evt=='follow'){
+      clicker(btn,
+      (function(){
+        var wp_url = rest_root+'/m/hcm/motion/waypoints';
+        var wp = Waypoint.get_robot();
+        var b_evt = this.evt, b_fsm = this.fsm;
+        // Send the waypoint
+        qwest.post( wp_url, {val:JSON.stringify(wp)} )
+        .success(function(){
+          // Then send the follow event!
+          qwest.post(fsm_url,{fsm: b_fsm, evt: b_evt});
+        });
+      }).bind({evt:evt,fsm:fsm})
+      );
+    } else {
+      clicker(btn,
       (function(){
         qwest.post(fsm_url,{fsm: this.fsm , evt: this.evt});
       }).bind({evt:evt,fsm:fsm})
     );
+    }
   } // for each
   
   // Proceed buttons
