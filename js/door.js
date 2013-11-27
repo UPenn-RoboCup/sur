@@ -111,7 +111,8 @@
   var model_to_three = function(model){
     // undefined door goes to the default
     if(model===undefined){
-      model = [0.45,0.85,handle_height-Robot.bodyHeight, //Hinge XYZ pos from robot frame
+      model = [
+      0.45,0.85,handle_height-Robot.bodyHeight, //Hinge XYZ pos from robot frame
     	door_width, //Door radius, negative - left hinge, positive - right hinge
     	handle_offset_x, //The X offset of the door handle (from door surface)
     	handle_offset_y, //The Y offset of the knob axis (from gripping pos)
@@ -189,13 +190,13 @@
     .success(function(model){
       model_to_three(model);
       item_mesh = hinge_mesh;
-      World.render();
+      
     })
     .error(function(msg){
       console.log('Error loading door!',msg);
       model_to_three();
       item_mesh = hinge_mesh;
-      World.render();
+      
     });
   }
   // enter
@@ -229,7 +230,7 @@
     }
     tcontrol.attach( item_mesh );
     tcontrol.update();
-    World.render();
+    
   }
   // get the mesh
   Door.get_mesh = function(){

@@ -105,5 +105,18 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('proceed_notify',function(){
     qwest.post( rpc_url_proceed, {val:JSON.stringify(2)} )
   });
+  
+  // stats
+  var stats = new Stats();
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.top = '0px';
+  $('body')[0].appendChild( stats.domElement );
+  
+  // begin animation
+  (function animloop(){
+    World.render();
+    stats.update();
+    requestAnimationFrame(animloop);
+  })();
 
 });

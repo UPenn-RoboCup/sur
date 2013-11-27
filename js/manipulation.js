@@ -12,95 +12,87 @@
   // Manipulatable items
   var items = [];
   Manipulation.add_item = function(item){
+    var item_id = items.length;
+    // Store in our array
     items.push(item);
+    // Place as a select option
+    var menu = $('#menu_obj')[0];
+    var option = new Option(item.item_name);
+    option.value = item_id;
+    menu.appendChild(option);
   }
   Manipulation.is_mod = false;
-  var cur_item_id = -1;
-  var cur_item = null;
-  var grab_btn, cycle_btn;
+  var cur_item_id = -1, cur_item = null;
   
   // Functions to start/stop modifying
   var yes_mod = function(){
-    if(Manipulation.is_mod===true){return;}
+    if(Manipulation.is_mod==true){return;}
     Manipulation.is_mod = true;
-    
+    // Initial callback
+    cur_item.mod_callback();
     // stop the normal controls
     World.disable_orbit();
-    
-    // attach
-    var cur_mesh = cur_item.get_mesh();
+    // attach the tcontrol
+    var cur_mesh = cur_item.get_mod_mesh();
     tcontrol.attach( cur_mesh );
-    
     World.add( tcontrol );
     tcontrol.update();
-    
-    // Keyboard shortcuts
+    // Keyboard shortcuts for tcontrol
     keypress.register_many(tcontrol_hotkeys);
-    
     // Re-render
-    World.render();
-        
-    // reset
-    unclicker(this,yes_mod);
-    clicker(this,no_mod);
+    
+    // reset the buttons
+    if(this!==ctx){
+      unclicker(this,yes_mod);
+      clicker(this,no_mod);
+    }
   };
   var no_mod = function(){
-    if(Manipulation.is_mod===false){return;}
+    if(Manipulation.is_mod==false){return;}
     Manipulation.is_mod = false;
-
+    // Final callback
+    cur_item.mod_callback();
     // Remove the tcontrol
     World.remove( tcontrol );
-    
-    // detach
-    var cur_mesh = cur_item.get_mesh();
+    // detach the tcontrol
+    var cur_mesh = cur_item.get_mod_mesh();
     tcontrol.detach( cur_mesh );
-    
+    // Go back to the normal view
     World.enable_orbit();
-    World.render();
     
     // Keyboard shortcuts
     keypress.unregister_many(tcontrol_hotkeys);
-    
     // send the model to the robot
     cur_item.send();
-    
-    // reset... uh "this" could be bad...
-    // quick fix for now...
+    // Ensure that we do not set a clicker on the whole page
     if(this!==ctx){
       unclicker(this,no_mod);
       clicker(this,yes_mod);
     }
   };
-  // Function to clear manipulation points/objects
-  var clear_manip = function(){
-    cur_item.clear(tcontrol);
-  }
-  // Function to cycle manipulation item
-  var cycle_item = function(){
+  // Function to cycle manipulation item to the item_id
+  var cycle_item = function(item_id){
     // Stop modifying
-    //no_mod();
+    no_mod();
     // Remove the event listener
     tcontrol.removeEventListener( 'modify', cur_item.mod_callback );
     // De-init
-    cur_item.deinit();
+    cur_item.deinit(tcontrol);
     
-    // find the next item
-    cur_item_id++;
+    // set the next item
+    cur_item_id = item_id;
     if(cur_item_id>=items.length){cur_item_id=0;}
     cur_item = items[cur_item_id];
-    // Update the display of the button
-    cycle_btn.textContent = cur_item.item_name;
     
     // Init the item
     cur_item.init(tcontrol);
-    
     // Add the event listener
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );
-    
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
+    
     // Re-render the world
-    World.render();
+    
   }
   
   var loop_item = function(){
@@ -112,63 +104,42 @@
     if(grab_evt===undefined){return;}
     qwest.post(fsm_url,{fsm: 'ArmFSM', evt: grab_evt});
   }
-  
+  // Vantage point for looking at objects
   Manipulation.get_vantage = function(){
     var cp = cur_item.get_position;
-    if(cp!==undefined){
-      var p = cp();
-      var v = {
-        position: p.position.toArray(),
-        target: p.position.toArray(),
-      };
-      v.position[2] = v.position[2] - 200;
-    }
-    else
-    {
-      return {position: [0,1000,250], target: [0,1000,500]};
-    }
+    var p = cp();
+    var v = {
+      position: p.position.toArray(),
+      target: p.position.toArray(),
+    };
+    v.position[2] = v.position[2] - 200;
   }
   
   Manipulation.setup = function(){
-    // Acquire buttons
-    cycle_btn = $('#cycle_obj')[0];
-    grab_btn = $('#arm_grab')[0];
-    
     // Handle the button clicks
     clicker('modify_obj',yes_mod);
-    clicker('clear_obj', clear_manip);
-    clicker('cycle_obj', cycle_item);
     clicker('loop_obj',loop_item);
-    // special grab click
-    clicker(grab_btn, grab_item);
-    
+    clicker('arm_grab', grab_item);
     // initialize the element
-    //cur_item_id = items.length - 1;
     cur_item_id = 0;
     cur_item    = items[cur_item_id];
-    cycle_btn.textContent = cur_item.item_name;
-    
-    // init
     cur_item.init();
-    
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
-    
-    // Spacemouse
-    var port = 9012;
-    // Connect to the websocket server
-    var ws = new WebSocket('ws://' + host + ':' + port);
-    ws.binaryType = "arraybuffer";
-    ws.onmessage = function(e){
-      var sp_mouse = JSON.parse(e.data);
-      //console.log('spacemouse'.e,sp_mouse);
-    };
-    
     // Make a tcontrol
     tcontrol = World.generate_tcontrol();
-    tcontrol.attach( cur_item.get_mesh() );
+    tcontrol.attach( cur_item.get_mod_mesh() );
     tcontrol.addEventListener( 'change', World.render );
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );
+    // Setup hotkeys for items
+    keypress.register_many(item_hotkeys);
+    // Setup the menu
+    var menu = $('#menu_obj')[0];
+    menu.addEventListener('change', function(){
+      var item_id = this.value;
+      cycle_item(item_id);
+      this.blur();
+    }, false);
     
   } // setup
 
@@ -227,6 +198,82 @@
       "this"          : ctx
     },
     */
+  ];
+  
+  // Keypressing hotkeys
+  var item_hotkeys = [
+  {
+    "keys"          : "i",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.position.z += 10;
+        cur_item.mod_callback();
+        
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : ",",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.position.z -= 10;
+        cur_item.mod_callback();
+        
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "j",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.position.x += 10;
+        cur_item.mod_callback();
+        
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "l",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.position.x -= 10;
+        cur_item.mod_callback();
+        
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "u",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.position.y += 10;
+        cur_item.mod_callback();
+        
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "m",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.position.y -= 10;
+        cur_item.mod_callback();
+        
+    },
+    "this"          : ctx
+  },
   ];
 
   // export

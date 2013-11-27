@@ -71,7 +71,7 @@
     item_mesh.position.copy(p);
 
     // Re-render
-    World.render();
+    
 
   }
   // modification loop
@@ -94,7 +94,7 @@
     }
     tcontrol.attach( mod_mesh );
     tcontrol.update();
-    World.render();
+    
 
   }
   // send data to the robot
@@ -112,7 +112,7 @@
     .success(function(model){
       model_to_three(model);
       mod_mesh = item_mesh;
-      World.render();
+      
     })
   }
   // enter

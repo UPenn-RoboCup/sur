@@ -455,7 +455,7 @@
 
       // Orientation
       var q_pose = (new THREE.Quaternion()).setFromAxisAngle(
-        (new THREE.Vector3(0,1,0)), Robot.pa )
+        (new THREE.Vector3(0,1,0)), Robot.pa );
       var q_tilt = (new THREE.Quaternion()).setFromAxisAngle(
         (new THREE.Vector3(1,0,0)), Robot.bodyTilt );
       skeleton.q.multiplyQuaternions(q_pose,q_tilt);
@@ -475,7 +475,7 @@
       // Update jangles
       jangles = feedback.neckangle.concat(feedback.larmangle,feedback.llegangle,feedback.rlegangle,feedback.rarmangle,feedback.waistangle)
       update_skeleton();
-      World.render();
+      
     }
   }
   

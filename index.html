@@ -24,6 +24,7 @@
   <script src="lib/OrbitControls.js"></script>
   <script src="lib/TransformControls.js"></script>
   <script src="lib/STLLoader.js"></script>
+  <script src="lib/stats.min.js"></script>
 
   <!-- SUR data JS -->
   <script src="js/main.js"></script>
@@ -86,9 +87,8 @@
   
   <!-- Object modification Settings -->
   <div class="button-group" id="object">
-    <a href="#" class="button primary" id="cycle_obj">Wheel</a>
-    <a href="#" class="button icon remove danger" id="clear_obj">Clear</a>
-    <a href="#" class="button icon move" id="modify_obj">Modify</a>
+    <select name="objects_menu" id="menu_obj"></select>
+    <a href="#" class="button icon move" id="modify_obj">Mod</a>
     <a href="#" class="button icon loop" id="loop_obj">Loop</a>
   </div>
   <br/>

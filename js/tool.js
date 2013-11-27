@@ -51,7 +51,7 @@
     // Set the position
     item_mesh.position.copy(p);
     // Re-render
-    World.render();
+    
   }
   Tool.clear = function(){
 

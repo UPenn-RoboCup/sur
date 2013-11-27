@@ -8,6 +8,10 @@
   //////////////
   var rpc_url = rest_root+'/m/hcm/smallvalve/model'
   
+  // Relative waypoint offset in ROBOT coordinates
+  // but with THREE scale (mm)
+  var offset = new THREE.Vector2(600,300);
+  
   /////////////////////
   // Mesh definition //
   /////////////////////
@@ -63,7 +67,9 @@
   item_mesh.add(start_mesh);
   item_mesh.add(stop_mesh);
   
+  // Mesh that is undergoing modification
   var mod_mesh = item_mesh;
+  // Item mesh remains always the base mesh
   
   //////////////////////
   // Model converters //
@@ -103,7 +109,7 @@
     item_mesh.position.copy(p);
 
     // Re-render
-    World.render();
+    
 
   }
   // modification loop
@@ -126,7 +132,7 @@
     }
     tcontrol.attach( mod_mesh );
     tcontrol.update();
-    World.render();
+    
 
   }
   // send data to the robot
@@ -144,7 +150,7 @@
     .success(function(model){
       model_to_three(model);
       mod_mesh = item_mesh;
-      World.render();
+      
     })
   }
   // enter

@@ -4,14 +4,11 @@
 (function(ctx){
   
   // Function to hold methods
-  function Waypoint(){}
+  function Target(){}
 
   //////////////
   // RPC URLs //
   //////////////
-  var rpc_url = rest_root+'/m/hcm/motion/waypoints';
-  var rpc_url_n = rest_root+'/m/hcm/motion/nwaypoints';
-  var rpc_url_fr = rest_root+'/m/hcm/motion/waypoint_frame';
   
   /////////////////////
   // Mesh definition //
@@ -56,30 +53,30 @@
   /////////////////////////////
   // Object manipulation API //
   /////////////////////////////
-  Waypoint.select = function(p,r){
+  Target.select = function(p,r){
     // Put the mesh in the right position (no orientation change)
     item_mesh.position.copy(p);
     // Always above ground a bit
     item_mesh.position.y = 100;
     // Send the waypoint to robot when selecting
-    Waypoint.send();
+    Target.send();
     // Re-render
-    
+    World.render();
   }
   // TODO: reset from SHM?
-  Waypoint.clear = function(){
+  Target.clear = function(){
   }
   // enter
-  Waypoint.init = function(){
+  Target.init = function(){
     World.add( item_mesh );
   }
   //exit
-  Waypoint.deinit = function(){
+  Target.deinit = function(){
     // Never remove :P
     //World.remove( item_mesh );
   }
   // Constrain the angles to 2D (i.e. one angle)
-  Waypoint.mod_callback = function(){
+  Target.mod_callback = function(){
     // Retain the same angles
     item_mesh.rotation.x = Math.PI/2;
     item_mesh.rotation.y = 0;
@@ -87,8 +84,8 @@
     item_mesh.position.y = 100;
   }
   // send to robot
-  Waypoint.send = function(){
-    // Waypoint model
+  Target.send = function(){
+    // Target model
     var wp = three_to_model();
     qwest.post( rpc_url, {val:JSON.stringify(wp)} );
     // One waypoint
@@ -97,22 +94,22 @@
     qwest.post( rpc_url_fr, {val:JSON.stringify(1)} );
   }
   // get the mesh
-  Waypoint.get_mod_mesh = function(){
+  Target.get_mod_mesh = function(){
     return item_mesh;
   }
-  Waypoint.set = function(p,pa){
+  Target.set = function(p,pa){
     item_mesh.position.copy(p);
     item_mesh.position.y = 100;
     item_mesh.rotation.z = pa;
   }
-  Waypoint.get_robot = function(){
+  Target.get_robot = function(){
     return three_to_model();
   }
 
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
-  Waypoint.item_name = 'Waypoint';
-	ctx.Waypoint = Waypoint;
+  Target.item_name = 'Target';
+	ctx.Target = Target;
 
 })(this);

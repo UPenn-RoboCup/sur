@@ -82,70 +82,6 @@
     return tr;
   }
   
-  // Keypressing hotkeys
-  var hotkeys = [
-  {
-    "keys"          : "i",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        item_mesh.position.z += 10;
-        World.render();
-    },
-    "this"          : ctx
-  },
-  {
-    "keys"          : ",",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        item_mesh.position.z -= 10;
-        World.render();
-    },
-    "this"          : ctx
-  },
-  {
-    "keys"          : "j",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        item_mesh.position.x += 10;
-        World.render();
-    },
-    "this"          : ctx
-  },
-  {
-    "keys"          : "l",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        item_mesh.position.x -= 10;
-        World.render();
-    },
-    "this"          : ctx
-  },
-  {
-    "keys"          : "u",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        item_mesh.position.y += 10;
-        World.render();
-    },
-    "this"          : ctx
-  },
-  {
-    "keys"          : "m",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        item_mesh.position.y -= 10;
-        World.render();
-    },
-    "this"          : ctx
-  },
-  ];
-  
   
   /////////////////////////////
   // Object manipulation API //
@@ -155,7 +91,7 @@
     // Set the position
     item_mesh.position.copy(p);
     // Re-render
-    World.render();
+    
   }
   // reset the hand
   Hand.clear = function(){
@@ -181,13 +117,10 @@
     // Add to the world
     World.add(item_mesh);
     // Re-render
-    World.render();
-    // register keypresses
-    keypress.register_many(hotkeys);
+    
   }
   // exit stage
   Hand.deinit = function(){
-    keypress.unregister_many(hotkeys);
     World.remove(item_mesh);
   }
   // send to robot

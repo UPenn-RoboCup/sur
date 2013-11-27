@@ -10,7 +10,7 @@
   
   var CANVAS_WIDTH, CANVAS_HEIGHT;
   var camera, renderer, scene, container, controls;
-  var is_robot_camera = false;
+  World.is_robot_camera = false;
   
   // save items
   var meshes = [], items = [];
@@ -30,18 +30,19 @@
   
   World.render = function(){
     // render the scene using the camera
-    if(is_robot_camera){
+    if(World.is_robot_camera){
       renderer.render( scene, Robot.head_camera );
     } else {
+      controls.update();
       renderer.render( scene, camera );
     }
   }
   
   World.set_view = function(pos,target){
     if(pos=='robot'){
-      is_robot_camera = true;
+      World.is_robot_camera = true;
     } else {
-      is_robot_camera = false;
+      World.is_robot_camera = false;
       // cam position
       lookPosition.fromArray(pos);
       camera.position.copy(lookPosition);
@@ -51,7 +52,6 @@
       // update and render
       controls.update();
     }
-    World.render();
   }
   
   // Transform control generator
@@ -62,13 +62,13 @@
   // Stop moving the view
   World.disable_orbit = function(){
     controls.enabled = false;
-    controls.removeEventListener('change', World.render);
+//    controls.removeEventListener('change', World.render);
     controls = null;
   }
   World.enable_orbit = function(){
     // setup OrbitControls to move around the view
     controls = new THREE.OrbitControls( camera, container );
-    controls.addEventListener( 'change', World.render );
+//    controls.addEventListener( 'change', World.render );
     controls.target = lookTarget;
     controls.update();
   }
@@ -88,7 +88,7 @@
     var projector = new THREE.Projector();
     //console.log('projector',projector)
     var raycaster = null;
-    if(is_robot_camera){
+    if(World.is_robot_camera){
       raycaster = projector.pickingRay(mouse_vector,Robot.head_camera);
     } else {
       raycaster = projector.pickingRay(mouse_vector,camera);
@@ -194,7 +194,7 @@
       // Set the rendering size
       renderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
       // re-render
-      World.render();
+      //World.render();
     }, false );
     
     // handle buttons
@@ -205,7 +205,54 @@
     World.enable_orbit();
     
     // render
-    World.render();
+    //World.render();
+    
+    // Spacemouse
+    var port = 9012;
+    var sp = {
+      left: 0,
+      up: 0,
+      dx: 0,
+      dy: 0,
+      dz: 0,
+    }
+    // re-rendering
+    var sp_rot = [0,0];
+    var sp_up = function(){
+      // Rotations
+      controls.rotateLeft(sp.left);
+      controls.rotateUp(sp.up);
+      // Target and camera translations
+      
+      controls.update();
+      // reset
+      sp = {left: 0,up: 0,dx: 0,dy: 0,dz: 0,}
+    }
+    // Connect to the websocket server
+    var ws = new WebSocket('ws://' + host + ':' + port);
+    ws.binaryType = "arraybuffer";
+    ws.onopen = function(e){
+      // perform the setTimeout for constant rendering
+      var intervalID = window.setInterval(sp_controls_up, 30);
+    }
+    ws.onmessage = function(e){
+      // Nothing to do if no orbit controls
+      if(controls===null){return}
+      var sp_mouse = JSON.parse(e.data);
+      //console.log('sp',e.data)
+      if(sp_mouse.wz){
+        // Rotation around the target
+        sp.left = sp_mouse.wz/300;
+        sp.up   = sp_mouse.wy/300;
+      } else if(sp_mouse.z){
+        // Translation of the target
+        sp.dx = 0;
+        sp.dy = 0;
+        sp.dz = 0;
+      }
+      
+    };
+    
   }
   
   // mesh generation helpers
@@ -295,13 +342,13 @@
     //var particleSystem = make_particle_system(position, color);
     //scene.add( particleSystem );
     // render the particle system change
-    World.render();
+    //World.render();
   }
   
   World.clear_meshes = function(){
     for(var i=0, j=meshes.length; i<j; i++){scene.remove(meshes[i]);}
     meshes = [];
-    World.render();
+    //World.render();
   }
   
   // From the mesh websockets listener to rendering
