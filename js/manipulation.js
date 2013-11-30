@@ -113,13 +113,14 @@
       target: p.position.toArray(),
     };
     v.position[2] = v.position[2] - 200;
+    return v;
   }
   
   Manipulation.setup = function(){
     // Handle the button clicks
     clicker('modify_obj',yes_mod);
     clicker('loop_obj',loop_item);
-    clicker('arm_grab', grab_item);
+    clicker('arm_grab',grab_item);
     // initialize the element
     cur_item_id = 0;
     cur_item    = items[cur_item_id];
@@ -136,8 +137,7 @@
     // Setup the menu
     var menu = $('#menu_obj')[0];
     menu.addEventListener('change', function(){
-      var item_id = this.value;
-      cycle_item(item_id);
+      cycle_item(this.value);
       this.blur();
     }, false);
     

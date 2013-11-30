@@ -208,7 +208,6 @@
     //World.render();
     
     // Spacemouse
-    var port = 9012;
     var sp = {
       left: 0,
       up: 0,
@@ -222,33 +221,45 @@
       // Rotations
       controls.rotateLeft(sp.left);
       controls.rotateUp(sp.up);
-      // Target and camera translations
-      
+      // Target translations
+      controls.target.x += sp.dx;
+      controls.target.y += sp.dy;
+      controls.target.z += sp.dz;
+      // Camera translation, too
+      controls.object.position.x += sp.dx;
+      controls.object.position.y += sp.dy;
+      controls.object.position.z += sp.dz;
       controls.update();
       // reset
       sp = {left: 0,up: 0,dx: 0,dy: 0,dz: 0,}
     }
     // Connect to the websocket server
+    var port = 9012;
     var ws = new WebSocket('ws://' + host + ':' + port);
     ws.binaryType = "arraybuffer";
     ws.onopen = function(e){
       // perform the setTimeout for constant rendering
-      var intervalID = window.setInterval(sp_controls_up, 30);
+      var intervalID = ctx.setInterval(sp_controls_up, 30);
     }
     ws.onmessage = function(e){
       // Nothing to do if no orbit controls
-      if(controls===null){return}
+      
       var sp_mouse = JSON.parse(e.data);
       //console.log('sp',e.data)
+      
+      // Buttons can do special things... zoom only? switch cameras?
+      
+      // Updating the controls
+      if(controls===null){return}
       if(sp_mouse.wz){
         // Rotation around the target
         sp.left = sp_mouse.wz/300;
         sp.up   = sp_mouse.wy/300;
       } else if(sp_mouse.z){
         // Translation of the target
-        sp.dx = 0;
-        sp.dy = 0;
-        sp.dz = 0;
+        sp.dx = sp_mouse.x/300;
+        sp.dy = sp_mouse.y/300;
+        sp.dz = sp_mouse.z/300;
       }
       
     };
@@ -377,8 +388,7 @@
   // Add the webworker
   var mesh_worker = new Worker("js/mesh_worker.js");
   mesh_worker.onmessage = function(e) {
-    var el = e.data;
-    process_lidar_results(el);
+    process_lidar_results(e.data);
   };
   
   var handle_buttons = function(){
@@ -392,10 +402,12 @@
       World.set_view([0,Robot.bodyHeight*1000,220],[0,0,dz]);
     });
     clicker('vantage_item',function() {
-      var v = Manipulation.get_vantage()
+      var v = Manipulation.get_vantage();
       World.set_view(v.position,v.target);
     });
-    clicker('vantage_robot',function() {World.set_view('robot');});
+    clicker('vantage_robot',function(){
+      World.set_view('robot');
+    });
   }
   
   // export

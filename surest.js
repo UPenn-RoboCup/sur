@@ -13,11 +13,11 @@ var dgram   = require('dgram');
 var _       = require('underscore');
 
 /* Remote Procedure Call Configuration */
-var rpc_robot     = '192.168.123.26'
-//var rpc_robot     = 'localhost'
-var rpc_reliable_port   = 55555
-var rpc_unreliable_port = 55556
-var homepage = 'index.html'
+//var rpc_robot     = '192.168.123.26';
+var rpc_robot     = 'localhost'
+var rpc_reliable_port   = 55555;
+var rpc_unreliable_port = 55556;
+var homepage = 'index.html';
 
 /**
 * Load configuration values
