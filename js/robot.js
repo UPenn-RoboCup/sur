@@ -89,16 +89,18 @@
   }
   upper_body_chest.children.push(neck_chain);
   
-  //
+  var STL_MOTOR_WIDTH = 48;
   var larm_chain = {
     stl: 'RIGHT_SHOULDER_PITCH',
-    p: new THREE.Vector3(184, -8, 0),
+    // subtract the torso offset for the y height
+    // subtract the effective width of the shoulder
+    p: new THREE.Vector3(234-STL_MOTOR_WIDTH, 165-170, 0),
     q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,0,1)), 1.5708 ),
     axel: new THREE.Vector3(1,0,0),
     id: 3,
     children: [
       {stl: 'RIGHT_SHOULDER_ROLL',
-      p: new THREE.Vector3(0, -50, 24),
+      p: new THREE.Vector3(0, -STL_MOTOR_WIDTH, STL_MOTOR_WIDTH/2),
       q: new THREE.Quaternion(0,0,0,1),
       axel: new THREE.Vector3(0,0,-1),
       id: 4,
@@ -108,41 +110,53 @@
         q: new THREE.Quaternion(0,0,0,1),
         axel: new THREE.Vector3(0,-1,0),
         id: 5,
-        children: [
-          {stl: 'RIGHT_ARM',
-          p: new THREE.Vector3(0, -27, -24),
+        children: [{
+          stl: 'RIGHT_ARM',
+          p: new THREE.Vector3(0, -STL_MOTOR_WIDTH/2, 0),
           q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
-          children: [
-            {stl: 'RIGHT_ELBOW',
-            p: new THREE.Vector3(0, -246+27, 0),
+          children: [{
+            p: new THREE.Vector3(0, -246+STL_MOTOR_WIDTH/2, 0),
             q: new THREE.Quaternion(0,0,0,1),
-            axel: new THREE.Vector3(-1,0,0),
-            id: 6,
-            children: [
-              {stl: 'RIGHT_WRIST',
-              p: new THREE.Vector3(0, -216, 0),
+            children: [{
+              p: new THREE.Vector3(0, 0, -STL_MOTOR_WIDTH/2),
               q: new THREE.Quaternion(0,0,0,1),
-              axel: new THREE.Vector3(0,-1,0),
-              id: 7,
-              children:[{
+              axel: new THREE.Vector3(-1,0,0),
+              id: 6,
+              children: [{
+                stl: 'RIGHT_ELBOW',
+                p: new THREE.Vector3(0, 0, STL_MOTOR_WIDTH/2),
                 q: new THREE.Quaternion(0,0,0,1),
-                p: new THREE.Vector3(0, 0, 0),
-                axel: new THREE.Vector3(0,0,-1),
-                id: 8,
-                children:[{
+                children: [{
                   stl: 'RIGHT_WRIST',
-                  q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 3.14159/2 ),
-                  p: new THREE.Vector3(0, -65, 0),
+                  p: new THREE.Vector3(0, -250, 0),
+                  q: new THREE.Quaternion(0,0,0,1),
                   axel: new THREE.Vector3(0,-1,0),
-                  id: 9,
+                  id: 7,
                   children:[{
-                    stl: 'LEFT_GRIPPER',
-                    q: (new THREE.Quaternion()).setFromEuler( new THREE.Euler(Math.PI/2,0,-Math.PI) ),
-                    p: new THREE.Vector3(0, 0, 18),
+                    q: new THREE.Quaternion(0,0,0,1),
+                    p: new THREE.Vector3(0, 0, 0),
+                    axel: new THREE.Vector3(0,0,-1),
+                    id: 8,
+                    children:[{
+                      stl: 'RIGHT_WRIST',
+                      q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 3.14159/2 ),
+                      p: new THREE.Vector3(0, -65, 0),
+                      axel: new THREE.Vector3(0,-1,0),
+                      id: 9,
+                      children:[{
+                        stl: 'LEFT_GRIPPER',
+                        q: (new THREE.Quaternion()).setFromEuler( new THREE.Euler(Math.PI/2,0,-Math.PI) ),
+                        p: new THREE.Vector3(0, 0, 18),
+                      }]
+                    }]
                   }]
+                  
                 }]
+                
               }]
-            }]
+            
+            }] // offset
+              
           }]
         }]
       }]
@@ -474,6 +488,7 @@
             
       // Update jangles
       jangles = feedback.neckangle.concat(feedback.larmangle,feedback.llegangle,feedback.rlegangle,feedback.rarmangle,feedback.waistangle)
+      jangles[5] = -Math.PI/2w;
       update_skeleton();
       
     }
