@@ -31,6 +31,11 @@
   
   var shown = true;
   
+  var STL_MOTOR_WIDTH = 48;
+  var STL_MOTOR_WIDTH_SM = 45;
+  var STL_MOTOR_HEIGHT_SM = 42;
+  var STL_CHEST_OFFSET = 170;
+  
   // Skeleton
   var skeleton = {
     q: new THREE.Quaternion(0,0,0,1),
@@ -39,7 +44,7 @@
     {
       stl: 'CHEST',
       q: new THREE.Quaternion(0,0,0,1),
-      p: new THREE.Vector3(0, 170, 0),
+      p: new THREE.Vector3(0, STL_CHEST_OFFSET, 0),
       axel: new THREE.Vector3(1,0,0),
       id: 30,
       children: [
@@ -89,23 +94,21 @@
   }
   upper_body_chest.children.push(neck_chain);
   
-  var STL_MOTOR_WIDTH = 48;
   var larm_chain = {
     stl: 'RIGHT_SHOULDER_PITCH',
     // subtract the torso offset for the y height
     // subtract the effective width of the shoulder
-    p: new THREE.Vector3(234-STL_MOTOR_WIDTH, 165-170, 0),
+    p: new THREE.Vector3(234-STL_MOTOR_WIDTH, 165-STL_CHEST_OFFSET, 0),
     q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,0,1)), 1.5708 ),
     axel: new THREE.Vector3(1,0,0),
     id: 3,
-    children: [
-      {stl: 'RIGHT_SHOULDER_ROLL',
+    children: [{
+      stl: 'RIGHT_SHOULDER_ROLL',
       p: new THREE.Vector3(0, -STL_MOTOR_WIDTH, STL_MOTOR_WIDTH/2),
       q: new THREE.Quaternion(0,0,0,1),
       axel: new THREE.Vector3(0,0,-1),
       id: 4,
-      children: [
-        {// yaw
+      children: [{ // yaw
         p: new THREE.Vector3(0, 0, 0),
         q: new THREE.Quaternion(0,0,0,1),
         axel: new THREE.Vector3(0,-1,0),
@@ -140,28 +143,24 @@
                     children:[{
                       stl: 'RIGHT_WRIST',
                       q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 3.14159/2 ),
-                      p: new THREE.Vector3(0, -65, 0),
+                      p: new THREE.Vector3(0, -STL_MOTOR_WIDTH_SM-STL_MOTOR_HEIGHT_SM/2, 0),
                       axel: new THREE.Vector3(0,-1,0),
                       id: 9,
                       children:[{
                         stl: 'LEFT_GRIPPER',
                         q: (new THREE.Quaternion()).setFromEuler( new THREE.Euler(Math.PI/2,0,-Math.PI) ),
                         p: new THREE.Vector3(0, 0, 18),
-                      }]
-                    }]
-                  }]
-                  
-                }]
-                
-              }]
-            
-            }] // offset
-              
-          }]
-        }]
-      }]
-    }]
-  }
+                      }] // left_gripper
+                    }] // right wrist
+                  }] // id8
+                }] // id7
+              }] //right_elbow
+            }] // id6
+          }] // offset
+        }] // right_arm
+      }] // id5 yaw
+    }] // roll
+  } // pitch
   upper_body_chest.children.push(larm_chain);
   var right_hand = null;
   var lgripper = larm_chain;
@@ -275,12 +274,11 @@
       q: new THREE.Quaternion(0,0,0,1),
       axel: new THREE.Vector3(0,0,-1),
       id: 23,
-      children: [
-        {// yaw
+      children: [{
         p: new THREE.Vector3(0, 0, 0),
         q: new THREE.Quaternion(0,0,0,1),
         axel: new THREE.Vector3(0,-1,0),
-        id: 24,
+        id: 24, // yaw
         children: [
           {stl: 'RIGHT_ARM',
           p: new THREE.Vector3(0, -27, -24),
@@ -488,7 +486,7 @@
             
       // Update jangles
       jangles = feedback.neckangle.concat(feedback.larmangle,feedback.llegangle,feedback.rlegangle,feedback.rarmangle,feedback.waistangle)
-      jangles[5] = -Math.PI/2w;
+      //jangles[5] = -Math.PI/2;
       update_skeleton();
       
     }
