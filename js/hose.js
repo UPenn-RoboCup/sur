@@ -7,6 +7,10 @@
   // RPC URLs //
   //////////////
   var rpc_url = rest_root+'/m/hcm/hose/model';
+
+  // Relative waypoint offset in ROBOT coordinates
+  // but with THREE scale (mm)
+  var offset = new THREE.Vector2(450,90);
   
   /////////////////////
   // Mesh definition //
@@ -52,6 +56,26 @@
     //var yaw = 
   }
   
+  // Adjust the waypoint to the *perfect* position
+  var wp_callback = function(){
+    // Grab the (global) orientation of the mesh
+    var pa = -1*item_mesh.rotation.y;
+    // Acquire the position of the tip:
+    var p = (new THREE.Vector3()).copy(item_mesh.position);
+    
+    // Make the global offset from the object    
+    var dx = offset.x*Math.cos(pa) + offset.y*Math.sin(pa);
+    var dy = offset.y*Math.cos(pa) - offset.x*Math.sin(pa);
+
+    // Change the THREE coordinates of the desired waypoint
+    p.x -= dy;
+    p.z -= dx;
+
+    // Update the Waypoint in the scene
+    Waypoint.set(p,pa);
+
+  }
+
   /////////////////////////////
   // Object manipulation API //
   /////////////////////////////
@@ -83,7 +107,7 @@
     
   }
   Hose.mod_callback = function(){
-    
+    wp_callback();
   }
   Hose.gen_wp = function(){
     // yield the optimal waypoint
