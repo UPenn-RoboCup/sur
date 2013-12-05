@@ -9,7 +9,7 @@
   var MAX_NUM_MESHES = 3;
   
   var CANVAS_WIDTH, CANVAS_HEIGHT;
-  var camera, renderer, scene, container, controls;
+  var camera, renderer, scene, container, controls = null;
   World.is_robot_camera = false;
   
   // save items
@@ -33,7 +33,9 @@
     if(World.is_robot_camera){
       renderer.render( scene, Robot.head_camera );
     } else {
-      controls.update();
+      if(controls!=null){
+        controls.update();
+      }
       renderer.render( scene, camera );
     }
   }
@@ -56,7 +58,8 @@
   
   // Transform control generator
   World.generate_tcontrol = function(){
-    return new THREE.TransformControls( camera, container );
+    var tcontrol = new THREE.TransformControls( camera, container );
+    return tcontrol;
   }
   
   // Stop moving the view
@@ -217,7 +220,8 @@
     }
     // re-rendering
     var sp_rot = [0,0];
-    var sp_up = function(){
+    var sp_controls_up = function(){
+      if(controls===null){return;}
       // Rotations
       controls.rotateLeft(sp.left);
       controls.rotateUp(sp.up);
@@ -250,7 +254,7 @@
       // Buttons can do special things... zoom only? switch cameras?
       
       // Updating the controls
-      if(controls===null){return}
+      if(controls===null){return;}
       if(sp_mouse.wz){
         // Rotation around the target
         sp.left = sp_mouse.wz/300;

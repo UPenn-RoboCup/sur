@@ -78,6 +78,11 @@
     tcontrol.removeEventListener( 'modify', cur_item.mod_callback );
     // De-init
     cur_item.deinit(tcontrol);
+    // Remove the special buttons
+    var btn_holder = $('#arm_events')[0];
+    while (btn_holder.firstChild) {
+      btn_holder.removeChild(btn_holder.firstChild);
+    }
     
     // set the next item
     cur_item_id = item_id;
@@ -91,19 +96,15 @@
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
     
-    // Re-render the world
+    // Set the buttons for this object
+    cur_item.add_buttons(btn_holder);
     
   }
   
   var loop_item = function(){
     cur_item.loop(tcontrol);
   }
-  
-  var grab_item = function(){
-    var grab_evt = cur_item.grab_evt;
-    if(grab_evt===undefined){return;}
-    qwest.post(fsm_url,{fsm: 'ArmFSM', evt: grab_evt});
-  }
+
   // Vantage point for looking at objects
   Manipulation.get_vantage = function(){
     var cp = cur_item.get_position;
@@ -120,17 +121,17 @@
     // Handle the button clicks
     clicker('modify_obj',yes_mod);
     clicker('loop_obj',loop_item);
-    clicker('arm_grab',grab_item);
     // initialize the element
     cur_item_id = 0;
     cur_item    = items[cur_item_id];
     cur_item.init();
+    cur_item.add_buttons();
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
     // Make a tcontrol
     tcontrol = World.generate_tcontrol();
     tcontrol.attach( cur_item.get_mod_mesh() );
-    tcontrol.addEventListener( 'change', World.render );
+    //tcontrol.addEventListener( 'change', World.render );
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );
     // Setup hotkeys for items
     keypress.register_many(item_hotkeys);

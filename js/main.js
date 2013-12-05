@@ -41,6 +41,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Add items to be manipulated
   Manipulation.add_item(Waypoint);
+  Manipulation.add_item(Hose);
   Manipulation.add_item(Hand);
   Manipulation.add_item(SmallValve);
   Manipulation.add_item(LargeValve);

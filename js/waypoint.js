@@ -108,7 +108,9 @@
   Waypoint.get_robot = function(){
     return three_to_model();
   }
+  Waypoint.add_buttons = function(holder){
 
+  }
   /////////////////////////
   // Metadata and Export //
   /////////////////////////

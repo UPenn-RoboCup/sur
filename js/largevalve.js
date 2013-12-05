@@ -197,11 +197,23 @@
     // Update the global waypoint
     wp_callback();
   }
+
+
+  LargeValve.add_buttons = function(holder){
+    // Grab
+    var grab = document.createElement('a');
+    grab.classList.add('big');
+    grab.classList.add('button');
+    grab.id = 'door_grab';
+    grab.href = '#';
+    holder.appendChild(grab);
+    //
+  }
+
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
   LargeValve.item_name = 'Big Valve';
-  LargeValve.grab_evt = 'largevalvegrab';
   // export
 	ctx.LargeValve = LargeValve;
 

@@ -68,7 +68,7 @@
     var model = three_to_model();
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
-  Tool.get_mesh = function(){
+  Tool.get_mod_mesh = function(){
     return item_mesh;
   }
   Tool.loop = function(){
@@ -80,12 +80,24 @@
   Tool.gen_wp = function(){
     // yield the optimal waypoint
   }
+  Tool.add_buttons = function(holder){
+    // Grab
+    var grab = document.createElement('a');
+    grab.classList.add('big');
+    grab.classList.add('button');
+    grab.id = 'tool_grab';
+    grab.href = '#';
+    grab.textContent = 'Grab';
+    holder.appendChild(grab);
+    clicker(grab,function(){
+      qwest.post(fsm_url,{fsm: 'ArmFSM', evt: 'toolgrab'});
+    });
+  }
 
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
   Tool.item_name = 'Tool';
-  Tool.grab_evt = 'toolgrab';
   // export
 	ctx.Tool = Tool;
 

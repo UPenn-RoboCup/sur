@@ -161,7 +161,7 @@
   SmallValve.deinit = function(){
     World.remove(item_mesh);
   }
-  SmallValve.get_mesh = function(){
+  SmallValve.get_mod_mesh = function(){
     return mod_mesh;
   }
   SmallValve.mod_callback = function(){
@@ -176,11 +176,24 @@
     item_mesh.position.y = off_ground;
   }
 
+  SmallValve.add_buttons = function(holder){
+    // Grab
+    var grab = document.createElement('a');
+    grab.classList.add('big');
+    grab.classList.add('button');
+    grab.id = 'smallvalve_grab';
+    grab.href = '#';
+    holder.appendChild(grab);
+    clicker(grab,function(){
+      qwest.post(fsm_url,{fsm: 'ArmFSM', evt: 'smallvalvegrab'});
+    });
+    //
+  }
+
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
   SmallValve.item_name = 'Mini Valve';
-  SmallValve.grab_evt = 'smallvalvegrab';
   // export
 	ctx.SmallValve = SmallValve;
 
