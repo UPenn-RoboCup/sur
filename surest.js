@@ -155,14 +155,15 @@ server.get('/css/:css', load_css.bind({base_dir: 'css'}) );
 var rest_shm = function (req, res, next) {
 
   // debug rest requests for shm
-  //console.log(req.params);
+  console.log(req.params);
 
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
     var ret = mp.unpack(data)
+    
     if(ret!=null){
-      res.json( ret )
+      res.json( ret );
     } else {
       res.send()
     }

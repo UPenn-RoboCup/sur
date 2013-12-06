@@ -1,44 +1,26 @@
 (function(ctx){
   
   // Function to hold methods
-  function Hose(){}
+  function Wye(){}
 
   //////////////
   // RPC URLs //
   //////////////
-  var rpc_url = rest_root+'/m/hcm/hose/model';
+  var rpc_url = rest_root+'/m/hcm/hoseattach/model';
 
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(450,90);
+  var offset = new THREE.Vector2(400,0);
   
   /////////////////////
   // Mesh definition //
   /////////////////////
   var item_angle = new THREE.Euler();
   // master
-  var item_mat = new THREE.MeshLambertMaterial({color: 0xAAAAAA});
-  var item_geo = new THREE.CylinderGeometry(44.5,44.5,25.4,12,1,false);
+  var item_mat = new THREE.MeshLambertMaterial({color: 0xFF0000});
+  var item_geo = new THREE.CylinderGeometry(44.5,44.5,50,12,1,false);
   var item_mesh = new THREE.Mesh( item_geo, item_mat );
-  // Non-spinning piece
-  var no_spin_mat = new THREE.MeshLambertMaterial({color: 0x444444});
-  var no_spin_geo = new THREE.CylinderGeometry(44.5,44.5,50.0,12,1,false);
-  var no_spin_mesh = new THREE.Mesh( no_spin_geo, no_spin_mat );
-  no_spin_mesh.position.y = -25.4/2 - 50/2;
-  // Mesh Tube
-  var tube_mat = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
-  var tube_geo = new THREE.CubeGeometry(80,100,10);
-  var tube_mesh = new THREE.Mesh( tube_geo, tube_mat );
-  tube_mesh.position.y = -50.0/2 - 60/2;
-  // North Nub
-  var nub_mat = new THREE.MeshBasicMaterial({color: 0x888888});
-  var nub_geo = new THREE.CubeGeometry(10,25.4,10);
-  var nub_mesh = new THREE.Mesh( nub_geo, nub_mat );
-  nub_mesh.position.z = 44.4 + 10/2;
-  // Scene graph time!
-  no_spin_mesh.add(tube_mesh);
-  item_mesh.add(no_spin_mesh);
-  item_mesh.add(nub_mesh);
+  item_mesh.rotation.set(Math.PI/2,0,0);
   
   //////////////////////
   // Model converters //
@@ -49,7 +31,7 @@
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
     model.push(item_angle.y);
-    console.log('Hose',model);
+    console.log('Wye',model);
     return model;
   }
   var model_to_three = function(model){
@@ -59,7 +41,7 @@
   // Adjust the waypoint to the *perfect* position
   var wp_callback = function(){
     // Grab the (global) orientation of the mesh
-    var pa = -1*item_mesh.rotation.y;
+    var pa = item_mesh.rotation.z;
     // Acquire the position of the tip:
     var p = (new THREE.Vector3()).copy(item_mesh.position);
     
@@ -79,40 +61,50 @@
   /////////////////////////////
   // Object manipulation API //
   /////////////////////////////
-  Hose.select = function(p,r){
+  Wye.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
     // Re-render
     
   }
-  Hose.clear = function(){
+  Wye.clear = function(){
 
   }
-  Hose.init = function(){
+  Wye.init = function(){
+    // Set the default position relative to the robot
+    
+    // Make the global offset from the object
+    var pa = Robot.pa;
+    var dx = offset.x*Math.cos(pa) + offset.y*Math.sin(pa);
+    var dy = offset.y*Math.cos(pa) - offset.x*Math.sin(pa);
+    // Set mesh
+    item_mesh.position.x = Robot.py*1000+dy;
+    item_mesh.position.z = Robot.px*1000+dx;
+    item_mesh.position.y = (Robot.bodyHeight + 0.10)*1000;
     // Add to the world
     World.add(item_mesh);
   }
-  Hose.deinit = function(){
+  Wye.deinit = function(){
     // Add to the world
     World.remove(item_mesh);
   }
-  Hose.send = function(){
+  Wye.send = function(){
     var model = three_to_model();
     //qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
-  Hose.get_mod_mesh = function(){
+  Wye.get_mod_mesh = function(){
     return item_mesh;
   }
-  Hose.loop = function(){
+  Wye.loop = function(){
     
   }
-  Hose.mod_callback = function(){
+  Wye.mod_callback = function(){
     wp_callback();
   }
-  Hose.gen_wp = function(){
+  Wye.gen_wp = function(){
     // yield the optimal waypoint
   }
-  Hose.add_buttons = function(holder){
+  Wye.add_buttons = function(holder){
     // Grab
     var grab = document.createElement('a');
     grab.classList.add('big');
@@ -129,8 +121,8 @@
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
-  Hose.item_name = 'Hose';
+  Wye.item_name = 'Wye';
   // export
-	ctx.Hose = Hose;
+	ctx.Wye = Wye;
 
 })(this);
