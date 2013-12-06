@@ -80,7 +80,7 @@ document.addEventListener( "DOMContentLoaded", function(){
         var b_evt = this.evt, b_fsm = this.fsm;
         // Send the waypoint
         qwest.post( wp_url, {val:JSON.stringify(wp)} )
-        .success(function(){
+        .complete(function(){
           // Then send the follow event!
           qwest.post(fsm_url,{fsm: b_fsm, evt: b_evt});
         });
