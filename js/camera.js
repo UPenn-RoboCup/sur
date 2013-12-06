@@ -19,8 +19,8 @@
   // Camera characteristics
   var h_fov = 60;
   var v_fov = 60;
-  var focal_base = 320;
-  var focal_length = 180;
+  var focal_base = 640;
+  var focal_length = 360;
   //
   var cam_width, cam_height, cam_mid_x, cam_mid_y;
   //
@@ -103,7 +103,7 @@
       // Request the stream be enabled
       this.classList.remove('record');
       this.classList.add('special');
-      qwest.post( rpc_url, {val:JSON.stringify([2,1,75])} );
+      qwest.post( rpc_url, {val:JSON.stringify([4,1,75])} );
     });
     clicker('single_cam',function(){
       // Perform a single frame request

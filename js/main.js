@@ -108,11 +108,13 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post( rpc_url_proceed, {val:JSON.stringify(2)} )
   });
   
+  /*
   // stats
   var stats = new Stats();
   stats.domElement.style.position = 'absolute';
   stats.domElement.style.top = '0px';
   $('body')[0].appendChild( stats.domElement );
+  */
   
   // begin animation
   (function animloop(){

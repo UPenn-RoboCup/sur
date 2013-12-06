@@ -6,13 +6,13 @@ html, body {
   height: 98%;
 }
 #world_container {
-  margin-left: 320px;
+  margin-left: 640px;
   margin-right: 10px;
   background-color: #080;
   height: 98%;
 }
 #left_side {
-  width: 320px;
+  width: 640px;
   float: left;
   position: absolute;
   left: 4px;
@@ -21,8 +21,8 @@ html, body {
 
 /* Camera size definition */
 #camera_container img {
-  width:  320px;
-  height: 180px;
+  width:  640px;
+  height: 360px;
 }
 /* Object name has same width, so lots of cycling has predictable button */
 #menu_obj {
