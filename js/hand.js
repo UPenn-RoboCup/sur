@@ -37,6 +37,8 @@
   item_mesh_default_rot.setFromEuler(item_mesh.rotation);
   item_mesh_default_rot_inv.copy(item_mesh_default_rot).inverse();
   
+  // Right Hand
+  
 
   //////////////////////
   // Model converters //
@@ -75,7 +77,6 @@
     var q_robot = (new THREE.Quaternion())
     .multiplyQuaternions(q_rel,item_mesh_default_rot_inv);
     
-    
     var rpy = (new THREE.Euler()).setFromQuaternion(q_robot);
     var tr = Transform.three_to_torso(item_mesh.position,Robot)
     tr.push(rpy.z, rpy.x, rpy.y)
@@ -90,20 +91,15 @@
   Hand.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
-    // Re-render
-    
   }
   // reset the hand
-  Hand.clear = function(){
-    // reset the transform
+  // loop modify handles
+  Hand.loop = function(tcontrol){
     qwest.get( rpc_url_rget ).success(function(model){
       // Convert the position to THREEjs
       model_to_three(model);
+      tcontrol.update();
     });
-  }
-  // loop modify handles
-  Hand.loop = function(tcontrol){
-    
   }
   // enter stage
   Hand.init = function(tcontrol){
@@ -133,8 +129,12 @@
     
   }
   // get the mesh
-  Hand.get_mesh = function(){
+  Hand.get_mod_mesh = function(){
     return item_mesh;
+  }
+  
+  Hand.add_buttons = function(holder){
+    
   }
 
   /////////////////////////

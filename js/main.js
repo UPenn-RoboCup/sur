@@ -119,7 +119,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   // begin animation
   (function animloop(){
     World.render();
-    stats.update();
+    //stats.update();
     requestAnimationFrame(animloop);
   })();
 
