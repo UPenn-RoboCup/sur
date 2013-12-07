@@ -50,7 +50,10 @@
     return [px,py,pa];
   }
   var model_to_three = function(model){
-    //item_mesh.position.fromArray(model);
+    // Assumption: Global coordinates
+    item_mesh.position.x = 1000*model[1];
+    item_mesh.position.z = 1000*model[0];
+    item_mesh.rotation.z = -1*model[2];
   }
   
   /////////////////////////////
@@ -82,6 +85,7 @@
   // enter
   Waypoint.init = function(){
     World.add( item_mesh );
+    Waypoint.loop();
   }
   //exit
   Waypoint.deinit = function(){

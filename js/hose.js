@@ -112,6 +112,7 @@
     })
     .success(function(model){
       model_to_three(model);
+      Hose.mod_callback();
     })
   }
   Hose.mod_callback = function(){
