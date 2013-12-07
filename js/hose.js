@@ -48,7 +48,8 @@
     item_angle.setFromQuaternion(item_mesh.quaternion);
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
-    model.push(item_angle.y);
+    //model.push(item_angle.y);
+    model.push(0);
     // pitch
     model.push(0);
     console.log('Hose',model);

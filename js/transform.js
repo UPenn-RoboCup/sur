@@ -174,6 +174,21 @@
     */
     return [x,y,z];
   }
+  
+  // Get the relative x,y,a position of this mesh from the robot
+  Transform.absolute = function(mesh){
+    // Grab the (global) orientation of the mesh
+    var a = -1*mesh.rotation.y;
+    // Acquire the position of the tip:
+    var p = (new THREE.Vector3()).copy(mesh.position);
+    // Make the global offset from the object
+    var ca = Math.cos(a), sa = Math.sin(a);
+    var dx = offset.x*ca + offset.y*sa;
+    var dy = offset.y*ca - offset.x*sa;
+    // Change the THREE coordinates of the desired waypoint
+    p.x -= dy;
+    p.z -= dx;
+  }
 
   Transform.make_quads = function(mesh){
   

@@ -202,17 +202,23 @@
   ];
   
   // Keypressing hotkeys
+  var dp = 10; // 1cm at a time
   var item_hotkeys = [
   {
     "keys"          : "i",
     "is_exclusive"  : true,
     "on_keyup"      : function(event) {
-        event.preventDefault();
-        var mod_mesh = cur_item.get_mod_mesh();
-        mod_mesh.position.z += 10;
-        cur_item.mod_callback();
-        // Send on each keypress modification
-        cur_item.send();
+      event.preventDefault();
+      var mod_mesh = cur_item.get_mod_mesh();
+      // Relative direction wrt robot
+      var pa = Robot.pa;
+      var ca = Math.cos(pa), sa = Math.sin(pa);
+      var dx = dp*ca, dy = dp*sa;
+      mod_mesh.position.x += dy;
+      mod_mesh.position.z += dx;
+      //
+      cur_item.mod_callback();
+      cur_item.send();
     },
     "this"          : ctx
   },
@@ -220,13 +226,16 @@
     "keys"          : ",",
     "is_exclusive"  : true,
     "on_keyup"      : function(event) {
-        event.preventDefault();
-        var mod_mesh = cur_item.get_mod_mesh();
-        mod_mesh.position.z -= 10;
-        cur_item.mod_callback();
-        // Send on each keypress modification
-        cur_item.send();
-        
+      event.preventDefault();
+      var mod_mesh = cur_item.get_mod_mesh();
+      // Relative direction wrt robot
+      var pa = Robot.pa;
+      var ca = Math.cos(pa), sa = Math.sin(pa);
+      var dx = dp*ca, dy = dp*sa;
+      mod_mesh.position.x -= dy;
+      mod_mesh.position.z -= dx;
+      cur_item.mod_callback();
+      cur_item.send();
     },
     "this"          : ctx
   },
@@ -234,12 +243,19 @@
     "keys"          : "j",
     "is_exclusive"  : true,
     "on_keyup"      : function(event) {
-        event.preventDefault();
-        var mod_mesh = cur_item.get_mod_mesh();
-        mod_mesh.position.x += 10;
-        cur_item.mod_callback();
-        // Send on each keypress modification
-        cur_item.send();
+      event.preventDefault();
+      var mod_mesh = cur_item.get_mod_mesh();
+      // Relative direction wrt robot
+      var pa = Robot.pa;
+      var ca = Math.cos(pa), sa = Math.sin(pa);
+      var dx = dp*sa, dy = -dp*ca;
+      mod_mesh.position.x -= dy;
+      mod_mesh.position.z -= dx;
+      //
+      console.log('pa',pa,'dx',dx,'dy',dy,'ca',ca,'sa',sa);
+      //
+      cur_item.mod_callback();
+      cur_item.send();
     },
     "this"          : ctx
   },
@@ -249,9 +265,14 @@
     "on_keyup"      : function(event) {
         event.preventDefault();
         var mod_mesh = cur_item.get_mod_mesh();
-        mod_mesh.position.x -= 10;
+        // Relative direction wrt robot
+        var pa = Robot.pa;
+        var ca = Math.cos(pa), sa = Math.sin(pa);
+        var dx = dp*sa, dy = -dp*ca;
+        mod_mesh.position.x += dy;
+        mod_mesh.position.z += dx;
+        //
         cur_item.mod_callback();
-        // Send on each keypress modification
         cur_item.send();
     },
     "this"          : ctx

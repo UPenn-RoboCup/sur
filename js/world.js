@@ -32,12 +32,11 @@
     // render the scene using the camera
     if(World.is_robot_camera){
       renderer.render( scene, Robot.head_camera );
-    } else {
-      if(controls!=null){
-        controls.update();
-      }
-      renderer.render( scene, camera );
+      return;
     }
+    // TODO: called too much?
+    if(controls!=null){controls.update();}
+    renderer.render( scene, camera );
   }
   
   World.set_view = function(pos,target){
