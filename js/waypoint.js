@@ -69,6 +69,8 @@
   // TODO: reset from SHM?
   Waypoint.clear = function(){
   }
+  Waypoint.loop = function(){
+  }
   // enter
   Waypoint.init = function(){
     World.add( item_mesh );
