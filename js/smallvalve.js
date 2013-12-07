@@ -155,6 +155,7 @@
   // enter
   SmallValve.init = function(){
     World.add(item_mesh);
+    SmallValve.clear();
   }
   // exit
   SmallValve.deinit = function(){

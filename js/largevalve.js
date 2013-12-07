@@ -176,6 +176,7 @@
   // enter
   LargeValve.init = function(){
     World.add(item_mesh);
+    LargeValve.clear();
   }
   // exit
   LargeValve.deinit = function(){
