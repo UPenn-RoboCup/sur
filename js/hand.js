@@ -72,6 +72,9 @@
     // RPY
     var rpy = (new THREE.Euler()).setFromQuaternion(q_rel);
     tr.push(rpy.z, rpy.x, rpy.y);
+    
+    console.log('tr',hand,tr,left_mesh.position);
+    
     return tr;
   }
   
@@ -135,7 +138,7 @@
   // send to robot
   Hand.send = function(){
     // Acquire the model
-    var model = three_to_model();
+    var model = three_to_model(cur_hand);
     if(cur_hand=='left') {
       qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
     } else {

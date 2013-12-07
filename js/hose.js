@@ -24,12 +24,12 @@
   var no_spin_mat = new THREE.MeshLambertMaterial({color: 0x444444});
   var no_spin_geo = new THREE.CylinderGeometry(44.5,44.5,50.0,12,1,false);
   var no_spin_mesh = new THREE.Mesh( no_spin_geo, no_spin_mat );
-  no_spin_mesh.position.y = -25.4/2 - 50/2;
+  no_spin_mesh.position.y = 25.4/2 + 50/2;
   // Mesh Tube
   var tube_mat = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
   var tube_geo = new THREE.CubeGeometry(80,100,10);
   var tube_mesh = new THREE.Mesh( tube_geo, tube_mat );
-  tube_mesh.position.y = -50.0/2 - 60/2;
+  tube_mesh.position.y = 50.0/2 + 60/2;
   // North Nub
   var nub_mat = new THREE.MeshBasicMaterial({color: 0x888888});
   var nub_geo = new THREE.CubeGeometry(10,25.4,10);
@@ -49,6 +49,8 @@
     // Points in THREEjs to torso frame
     var model = Transform.three_to_torso(item_mesh.position,Robot);
     model.push(item_angle.y);
+    // pitch
+    model.push(0);
     console.log('Hose',model);
     return model;
   }
