@@ -150,7 +150,6 @@
     .success(function(model){
       model_to_three(model);
       mod_mesh = item_mesh;
-      
     })
   }
   // enter

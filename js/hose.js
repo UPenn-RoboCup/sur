@@ -53,7 +53,9 @@
     return model;
   }
   var model_to_three = function(model){
-    //var yaw = 
+    var p = Transform.torso_to_three(model[0],model[1],model[2],Robot);
+    item_mesh.position.fromArray(p);
+    // Do not care about yaw yet
   }
   
   // Adjust the waypoint to the *perfect* position
@@ -82,15 +84,11 @@
   Hose.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
-    // Re-render
-    
-  }
-  Hose.clear = function(){
-
   }
   Hose.init = function(){
     // Add to the world
     World.add(item_mesh);
+    Hose.loop();
   }
   Hose.deinit = function(){
     // Add to the world
@@ -104,7 +102,14 @@
     return item_mesh;
   }
   Hose.loop = function(){
-    
+    // Get the model from the robot (could be pesky...?)
+    qwest.get( rpc_url,{},{},function(){
+      // Use a 1 second timeout for the XHR2 request for getting the model
+      this.timeout = 1000; // ms
+    })
+    .success(function(model){
+      model_to_three(model);
+    })
   }
   Hose.mod_callback = function(){
     wp_callback();
