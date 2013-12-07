@@ -96,7 +96,7 @@
   }
   Hose.send = function(){
     var model = three_to_model();
-    //qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
   Hose.get_mod_mesh = function(){
     return item_mesh;

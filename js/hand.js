@@ -17,12 +17,12 @@
   /////////////////////
   
   // Left Hand
-  var left_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
+  var left_mat  = new THREE.MeshLambertMaterial({color: 0xFFFF00});
   var left_geo  = new THREE.TorusGeometry(40, 25.4, 8, 6, Math.PI);
   var left_mesh = new THREE.Mesh( left_geo, left_mat );
   
   // Right Hand
-  var right_mat  = new THREE.MeshLambertMaterial({color: 0xFFFF00});
+  var right_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
   var right_geo  = new THREE.TorusGeometry(40, 25.4, 8, 6, Math.PI);
   var right_mesh = new THREE.Mesh( right_geo, right_mat );
   
@@ -136,7 +136,11 @@
   Hand.send = function(){
     // Acquire the model
     var model = three_to_model();
-    //qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
+    if(cur_hand=='left') {
+      qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
+    } else {
+      qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
+    }
   }
   Hand.mod_callback = function(){
     
