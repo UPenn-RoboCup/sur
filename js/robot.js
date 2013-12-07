@@ -419,24 +419,13 @@
     
   } // update skeleton
   
-  Robot.make_virtual_hands = function(){
-    //console.log('Virtual hands!',lgripper,rgripper);
-    var lg2 = new THREE.Mesh(
-      lgripper.mesh.geometry.clone(),
-      new THREE.MeshPhongMaterial({
-        ambient: 0xFDEEF4, color: 0xFF0000, specular: 0x111111, shininess: 200
-      })
-    );
-    var rg2 = new THREE.Mesh(
-      rgripper.mesh.geometry.clone(),
-      new THREE.MeshPhongMaterial({
-        ambient: 0xFDEEF4, color: 0xFF0000, specular: 0x111111, shininess: 200
-      })
-    );
-    // Rotate correctly
-    rg2.rotation.set(-Math.PI/2,Math.PI,0);
-    // Copy the hand and its position
-    return {left: lg2, right: rg2};
+  Robot.show = function(){
+    var m = Robot.meshes;
+    for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
+  }
+  Robot.hide = function(){
+    var m = Robot.meshes;
+    for(var i=0,j=m.length;i<j;i++){World.remove(m[i]);}
   }
   
   Robot.setup = function(cb){
@@ -449,6 +438,10 @@
     //Robot.head_camera.lookAt(0,0,1000);
     var help = new THREE.CameraHelper(Robot.head_camera );
     World.add(help);
+    
+    // Buttons
+    clicker('robot_show',Robot.show);
+    clicker('robot_hide',Robot.hide);
     
     // Websocket Configuration for feedback
     var port = 9013;
