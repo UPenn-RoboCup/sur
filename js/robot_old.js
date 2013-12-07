@@ -264,71 +264,61 @@
   //
   var rarm_chain = {
     stl: 'RIGHT_SHOULDER_PITCH',
-    // subtract the torso offset for the y height
-    // subtract the effective width of the shoulder
-    p: new THREE.Vector3(-1*(234-STL_MOTOR_WIDTH), 165-STL_CHEST_OFFSET, 0),
+    p: new THREE.Vector3(-184, -8, 0),
     q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,0,1)), -1.5708 ),
     axel: new THREE.Vector3(1,0,0),
     id: 22,
-    children: [{
-      stl: 'RIGHT_SHOULDER_ROLL',
-      p: new THREE.Vector3(0, -STL_MOTOR_WIDTH, STL_MOTOR_WIDTH/2),
+    children: [
+      {stl: 'RIGHT_SHOULDER_ROLL',
+      p: new THREE.Vector3(0, -50, 24),
       q: new THREE.Quaternion(0,0,0,1),
       axel: new THREE.Vector3(0,0,-1),
       id: 23,
-      children: [{ // yaw
+      children: [{
         p: new THREE.Vector3(0, 0, 0),
         q: new THREE.Quaternion(0,0,0,1),
         axel: new THREE.Vector3(0,-1,0),
-        id: 24,
-        children: [{
-          stl: 'RIGHT_ARM',
-          p: new THREE.Vector3(0, -STL_MOTOR_WIDTH/2, 0),
+        id: 24, // yaw
+        children: [
+          {stl: 'RIGHT_ARM',
+          p: new THREE.Vector3(0, -27, -24),
           q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0,1,0)), 3.14159 ),
-          children: [{
-            p: new THREE.Vector3(0, -246+STL_MOTOR_WIDTH/2, 0),
+          children: [
+            {stl: 'RIGHT_ELBOW',
+            p: new THREE.Vector3(0, -246+27, 0),
             q: new THREE.Quaternion(0,0,0,1),
-            children: [{
-              p: new THREE.Vector3(0, 0, -STL_MOTOR_WIDTH/2),
+            axel: new THREE.Vector3(-1,0,0),
+            id: 25,
+            children: [
+              {stl: 'RIGHT_WRIST',
+              p: new THREE.Vector3(0, -216, 0),
               q: new THREE.Quaternion(0,0,0,1),
-              axel: new THREE.Vector3(-1,0,0),
-              id: 25,
-              children: [{
-                stl: 'RIGHT_ELBOW',
-                p: new THREE.Vector3(0, 0, STL_MOTOR_WIDTH/2),
+              axel: new THREE.Vector3(0,-1,0),
+              id: 26,
+              children:[{
                 q: new THREE.Quaternion(0,0,0,1),
-                children: [{
+                p: new THREE.Vector3(0, 0, 0),
+                axel: new THREE.Vector3(0,0,-1),
+                id: 27,
+                children:[{
                   stl: 'RIGHT_WRIST',
-                  p: new THREE.Vector3(0, -250, 0),
-                  q: new THREE.Quaternion(0,0,0,1),
+                  q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 3.14159/2 ),
+                  p: new THREE.Vector3(0, -65, 0),
                   axel: new THREE.Vector3(0,-1,0),
-                  id: 26,
+                  id: 28,
                   children:[{
-                    q: new THREE.Quaternion(0,0,0,1),
-                    p: new THREE.Vector3(0, 0, 0),
-                    axel: new THREE.Vector3(0,0,-1),
-                    id: 27,
-                    children:[{
-                      stl: 'RIGHT_WRIST',
-                      q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), 3.14159/2 ),
-                      p: new THREE.Vector3(0, -STL_MOTOR_WIDTH_SM-STL_MOTOR_HEIGHT_SM/2, 0),
-                      axel: new THREE.Vector3(0,-1,0),
-                      id: 28,
-                      children:[{
-                        stl: 'RIGHT_GRIPPER',
-                        q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), -3.14159/2 ),
-                        p: new THREE.Vector3(0, 0, 18),
-                      }] // left_gripper
-                    }] // right wrist
-                  }] // id8
-                }] // id7
-              }] //right_elbow
-            }] // id6
-          }] // offset
-        }] // right_arm
-      }] // id5 yaw
-    }] // roll
-  } // pitch
+                    stl: 'RIGHT_GRIPPER',
+                    q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), -3.14159/2 ),
+                    p: new THREE.Vector3(0, 0, 18),
+                  }]
+                }]
+              }]
+            }]
+          }]
+        }]
+      }]
+    }]
+  }
   upper_body_chest.children.push(rarm_chain);
   var rgripper = rarm_chain;
   while(rgripper.children!==undefined){rgripper = rgripper.children[0];}
