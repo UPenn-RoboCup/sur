@@ -77,15 +77,13 @@ bridges.push({
 	clients : []
 });
 
-
-
 // rest look up table for the objects
 var reliable_lookup = {}
 
 /* Begin the REST HTTP server */
 var server = restify.createServer({
   name: 'surest',
-  version: '0.0.1'
+  version: '1.0beta'
 });
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
