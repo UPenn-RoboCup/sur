@@ -87,6 +87,8 @@
   Hose.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
+    Hose.mod_callback();
+    Hose.send();
   }
   Hose.init = function(){
     // Add to the world

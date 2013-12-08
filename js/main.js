@@ -11,7 +11,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Setup the camera(s)
   Camera.setup();
-  Camera2.setup();
   
   // Add items to be manipulated
   Manipulation.add_item(Waypoint);
