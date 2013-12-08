@@ -5,6 +5,8 @@
 <head>
   <title>SUR Visualizer</title>
   <meta charset="utf-8">
+  <!-- For iPad: http://stackoverflow.com/questions/15791277/preventing-default-ios-webpage-drag-with-javascript-and-hammerjs -->
+  <meta name="viewport" content="width=device-width,user-scalable=no">
   
   <!-- CSS for Styling the page -->
   <link rel="stylesheet" type="text/css" href="/css/gh-buttons.css">
@@ -24,6 +26,10 @@
   <script src="/js/fsm.js"></script>
   <script src="/js/camera.js"></script>
   <script src="/js/camera2.js"></script>
+  <script>
+    document.addEventListener( "DOMContentLoaded",Camera.setup);
+    document.addEventListener( "DOMContentLoaded",Camera2.setup);
+  </script>
  
 </head>
 
@@ -51,28 +57,7 @@
     <a href="#" class="uibutton confirm" id="vantage_item">Item</a>
     <a href="#" class="uibutton confirm" id="vantage_robot">Robot</a>
   </div>
-  <!-- Mesh Streaming Settings -->
-  <div class='button-container' id='mesh'>
-    <div class="button-group">
-      <a href="#" class="button primary" id="switch_mesh">Chest</a>
-      <a href="#" class="button" id="request_mesh">Once</a>
-      <a href="#" class="button" id="stream_mesh">Stream</a>
-      <a href="#" class="button" id="wipe_mesh">Wipe</a>
-    </div>
-    <div class="button-group minor-group">
-      <a href="#" class="button pill" id="slow_mesh">Slow</a>
-      <a href="#" class="button pill" id="fast_mesh">Fast</a>
-    </div>
-  </div>
-  <hr/>
   
-  <!-- Object modification Settings -->
-  <div class="button-group" id="object">
-    <select name="objects_menu" id="menu_obj"></select>
-    <a href="#" class="button icon move" id="modify_obj">Mod</a>
-    <a href="#" class="button icon loop" id="loop_obj">Loop</a>
-  </div>
-  <br/>
   <!-- Proceed FSM Events -->
   <div class="button-group minor-group" id="proceed">
     <a href="#" class="button" id="proceed_reverse">Reverse</a>
@@ -102,13 +87,6 @@
     </div>
   </div>
   <hr/>
-  
-  <div id='robot'>
-    <div class="button-group minor-group">
-      <a href="#" class="button pill" id="robot_show">Show</a>
-      <a href="#" class="button pill" id="robot_hide">Hide</a>
-    </div>
-  </div>
   
   <!-- Camera2 Image Stream -->
   <div id="camera2_container"></div>
