@@ -121,7 +121,8 @@ var load_js = function (req, res, next) {
   res.end();
 };
 server.get('/lib/:js', load_js.bind({base_dir: 'lib'}) );
-server.get('/js/:js', load_js.bind({base_dir: 'js'}) );
+server.get('/models/:js', load_js.bind({base_dir: 'js'}) );
+server.get('/controllers/:js', load_js.bind({base_dir: 'js'}) );
 
 // Images
 var load_img = function(req, res, next) {
