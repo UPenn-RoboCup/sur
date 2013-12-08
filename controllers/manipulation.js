@@ -17,6 +17,8 @@
     items.push(item);
     // Place as a select option
     var menu = $('#menu_obj')[0];
+    // If no menu, then exit
+    if(menu===undefined){return;}
     var option = new Option(item.item_name);
     option.value = item_id;
     menu.appendChild(option);
@@ -137,10 +139,12 @@
     keypress.register_many(item_hotkeys);
     // Setup the menu
     var menu = $('#menu_obj')[0];
-    menu.addEventListener('change', function(){
-      cycle_item(this.value);
-      this.blur();
-    }, false);
+    if(menu!==undefined){
+      menu.addEventListener('change', function(){
+        cycle_item(this.value);
+        this.blur();
+      }, false);
+    }
     
   } // setup
 

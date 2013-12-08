@@ -6,7 +6,7 @@
   // Function to hold methods
   function World(){}
   
-  var MAX_NUM_MESHES = 3;
+  var MAX_NUM_MESHES = 1;
   
   var CANVAS_WIDTH, CANVAS_HEIGHT;
   var camera, renderer, scene, container, controls = null;
@@ -365,7 +365,6 @@
   World.clear_meshes = function(){
     for(var i=0, j=meshes.length; i<j; i++){scene.remove(meshes[i]);}
     meshes = [];
-    //World.render();
   }
   
   // From the mesh websockets listener to rendering
@@ -382,17 +381,15 @@
     // Restore the objects
     mesh.ctx = ctx;
     mesh.raw = raw;
-
 /*    
     // Not using WebWorkers (for debugging)
     var el = Transform.make_quads(mesh);
     process_lidar_results(el);
 */
-    
   }
   
   // Add the webworker
-  var mesh_worker = new Worker("/js/mesh_worker.js");
+  var mesh_worker = new Worker("/models/mesh_worker.js");
   mesh_worker.onmessage = function(e) {
     process_lidar_results(e.data);
   };

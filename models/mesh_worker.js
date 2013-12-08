@@ -1,5 +1,5 @@
 // Do the transforms in a webworker, instead of in the main thread
-importScripts('../js/transform.js');
+importScripts('/controllers/transform.js');
 
 self.onmessage = function(e) {
   var el = Transform.make_quads(e.data);

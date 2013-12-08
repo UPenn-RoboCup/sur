@@ -361,7 +361,7 @@
     if(name!==undefined){
       n_stl++;
       loader.addEventListener( 'load', cb.bind({root: root}) );
-      loader.load( 'stl/'+name+'.stl' );
+      loader.load( '/stl/'+name+'.stl' );
     }
     if(root.children===undefined){return n_stl;}
     // load children
