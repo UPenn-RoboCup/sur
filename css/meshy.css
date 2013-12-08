@@ -1,0 +1,12 @@
+/*
+ * Establish main layout where the 3d scene is and where the buttons are
+ */
+html, body {
+  font-family: helvetica;
+  height: 98%;
+}
+#world_container {
+  background-color: #080;
+  height: 100%;
+  margin-bottom: 0pt;
+}

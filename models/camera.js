@@ -79,8 +79,8 @@
   ******/
   Camera.setup = function(){
     // put image into the dom
-    camera_container = $('#camera_container')[0];
-    camera_container.appendChild( camera_img );
+    camera_container = $('#camera_container');
+    camera_container[0].appendChild( camera_img );
     // Single click looks somewhere
     var hammertime = Hammer(camera_container);
     hammertime.on("tap", head_look);

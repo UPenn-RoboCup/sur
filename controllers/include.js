@@ -10,9 +10,14 @@ this.fsm_url = rest_root+'/s';
 this.$ = function(x){return document.querySelectorAll(x);};
 this.clicker = function(id,fun){
   if(typeof id==='string'){
-    Hammer(document.getElementById(id)).on('tap',fun);
+    var id_el = document.getElementById(id);
+    console.log('id_el',id_el);
+    if(id_el==null){return false;}
+    var ret = Hammer(id_el).on('tap',fun);
+    console.log('ret',ret);
   } else {
     Hammer(id).on('tap',fun);
+    console.log('id',id);
   }
 }
 this.unclicker = function(id,fun){

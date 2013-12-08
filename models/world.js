@@ -180,6 +180,9 @@
     renderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
     // add the rendered to the dom
     container.appendChild( renderer.domElement );
+    
+    // Add the floor
+    World.append_floor();
 
     // handle resizing
     window.addEventListener( 'resize', function() {
@@ -389,7 +392,7 @@
   }
   
   // Add the webworker
-  var mesh_worker = new Worker("js/mesh_worker.js");
+  var mesh_worker = new Worker("/js/mesh_worker.js");
   mesh_worker.onmessage = function(e) {
     process_lidar_results(e.data);
   };
