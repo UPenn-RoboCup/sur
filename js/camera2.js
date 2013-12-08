@@ -1,22 +1,22 @@
 /*****
- * Camera display in the DOM
+ * Camera2 display in the DOM
  */
 (function(ctx){
   
   // Function to hold methods
-  function Camera(){}
+  function Camera2(){}
   
   // Make the image object
   var old_imgs = []
   var camera_img = new Image();
-  camera_img.id  = 'head_camera';
-  camera_img.alt = 'No head_camera image yet...'
+  camera_img.id  = 'forehead_camera';
+  camera_img.alt = 'No forehead_camera image yet...'
   var camera_container;
   
   // network settings for the camera
-  var rpc_url = rest_root+'/m/vcm/head_camera/net'
+  var rpc_url = rest_root+'/m/vcm/forehead_camera/net'
   
-  // Camera characteristics
+  // Camera2 characteristics
   var h_fov = 60;
   var v_fov = 60;
   var focal_base = 640;
@@ -60,7 +60,7 @@
       ( event.offsetX / cam_width ) * 2 - 1,
       -( event.offsetY / cam_height ) * 2 + 1);
     var projector = new THREE.Projector();
-    var raycaster = projector.pickingRay(mouse_vector,Robot.head_camera);
+    var raycaster = projector.pickingRay(mouse_vector,Robot.forehead_camera);
     // intersect the plane
     var intersections = raycaster.intersectObjects( World.items.concat(World.meshes) );
     // if no intersection
@@ -77,9 +77,9 @@
   /*******
   * Websocket setup
   ******/
-  Camera.setup = function(){
+  Camera2.setup = function(){
     // put image into the dom
-    camera_container = $('#camera_container')[0];
+    camera_container = $('#camera2_container')[0];
     camera_container.appendChild( camera_img );
     // Single click looks somewhere
     var hammertime = Hammer(camera_container);
@@ -120,8 +120,7 @@
     cam_mid_y  = cam_height/2;
 
     // Websocket Configuration
-    //var mesh_port = 9005; // kinect
-    var port = 9003; // head cam
+    var port = 9004; // head cam
     // checksum & metadata
     var fr_sz_checksum, fr_metadata, last_camera_img;
     // Connect to the websocket server
@@ -132,8 +131,8 @@
       if(typeof e.data === "string"){
         fr_metadata = JSON.parse(e.data);
         /*
-        Camera.latency.push( e.timeStamp/1e6-fr_metadata.t );
-        if(Camera.latency.length>5){Camera.latency.shift()}
+        Camera2.latency.push( e.timeStamp/1e6-fr_metadata.t );
+        if(Camera2.latency.length>5){Camera2.latency.shift()}
         */
         return;
       }
@@ -141,7 +140,7 @@
         for metadata pairing with an incoming image */
       fr_sz_checksum = e.data.size;
       if(fr_metadata.sz!==fr_sz_checksum){
-        console.log('Camera Checksum fail!',fr_metadata.sz,fr_sz_checksum);
+        console.log('Camera2 Checksum fail!',fr_metadata.sz,fr_sz_checksum);
         return;
       }
       // Save the last received image, for delayed rendering
@@ -162,6 +161,6 @@
   } // Websocket handling
 
   // export
-	ctx.Camera = Camera;
+	ctx.Camera2 = Camera2;
 
 })(this);

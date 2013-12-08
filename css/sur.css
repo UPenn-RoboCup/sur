@@ -24,6 +24,12 @@ html, body {
   width:  640px;
   height: 360px;
 }
+/* Camera size definition */
+#camera2_container img {
+  width:  320px;
+  height: 240px;
+}
+
 /* Object name has same width, so lots of cycling has predictable button */
 #menu_obj {
   width: 64pt;

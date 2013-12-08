@@ -14,8 +14,8 @@ var _       = require('underscore');
 
 /* Remote Procedure Call Configuration */
 //var rpc_robot     = '192.168.123.26';
-//var rpc_robot     = '192.168.123.24';
-var rpc_robot     = 'localhost'
+var rpc_robot     = '192.168.123.24';
+//var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
 var homepage = 'index.html';
@@ -42,9 +42,10 @@ bridges.push({
 });
 
 bridges.push({
-  name : 'lwrist_camera',
+  name : 'forehead_camera',
   ws : 9004,
-  udp: 33334,
+  udp: 33335,
+  tcp: 33336,
   clients : []
 });
 

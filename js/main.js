@@ -36,8 +36,9 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   World.append_floor();
   
-  // Setup the camera
+  // Setup the camera(s)
   Camera.setup();
+  Camera2.setup();
   
   // Add items to be manipulated
   Manipulation.add_item(Waypoint);
