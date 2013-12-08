@@ -83,7 +83,7 @@ var reliable_lookup = {}
 /* Begin the REST HTTP server */
 var server = restify.createServer({
   name: 'surest',
-  version: '1.0beta'
+  version: '1.0.0'
 });
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
@@ -91,7 +91,13 @@ server.use(restify.bodyParser());
 
 // HTML files
 var load_html = function (req, res, next) {
-  var body = fs.readFileSync(homepage,{encoding:'utf8'});
+  // Select a page
+  var page = homepage;
+  if(req.params.html!==undefined){
+    page = 'views/'+req.params.html+'.html';
+  }
+  // Perform the load
+  var body = fs.readFileSync(page,{encoding:'utf8'});
   res.writeHead(200, {
     'Content-Length': Buffer.byteLength(body),
     'Content-Type': 'text/html'
@@ -100,6 +106,8 @@ var load_html = function (req, res, next) {
   res.end();
 };
 server.get('/', load_html );
+// Other html views
+server.get('/v/:html', load_html );
 
 // Javascript libraries
 var load_js = function (req, res, next) {

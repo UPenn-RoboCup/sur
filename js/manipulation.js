@@ -252,8 +252,6 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       //
-      console.log('pa',pa,'dx',dx,'dy',dy,'ca',ca,'sa',sa);
-      //
       cur_item.mod_callback();
       cur_item.send();
     },
