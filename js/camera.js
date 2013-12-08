@@ -40,7 +40,7 @@
     // Adjust the angle based on the previous angle from the robot
     qwest.get(ang_url).success(function(cur_headangle){
       //console.log('Current desired angle',cur_headangle);
-      var x = (event.offsetX-cam_mid_x)/cam_width  * h_fov * DEG_TO_RAD;
+      var x = (cam_mid_x-event.offsetX)/cam_width  * h_fov * DEG_TO_RAD;
       var y = (event.offsetY-cam_mid_y)/cam_height * v_fov * DEG_TO_RAD;
       x+=cur_headangle[0];
       y+=cur_headangle[1];
@@ -58,7 +58,7 @@
     // find the mouse position (use NDC coordinates, per documentation)
     var mouse_vector = new THREE.Vector3(
       ( event.offsetX / cam_width ) * 2 - 1,
-      -( event.offsetY / cam_height ) * 2 + 1);
+      1 - ( event.offsetY / cam_height ) * 2);
     var projector = new THREE.Projector();
     var raycaster = projector.pickingRay(mouse_vector,Robot.head_camera);
     // intersect the plane

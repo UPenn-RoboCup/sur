@@ -75,7 +75,7 @@
     stl: 'NECK',
     q: new THREE.Quaternion(0,0,0,1),
     p: new THREE.Vector3(0, 40, 0),
-    axel: new THREE.Vector3(0,-1,0),
+    axel: new THREE.Vector3(0,1,0),
     id: 1,
     children: [{
       stl: 'CAM',

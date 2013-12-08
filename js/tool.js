@@ -41,7 +41,10 @@
     return model;
   }
   var model_to_three = function(model){
-    //var yaw = 
+    // Assumption: Global coordinates
+    item_mesh.position.x = 1000*model[1];
+    item_mesh.position.z = 1000*model[0];
+    item_mesh.rotation.y = -1*model[2];
   }
   
   /////////////////////////////
@@ -72,7 +75,14 @@
     return item_mesh;
   }
   Tool.loop = function(){
-    
+    // Get the model from the robot (could be pesky...?)
+    qwest.get( rpc_url,{},{},function(){
+      // Use a 1 second timeout for the XHR2 request for getting the model
+      this.timeout = 1000; // ms
+    })
+    .success(function(model){
+      model_to_three(model);
+    });
   }
   Tool.mod_callback = function(){
     
