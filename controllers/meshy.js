@@ -6,18 +6,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   Mesh.setup();
   Robot.setup();
   
-  // Add items to be manipulated
-  Manipulation.add_item(Waypoint);
-  Manipulation.add_item(Hand);
-  Manipulation.add_item(Hose);
-  Manipulation.add_item(Wye);
-  Manipulation.add_item(SmallValve);
-  Manipulation.add_item(LargeValve);
-  Manipulation.add_item(BarValve);
-  Manipulation.add_item(Door);
-  Manipulation.add_item(Tool);
-  Manipulation.setup();
-  
   // Setup the GUI
   clicker('modify_obj',Manipulation.modify);
   clicker('loop_obj',Manipulation.loop);
@@ -142,6 +130,25 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('arm_barvalvegrab',function(){
     qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'barvalvegrab'});
   });
+  
+  // Setup manipulation
+  Manipulation.add_item(Waypoint);
+  Manipulation.add_item(Hand);
+  Manipulation.add_item(Hose);
+  Manipulation.add_item(Wye);
+  Manipulation.add_item(SmallValve);
+  Manipulation.add_item(LargeValve);
+  Manipulation.add_item(BarValve);
+  Manipulation.add_item(Door);
+  Manipulation.add_item(Tool);
+  Manipulation.setup();
+  var menu = $('#menu_obj')[0];
+  if(menu!==undefined){
+    menu.addEventListener('change', function(){
+      Manipulation.cycle_item(this.value);
+      this.blur();
+    }, false);
+  }
   
   
   // begin animation

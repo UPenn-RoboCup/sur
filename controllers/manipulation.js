@@ -49,16 +49,11 @@
     
   };
   // Function to cycle manipulation item to the item_id
-  var cycle_item = function(item_id){
+  Manipulation.cycle_item = function(item_id){
     // Remove the event listener
     tcontrol.removeEventListener( 'modify', cur_item.mod_callback );
     // De-init
     cur_item.deinit(tcontrol);
-    // Remove the special buttons
-    var btn_holder = $('#arm_events')[0];
-    while (btn_holder.firstChild) {
-      btn_holder.removeChild(btn_holder.firstChild);
-    }
     
     // set the next item
     cur_item_id = item_id;
@@ -71,9 +66,6 @@
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
-    
-    // Set the buttons for this object
-    cur_item.add_buttons(btn_holder);
     
   }
 
@@ -131,14 +123,6 @@
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );
     // Setup hotkeys for items
     keypress.register_many(item_hotkeys);
-    // Setup the menu
-    var menu = $('#menu_obj')[0];
-    if(menu!==undefined){
-      menu.addEventListener('change', function(){
-        cycle_item(this.value);
-        this.blur();
-      }, false);
-    }
   } // setup
 
   //////
