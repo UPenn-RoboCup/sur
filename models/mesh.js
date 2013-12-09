@@ -27,120 +27,6 @@
     mesh.ctx = raw.getContext('2d');
     mesh.fov = [0,0,0,0];
   }
-  
-  /**
-   * Buttons for interacting with the mesh
-   */
-  // NOTE: Must have access to the DOM
-  Mesh.handle_buttons = function(){
-    
-    // Clear all meshes
-    clicker('wipe_mesh',World.clear_meshes);
-    
-    // Fast or slow
-    // TODO: JUST FOR CHEST AT THE MOMENT!
-    var scanlines_val = [-1.0472, 1.0472, 5/DEG_TO_RAD];
-    qwest.get(rest_root+'/m/vcm/chest_lidar/scanlines')
-    .success( function(response){ scanlines_val = response.slice(); });
-    
-    clicker('fast_mesh',function() {
-      scanlines_val[2] = 2/DEG_TO_RAD;
-      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
-    });
-    clicker('slow_mesh',function() {
-      scanlines_val[2] = 5/DEG_TO_RAD;
-      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
-    });
-    /*
-    clicker('slow_mesh',function() {
-      scanlines_val[2] = 10/DEG_TO_RAD;
-      qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{val: JSON.stringify(scanlines_val)});
-    });
-    */
-  
-    // request a new mesh
-    clicker('request_mesh',function() {
-      // if testing with the kinect
-      var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net';
-      if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
-      // perform the post request for a reliable single PNG
-      qwest.post( mesh_req_url, {val:JSON.stringify([3,3,90,1])} );
-    });
-    
-    // stream a mesh
-    clicker('stream_mesh',function() {
-      // if testing with the kinect
-      var mesh_req_url = rest_root+'/m/vcm/'+mesh_in_use+'/net';
-      if(mesh_in_use=='kinect'){mesh_req_url+='_depth';}
-      // perform the post request for a reliable interval PNG
-      qwest.post( mesh_req_url, {val:JSON.stringify([4,3,90,1])} );
-    });
-    
-    // switch the type of mesh to request
-    clicker('switch_mesh',function() {
-      // Change the button text
-      switch(this.textContent){
-        case 'Head':
-          this.textContent = "Chest";
-          mesh_in_use = 'chest_lidar';
-          break;
-        case 'Chest':
-          this.textContent = "Head";
-          mesh_in_use = 'head_lidar';
-          break;
-        default:
-          this.textContent = "Kinect";
-          mesh_in_use = 'kinect';
-          break;
-      }
-    });
-
-    // Slider for mesh depth ranges
-    function brushend() {
-      // When the slider is done moving
-      // ajax to set the depths
-      var rpc_url = rest_root+'/m/vcm/'+mesh_in_use+'/depths'
-      var vals = brush.extent();
-      // perform the post request
-      qwest.post( rpc_url, {val:JSON.stringify(vals)} );
-    }
-    // Actual SVG Markup
-    var margin = {top: 0, right: 12, bottom: 18, left: 12},
-        width = 170 - margin.left - margin.right,
-        height = 36 - margin.top - margin.bottom;
-    var x = d3.scale.pow().exponent(.5).range([0, width]).domain([0, 30]);
-    var y = d3.random.normal(height / 2, height / 8);
-    var brush = d3.svg.brush().x(x).extent([.5, 3]).on("brushend", brushend);
-    // Make the handle
-    var arc = d3.svg.arc()
-        .outerRadius(height / 2)
-        .startAngle(0)
-        .endAngle(function(d, i) { return i ? -Math.PI : Math.PI; });
-    var svg = d3.select("#vision").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.svg.axis().scale(x).orient("bottom")
-        .tickValues([.2,1,3,5,10,20,30]).tickFormat(d3.format("g"))
-      );
-    var brushg = svg.append("g")
-        .attr("class", "brush")
-        .call(brush);
-    brushg.selectAll(".resize").append("path")
-        .attr("transform", "translate(0," +  height / 2 + ")")
-        .attr("d", arc);
-    brushg.selectAll("rect")
-        .attr("height", height);
-    // Call immediately to set on the robot the desired ranges on the robot
-    brushend();
-    
-    
-  } // GUI element setup
-  
   /*******
   * Websocket callback upon receiving an image
   ******/
@@ -208,7 +94,7 @@
   /*******
   * Websocket setup
   ******/
-  Mesh.setup_websockets = function(){
+  Mesh.setup = function(){
     
     // Websocket Configuration
     //var mesh_port = 9004; // kinect

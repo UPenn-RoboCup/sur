@@ -41,21 +41,6 @@
     // put image into the dom
     camera_container = $('#camera2_container')[0];
     camera_container.appendChild( camera_img );
-    // Buttons to control streaming of the camera
-    // TODO: Be able to change the rate (Combo box?)
-    var stream_cam = $('#stream_cam2')[0];
-    clicker(stream_cam,function(){
-      // Request the stream be enabled
-      this.classList.remove('record');
-      this.classList.add('special');
-      qwest.post( rpc_url, {val:JSON.stringify([4,1,75,1])} );
-    });
-    clicker('single_cam2',function(){
-      // Perform a single frame request
-      stream_cam.classList.remove('special');
-      stream_cam.classList.add('record');
-      qwest.post( rpc_url, {val:JSON.stringify([3,1,95,1])} );
-    });
     
     // Save some variables
     cam_width  = camera_container.clientWidth;
