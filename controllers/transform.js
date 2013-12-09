@@ -351,6 +351,7 @@
       
         // x, y, z of this position
         //a = positions.subarray(a_position_idx, a_position_idx+3);
+        //if(a[1]<20||a[1]>1000){return;}
         //b = positions.subarray(b_position_idx, b_position_idx+3);
         //c = positions.subarray(c_position_idx, c_position_idx+3);
         //d = positions.subarray(d_position_idx, d_position_idx+3);

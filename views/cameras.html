@@ -5,6 +5,7 @@
 <head>
   <title>SUR Cameras</title>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no">
   
   <!-- CSS for Styling the page -->
   <link rel="stylesheet" type="text/css" href="/css/gh-buttons.css">
@@ -18,28 +19,27 @@
   <script src="/lib/keypress.min.js"></script>
 
   <!-- SUR data JS -->
-  <script src="/js/include.js"></script>
-  <script src="/js/camera.js"></script>
-  <script src="/js/camera2.js"></script>
+  <script src="/controllers/include.js"></script>
+  <script src="/models/camera.js"></script>
+  <script src="/models/camera2.js"></script>
   <script>
     document.addEventListener( "DOMContentLoaded",Camera.setup);
     document.addEventListener( "DOMContentLoaded",Camera2.setup);
   </script>
+  
+  <!-- App specific needs -->
+  <link rel="stylesheet" type="text/css" href="/css/cameras.css">
+  <script src="/controllers/cameras.js"></script>
  
 </head>
 
 <body>
-
-<!--https://github.com/necolas/css3-github-buttons-->
-<div id="left_side">
   
   <!-- Head Camera Image Stream -->
   <div id="camera_container"></div>
   
   <!-- Camera2 Image Stream -->
   <div id="camera2_container"></div>
-  
-</div>
 
 </body>
 
