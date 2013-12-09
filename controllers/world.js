@@ -371,6 +371,8 @@
   World.digest_mesh = function( mesh ){
     var buf = mesh.ctx.getImageData(1, 1, mesh.width, mesh.height).data.buffer;
     mesh.buf = buf;
+    
+    /*
     // Remove illegal worker objects
     var ctx = mesh.ctx;
     mesh.ctx = null;
@@ -381,18 +383,21 @@
     // Restore the objects
     mesh.ctx = ctx;
     mesh.raw = raw;
-/*    
+    */
+
     // Not using WebWorkers (for debugging)
     var el = Transform.make_quads(mesh);
     process_lidar_results(el);
-*/
+
   }
   
+  /*
   // Add the webworker
   var mesh_worker = new Worker("/models/mesh_worker.js");
   mesh_worker.onmessage = function(e) {
     process_lidar_results(e.data);
   };
+  */
   
   // export
 	ctx.World = World;
