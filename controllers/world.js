@@ -54,6 +54,12 @@
       controls.update();
     }
   }
+  World.get_view = function(){
+    return {
+      position: camera.position.toArray(),
+      target: controls.target.toArray()
+    }
+  }
   
   // Transform control generator
   World.generate_tcontrol = function(){
@@ -185,7 +191,7 @@
     World.append_floor();
 
     // handle resizing
-    window.addEventListener( 'resize', function() {
+    addEventListener( 'resize', function() {
       // update the width/heightheight: 100%;
       CANVAS_WIDTH  = container.clientWidth;
       CANVAS_HEIGHT = container.clientHeight;

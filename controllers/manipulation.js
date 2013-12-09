@@ -113,15 +113,8 @@
   }
   
   // Vantage point for looking at objects
-  Manipulation.get_vantage = function(){
-    var cp = cur_item.get_position;
-    var p = cp();
-    var v = {
-      position: p.position.toArray(),
-      target: p.position.toArray(),
-    };
-    v.position[2] = v.position[2] - 200;
-    return v;
+  Manipulation.get_item = function(){
+    return cur_item;
   }
   
   Manipulation.setup = function(){

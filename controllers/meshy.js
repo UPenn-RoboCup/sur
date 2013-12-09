@@ -109,24 +109,32 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   // Vantage points (Position then target)
-  clicker('vantage_def',function() {
-    World.set_view([500,2000,-500],[0,0,500]);
-  });
   clicker('vantage_top',function() {
-    World.set_view([0,2000,500],[0,0,501]);}
-  );
-  clicker('vantage_chest',function() {
-    var dz = 1000*Robot.bodyHeight / Math.tan(Robot.bodyTilt);
-    World.set_view([0,Robot.bodyHeight*1000,220],[0,0,dz]);
+    var cur = Robot.get_root();
+    var position = cur.p.toArray();
+    position[1] = 2000;
+    var target = cur.p.toArray();
+    target[2] += 50;
+    World.set_view(position,target);
   });
-  clicker('vantage_item',function() {
-    var v = Manipulation.get_vantage();
-    World.set_view(v.position,v.target);
+  clicker('vantage_chest',function() {
+    var cur = Robot.get_root();
+    var position = cur.p.toArray();
+    var target = cur.p.toArray();
+    target[2] += 1000;
+    World.set_view(position,target);
   });
   clicker('vantage_robot',function(){
     World.set_view('robot');
   });
-  
+  clicker('vantage_item',function() {
+    var view = World.get_view();
+    var item = Manipulation.get_item();
+    var target = item.get_mod_mesh().position.toArray();
+    World.set_view(view.position,target);
+  });
+
+/*
   // Camera settings
   clicker('stream_cam',function(){
     // Request the stream be enabled
@@ -140,7 +148,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     stream_cam.classList.add('record');
     qwest.post( rpc_url, {val:JSON.stringify([3,1,95,1])} );
   });
-  
+*/
   /*
   // stats
   var stats = new Stats();

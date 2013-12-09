@@ -1,11 +1,25 @@
-/*
- * Establish main layout where the 3d scene is and where the buttons are
- */
 html, body {
   font-family: helvetica;
-  height: 98%;
+  height: 100%;
+  margin: 0px;
+  overflow: hidden;
 }
 #world_container {
-  background-color: #080;
+  background-color: #7F5217;
   height: 100%;
+}
+#fsm {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+}
+#proceed {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+#view {
+  position: fixed;
+  top: 0px;
+  right: 0px;
 }

@@ -15,10 +15,12 @@
   Robot.pa = 0;
   // camera
   Robot.head_camera = null;
+  // Included meshes
+  Robot.meshes = [];
   
   var n_loaded = 0, nstl = 0;
   var is_loaded = false;
-  Robot.meshes = [];
+  
   
   var jangles = [
     0, 0, //head
@@ -427,6 +429,10 @@
   Robot.hide = function(){
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.remove(m[i]);}
+  }
+  
+  Robot.get_root = function(){
+    return skeleton;
   }
   
   Robot.setup = function(){

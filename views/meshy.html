@@ -52,10 +52,25 @@
 </head>
 
 <body>
-
-<!-- 3D scene -->
-<div id="world_container"></div>
-
+  <!-- Proceed FSM Events -->
+  <div class="button-group" id="proceed">
+    <a href="#" class="button" id="proceed_reverse">Reverse</a>
+    <a href="#" class="button" id="proceed_proceed">Proceed</a>
+    <a href="#" class="button" id="proceed_notify">Notify</a>
+  </div>
+  <!-- 3D scene -->
+  <div id="world_container"></div>
+  <div class="button-group" id="fsm">
+    <a href="#" class="big button" id="body_follow">Follow</a>
+    <a href="#" class="big button" id="head_center">Head Center</a>
+    <a href="#" class="big button" id="head_teleop">Head Teleop</a>
+  <div>
+  <div class="button-group" id="view">  
+    <a href="#" class="button" id="vantage_top">Top</a>
+    <a href="#" class="button" id="vantage_chest">Chest</a>
+    <a href="#" class="button" id="vantage_item">Item</a>
+    <a href="#" class="button" id="vantage_robot">Robot</a>
+  </div>
 </body>
 
 </html>
