@@ -11,19 +11,6 @@
   
   // Manipulatable items
   var items = [];
-  Manipulation.add_item = function(item){
-    var item_id = items.length;
-    // Store in our array
-    items.push(item);
-    // Place as a select option
-    var menu = $('#menu_obj')[0];
-    // If no menu, then exit
-    if(menu===undefined){return;}
-    var option = new Option(item.item_name);
-    option.value = item_id;
-    menu.appendChild(option);
-  }
-  Manipulation.is_mod = false;
   var cur_item_id = -1, cur_item = null;
   
   // Functions to start/stop modifying
@@ -41,13 +28,6 @@
     tcontrol.update();
     // Keyboard shortcuts for tcontrol
     keypress.register_many(tcontrol_hotkeys);
-    // Re-render
-    
-    // reset the buttons
-    if(this!==ctx){
-      unclicker(this,yes_mod);
-      clicker(this,no_mod);
-    }
   };
   var no_mod = function(){
     if(Manipulation.is_mod==false){return;}
@@ -66,16 +46,10 @@
     keypress.unregister_many(tcontrol_hotkeys);
     // send the model to the robot
     cur_item.send();
-    // Ensure that we do not set a clicker on the whole page
-    if(this!==ctx){
-      unclicker(this,no_mod);
-      clicker(this,yes_mod);
-    }
+    
   };
   // Function to cycle manipulation item to the item_id
   var cycle_item = function(item_id){
-    // Stop modifying
-    no_mod();
     // Remove the event listener
     tcontrol.removeEventListener( 'modify', cur_item.mod_callback );
     // De-init
@@ -102,11 +76,42 @@
     cur_item.add_buttons(btn_holder);
     
   }
+
+  ////////////////
+  // Global API //
+  ////////////////
+  Manipulation.is_mod = false;
   
-  var loop_item = function(){
+  // Loop the item
+  Manipulation.loop = function(){
     cur_item.loop(tcontrol);
   }
-
+  
+  Manipulation.modify = function(set){
+    if(set=='yes'){
+      yes_mod();
+    } else if(set=='no'){
+      no_mod();
+    } else {
+      // Toggle
+      if(Manipulation.is_mod==false){yes_mod();}else{no_mod();}
+    }
+  }
+  
+  // Add an item
+  Manipulation.add_item = function(item){
+    var item_id = items.length;
+    // Store in our array
+    items.push(item);
+    // Place as a select option
+    var menu = $('#menu_obj')[0];
+    // If no menu, then exit
+    if(menu===undefined){return;}
+    var option = new Option(item.item_name);
+    option.value = item_id;
+    menu.appendChild(option);
+  }
+  
   // Vantage point for looking at objects
   Manipulation.get_vantage = function(){
     var cp = cur_item.get_position;
@@ -120,9 +125,6 @@
   }
   
   Manipulation.setup = function(){
-    // Handle the button clicks
-    clicker('modify_obj',yes_mod);
-    clicker('loop_obj',loop_item);
     // initialize the element
     cur_item_id = 0;
     cur_item    = items[cur_item_id];
@@ -133,7 +135,6 @@
     // Make a tcontrol
     tcontrol = World.generate_tcontrol();
     tcontrol.attach( cur_item.get_mod_mesh() );
-    //tcontrol.addEventListener( 'change', World.render );
     tcontrol.addEventListener( 'modify', cur_item.mod_callback );
     // Setup hotkeys for items
     keypress.register_many(item_hotkeys);
@@ -145,7 +146,6 @@
         this.blur();
       }, false);
     }
-    
   } // setup
 
   //////

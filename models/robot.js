@@ -17,7 +17,7 @@
   Robot.head_camera = null;
   
   var n_loaded = 0, nstl = 0;
-  var is_loaded_cb, is_loaded = false;
+  var is_loaded = false;
   Robot.meshes = [];
   
   var jangles = [
@@ -346,9 +346,10 @@
     this.root.mesh = mesh;
     Robot.meshes.push(mesh);
 
-    if(n_loaded==n_stl && is_loaded_cb!==undefined){
+    // Show the robot if done
+    if(n_loaded==n_stl){
       is_loaded = true;
-      is_loaded_cb();
+      Robot.show();
     }
     
   }
@@ -428,8 +429,8 @@
     for(var i=0,j=m.length;i<j;i++){World.remove(m[i]);}
   }
   
-  Robot.setup = function(cb){
-    is_loaded_cb = cb;
+  Robot.setup = function(){
+    // Load the skeleton
     n_stl = load_skeleton(skeleton);
     Robot.head_camera = neck_chain.children[0].children[0].camera;
     Robot.head_camera.setLens( 3.67, 2.914 );
@@ -438,10 +439,6 @@
     //Robot.head_camera.lookAt(0,0,1000);
     var help = new THREE.CameraHelper(Robot.head_camera );
     World.add(help);
-    
-    // Buttons
-    clicker('robot_show',Robot.show);
-    clicker('robot_hide',Robot.hide);
     
     // Websocket Configuration for feedback
     var port = 9013;

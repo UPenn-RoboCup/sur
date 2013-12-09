@@ -18,13 +18,17 @@ document.addEventListener( "DOMContentLoaded", function(){
   Manipulation.add_item(BarValve);
   Manipulation.add_item(Door);
   Manipulation.add_item(Tool);
-  //Manipulation.add_item(Wheel);
   Manipulation.setup();
   
   // Add the robot
-  Robot.setup(function(){
-    Robot.show();
-  });
+  Robot.setup();
+  
+  // Setup the gui
+  clicker('modify_obj',Manipulation.modify);
+  clicker('loop_obj',Manipulation.loop);
+  //
+  clicker('robot_show',Robot.show);
+  clicker('robot_hide',Robot.hide);
 
   // Finally, render the world!
   World.render();
