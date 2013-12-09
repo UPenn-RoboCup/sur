@@ -28,73 +28,34 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('wipe_mesh',World.clear_meshes);
   // During walking
   clicker('fast_mesh',function() {
+    // Fast scan
     qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
       val: JSON.stringify([-1.0472, 1.0472, 2/DEG_TO_RAD])
     });
-  });
-  // During manipulation
-  clicker('slow_mesh',function() {
-    qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
-      val: JSON.stringify([-1.0472, 1.0472, 5/DEG_TO_RAD])
+    // See far
+    qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
+      val:JSON.stringify([.2,5])
     });
-  });
-  // Chest mesh: reliable single PNG
-  clicker('request_mesh',function() {
-    // if testing with the kinect
-    qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
-      val:JSON.stringify([3,3,90,1])
-    });
-  });
-  // Chest mesh: reliable interval PNG
-  clicker('stream_mesh',function() {
-    // if testing with the kinect
+    // Stream (JPEG?)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
       val:JSON.stringify([4,3,90,1])
     });
   });
-  // Slider for mesh depth ranges
-  (function(){
-    function brushend() {
-      // Done moving
-      qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
-        val:JSON.stringify(brush.extent())
-      });
-    }
-    // D3 settings
-    var margin = {top: 0, right: 12, bottom: 18, left: 12},
-        width = 170 - margin.left - margin.right,
-        height = 36 - margin.top - margin.bottom;
-    var x = d3.scale.pow().exponent(.5).range([0, width]).domain([0, 30]);
-    var y = d3.random.normal(height / 2, height / 8);
-    // Make the handle
-    var arc = d3.svg.arc()
-        .outerRadius(height / 2)
-        .startAngle(0)
-        .endAngle(function(d, i) { return i ? -Math.PI : Math.PI; });
-    var svg = d3.select("#vision").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.svg.axis().scale(x).orient("bottom")
-        .tickValues([.2,1,3,5,10,20,30]).tickFormat(d3.format("g"))
-      );
-    // Make the brush
-    var brush = d3.svg.brush().x(x).extent([.5, 3]).on("brushend", brushend);
-    var brushg = svg.append("g")
-        .attr("class", "brush")
-        .call(brush);
-    brushg.selectAll(".resize").append("path")
-        .attr("transform", "translate(0," +  height / 2 + ")")
-        .attr("d", arc);
-    brushg.selectAll("rect")
-        .attr("height", height);
-    // Call immediately to set on the robot the desired ranges on the robot
-    brushend();
-  })();
+  // During manipulation
+  clicker('slow_mesh',function() {
+    // Slow scan
+    qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
+      val: JSON.stringify([-1.0472, 1.0472, 5/DEG_TO_RAD])
+    });
+    // See close
+    qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
+      val:JSON.stringify([.1,1])
+    });
+    // Once PNG
+    qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
+      val:JSON.stringify([3,3,90,1])
+    });
+  });
   
   // Proceed buttons
   var rpc_url_proceed = rest_root+'/m/hcm/state/proceed'
@@ -133,34 +94,46 @@ document.addEventListener( "DOMContentLoaded", function(){
     var target = item.get_mod_mesh().position.toArray();
     World.set_view(view.position,target);
   });
-
-/*
-  // Camera settings
-  clicker('stream_cam',function(){
-    // Request the stream be enabled
-    this.classList.remove('record');
-    this.classList.add('special');
-    qwest.post( rpc_url, {val:JSON.stringify([4,1,75,1])} );
-  });
-  clicker('single_cam',function(){
-    // Perform a single frame request
-    stream_cam.classList.remove('special');
-    stream_cam.classList.add('record');
-    qwest.post( rpc_url, {val:JSON.stringify([3,1,95,1])} );
-  });
-*/
-  /*
-  // stats
-  var stats = new Stats();
-  stats.domElement.style.position = 'absolute';
-  stats.domElement.style.top = '0px';
-  $('body')[0].appendChild( stats.domElement );
-  */
+  
+  // State machines
+  // Attach click bindings to the FSM buttons
+  var a = $('#fsm a');
+  for(var i=0, j=a.length; i<j; i++){
+    var btn = a[i];
+    var id  = btn.id;
+    // Grab is a special button
+    if(id=='arm_grab'){continue;}
+    var sep = id.indexOf('_');
+    var evt = id.substring(sep+1);
+    var sm = id.substring(0,sep);
+    var fsm = sm.charAt(0).toUpperCase() + sm.slice(1) + 'FSM';
+    // Add the listener
+    if(fsm=='BodyFSM'&&evt=='follow'){
+      clicker(btn,
+      (function(){
+        var wp_url = rest_root+'/m/hcm/motion/waypoints';
+        var wp = Waypoint.get_robot();
+        var b_evt = this.evt, b_fsm = this.fsm;
+        // Send the waypoint
+        qwest.post( wp_url, {val:JSON.stringify(wp)} )
+        .complete(function(){
+          // Then send the follow event!
+          qwest.post(fsm_url,{fsm: b_fsm, evt: b_evt});
+        });
+      }).bind({evt:evt,fsm:fsm})
+      );
+    } else {
+      clicker(btn,
+      (function(){
+        qwest.post(fsm_url,{fsm: this.fsm , evt: this.evt});
+      }).bind({evt:evt,fsm:fsm})
+    );
+    }
+  } // for each
   
   // begin animation
   (function animloop(){
     World.render();
-    //stats.update();
     requestAnimationFrame(animloop);
   })();
 
