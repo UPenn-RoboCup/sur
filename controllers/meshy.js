@@ -85,6 +85,15 @@ document.addEventListener( "DOMContentLoaded", function(){
     target[2] += 1000;
     World.set_view(position,target);
   });
+  clicker('vantage_side',function() {
+    var cur = Robot.get_root();
+    var position = cur.p.toArray();
+    var target = position.slice();
+    position[0] += 500;
+    position[2] += 500;
+    target[2] += 500;
+    World.set_view(position,target);
+  });
   clicker('vantage_robot',function(){
     World.set_view('robot');
   });
@@ -96,40 +105,44 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   // State machines
-  // Attach click bindings to the FSM buttons
-  var a = $('#fsm a');
-  for(var i=0, j=a.length; i<j; i++){
-    var btn = a[i];
-    var id  = btn.id;
-    // Grab is a special button
-    if(id=='arm_grab'){continue;}
-    var sep = id.indexOf('_');
-    var evt = id.substring(sep+1);
-    var sm = id.substring(0,sep);
-    var fsm = sm.charAt(0).toUpperCase() + sm.slice(1) + 'FSM';
-    // Add the listener
-    if(fsm=='BodyFSM'&&evt=='follow'){
-      clicker(btn,
-      (function(){
-        var wp_url = rest_root+'/m/hcm/motion/waypoints';
-        var wp = Waypoint.get_robot();
-        var b_evt = this.evt, b_fsm = this.fsm;
-        // Send the waypoint
-        qwest.post( wp_url, {val:JSON.stringify(wp)} )
-        .complete(function(){
-          // Then send the follow event!
-          qwest.post(fsm_url,{fsm: b_fsm, evt: b_evt});
-        });
-      }).bind({evt:evt,fsm:fsm})
-      );
-    } else {
-      clicker(btn,
-      (function(){
-        qwest.post(fsm_url,{fsm: this.fsm , evt: this.evt});
-      }).bind({evt:evt,fsm:fsm})
-    );
-    }
-  } // for each
+  clicker('body_init',function() {
+    qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'init'});
+  });
+  clicker('body_follow',function(){
+    var wp_url = rest_root+'/m/hcm/motion/waypoints';
+    var wp = Waypoint.get_robot();
+    qwest.post( wp_url, {val:JSON.stringify(wp)} )
+    .success(function(){
+      qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});
+    });
+  });
+  
+  // Each arm event
+  clicker('arm_doorgrab',function(){
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'doorgrab'});
+  });
+  clicker('arm_pushdoorgrab',function(){
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'pushdoordoorgrab'});
+  });
+  clicker('arm_loaddoorgrab',function(){
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'loaddoordoorgrab'});
+  });
+  clicker('arm_toolgrab',function(){
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'toolgrab'});
+  });
+  clicker('arm_hosegrab',function(){
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'hosegrab'});
+  });
+  clicker('arm_smallvalvegrab',function(){
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'smallvalvegrab'});
+  });
+  clicker('arm_largevalvegrab',function(){
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'largevalvegrab'});
+  });
+  clicker('arm_barvalvegrab',function(){
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'barvalvegrab'});
+  });
+  
   
   // begin animation
   (function animloop(){
