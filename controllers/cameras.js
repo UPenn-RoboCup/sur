@@ -14,16 +14,20 @@ document.addEventListener( "DOMContentLoaded", function(){
   var ang_url = rest_root+'/m/hcm/motion/headangle';
   var head_look = function(e){
     var event = e.gesture.touches[0];
+    
     var width = camera_container.clientWidth;
     var height = camera_container.clientHeight;
     // Adjust the angle based on the previous angle from the robot
     qwest.get(ang_url).success(function(cur_headangle){
-      var x = (0.5 - event.offsetX / width) * h_fov * DEG_TO_RAD;
-      var y = (event.offsetY/height - 0.5) * v_fov * DEG_TO_RAD;
+      var dx = event.offsetX || event.clientX;
+      var dy = event.offsetX || event.clientY;
+      var x = (0.5 - dx/width ) * h_fov * DEG_TO_RAD;
+      var y = (dy/height - 0.5) * v_fov * DEG_TO_RAD;
+      //console.log('Current desired angle',cur_headangle,x,y);
       x += cur_headangle[0];
       y += cur_headangle[1];
       if(x==null||x===undefined||y==null||y===undefined){return;}
-      //console.log('Current desired angle',cur_headangle,x,y);
+      console.log('Current desired angle',cur_headangle,x,y);
       qwest.post(ang_url,{val: JSON.stringify([x,y])});
     });
   }
