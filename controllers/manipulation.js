@@ -298,6 +298,32 @@
     },
     "this"          : ctx
   },
+  {
+    "keys"          : "h",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.rotation.y += .1;
+        cur_item.mod_callback();
+        // Send on each keypress modification
+        cur_item.send();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : ";",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.rotation.y -= .1;
+        cur_item.mod_callback();
+        // Send on each keypress modification
+        cur_item.send();
+    },
+    "this"          : ctx
+  },
   ];
 
   // export

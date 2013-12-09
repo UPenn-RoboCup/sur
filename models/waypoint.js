@@ -17,23 +17,15 @@
   // Mesh definition //
   /////////////////////
   var item_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
-  var item_path = new THREE.Path();
-  item_path.fromPoints([
-    new THREE.Vector2(0,0), // tip of the arrow
-    new THREE.Vector2(-50,-120),
-    new THREE.Vector2(-20,-100),
-    new THREE.Vector2(20,-100),
-    new THREE.Vector2(50,-120),
-  ]);
-  var item_shape = item_path.toShapes();
-  var item_geo  = new THREE.ExtrudeGeometry(
-    item_shape, {}
-  );
+  var item_geo = new THREE.LatheGeometry([
+    new THREE.Vector3(   0, 0,    0),
+    new THREE.Vector3(  50, 0,  -50),
+    new THREE.Vector3(  25, 0,  -50),
+    new THREE.Vector3(  25, 0, -125),
+    new THREE.Vector3(   0, 0, -125),
+  ], 12, -Math.PI, -Math.PI);
   var item_mesh  = new THREE.Mesh( item_geo, item_mat );
-  var item_angle = new THREE.Euler( Math.PI/2, 0, 0 )
-  item_mesh.quaternion.setFromEuler( item_angle );
-  // Set above the ground
-  item_mesh.position.y = 100;
+  //item_mesh.position.y = 100;
   
   //////////////////////
   // Model converters //
@@ -45,7 +37,7 @@
     var px = p.z / 1000;
     var py = p.x / 1000;
     // Make the robot GLOBAL orientation
-    var pa = -1*item_mesh.rotation.z;
+    var pa = -1*item_mesh.rotation.y;
     // Pose_local to pose_global
     return [px,py,pa];
   }
@@ -53,7 +45,7 @@
     // Assumption: Global coordinates
     item_mesh.position.x = 1000*model[1];
     item_mesh.position.z = 1000*model[0];
-    item_mesh.rotation.z = -1*model[2];
+    item_mesh.rotation.y = -1*model[2];
   }
   
   /////////////////////////////
@@ -95,10 +87,10 @@
   // Constrain the angles to 2D (i.e. one angle)
   Waypoint.mod_callback = function(){
     // Retain the same angles
-    item_mesh.rotation.x = Math.PI/2;
-    item_mesh.rotation.y = 0;
+    item_mesh.rotation.x = 0;
+    item_mesh.rotation.z = 0;
     // Retain the same height
-    item_mesh.position.y = 100;
+    item_mesh.position.y = 0;
   }
   // send to robot
   Waypoint.send = function(){
@@ -116,8 +108,8 @@
   }
   Waypoint.set = function(p,pa){
     item_mesh.position.copy(p);
-    item_mesh.position.y = 100;
-    item_mesh.rotation.z = pa;
+    item_mesh.position.y = 0;
+    item_mesh.rotation.y = pa;
   }
   Waypoint.get_robot = function(){
     return three_to_model();
