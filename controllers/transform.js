@@ -226,6 +226,17 @@
     // Save the particle with 1 indexed in pixdex
     var idx_idx = 1;
 
+    // Temp robot
+    var tmp_robot = {
+      px: 0,
+      py: 0,
+      pa: 0, // actually correct name for now; mesh_wizard
+      bodyTilt: mesh.pitch,
+      // TODO: This is hard coded! Should come from mesh!
+      supportX: 0.0515184,
+      bodyHeight: 0.9285318
+    }
+
     // begin the loop to find particle positions
     n_el = 0;
     pixdex_idx = -1;
@@ -251,15 +262,11 @@
           continue;
         }
         
-        var threep = lidar_to_three(p[0],p[1],p[2],{
-          px: mesh.posex[i],
-          py: mesh.posey[i],
-          pa: mesh.posez[i], // actually correct name for now; mesh_wizard
-          bodyTilt: mesh.pitch,
-          // TODO: This is hard coded! Should come from mesh!
-          supportX: 0.0515184,
-          bodyHeight: 0.9285318
-        });
+        // Compute the position from the lidar
+        tmp_robot.px = mesh.posex[i];
+        tmp_robot.py = mesh.posey[i];
+        tmp_robot.pa = mesh.posez[i];
+        var threep = lidar_to_three(p[0],p[1],p[2],tmp_robot);
       
         // Save the pixel particle, since it is valid
         n_el++;
@@ -277,11 +284,19 @@
       
         // Increment the index of where we are in the position typedarray
         position_idx += 3;
-      
+        
         // index of 3 for the positions (mesh knows to use TRIANGLE of 3)
         pixdex[pixdex_idx] = idx_idx;
+        
         // records the number of position indices
         idx_idx++;
+        
+        /*
+        // debug
+        if(i==Math.floor(width/2)&&j==Math.floor(height/8)){
+          console.log(i,j,pixdex_idx,idx_idx,'idx_idx');
+        }
+        */
 
   		} // for i in width
     
@@ -314,21 +329,33 @@
     pixdex_idx = 0;
   
     // do not look at the last row/column
-    height--;
-    width--;
+    //height--;
+    //width--;
+    
     // begin the loop
     var offset_num = 0;
     var cur_offset = quad_offsets[offset_num];
     var face_count = 0;
     for (var j = 0; j<height; j++ ) {
-    
+      // Do not look at the last row
+      if(j==height-1){break;}
       for (var i = 0; i<width; i++ ) {
       
         // use a temporary index
         var tmp_idx = pixdex_idx;
-      
+        
+        /*
+        // debug
+        if(i==Math.floor(width/2)&&j==Math.floor(height/8)){
+          console.log(i,j,tmp_idx,pixdex[tmp_idx],'tmp_idx');
+        }
+        */
+        
         // ready for next iteration
         pixdex_idx++;
+        
+        // Do not look at the last column
+        if(i==height-1){continue;}
       
         // a of the quad
         var a_position_idx = pixdex[tmp_idx]-1;
@@ -351,11 +378,13 @@
       
         // x, y, z of this position
         //a = positions.subarray(a_position_idx, a_position_idx+3);
-        //if(a[1]<20||a[1]>1000){return;}
         //b = positions.subarray(b_position_idx, b_position_idx+3);
         //c = positions.subarray(c_position_idx, c_position_idx+3);
         //d = positions.subarray(d_position_idx, d_position_idx+3);
-        //if(positions[a_position_idx]-positions[b_position_idx]>1000){continue;}
+        
+        // Too high in the air
+        //if(a[1]>1000||b[1]>1000||c[1]>1000||d[1]>1000){continue;}
+        //if(a[1]>1000){continue;}
       
         // We have a valid quad!
         n_quad++;
