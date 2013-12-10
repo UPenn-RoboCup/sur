@@ -100,6 +100,25 @@
     stop_mesh.rotation.set(0, 0, roll_end);
   }
   
+  // Adjust the waypoint to the *perfect* position
+  var wp_callback = function(){
+    // Grab the (global) orientation of the mesh
+    var pa = -1*item_mesh.rotation.y;
+    // Acquire the position of the tip:
+    var p = (new THREE.Vector3()).copy(item_mesh.position);
+    
+    // Make the global offset from the object    
+    var dx = offset.x*Math.cos(pa) + offset.y*Math.sin(pa);
+    var dy = offset.y*Math.cos(pa) - offset.x*Math.sin(pa);
+
+    // Change the THREE coordinates of the desired waypoint
+    p.x -= dy;
+    p.z -= dx;
+
+    // Update the Waypoint in the scene
+    Waypoint.set(p,pa);
+
+  }
   /////////////////////////////
   // Object manipulation API //
   /////////////////////////////
@@ -107,6 +126,9 @@
     
     // Set the position from the double click
     item_mesh.position.copy(p);
+
+    wp_callback();
+    SmallValve.send();
 
     // Re-render
     
@@ -174,6 +196,10 @@
     stop_mesh.rotation.y = 0;
     // Retain the same height
     item_mesh.position.y = off_ground;
+
+    // Update the global waypoint
+    wp_callback();
+
   }
 
   SmallValve.add_buttons = function(holder){
