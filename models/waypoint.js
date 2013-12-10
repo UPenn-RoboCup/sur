@@ -58,8 +58,6 @@
     item_mesh.position.y = 100;
     // Send the waypoint to robot when selecting
     Waypoint.send();
-    // Re-render
-    
   }
   // TODO: reset from SHM?
   Waypoint.clear = function(){

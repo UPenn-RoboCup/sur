@@ -53,8 +53,7 @@
   Tool.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
-    // Re-render
-    
+    Tool.send();
   }
   Tool.clear = function(){
 
