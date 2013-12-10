@@ -113,19 +113,6 @@
   Tool.gen_wp = function(){
     // yield the optimal waypoint
   }
-  Tool.add_buttons = function(holder){
-    // Grab
-    var grab = document.createElement('a');
-    grab.classList.add('big');
-    grab.classList.add('button');
-    grab.id = 'tool_grab';
-    grab.href = '#';
-    grab.textContent = 'Grab';
-    holder.appendChild(grab);
-    clicker(grab,function(){
-      qwest.post(fsm_url,{fsm: 'ArmFSM', evt: 'toolgrab'});
-    });
-  }
 
   /////////////////////////
   // Metadata and Export //

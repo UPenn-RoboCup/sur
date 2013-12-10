@@ -201,18 +201,6 @@
     wp_callback();
   }
 
-
-  LargeValve.add_buttons = function(holder){
-    // Grab
-    var grab = document.createElement('a');
-    grab.classList.add('big');
-    grab.classList.add('button');
-    grab.id = 'door_grab';
-    grab.href = '#';
-    holder.appendChild(grab);
-    //
-  }
-
   /////////////////////////
   // Metadata and Export //
   /////////////////////////

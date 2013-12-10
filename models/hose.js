@@ -124,19 +124,6 @@
   Hose.gen_wp = function(){
     // yield the optimal waypoint
   }
-  Hose.add_buttons = function(holder){
-    // Grab
-    var grab = document.createElement('a');
-    grab.classList.add('big');
-    grab.classList.add('button');
-    grab.id = 'hose_grab';
-    grab.href = '#';
-    grab.textContent = 'Grab';
-    holder.appendChild(grab);
-    clicker(grab,function(){
-      qwest.post(fsm_url,{fsm: 'ArmFSM', evt: 'hosegrab'});
-    });
-  }
 
   /////////////////////////
   // Metadata and Export //

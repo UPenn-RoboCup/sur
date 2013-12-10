@@ -247,42 +247,6 @@
     // no up and down movement
     hinge_mesh.position.y = door_height/2;
   }
-  Door.add_buttons = function(holder){
-    // Grab
-    var grab = document.createElement('a');
-    grab.classList.add('big');
-    grab.classList.add('button');
-    grab.id = 'door_grab';
-    grab.href = '#';
-    grab.textContent = 'PullDoor';
-    holder.appendChild(grab);
-    clicker(grab,function(){
-      qwest.post(fsm_url,{fsm: 'ArmFSM', evt: 'doorgrab'});
-    });
-    // PushGrab
-    var pushd = document.createElement('a');
-    pushd.classList.add('big');
-    pushd.classList.add('button');
-    pushd.id = 'door_push';
-    pushd.href = '#';
-    pushd.textContent = 'PushDoor';
-    holder.appendChild(pushd);
-    clicker(grab,function(){
-      qwest.post(fsm_url,{fsm: 'ArmFSM', evt: 'pushdoorgrab'});
-    });
-    // LoadGrab
-    var loadd = document.createElement('a');
-    loadd.classList.add('big');
-    loadd.classList.add('button');
-    loadd.id = 'door_load';
-    loadd.href = '#';
-    loadd.textContent = 'LoadDoor';
-    holder.appendChild(loadd);
-    clicker(grab,function(){
-      qwest.post(fsm_url,{fsm: 'ArmFSM', evt: 'loaddoorgrab'});
-    });
-    //
-  }
 
   /////////////////////////
   // Metadata and Export //

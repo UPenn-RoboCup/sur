@@ -202,20 +202,6 @@
 
   }
 
-  SmallValve.add_buttons = function(holder){
-    // Grab
-    var grab = document.createElement('a');
-    grab.classList.add('big');
-    grab.classList.add('button');
-    grab.id = 'smallvalve_grab';
-    grab.href = '#';
-    holder.appendChild(grab);
-    clicker(grab,function(){
-      qwest.post(fsm_url,{fsm: 'ArmFSM', evt: 'smallvalvegrab'});
-    });
-    //
-  }
-
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
