@@ -174,7 +174,12 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Data sharing
   var peer = new Peer('meshy', {host: 'localhost', port: 9000});
-  console.log('peer',peer);
+  peer.on('connection', function(conn){
+    // Receive messages
+    conn.on('data', function(data) {
+      console.log('Received', data);
+    });
+  });
   /*
   var conn = peer.connect('cameras');
   conn.on('open', function(){
