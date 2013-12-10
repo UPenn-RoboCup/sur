@@ -392,11 +392,11 @@
         if(a[1]>3000||b[1]>3000||c[1]>3000||d[1]>3000){continue;}
         // Ground (5cm)
         if(a[1]<50||b[1]<50||c[1]<50||d[1]<50){continue;}
-        // ugliness with too far away (4cm break)
+        // ugliness with too far away (5cm break)
         if(
-          Math.abs(a[2]-b[2])>40 ||
-          Math.abs(a[2]-c[2])>40 ||
-          Math.abs(a[2]-d[2])>40
+          Math.abs(a[2]-b[2])>50 ||
+          Math.abs(a[2]-c[2])>50 ||
+          Math.abs(a[2]-d[2])>50
         ){continue;}
         
       

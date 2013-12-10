@@ -7,6 +7,8 @@
   function World(){}
   
   var MAX_NUM_MESHES = 1;
+  var mesh_worker;
+  var ENABLE_WORKERS = true;
   
   var CANVAS_WIDTH, CANVAS_HEIGHT;
   var camera, renderer, scene, container, controls = null;
@@ -358,8 +360,6 @@
     }
     //var particleSystem = make_particle_system(position, color);
     //scene.add( particleSystem );
-    // render the particle system change
-    //World.render();
   }
   
   World.clear_meshes = function(){
@@ -372,32 +372,32 @@
     var buf = mesh.ctx.getImageData(1, 1, mesh.width, mesh.height).data.buffer;
     mesh.buf = buf;
     
-    /*
-    // Remove illegal worker objects
-    var ctx = mesh.ctx;
-    mesh.ctx = null;
-    var raw = mesh.raw;
-    mesh.raw = null;
-    // Post the object
-    mesh_worker.postMessage(mesh,[buf]);
-    // Restore the objects
-    mesh.ctx = ctx;
-    mesh.raw = raw;
-    */
-
-    // Not using WebWorkers (for debugging)
-    var el = Transform.make_quads(mesh);
-    process_lidar_results(el);
-
+    if(ENABLE_WORKERS){
+      // Remove illegal worker objects
+      var ctx = mesh.ctx;
+      mesh.ctx = null;
+      var raw = mesh.raw;
+      mesh.raw = null;
+      // Post the object
+      mesh_worker.postMessage(mesh,[buf]);
+      // Restore the objects
+      mesh.ctx = ctx;
+      mesh.raw = raw;
+    } else {
+      // Not using WebWorkers (for debugging)
+      var el = Transform.make_quads(mesh);
+      process_lidar_results(el);
+    }
+    
   }
   
-  /*
-  // Add the webworker
-  var mesh_worker = new Worker("/models/mesh_worker.js");
-  mesh_worker.onmessage = function(e) {
-    process_lidar_results(e.data);
-  };
-  */
+  if(ENABLE_WORKERS){
+    // Add the webworker
+    mesh_worker = new Worker("/models/mesh_worker.js");
+    mesh_worker.onmessage = function(e) {
+      process_lidar_results(e.data);
+    };
+  }
   
   // export
 	ctx.World = World;
