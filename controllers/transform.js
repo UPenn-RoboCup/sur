@@ -282,11 +282,11 @@
         colors[ position_idx + 1 ] = cm[1];
         colors[ position_idx + 2 ] = cm[2];
       
-        // Increment the index of where we are in the position typedarray
-        position_idx += 3;
-        
         // index of 3 for the positions (mesh knows to use TRIANGLE of 3)
         pixdex[pixdex_idx] = idx_idx;
+        
+        // Increment the index of where we are in the position typedarray
+        position_idx += 3;
         
         // records the number of position indices
         idx_idx++;
@@ -377,14 +377,28 @@
         if(d_position_idx<0){continue;}
       
         // x, y, z of this position
-        //a = positions.subarray(a_position_idx, a_position_idx+3);
-        //b = positions.subarray(b_position_idx, b_position_idx+3);
-        //c = positions.subarray(c_position_idx, c_position_idx+3);
-        //d = positions.subarray(d_position_idx, d_position_idx+3);
+        a = positions.subarray(3*a_position_idx, 3*a_position_idx+3);
+        b = positions.subarray(3*b_position_idx, 3*b_position_idx+3);
+        c = positions.subarray(3*c_position_idx, 3*c_position_idx+3);
+        d = positions.subarray(3*d_position_idx, 3*d_position_idx+3);
         
-        // Too high in the air
-        //if(a[1]>1000||b[1]>1000||c[1]>1000||d[1]>1000){continue;}
-        //if(a[1]>1000){continue;}
+        /*
+        if(i==Math.floor(width/2)&&j==Math.floor(height/8)){
+          console.log(i,j,a,b,c,d,'position');
+        }
+        */
+        
+        // Too high in the air (3m)
+        if(a[1]>3000||b[1]>3000||c[1]>3000||d[1]>3000){continue;}
+        // Ground (5cm)
+        if(a[1]<50||b[1]<50||c[1]<50||d[1]<50){continue;}
+        // ugliness with too far away (1cm break)
+        if(
+          Math.abs(a[2]-b[2])>10 ||
+          Math.abs(a[2]-c[2])>10 ||
+          Math.abs(a[2]-d[2])>10
+        ){continue;}
+        
       
         // We have a valid quad!
         n_quad++;
