@@ -452,6 +452,40 @@
     return el;
   }
 
+  // Camera clicking
+  Transform.head_look = function(coord){
+    // Head look
+    var h_fov = 60;
+    var v_fov = 60;
+    //
+    var ang_url = rest_root+'/m/hcm/motion/headangle';
+    // Adjust the angle based on the previous angle from the robot
+    qwest.get(ang_url).success(function(cur_headangle){
+      var x =  coord.dx * h_fov * DEG_TO_RAD;
+      var y = -coord.dy * v_fov * DEG_TO_RAD;
+      x += cur_headangle[0];
+      y += cur_headangle[1];
+      console.log(x/Math.PI*180,y/Math.PI*180,coord)
+      qwest.post(ang_url,{val: JSON.stringify([x,y])});
+    });
+  }
+  
+  Transform.head_intersect = function(coord){
+    var projector = new THREE.Projector();
+    var raycaster = projector.pickingRay(new THREE.Vector3(coord.ndx,coord.ndy),Robot.head_camera);
+    // intersect the plane
+    var intersections = raycaster.intersectObjects( World.items.concat(World.meshes) );
+    // if no intersection
+    //console.log(intersections)
+    if(intersections.length==0){ return; }
+    // only give the first intersection point
+    var p = intersections[0].point;
+    // get the robot point
+    var r = Transform.three_to_torso(p, Robot);
+    // apply the callback
+    World.intersection_callback(p,r);
+  }
+
   // export
   Transform.torso_to_three = torso_to_three;
 	ctx.Transform = Transform;

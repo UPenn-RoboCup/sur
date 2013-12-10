@@ -18,7 +18,7 @@ var _       = require('underscore');
 var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
-var homepage = 'index.html';
+var homepage = 'meshy';
 
 /**
 * Load configuration values
@@ -92,9 +92,11 @@ server.use(restify.bodyParser());
 // HTML files
 var load_html = function (req, res, next) {
   // Select a page
-  var page = homepage;
+  var page;
   if(req.params.html!==undefined){
     page = 'views/'+req.params.html+'.html';
+  } else {
+    page = 'views/'+homepage+'.html';
   }
   // Perform the load
   var body = fs.readFileSync(page,{encoding:'utf8'});

@@ -175,18 +175,14 @@ document.addEventListener( "DOMContentLoaded", function(){
   // Data sharing
   var peer = new Peer('meshy', {host: 'localhost', port: 9000});
   peer.on('connection', function(conn){
+    console.log('Peer | New connection',conn.peer);
     // Receive messages
     conn.on('data', function(data) {
-      console.log('Received', data);
+      if(data.evt=='camera_click'){
+        Transform.head_look(data);
+      }
     });
   });
-  /*
-  var conn = peer.connect('cameras');
-  conn.on('open', function(){
-    console.log('cameras!!!');
-    conn.send('hi!');
-  });
-  */
   
   // begin animation
   (function animloop(){
