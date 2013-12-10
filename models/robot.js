@@ -21,7 +21,6 @@
   var n_loaded = 0, nstl = 0;
   var is_loaded = false;
   
-  
   var jangles = [
     0, 0, //head
     0,0,0,0,0,0,0, //larm
@@ -32,6 +31,13 @@
   ];
   
   var shown = true;
+  
+  // Tetrahedron for where we are now
+  var placeholder_mat  = new THREE.MeshLambertMaterial({color: 0xFFFFFF});
+  var placeholder_geo  = new THREE.SphereGeometry(25);
+  var placeholder_mesh = new THREE.Mesh(placeholder_geo,placeholder_mat);
+  //placeholder_mesh.rotation.z = Math.PI/6;
+  //placeholder_mesh.rotation.x = Math.PI/6;
   
   var STL_MOTOR_WIDTH = 48;
   var STL_MOTOR_WIDTH_SM = 45;
@@ -446,6 +452,9 @@
     var help = new THREE.CameraHelper(Robot.head_camera );
     World.add(help);
     
+    // Placeholder
+    World.add(placeholder_mesh);
+    
     // Websocket Configuration for feedback
     var port = 9013;
     // Connect to the websocket server
@@ -465,6 +474,11 @@
       // Update the skeleton model
       skeleton.p.x = 1000*Robot.py;
       skeleton.p.z = 1000*Robot.px;
+      
+      // placeholder
+      placeholder_mesh.position.copy(skeleton.p);
+      placeholder_mesh.position.y = 0;
+      
       Robot.bodyHeight = feedback.body_height;
       // Update the skeleton
       skeleton.p.setY(1000*Robot.bodyHeight-15);

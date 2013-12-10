@@ -16,7 +16,7 @@
   /////////////////////
   // Mesh definition //
   /////////////////////
-  var item_mat  = new THREE.MeshLambertMaterial({color: 0xFFFF00});
+  var item_mat = new THREE.MeshLambertMaterial({color: 0xFFFF00});
   var item_geo = new THREE.LatheGeometry([
     new THREE.Vector3(   0, 0,    0),
     new THREE.Vector3(  50, 0,  -50),
