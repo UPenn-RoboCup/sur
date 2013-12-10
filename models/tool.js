@@ -8,6 +8,10 @@
   //////////////
   var rpc_url = rest_root+'/m/hcm/tool/model'
   
+  // Relative waypoint offset in ROBOT coordinates
+  // but with THREE scale (mm)
+  var offset = new THREE.Vector2(690,270);
+  
   /////////////////////
   // Mesh definition //
   /////////////////////
