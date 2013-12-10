@@ -8,13 +8,19 @@ document.addEventListener( "DOMContentLoaded", function(){
   var img = Camera.get_image()
   camera_container.appendChild( img );
   
+  // Data sharing
+  var peer = new Peer('cameras', {host: 'localhost', port: 9000});
+  var meshy_conn = peer.connect('meshy');
+  meshy_conn.on('open', function(conn){
+    console.log('Peer | meshy!!!');
+  });
+  
   // Head look
   var h_fov = 60;
   var v_fov = 60;
   var ang_url = rest_root+'/m/hcm/motion/headangle';
   var head_look = function(e){
     var event = e.gesture.touches[0];
-    
     var width = camera_container.clientWidth;
     var height = camera_container.clientHeight;
     // Adjust the angle based on the previous angle from the robot
@@ -32,29 +38,24 @@ document.addEventListener( "DOMContentLoaded", function(){
     });
   }
   
-  // Single click looks somewhere
-  var hammertime = Hammer(camera_container);
-  hammertime.on("tap", head_look);
-  
-  // Data sharing
-  var peer = new Peer('cameras', {host: 'localhost', port: 9000});
-  console.log('peer',peer);
-  var conn = peer.connect('meshy');
-  conn.on('open', function(){
-    console.log('meshy!!!');
-    conn.send('hello!');
-  });
-  
-  /*
   // This is the intersection function
   var head_intersect = function(e){
     var event = e.gesture.touches[0];
-    // if no callback, then do nothing
-    if(typeof World.intersection_callback!=="function"){ return; }    
+    var width = camera_container.clientWidth;
+    var height = camera_container.clientHeight;
+    var dx = event.offsetX || event.clientX;
+    var dy = event.offsetX || event.clientY;
+    // Ratios
+    var x = (0.5 - dx/width ) * h_fov * DEG_TO_RAD;
+    var y = (dy/height - 0.5) * v_fov * DEG_TO_RAD;
+    // Send the click information to the main meshy ui
+    meshy_conn.send( [x,y] );
+    /*
     // find the mouse position (use NDC coordinates, per documentation)
-    var mouse_vector = new THREE.Vector3(
-      ( event.offsetX / cam_width ) * 2 - 1,
-      1 - ( event.offsetY / cam_height ) * 2);
+    var mouse_vector = [
+      ( dx / width ) * 2 - 1,
+      1 - ( dy / height ) * 2
+    ];    
     var projector = new THREE.Projector();
     var raycaster = projector.pickingRay(mouse_vector,Robot.head_camera);
     // intersect the plane
@@ -68,7 +69,12 @@ document.addEventListener( "DOMContentLoaded", function(){
     var r = Transform.three_to_torso(p, Robot);
     // apply the callback
     World.intersection_callback(p,r);
+    */
   }
-  */
+  
+  // Single click looks somewhere
+  var hammertime = Hammer(camera_container);
+  hammertime.on("tap", head_look);
+  hammertime.on("tap", head_intersect);
   
 });
