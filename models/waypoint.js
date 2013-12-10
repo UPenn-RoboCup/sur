@@ -16,7 +16,7 @@
   /////////////////////
   // Mesh definition //
   /////////////////////
-  var item_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
+  var item_mat  = new THREE.MeshLambertMaterial({color: 0xFFFF00});
   var item_geo = new THREE.LatheGeometry([
     new THREE.Vector3(   0, 0,    0),
     new THREE.Vector3(  50, 0,  -50),
@@ -63,7 +63,6 @@
   Waypoint.select = function(p,r){
     // Send upon done second indicator
     if(first_indicator){
-      // Calculate
       // Put the mesh in the right position (no orientation change)
       l_indicator.position.copy(p);
     } else {
@@ -71,9 +70,8 @@
       r_indicator.position.copy(p);
       // Calculate the angle
       var dx = r_indicator.position.z - l_indicator.position.z;
-      var dy = r_indicator.position.x - l_indicator.position.x;
-      var a = Math.atan2(dx,-dy);
-      //console.log('wp',dx,dy,a*180/Math.PI);
+      var dy = l_indicator.position.x - r_indicator.position.x;
+      var a = Math.atan2(dx,dy);
       // Set the item rotation
       item_mesh.rotation.y = a;
       item_mesh.position.z = (r_indicator.position.z+l_indicator.position.z)/2;
@@ -81,7 +79,7 @@
       // Send
       Waypoint.send();
     }
-    // Send the waypoint to robot when selecting
+    // Swap indicators
     first_indicator = !first_indicator;
   }
   // TODO: reset from SHM?
@@ -106,8 +104,8 @@
   }
   //exit
   Waypoint.deinit = function(){
-    // Never remove :P
-    //World.remove( item_mesh );
+    World.remove( l_indicator );
+    World.remove( r_indicator );
   }
   // Constrain the angles to 2D (i.e. one angle)
   Waypoint.mod_callback = function(){
@@ -118,14 +116,16 @@
     item_mesh.position.y = 0;
   }
   // send to robot
-  Waypoint.send = function(){
+  Waypoint.send = function(cb){
     // Waypoint model
     var wp = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(wp)} );
-    // One waypoint
-    qwest.post( rpc_url_n, {val:JSON.stringify(1)} );
-    // Global wp
-    qwest.post( rpc_url_fr, {val:JSON.stringify(1)} );
+    qwest.post( rpc_url, {val:JSON.stringify(wp)} ).success(function(){
+      // One waypoint
+      qwest.post( rpc_url_n, {val:JSON.stringify([1])} ).success(function(){
+        // Global wp
+        qwest.post( rpc_url_fr, {val:JSON.stringify([1])} ).success(cb);
+      })
+    });
   }
   // get the mesh
   Waypoint.get_mod_mesh = function(){

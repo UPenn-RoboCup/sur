@@ -97,15 +97,8 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'init'});
   });
   clicker('body_follow',function(){
-    var wp_url = rest_root+'/m/hcm/motion/waypoints';
-    var wp = Waypoint.get_robot();
-    qwest.post( wp_url, {val:JSON.stringify(wp)} )
-    .success(function(){
-      var nwp_url = rest_root+'/m/hcm/motion/nwaypoints';
-      qwest.post( nwp_url, {val:JSON.stringify([1])} )
-      .success(function(){
-        qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});
-      });
+    Waypoint.send(function(){
+      qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});
     });
   });
   
