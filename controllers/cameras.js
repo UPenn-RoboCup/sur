@@ -36,6 +36,15 @@ document.addEventListener( "DOMContentLoaded", function(){
   var hammertime = Hammer(camera_container);
   hammertime.on("tap", head_look);
   
+  // Data sharing
+  var peer = new Peer('cameras', {host: 'localhost', port: 9000});
+  console.log('peer',peer);
+  var conn = peer.connect('meshy');
+  conn.on('open', function(){
+    console.log('meshy!!!');
+    conn.send('hello!');
+  });
+  
   /*
   // This is the intersection function
   var head_intersect = function(e){
