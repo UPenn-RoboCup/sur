@@ -476,7 +476,7 @@
     // intersect the plane
     var intersections = raycaster.intersectObjects( World.items.concat(World.meshes) );
     // if no intersection
-    //console.log(intersections)
+    console.log('Camera Intersection',intersections);
     if(intersections.length==0){ return; }
     // only give the first intersection point
     var p = intersections[0].point;
