@@ -456,13 +456,14 @@
   Transform.head_look = function(coord){
     // Head look
     var h_fov = 60;
-    var v_fov = 60;
+    var v_fov = 30;//60;
     //
     var ang_url = rest_root+'/m/hcm/motion/headangle';
     // Adjust the angle based on the previous angle from the robot
     qwest.get(ang_url).success(function(cur_headangle){
-      var x =  coord.dx * h_fov * DEG_TO_RAD;
-      var y = -coord.dy * v_fov * DEG_TO_RAD;
+      // Half fov
+      var x = (.5-coord.ndx) * h_fov * DEG_TO_RAD;
+      var y = (.5-coord.ndy) * v_fov * DEG_TO_RAD;
       x += cur_headangle[0];
       y += cur_headangle[1];
       console.log(x/Math.PI*180,y/Math.PI*180,coord)

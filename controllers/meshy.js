@@ -180,7 +180,6 @@ document.addEventListener( "DOMContentLoaded", function(){
     conn.on('data', function(data) {
       if(data.evt=='camera_click'){
         if(World.is_robot_camera){
-          console.log('INTERSECT')
           Transform.head_intersect(data);
         } else {
           Transform.head_look(data);

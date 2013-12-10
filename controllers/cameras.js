@@ -8,15 +8,13 @@ document.addEventListener( "DOMContentLoaded", function(){
   var img = Camera.get_image()
   camera_container.appendChild( img );
   
+  // Normalized Device Coordinates
   var get_coord = function(event){
     var width = camera_container.clientWidth;
     var height = camera_container.clientHeight;
     var dx = event.offsetX || event.clientX;
     var dy = event.offsetY || event.clientY;
     return {
-      // -1 to 1
-      dx: 0.5 - dx/width,
-      dy: 0.5 - dy/height,
       // 0 to 1
       ndx: dx/width,
       ndy: 1-dy/height
@@ -41,6 +39,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   hammertime.on("tap", function(e){
     var event = e.gesture.touches[0];
     var coord = get_coord(event);
+    console.log('Clicked',coord);
     coord.evt = 'camera_click';
     if(is_connected){
       meshy_conn.send( coord );
