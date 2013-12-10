@@ -380,3 +380,6 @@ console.log('\nRESTful unreliable RPC connected to ', rpc_robot, rpc_unreliable_
 server.listen(8080, function () {
   console.log('%s listening at %s', server.name, server.url);
 });
+
+var PeerServer = require('peer').PeerServer;
+var pserver = new PeerServer({ port: 9000 });
