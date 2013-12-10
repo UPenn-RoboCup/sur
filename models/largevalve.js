@@ -127,6 +127,8 @@
     
     // Set the position from the double click
     item_mesh.position.copy(p);
+    wp_callback();
+    LargeValve.send();
 
     // Re-render
     
