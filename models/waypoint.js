@@ -25,7 +25,16 @@
     new THREE.Vector3(   0, 0, -125),
   ], 12, -Math.PI, -Math.PI);
   var item_mesh  = new THREE.Mesh( item_geo, item_mat );
-  //item_mesh.position.y = 100;
+  // make the indicators;
+  var l_indicator = new THREE.Mesh(
+    new THREE.OctahedronGeometry(25),
+    new THREE.MeshLambertMaterial({color: 0x2017FD})
+  );
+  var r_indicator = new THREE.Mesh(
+    new THREE.OctahedronGeometry(25),
+    new THREE.MeshLambertMaterial({color: 0xFD2017})
+  );
+  var first_indicator = true;
   
   //////////////////////
   // Model converters //
@@ -37,7 +46,7 @@
     var px = p.z / 1000;
     var py = p.x / 1000;
     // Make the robot GLOBAL orientation
-    var pa = -1*item_mesh.rotation.y;
+    var pa = item_mesh.rotation.y;
     // Pose_local to pose_global
     return [px,py,pa];
   }
@@ -45,19 +54,35 @@
     // Assumption: Global coordinates
     item_mesh.position.x = 1000*model[1];
     item_mesh.position.z = 1000*model[0];
-    item_mesh.rotation.y = -1*model[2];
+    item_mesh.rotation.y = model[2];
   }
   
   /////////////////////////////
   // Object manipulation API //
   /////////////////////////////
   Waypoint.select = function(p,r){
-    // Put the mesh in the right position (no orientation change)
-    item_mesh.position.copy(p);
-    // Always above ground a bit
-    item_mesh.position.y = 100;
+    // Send upon done second indicator
+    if(first_indicator){
+      // Calculate
+      // Put the mesh in the right position (no orientation change)
+      l_indicator.position.copy(p);
+    } else {
+      // Put the mesh in the right position (no orientation change)
+      r_indicator.position.copy(p);
+      // Calculate the angle
+      var dx = r_indicator.position.z - l_indicator.position.z;
+      var dy = r_indicator.position.x - l_indicator.position.x;
+      var a = Math.atan2(dx,-dy);
+      //console.log('wp',dx,dy,a*180/Math.PI);
+      // Set the item rotation
+      item_mesh.rotation.y = a;
+      item_mesh.position.z = (r_indicator.position.z+l_indicator.position.z)/2;
+      item_mesh.position.x = (r_indicator.position.x+l_indicator.position.x)/2;
+      // Send
+      Waypoint.send();
+    }
     // Send the waypoint to robot when selecting
-    Waypoint.send();
+    first_indicator = !first_indicator;
   }
   // TODO: reset from SHM?
   Waypoint.clear = function(){
@@ -75,6 +100,8 @@
   // enter
   Waypoint.init = function(){
     World.add( item_mesh );
+    World.add( l_indicator );
+    World.add( r_indicator );
     Waypoint.loop();
   }
   //exit

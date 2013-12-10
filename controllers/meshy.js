@@ -101,7 +101,11 @@ document.addEventListener( "DOMContentLoaded", function(){
     var wp = Waypoint.get_robot();
     qwest.post( wp_url, {val:JSON.stringify(wp)} )
     .success(function(){
-      qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});
+      var nwp_url = rest_root+'/m/hcm/motion/nwaypoints';
+      qwest.post( nwp_url, {val:JSON.stringify([1])} )
+      .success(function(){
+        qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});
+      });
     });
   });
   
