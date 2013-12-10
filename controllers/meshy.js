@@ -62,34 +62,56 @@ document.addEventListener( "DOMContentLoaded", function(){
     var cur = Robot.get_root();
     var position = cur.p.toArray();
     position[1] = 2000;
+    // Relative direction wrt robot
+    var dp = 500;
+    var pa = Robot.pa;
+    var ca = Math.cos(pa), sa = Math.sin(pa);
+    var dx = dp*ca, dy = dp*sa;
     var target = cur.p.toArray();
-    target[2] += 50;
+    target[0] += dy;
+    target[2] += dx;
+    //
     World.set_view(position,target);
   });
   clicker('vantage_chest',function() {
     var cur = Robot.get_root();
     var position = cur.p.toArray();
     var target = cur.p.toArray();
-    target[2] += 1000;
+    var dp = 1000;
+    var pa = Robot.pa;
+    var ca = Math.cos(pa), sa = Math.sin(pa);
+    var dx = dp*ca, dy = dp*sa;
+    var target = cur.p.toArray();
+    target[0] += dy;
+    target[2] += dx;
     World.set_view(position,target);
   });
   clicker('vantage_side',function() {
+    var dp = 500;
+    var pa = Robot.pa;
+    var ca = Math.cos(pa), sa = Math.sin(pa);
+    var dx = dp*sa, dy = -dp*ca;
     var cur = Robot.get_root();
+    //
     var position = cur.p.toArray();
     var target = position.slice();
-    position[0] += 500;
-    position[2] += 500;
-    target[2] += 500;
+    position[0] += dy;
+    position[2] += dx;
+    var dx = dp*ca, dy = dp*sa;
+    position[0] += dy;
+    position[2] += dx;
+    target[0] += dy;
+    target[2] += dx;
     World.set_view(position,target);
-  });
-  clicker('vantage_robot',function(){
-    World.set_view('robot');
   });
   clicker('vantage_item',function() {
     var view = World.get_view();
     var item = Manipulation.get_item();
     var target = item.get_mod_mesh().position.toArray();
     World.set_view(view.position,target);
+  });
+  clicker('vantage_robot',function(){
+    World.set_view('robot');
   });
   
   // State machines
