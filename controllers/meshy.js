@@ -168,7 +168,9 @@ document.addEventListener( "DOMContentLoaded", function(){
       this.blur();
     }, false);
   }
-  
+  // Fine tune modify non-keypress
+  clicker('modify_obj',Manipulation.modify);
+  clicker('loop_obj',Manipulation.loop);
   
   // begin animation
   (function animloop(){
