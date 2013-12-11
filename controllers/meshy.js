@@ -129,10 +129,10 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'doorgrab'});
   });
   clicker('arm_pushdoorgrab',function(){
-    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'pushdoordoorgrab'});
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'pushdoorgrab'});
   });
   clicker('arm_loaddoorgrab',function(){
-    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'loaddoordoorgrab'});
+    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'loaddoorgrab'});
   });
   clicker('arm_toolgrab',function(){
     qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'toolgrab'});

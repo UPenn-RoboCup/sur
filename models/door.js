@@ -17,9 +17,10 @@
   // but with THREE scale (mm)
   // Pull and Push use different hand, so THEORETICALLY
   // offset should be different, but can use waypoint to adjust
-  // (-27 cm) + (-84 cm) ~= -110 cm
-  var offset = new THREE.Vector2(690,-1100);
-
+  // PULL DOOR: (-27 cm) + (-84 cm) ~= -110 cm
+  // PUSH DOOR: (27 cm) + (-84 cm) ~= -57 cm
+  // var offset = new THREE.Vector2(600,-1100);
+  var offset = new THREE.Vector2(480,-500);
 
   //////////////
   // RPC URLs //
