@@ -13,6 +13,14 @@
   var handle_offset_y = 0.05;
   var handle_height = 1.016;
 
+  // Relative waypoint offset in ROBOT coordinates
+  // but with THREE scale (mm)
+  // Pull and Push use different hand, so THEORETICALLY
+  // offset should be different, but can use waypoint to adjust
+  // (-27 cm) + (-84 cm) ~= -110 cm
+  var offset = new THREE.Vector2(690,-1100);
+
+
   //////////////
   // RPC URLs //
   //////////////
@@ -175,12 +183,31 @@
     return model;
   }
 
+    // Adjust the waypoint to the *perfect* position
+  var wp_callback = function(){
+    // Grab the (global) orientation of the mesh
+    var pa = item_mesh.rotation.y;
+    // Acquire the position of the tip:
+    var p = (new THREE.Vector3()).copy(item_mesh.position);
+    // Make the global offset from the object    
+    var dx = offset.x*Math.cos(pa) - offset.y*Math.sin(pa);
+    var dy = offset.y*Math.cos(pa) + offset.x*Math.sin(pa);
+    // Change the THREE coordinates of the desired waypoint
+    p.x -= dy;
+    p.z -= dx;
+    // Update the Waypoint in the scene
+    Waypoint.set(p,pa);
+  }
+
   /////////////////////////////
   // Object manipulation API //
   /////////////////////////////
   Door.select = function(p,r){
-    
+    item_mesh.position.copy(p);
+    wp_callback();
+    Door.send();
   }
+
   Door.clear = function(tcontrol){
     // Get the model from the robot (could be pesky...?)
     qwest.get( rpc_url,{},{},function(){
@@ -246,6 +273,10 @@
     
     // no up and down movement
     hinge_mesh.position.y = door_height/2;
+
+    // Update the global waypoint
+    wp_callback();
+
   }
 
   /////////////////////////
