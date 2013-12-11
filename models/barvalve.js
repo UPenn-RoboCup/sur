@@ -10,11 +10,10 @@
   
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(600,300);
-  
+  var offset = new THREE.Vector2(610,240);  // tune this based on claw length
   /////////////////////
   // Mesh definition //
-  /////////////////////
+  ///////////////////// 
   // make the wheel (some params known a priori)
   var off_ground = 1010;
   var radius0    = 105;
@@ -88,13 +87,13 @@
     // Adjust the waypoint to the *perfect* position
   var wp_callback = function(){
     // Grab the (global) orientation of the mesh
-    var pa = -1*item_mesh.rotation.y;
+    var pa = item_mesh.rotation.y;
     // Acquire the position of the tip:
     var p = (new THREE.Vector3()).copy(item_mesh.position);
     
     // Make the global offset from the object    
-    var dx = offset.x*Math.cos(pa) + offset.y*Math.sin(pa);
-    var dy = offset.y*Math.cos(pa) - offset.x*Math.sin(pa);
+    var dx = offset.x*Math.cos(pa) - offset.y*Math.sin(pa);
+    var dy = offset.y*Math.cos(pa) + offset.x*Math.sin(pa);
 
     // Change the THREE coordinates of the desired waypoint
     p.x -= dy;
