@@ -168,18 +168,6 @@
       },
       "this"          : ctx
     },
-    /*
-    {
-      // scale (should never use)
-      "keys"          : "y",
-      "is_exclusive"  : true,
-      "on_keyup"      : function(event) {
-          event.preventDefault();
-          tcontrol.setMode( "scale" );
-      },
-      "this"          : ctx
-    },
-    */
   ];
   
   // Keypressing hotkeys
@@ -305,6 +293,25 @@
         cur_item.mod_callback();
         // Send on each keypress modification
         cur_item.send();
+    },
+    "this"          : ctx
+  },
+  // Special keys
+  {
+    "keys"          : "[",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        cur_item.special(-1);
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "]",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        cur_item.special(1);
     },
     "this"          : ctx
   },

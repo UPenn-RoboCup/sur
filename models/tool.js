@@ -79,9 +79,6 @@
     wp_callback();
     Tool.send();
   }
-  Tool.clear = function(){
-
-  }
   Tool.init = function(){
     // Add to the world
     World.add(item_mesh);
@@ -109,9 +106,6 @@
   }
   Tool.mod_callback = function(){
     wp_callback();
-  }
-  Tool.gen_wp = function(){
-    // yield the optimal waypoint
   }
 
   /////////////////////////

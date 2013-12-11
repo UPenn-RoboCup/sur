@@ -106,41 +106,28 @@
     var pa = -1*item_mesh.rotation.y;
     // Acquire the position of the tip:
     var p = (new THREE.Vector3()).copy(item_mesh.position);
-    
     // Make the global offset from the object    
     var dx = offset.x*Math.cos(pa) + offset.y*Math.sin(pa);
     var dy = offset.y*Math.cos(pa) - offset.x*Math.sin(pa);
-
     // Change the THREE coordinates of the desired waypoint
     p.x -= dy;
     p.z -= dx;
-
     // Update the Waypoint in the scene
     Waypoint.set(p,pa);
-
   }
   
   /////////////////////////////
   // Object manipulation API //
   /////////////////////////////
   LargeValve.select = function(p,r){
-    
     // Set the position from the double click
     item_mesh.position.copy(p);
     wp_callback();
     LargeValve.send();
-
-    // Re-render
-    
-
   }
   // modification loop
   LargeValve.loop = function(tcontrol){
-    if(Manipulation.is_mod==false){
-      // Just reload the model from the robot
-      LargeValve.clear();
-      return;
-    }
+    if(Manipulation.is_mod==false){return;}
     // cycle the tcontrol
     if(mod_mesh===item_mesh){
       tcontrol.detach( item_mesh );
@@ -154,16 +141,16 @@
     }
     tcontrol.attach( mod_mesh );
     tcontrol.update();
-    
-
   }
   // send data to the robot
   LargeValve.send = function(){
     var model = three_to_model();
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
   }
-  // clear the item
-  LargeValve.clear = function(){
+  // enter
+  LargeValve.init = function(){
+    World.add(item_mesh);
+    mod_mesh = item_mesh;
     // Get the model from the robot (could be pesky...?)
     qwest.get( rpc_url,{},{},function(){
       // Use a 1 second timeout for the XHR2 request for getting the model
@@ -171,14 +158,7 @@
     })
     .success(function(model){
       model_to_three(model);
-      mod_mesh = item_mesh;
-      
-    })
-  }
-  // enter
-  LargeValve.init = function(){
-    World.add(item_mesh);
-    LargeValve.clear();
+    });
   }
   // exit
   LargeValve.deinit = function(){
@@ -199,6 +179,13 @@
     //item_mesh.position.y = off_ground;
     // Update the global waypoint
     wp_callback();
+  }
+  LargeValve.special = function(dir){
+    // Move the roll
+    start_mesh.rotation.z += dir*.1;
+    stop_mesh.rotation.z  += dir*.1;
+    wp_callback();
+    LargeValve.send();
   }
 
   /////////////////////////

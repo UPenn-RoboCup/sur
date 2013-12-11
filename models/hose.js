@@ -121,9 +121,6 @@
   Hose.mod_callback = function(){
     wp_callback();
   }
-  Hose.gen_wp = function(){
-    // yield the optimal waypoint
-  }
 
   /////////////////////////
   // Metadata and Export //

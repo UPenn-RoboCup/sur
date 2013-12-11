@@ -68,11 +68,7 @@
   Wye.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
-    // Re-render
-    
-  }
-  Wye.clear = function(){
-
+    mod_callback();
   }
   Wye.init = function(){
     // Set the default position relative to the robot
@@ -104,9 +100,6 @@
   }
   Wye.mod_callback = function(){
     wp_callback();
-  }
-  Wye.gen_wp = function(){
-    // yield the optimal waypoint
   }
 
   /////////////////////////

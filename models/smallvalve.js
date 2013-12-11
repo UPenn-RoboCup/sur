@@ -123,24 +123,14 @@
   // Object manipulation API //
   /////////////////////////////
   SmallValve.select = function(p,r){
-    
     // Set the position from the double click
     item_mesh.position.copy(p);
-
     wp_callback();
     SmallValve.send();
-
-    // Re-render
-    
-
   }
   // modification loop
   SmallValve.loop = function(tcontrol){
-    if(Manipulation.is_mod==false){
-      // Just reload the model from the robot
-      SmallValve.clear();
-      return;
-    }
+    if(Manipulation.is_mod==false){return;}
     // cycle the tcontrol
     if(mod_mesh===item_mesh){
       tcontrol.detach( item_mesh );
@@ -154,8 +144,6 @@
     }
     tcontrol.attach( mod_mesh );
     tcontrol.update();
-    
-
   }
   // send data to the robot
   SmallValve.send = function(){
@@ -164,6 +152,11 @@
   }
   // clear the item
   SmallValve.clear = function(){
+    
+  }
+  // enter
+  SmallValve.init = function(){
+    World.add(item_mesh);
     // Get the model from the robot (could be pesky...?)
     qwest.get( rpc_url,{},{},function(){
       // Use a 1 second timeout for the XHR2 request for getting the model
@@ -173,11 +166,6 @@
       model_to_three(model);
       mod_mesh = item_mesh;
     })
-  }
-  // enter
-  SmallValve.init = function(){
-    World.add(item_mesh);
-    SmallValve.clear();
   }
   // exit
   SmallValve.deinit = function(){
@@ -196,12 +184,17 @@
     stop_mesh.rotation.y = 0;
     // Retain the same height
     // item_mesh.position.y = off_ground;
-
     // Update the global waypoint
     wp_callback();
-
   }
-
+  SmallValve.special = function(dir){
+    // Move the roll
+    start_mesh.rotation.z += dir*.1;
+    stop_mesh.rotation.z  += dir*.1;
+    wp_callback();
+    SmallValve.send();
+  }
+  
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
