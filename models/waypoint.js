@@ -122,10 +122,8 @@
     qwest.post( rpc_url, {val:JSON.stringify(wp)} ).success(function(){
       // One waypoint
       qwest.post( rpc_url_n, {val:JSON.stringify(1)} ).success(function(){
-      // qwest.post( rpc_url_n, {val:JSON.stringify([1])} ).success(function(){
         // Global wp
         qwest.post( rpc_url_fr, {val:JSON.stringify(1)} ).success(cb);
-        // qwest.post( rpc_url_fr, {val:JSON.stringify([1])} ).success(cb);
       })
     });
   }
