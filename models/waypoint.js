@@ -87,10 +87,7 @@
   }
   Waypoint.loop = function(){
     // Get the model from the robot
-    qwest.get( rpc_url,{},{},function(){
-      // Use a 1 second timeout for the XHR2 request for getting the model
-      this.timeout = 1000; // ms
-    })
+    qwest.get( rpc_url,{},{},function(){/*this.timeout = 10000;*/})
     .success(function(model){
       model_to_three(model);
     })
@@ -119,13 +116,19 @@
   Waypoint.send = function(cb){
     // Waypoint model
     var wp = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(wp)} ).success(function(){
+    // For network efficiency, just send the waypoint coordinates
+    qwest.post( rpc_url, {val:JSON.stringify(wp)});
+    /*
+    qwest.post( rpc_url, {val:JSON.stringify(wp)})
+    .success(function(){
       // One waypoint
-      qwest.post( rpc_url_n, {val:JSON.stringify(1)} ).success(function(){
+      qwest.post( rpc_url_n, {val:JSON.stringify(1)},function(){
+    } ).success(function(){
         // Global wp
         qwest.post( rpc_url_fr, {val:JSON.stringify(1)} ).success(cb);
       })
     });
+    */
   }
   // get the mesh
   Waypoint.get_mod_mesh = function(){

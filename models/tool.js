@@ -96,10 +96,7 @@
   }
   Tool.loop = function(){
     // Get the model from the robot (could be pesky...?)
-    qwest.get( rpc_url,{},{},function(){
-      // Use a 1 second timeout for the XHR2 request for getting the model
-      this.timeout = 1000; // ms
-    })
+    qwest.get( rpc_url,{},{})
     .success(function(model){
       model_to_three(model);
     });

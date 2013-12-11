@@ -18,15 +18,16 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('fast_mesh',function() {
     // Fast scan
     qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
-      val: JSON.stringify([-1.0472, 1.0472, 2/DEG_TO_RAD])
+      //val: JSON.stringify([-1.0472, 1.0472, 2/DEG_TO_RAD])
+      val: JSON.stringify([-.7, .7, 2/DEG_TO_RAD])
     });
     // See far
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
       val:JSON.stringify([.2,5])
     });
-    // Stream (PNG)
+    // Stream (JPEG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
-      val:JSON.stringify([4,3,90,1])
+      val:JSON.stringify([3,1,75,1])
     });
   });
   // During manipulation
@@ -119,9 +120,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'init'});
   });
   clicker('body_follow',function(){
-    Waypoint.send(function(){
-      qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});
-    });
+    qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});
   });
   
   // Each arm event
@@ -171,6 +170,9 @@ document.addEventListener( "DOMContentLoaded", function(){
   // Fine tune modify non-keypress
   clicker('modify_obj',Manipulation.modify);
   clicker('loop_obj',Manipulation.loop);
+  clicker('send_obj',function(){
+    Manipulation.get_item().send();
+  });
   
   // Data sharing
   var peer = new Peer('meshy', {host: 'localhost', port: 9000});

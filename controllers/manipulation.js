@@ -187,7 +187,7 @@
       mod_mesh.position.z += dx;
       //
       cur_item.mod_callback();
-      cur_item.send();
+      //cur_item.send();
     },
     "this"          : ctx
   },
@@ -204,7 +204,7 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-      cur_item.send();
+      //cur_item.send();
     },
     "this"          : ctx
   },
@@ -222,7 +222,7 @@
       mod_mesh.position.z -= dx;
       //
       cur_item.mod_callback();
-      cur_item.send();
+      //cur_item.send();
     },
     "this"          : ctx
   },
@@ -240,7 +240,7 @@
         mod_mesh.position.z += dx;
         //
         cur_item.mod_callback();
-        cur_item.send();
+        //cur_item.send();
     },
     "this"          : ctx
   },
@@ -253,7 +253,7 @@
         mod_mesh.position.y += 10;
         cur_item.mod_callback();
         // Send on each keypress modification
-        cur_item.send();
+        //cur_item.send();
     },
     "this"          : ctx
   },
@@ -266,7 +266,7 @@
         mod_mesh.position.y -= 10;
         cur_item.mod_callback();
         // Send on each keypress modification
-        cur_item.send();
+        //cur_item.send();
     },
     "this"          : ctx
   },
@@ -279,7 +279,7 @@
         mod_mesh.rotation.y += .1;
         cur_item.mod_callback();
         // Send on each keypress modification
-        cur_item.send();
+        //cur_item.send();
     },
     "this"          : ctx
   },
@@ -292,7 +292,7 @@
         mod_mesh.rotation.y -= .1;
         cur_item.mod_callback();
         // Send on each keypress modification
-        cur_item.send();
+        //cur_item.send();
     },
     "this"          : ctx
   },
