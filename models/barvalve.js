@@ -169,7 +169,7 @@
 
     wp_callback();
   }
-  BarValve.special = function(dir){
+  BarValve.special2 = function(dir){
     // Move the roll
     item_mesh.rotation.z += dir*.1;
     wp_callback();

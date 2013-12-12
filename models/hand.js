@@ -12,6 +12,10 @@
   var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr';
   var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target';
   
+  // Specials
+  var special1 = 0, dSpecial1 = 0.1;
+  var special2 = 0, dSpecial2 = 0.1;
+  
   /////////////////////
   // Mesh definition //
   /////////////////////
@@ -116,15 +120,13 @@
     // RPY
     var rpy = (new THREE.Euler()).setFromQuaternion(q_rel);
     tr.push(rpy.z, rpy.x, rpy.y);
-    
-    console.log('tr',hand,tr,left_mesh.position);
-    
+        
     return tr;
   }
   
   /////////////////////////////
   // Object manipulation API //
-  /////////////////////////////
+  /////////////////////////////  
   // intersection handler
   Hand.select = function(p,r){
     // Set the position for the current mesh
@@ -185,9 +187,23 @@
     var model = three_to_model(cur_hand);
     if(cur_hand=='left') {
       qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
+      console.log('Sent left transform',model);
     } else {
       qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
+      console.log('Sent right transform',model);
     }
+
+    // Specials
+    var override = model.slice(0,5);
+    override[3] = special1;
+    override[4] = special2;
+    if(cur_hand=='left') {
+      qwest.post( so_url, {val:JSON.stringify(override)} );
+    } else {
+      qwest.post( so_url, {val:JSON.stringify(override)} );
+    }
+    console.log('Sent override',override);
+    
   }
   Hand.mod_callback = function(){
     
@@ -196,11 +212,14 @@
   Hand.get_mod_mesh = function(){
     return mod_mesh;
   }
-  
-  Hand.add_buttons = function(holder){
-    
-  }
 
+  Hand.special1 = function(dir){
+    special1 += dir*dSpecial1;
+  }
+  Hand.special2 = function(dir){
+    special2 += dir*dSpecial2;
+  }
+  
   /////////////////////////
   // Metadata and Export //
   /////////////////////////

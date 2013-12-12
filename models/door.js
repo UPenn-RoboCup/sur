@@ -259,8 +259,9 @@
   }
   // send to the robot
   Door.send = function(){
-    var model = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    //var model = three_to_model();
+    //qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    Waypoint.send();
   }
   // loop the tcontrol
   Door.loop = function(tcontrol){

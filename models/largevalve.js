@@ -177,7 +177,7 @@
     // Update the global waypoint
     wp_callback();
   }
-  LargeValve.special = function(dir){
+  LargeValve.special2 = function(dir){
     // Move the roll
     start_mesh.rotation.z += dir*.1;
     stop_mesh.rotation.z  += dir*.1;
