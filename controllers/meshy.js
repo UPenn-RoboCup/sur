@@ -160,6 +160,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   // Setup manipulation
   Manipulation.add_item(Waypoint);
   Manipulation.add_item(Hand);
+  Hand.init();
   Manipulation.add_item(Hose);
   Manipulation.add_item(Wye);
   Manipulation.add_item(SmallValve);

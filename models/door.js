@@ -28,6 +28,17 @@
   var rpc_url = rest_root+'/m/hcm/door/model';
   // Assume just zero yaw? I mean, for real...
   var rpc_url_yaw = rest_root+'/m/hcm/door/yaw';
+  
+  // make the indicators;
+  var l_indicator = new THREE.Mesh(
+    new THREE.OctahedronGeometry(25),
+    new THREE.MeshLambertMaterial({color: 0x2017FD})
+  );
+  var r_indicator = new THREE.Mesh(
+    new THREE.OctahedronGeometry(25),
+    new THREE.MeshLambertMaterial({color: 0xFD2017})
+  );
+  var first_indicator = true;
 
   /////////////////////
   // Mesh definition //
@@ -68,7 +79,11 @@
     hinge_mesh.position.z += door_thickness/2;
     // Second, the door itself
     var door_geo = new THREE.CubeGeometry(Math.abs(door_radius),door_height,door_thickness);
-    var door_mat = new THREE.MeshPhongMaterial({color: 0xFFFFFF,emissive:0x888888});
+    var door_mat = new THREE.MeshPhongMaterial({
+      color: 0xFFFFFF,
+      emissive:0x888888,
+      wireframe: true
+    });
     door_mesh = new THREE.Mesh( door_geo, door_mat );
     //door_mesh.geometry = door_geo;
     //door_mesh.material = door_mat;
@@ -106,9 +121,6 @@
     hinge_mesh.add(handle_mesh);
     hinge_mesh.add(knob_mesh);
     hinge_mesh.add(door_mesh);
-    
-    // add to the world
-    World.add(hinge_mesh);
     
     // update the item
     item_mesh = hinge_mesh;
@@ -204,30 +216,42 @@
   // Object manipulation API //
   /////////////////////////////
   Door.select = function(p,r){
-    item_mesh.position.copy(p);
-    wp_callback();
-    Door.send();
-  }
-
-  Door.clear = function(tcontrol){
-    // Get the model from the robot (could be pesky...?)
-    qwest.get( rpc_url,{},{})
-    .success(function(model){
-      model_to_three(model);
-      item_mesh = hinge_mesh;
-      
-    })
-    .error(function(msg){
-      console.log('Error loading door!',msg);
-      model_to_three();
-      item_mesh = hinge_mesh;
-      
-    });
+    // Send upon done second indicator
+    if(first_indicator){
+      // Put the mesh in the right position for handle (no orientation change)
+      l_indicator.position.copy(p);
+      item_mesh.position.copy(l_indicator.position);
+      // Make the global offset from the object
+      var a = item_mesh.rotation.y;
+      var dx = door_width*Math.sin(a);
+      var dy = door_width*Math.cos(a);
+      item_mesh.position.z+=1000*dx;
+      item_mesh.position.x-=1000*dy;
+    } else {
+      // Put the mesh in the right position (no orientation change)
+      r_indicator.position.copy(p);
+      // Calculate the angle
+      var dx = r_indicator.position.z - l_indicator.position.z;
+      var dy = l_indicator.position.x - r_indicator.position.x;
+      var a = Math.atan2(dx,dy);
+      // Set the item rotation
+      item_mesh.rotation.y = a;
+      // Redo...
+      var dx = door_width*Math.sin(a);
+      var dy = door_width*Math.cos(a);
+      item_mesh.position.copy(l_indicator.position);
+      item_mesh.position.z+=1000*dx;
+      item_mesh.position.x-=1000*dy;
+    }
+    // Swap indicators
+    first_indicator = !first_indicator;
+    
+    Door.mod_callback();
   }
   // enter
   Door.init = function(){
-    // Initial silly model
-    model_to_three();
+    World.add(hinge_mesh);
+    first_indicator = true;
   }
   // exit
   Door.deinit = function(){
@@ -242,7 +266,11 @@
   Door.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
       // Just reload the model from the robot
-      Door.clear();
+      qwest.get( rpc_url,{},{})
+      .success(function(model){
+        model_to_three(model);
+        item_mesh = hinge_mesh;
+      })
       return;
     }
     // cycle the tcontrol
@@ -264,18 +292,15 @@
   Door.mod_callback = function(){
     // no rotation
     hinge_mesh.rotation.x = 0;
-    hinge_mesh.rotation.z = 0;
-    // Not even yaw allowed... assume we get to perfect yaw=0
-    //hinge_mesh.rotation.y = 0;
-    // need robot pose...
-    
+    hinge_mesh.rotation.z = 0;    
     // no up and down movement
     hinge_mesh.position.y = door_height/2;
-
     // Update the global waypoint
     wp_callback();
-
   }
+
+  // Make the first model
+  model_to_three();
 
   /////////////////////////
   // Metadata and Export //

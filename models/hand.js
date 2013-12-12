@@ -176,8 +176,8 @@
   }
   // exit stage
   Hand.deinit = function(){
-    World.remove(left_mesh);
-    World.remove(right_mesh);
+    //World.remove(left_mesh);
+    //World.remove(right_mesh);
   }
   // send to robot
   Hand.send = function(){

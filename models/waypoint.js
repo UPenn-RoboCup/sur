@@ -92,10 +92,10 @@
   }
   // enter
   Waypoint.init = function(){
+    first_indicator = true;
     World.add( item_mesh );
     World.add( l_indicator );
     World.add( r_indicator );
-    //Waypoint.loop();
   }
   //exit
   Waypoint.deinit = function(){
