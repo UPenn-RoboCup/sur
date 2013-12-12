@@ -159,6 +159,7 @@
     */
     // setup the camera
     camera = new THREE.PerspectiveCamera( 75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6 );
+    //camera = new THREE.OrthographicCamera( CANVAS_WIDTH/-2, CANVAS_WIDTH/2,CANVAS_HEIGHT/2,CANVAS_HEIGHT/-2, 0.1, 1e6 );
     camera.position.copy(lookPosition);
 
     // make the scene

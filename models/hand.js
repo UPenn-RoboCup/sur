@@ -20,22 +20,55 @@
   var left_mat  = new THREE.MeshPhongMaterial({
     ambient: 0x555555,
     specular: 0x111100,
-    emissive: 0xFFFF00,
+    emissive: 0x000088,
     shininess: 200,
-    color: 0xFFFF00,
-    //side: THREE.DoubleSide,
+    color: 0x00FF00,
+    side: THREE.DoubleSide,
+    wireframe: true
   });
-  var left_geo  = new THREE.CylinderGeometry(25, 25, 100, 8, 1, false);
+  var left_geo   = new THREE.CylinderGeometry(8, 8, 80, 8, 1, false);
+  var left1_geo  = left_geo.clone();
+  var left1_mesh = new THREE.Mesh( left1_geo, left_mat );
+  left1_mesh.rotation.set(Math.PI/2,0,0);
+  left1_mesh.position.set(0,0,0);
+  //
+  var left2_geo  = left_geo.clone();
+  var left2_mesh = new THREE.Mesh( left2_geo, left_mat );
+  left2_mesh.rotation.set(0,0,Math.PI/2);
+  left2_mesh.position.set(0,0,0);
+  //
+  //THREE.GeometryUtils.merge( left_geo, left1_geo );
+  //THREE.GeometryUtils.merge( left_geo, left2_geo );
   var left_mesh = new THREE.Mesh( left_geo, left_mat );
-  
-  
-  
-  
+  left_mesh.add(left1_mesh);
+  left_mesh.add(left2_mesh);
   
   // Right Hand
-  var right_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
-  var right_geo  = new THREE.TorusGeometry(40, 25.4, 8, 6, Math.PI);
+  var right_mat  = new THREE.MeshPhongMaterial({
+    ambient: 0x555555,
+    specular: 0x111100,
+    emissive: 0x000088,
+    shininess: 200,
+    color: 0xFF0000,
+    side: THREE.DoubleSide,
+    wireframe: true
+  });
+  var right_geo   = new THREE.CylinderGeometry(8, 8, 80, 8, 1, false);
+  var right1_geo  = right_geo.clone();
+  var right1_mesh = new THREE.Mesh( right1_geo, right_mat );
+  right1_mesh.rotation.set(Math.PI/2,0,0);
+  right1_mesh.position.set(0,0,0);
+  //
+  var right2_geo  = right_geo.clone();
+  var right2_mesh = new THREE.Mesh( right2_geo, right_mat );
+  right2_mesh.rotation.set(0,0,Math.PI/2);
+  right2_mesh.position.set(0,0,0);
+  //
+  //THREE.GeometryUtils.merge( right_geo, right1_geo );
+  //THREE.GeometryUtils.merge( right_geo, right2_geo );
   var right_mesh = new THREE.Mesh( right_geo, right_mat );
+  right_mesh.add(right1_mesh);
+  right_mesh.add(right2_mesh);
   
   // Default mesh
   var mod_mesh = left_mesh;

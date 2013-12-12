@@ -8,22 +8,23 @@ html, body {
   background-color: #7F5217;
   height: 100%;
 }
-#view {
-  position: fixed;
-  top: 0px;
-  right: 0px;
-}
-#fsm {
-  position: fixed;
-  bottom: 0px;
-  left: 0px;
-}
 #proceed {
   position: fixed;
   top: 0px;
   left: 0px;
 }
 #visual {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+}
+
+#fsm {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+}
+#view {
   position: fixed;
   bottom: 0px;
   right: 0px;
