@@ -19,8 +19,10 @@
   // offset should be different, but can use waypoint to adjust
   // PULL DOOR: (-27 cm) + (-84 cm) ~= -110 cm
   // PUSH DOOR: (27 cm) + (-84 cm) ~= -57 cm
-  // var offset = new THREE.Vector2(600,-1100);
-  var offset = new THREE.Vector2(480,-500);
+  var offset_pull = new THREE.Vector2(600,-1100);
+  var offset_push = new THREE.Vector2(480,-500);
+  var is_push = true;
+  var offset = offset_push;
 
   //////////////
   // RPC URLs //
@@ -274,6 +276,14 @@
       })
       return;
     }
+    is_push = !is_push;
+    if(is_push){
+      offset = offset_push;
+    } else {
+      offset = offset_pull;
+    }
+    Door.mod_callback();
+    /*
     // cycle the tcontrol
     if(item_mesh===hinge_mesh){
       tcontrol.detach( item_mesh );
@@ -284,6 +294,7 @@
     }
     tcontrol.attach( item_mesh );
     tcontrol.update();
+    */
     
   }
   // get the mesh
