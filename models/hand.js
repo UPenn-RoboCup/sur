@@ -15,6 +15,10 @@
   // Specials
   var special1 = 0, dSpecial1 = 0.1;
   var special2 = 0, dSpecial2 = 0.1;
+  //
+  var cur_l = [0,0,0,0,0];
+  var cur_r = [0,0,0,0,0];
+  var override = [0,0,0, 0,0];
   
   /////////////////////
   // Mesh definition //
@@ -138,18 +142,21 @@
     if(Manipulation.is_mod==false){
       // Reload the models
       qwest.get( rpc_url_lget ).success(function(lmodel){
-        console.log('Left Hand',lmodel);
+        cur_l = lmodel.slice();
+        console.log('Left Hand',cur_l);
         // Convert the position to THREEjs
-        model_to_three(lmodel,'left');
+        model_to_three(cur_l,'left');
         qwest.get( rpc_url_rget ).success(function(rmodel){
-          console.log('Right Hand',rmodel);
+          cur_r = rmodel.slice();
+          console.log('Right Hand',cur_r);
           // Convert the position to THREEjs
-          model_to_three(rmodel,'right');
+          model_to_three(cur_r,'right');
+          qwest.get( go_url ).success(function(o){
+            console.log('Override',o);
+            override = o.slice();
+          })
         });
-      });     
-      qwest.get( go_url ).success(function(o){
-        console.log('override',o);
-      })
+      });
       
       return;
     }
@@ -184,24 +191,35 @@
   Hand.send = function(){
     // Acquire the model
     var model = three_to_model(cur_hand);
-    if(cur_hand=='left') {
-      qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
-      console.log('Sent left transform',model);
-    } else {
-      qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
-      console.log('Sent right transform',model);
-    }
-
     // Specials
-    var override = model.slice(0,5);
-    override[3] = special1;
-    override[4] = special2;
+    override[3]  = special1;
+    override[4]  = special2;
     if(cur_hand=='left') {
+      override[0]  = model[0] - cur_l[0];
+      override[1]  = model[1] - cur_l[1];
+      override[2]  = model[2] - cur_l[2];
       qwest.post( so_url, {val:JSON.stringify(override)} );
     } else {
+      override[0]  = model[0] - cur_r[0];
+      override[1]  = model[1] - cur_r[1];
+      override[2]  = model[2] - cur_r[2];
       qwest.post( so_url, {val:JSON.stringify(override)} );
     }
     console.log('Sent override',override);
+    // reset
+    special1 = 0, special2 = 0;
+    override = [0,0,0, 0,0];
+    
+    // raw hands
+    if(cur_hand=='left') {
+      qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
+      console.log('Sent left transform',model);
+      cur_l = model.slice();
+    } else {
+      qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
+      console.log('Sent right transform',model);
+      cur_r = model.slice();
+    }
     
   }
   Hand.mod_callback = function(){
