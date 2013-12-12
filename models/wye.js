@@ -45,7 +45,7 @@
   // Adjust the waypoint to the *perfect* position
   var wp_callback = function(){
     // Grab the (global) orientation of the mesh
-    var pa = item_mesh.rotation.z;
+    var pa = -1*item_mesh.rotation.z;
     // Acquire the position of the tip:
     var p = (new THREE.Vector3()).copy(item_mesh.position);
     

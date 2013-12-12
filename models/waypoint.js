@@ -76,8 +76,6 @@
       item_mesh.rotation.y = a;
       item_mesh.position.z = (r_indicator.position.z+l_indicator.position.z)/2;
       item_mesh.position.x = (r_indicator.position.x+l_indicator.position.x)/2;
-      // Send
-      Waypoint.send();
     }
     // Swap indicators
     first_indicator = !first_indicator;
@@ -116,6 +114,7 @@
   Waypoint.send = function(cb){
     // Waypoint model
     var wp = three_to_model();
+    console.log('Send wp',wp);
     // For network efficiency, just send the waypoint coordinates
     qwest.post( rpc_url, {val:JSON.stringify(wp)});
     /*
