@@ -80,9 +80,9 @@
   }
   
   Manipulation.modify = function(set){
-    if(set=='yes'){
+    if(set=='yes'||set==true){
       yes_mod();
-    } else if(set=='no'){
+    } else if(set=='no'||set==false){
       no_mod();
     } else {
       // Toggle

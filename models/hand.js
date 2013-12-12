@@ -138,13 +138,19 @@
     if(Manipulation.is_mod==false){
       // Reload the models
       qwest.get( rpc_url_lget ).success(function(lmodel){
+        console.log('Left Hand',lmodel);
         // Convert the position to THREEjs
         model_to_three(lmodel,'left');
         qwest.get( rpc_url_rget ).success(function(rmodel){
+          console.log('Right Hand',rmodel);
           // Convert the position to THREEjs
           model_to_three(rmodel,'right');
         });
       });     
+      qwest.get( go_url ).success(function(o){
+        console.log('override',o);
+      })
+      
       return;
     }
     // Switch hands
@@ -162,15 +168,8 @@
   }
   // enter stage
   Hand.init = function(tcontrol){
-    // Grab the current transforms
-    qwest.get( rpc_url_lget ).success(function(lmodel){
-      // Convert the position to THREEjs
-      model_to_three(lmodel,'left');
-      qwest.get( rpc_url_rget ).success(function(rmodel){
-        // Convert the position to THREEjs
-        model_to_three(rmodel,'right');
-      });
-    });
+    Manipulation.modify('no');
+    Hand.loop();
 
     // Add to the world
     World.add(left_mesh);
