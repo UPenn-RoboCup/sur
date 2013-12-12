@@ -16,26 +16,30 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('wipe_mesh',World.clear_meshes);
   // During walking
   clicker('fast_mesh',function() {
+    /*
     // Fast scan
     qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
       //val: JSON.stringify([-1.0472, 1.0472, 2/DEG_TO_RAD])
-      val: JSON.stringify([-.7, .7, 2/DEG_TO_RAD])
+      val: JSON.stringify([-1, 1, 1/DEG_TO_RAD])
     });
+    */
     // See far
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
       val:JSON.stringify([.2,5])
     });
-    // Stream (JPEG)
+    // Single (JPEG), so we get often
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
-      val:JSON.stringify([3,1,75,1])
+      val:JSON.stringify([3,1,90,1])
     });
   });
   // During manipulation
   clicker('slow_mesh',function() {
+    /*
     // Slow scan
     qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
       val: JSON.stringify([-1.0472, 1.0472, 5/DEG_TO_RAD])
     });
+    */
     // See close
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
       val:JSON.stringify([.1,1.5])

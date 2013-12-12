@@ -388,8 +388,9 @@
         }
         */
         
-        // Too high in the air (3m)
-        if(a[1]>3000||b[1]>3000||c[1]>3000||d[1]>3000){continue;}
+        // Too high in the air (2m)
+        var max_ceiling = 2000;
+        if(a[1]>max_ceiling||b[1]>max_ceiling||c[1]>max_ceiling||d[1]>max_ceiling){continue;}
         // Ground (5cm)
         if(a[1]<50||b[1]<50||c[1]<50||d[1]<50){continue;}
         // ugliness with too far away (5cm break)
@@ -399,7 +400,6 @@
           Math.abs(a[2]-d[2])>50
         ){continue;}
         
-      
         // We have a valid quad!
         n_quad++;
       
