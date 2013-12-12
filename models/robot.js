@@ -155,7 +155,7 @@
                       axel: new THREE.Vector3(0,-1,0),
                       id: 9,
                       children:[{
-                        stl: 'LEFT_GRIPPER',
+                        //stl: 'LEFT_GRIPPER',
                         q: (new THREE.Quaternion()).setFromEuler( new THREE.Euler(Math.PI/2,0,-Math.PI) ),
                         p: new THREE.Vector3(0, 0, 18),
                       }] // left_gripper
@@ -323,7 +323,7 @@
                       axel: new THREE.Vector3(0,-1,0),
                       id: 28,
                       children:[{
-                        stl: 'RIGHT_GRIPPER',
+                        //stl: 'RIGHT_GRIPPER',
                         q: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(1,0,0)), -3.14159/2 ),
                         p: new THREE.Vector3(0, 0, 18),
                       }] // left_gripper

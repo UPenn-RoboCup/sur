@@ -51,7 +51,8 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   // Proceed buttons
-  var rpc_url_proceed = rest_root+'/m/hcm/state/proceed'
+  var rpc_url_proceed = rest_root+'/m/hcm/state/proceed';
+  var rpc_url_override = rest_root+'/m/hcm/state/override_target';
   clicker('proceed_reverse',function(){
     qwest.post( rpc_url_proceed, {val:JSON.stringify(-1)} )
   });
@@ -60,6 +61,9 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   clicker('proceed_notify',function(){
     qwest.post( rpc_url_proceed, {val:JSON.stringify(2)} )
+  });
+  clicker('proceed_override',function(){
+    qwest.post( rpc_url_proceed, {val:JSON.stringify(3)} )
   });
   
   // Vantage points (Position then target)

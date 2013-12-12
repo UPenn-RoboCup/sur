@@ -6,6 +6,9 @@ this.URL = this.URL || this.webkitURL;
 // assume port 8080 for testing...
 this.rest_root = 'http://'+host+':8080';
 this.fsm_url = rest_root+'/s';
+// Override get/set
+this.so_url = rest_root+'/m/hcm/state/override_target';
+this.go_url = rest_root+'/m/hcm/state/override';
 // http://macwright.org/presentations/dcjq/
 this.$ = function(x){return document.querySelectorAll(x);};
 this.clicker = function(id,fun){

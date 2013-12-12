@@ -6,7 +6,7 @@
   //////////////
   // RPC URLs //
   //////////////
-  var rpc_url = rest_root+'/m/hcm/tool/model'
+  var rpc_url = rest_root+'/m/hcm/tool/model';
   
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
@@ -16,8 +16,8 @@
   // Mesh definition //
   /////////////////////
   // master
-  var item_mat   = new THREE.MeshLambertMaterial({color: 0xFFD801});
-  var item_geo   = new THREE.CylinderGeometry(25,25,140,12,1,false);
+  var item_mat = new THREE.MeshLambertMaterial({color: 0xFFD801});
+  var item_geo = new THREE.CylinderGeometry(25,25,140,12,1,false);
   // Drill direction
   var item2_mesh = new THREE.Mesh(new THREE.CylinderGeometry(30,30,240,12,1));
   // This also used as tmp variable
@@ -50,6 +50,9 @@
     item_mesh.position.z = 1000*model[0];
     item_mesh.rotation.y = -1*model[2];
   }
+  // TODO: Need for override as well, now
+  
+  
   // Adjust the waypoint to the *perfect* position
   var wp_callback = function(){
     // Grab the (global) orientation of the mesh
@@ -87,9 +90,17 @@
     World.remove(item_mesh);
   }
   Tool.send = function(){
+    // DEPRECATED: Post to our model
     var model = three_to_model();
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    // New!
+    /*
+    var override = three_to_override();
+    qwest.post( so_url, {val:JSON.stringify(override)} );
+    */
+    // Send our optimal waypoint
     Waypoint.send();
+    console.log('Sent tool',model);
   }
   Tool.get_mod_mesh = function(){
     return item_mesh;

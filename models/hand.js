@@ -17,9 +17,20 @@
   /////////////////////
   
   // Left Hand
-  var left_mat  = new THREE.MeshLambertMaterial({color: 0xFFFF00});
-  var left_geo  = new THREE.TorusGeometry(40, 25.4, 8, 6, Math.PI);
+  var left_mat  = new THREE.MeshPhongMaterial({
+    ambient: 0x555555,
+    specular: 0x111100,
+    emissive: 0xFFFF00,
+    shininess: 200,
+    color: 0xFFFF00,
+    //side: THREE.DoubleSide,
+  });
+  var left_geo  = new THREE.CylinderGeometry(25, 25, 100, 8, 1, false);
   var left_mesh = new THREE.Mesh( left_geo, left_mat );
+  
+  
+  
+  
   
   // Right Hand
   var right_mat  = new THREE.MeshLambertMaterial({color: 0xFF0000});
