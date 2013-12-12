@@ -20,7 +20,24 @@
   var item_mat = new THREE.MeshLambertMaterial({color: 0xFF0000});
   var item_geo = new THREE.CylinderGeometry(44.5,44.5,50,12,1,false);
   var item_mesh = new THREE.Mesh( item_geo, item_mat );
-  item_mesh.rotation.set(Math.PI/2,0,0);
+  // left
+  var left_mat = new THREE.MeshLambertMaterial({color: 0xFF4444});
+  var left_geo = new THREE.CylinderGeometry(44.5,44.5,50,12,1,false);
+  var left_mesh = new THREE.Mesh( left_geo, left_mat );
+  left_mesh.rotation.x = Math.PI/2;
+  left_mesh.rotation.z = Math.PI/4;
+  left_mesh.position.z = -50;
+  left_mesh.position.x = 50;
+  item_mesh.add(left_mesh);
+  // left
+  var right_mat = new THREE.MeshLambertMaterial({color: 0x990000});
+  var right_geo = new THREE.CylinderGeometry(44.5,44.5,50,12,1,false);
+  var right_mesh = new THREE.Mesh( right_geo, right_mat );
+  right_mesh.rotation.x = Math.PI/2;
+  right_mesh.rotation.z = -Math.PI/4;
+  right_mesh.position.z = -50;
+  right_mesh.position.x = -50;
+  item_mesh.add(right_mesh);
   
   //////////////////////
   // Model converters //
@@ -45,14 +62,15 @@
   // Adjust the waypoint to the *perfect* position
   var wp_callback = function(){
     // Grab the (global) orientation of the mesh
-    var pa = -1*item_mesh.rotation.z;
+    var pa = item_mesh.rotation.y;
     // Acquire the position of the tip:
     var p = (new THREE.Vector3()).copy(item_mesh.position);
     
     // Make the global offset from the object    
-    var dx = offset.x*Math.cos(pa) + offset.y*Math.sin(pa);
-    var dy = offset.y*Math.cos(pa) - offset.x*Math.sin(pa);
-
+    var ca = Math.cos(pa), sa = Math.sin(pa);
+    var dx = offset.x*ca - offset.y*sa;
+    var dy = offset.y*ca + offset.x*sa;
+    
     // Change the THREE coordinates of the desired waypoint
     p.x -= dy;
     p.z -= dx;
@@ -68,7 +86,7 @@
   Wye.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
-    mod_callback();
+    Wye.mod_callback();
   }
   Wye.init = function(){
     // Set the default position relative to the robot

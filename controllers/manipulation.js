@@ -45,7 +45,7 @@
     // Keyboard shortcuts
     keypress.unregister_many(tcontrol_hotkeys);
     // send the model to the robot
-    cur_item.send();
+    //cur_item.send();
     
   };
   // Function to cycle manipulation item to the item_id

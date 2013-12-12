@@ -95,7 +95,7 @@
     World.add( item_mesh );
     World.add( l_indicator );
     World.add( r_indicator );
-    Waypoint.loop();
+    //Waypoint.loop();
   }
   //exit
   Waypoint.deinit = function(){

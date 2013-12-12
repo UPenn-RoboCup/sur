@@ -77,7 +77,6 @@
     // Set the position
     item_mesh.position.copy(p);
     wp_callback();
-    Tool.send();
   }
   Tool.init = function(){
     // Add to the world
@@ -90,6 +89,7 @@
   Tool.send = function(){
     var model = three_to_model();
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    Waypoint.send();
   }
   Tool.get_mod_mesh = function(){
     return item_mesh;
