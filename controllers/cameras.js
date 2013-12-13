@@ -5,7 +5,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Place on the page
   var camera_container = $('#camera_container')[0];
-  var img = Camera.get_image()
+  var img = Camera.get_image();
   camera_container.appendChild( img );
   
   // Normalized Device Coordinates
@@ -15,10 +15,9 @@ document.addEventListener( "DOMContentLoaded", function(){
     var dx = event.offsetX || event.clientX;
     var dy = event.offsetY || event.clientY;
     return {
-      // 0 to 1
       ndx: dx/width,
       ndy: 1-dy/height
-    }
+    };
   }
   
   // Data sharing
