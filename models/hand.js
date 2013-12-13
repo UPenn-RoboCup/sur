@@ -66,6 +66,27 @@
   var right1_mesh = new THREE.Mesh( right1_geo, right_mat );
   right1_mesh.rotation.set(Math.PI/2,0,0);
   right1_mesh.position.set(0,0,0);
+  // lefty
+  var offy = 12; // 2cm
+  var szy = 200;
+  var isaa = szy/2*Math.sqrt(2)/2 /2
+  var right1a_geo   = new THREE.CylinderGeometry(5, 5, szy, 8, 1, false);
+  var right1a_mesh = new THREE.Mesh( right1a_geo, right_mat );
+  right1a_mesh.rotation.set(Math.PI/2,0,Math.PI/4);
+  right1a_mesh.position.set(offy-isaa,0,offy+isaa);
+  // righty
+  offy = 40;
+  var right1b_geo   = new THREE.CylinderGeometry(5, 5, szy, 8, 1, false);
+  var right1b_mesh = new THREE.Mesh( right1b_geo, right_mat );
+  right1b_mesh.rotation.set(Math.PI/2,0,Math.PI/4);
+  right1b_mesh.position.set(-offy-isaa,0,-offy+isaa);
+  // pushy
+  var offz = 65;
+  var right1c_geo   = new THREE.CylinderGeometry(5, 5, 2*offy*Math.sqrt(2), 8, 1, false);
+  var right1c_mesh = new THREE.Mesh( right1c_geo, right_mat );
+  right1c_mesh.rotation.set(Math.PI/2,0,-Math.PI/4);
+  right1c_mesh.position.set(-offz,0,offz);
+  
   //
   var right2_geo  = right_geo.clone();
   var right2_mesh = new THREE.Mesh( right2_geo, right_mat );
@@ -77,6 +98,10 @@
   var right_mesh = new THREE.Mesh( right_geo, right_mat );
   right_mesh.add(right1_mesh);
   right_mesh.add(right2_mesh);
+  //
+  right_mesh.add(right1a_mesh);
+  right_mesh.add(right1b_mesh);
+  right_mesh.add(right1c_mesh);
   
   // Default mesh
   var mod_mesh = left_mesh;

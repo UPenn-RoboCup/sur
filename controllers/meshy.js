@@ -42,7 +42,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     */
     // See close
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
-      val:JSON.stringify([.1,1.5])
+      val:JSON.stringify([.25,.75])
     });
     // Once (PNG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
