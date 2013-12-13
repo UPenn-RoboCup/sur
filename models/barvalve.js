@@ -119,7 +119,10 @@
   }
   // modification loop
   BarValve.loop = function(tcontrol){
-    if(Manipulation.is_mod==false){return;}
+    if(Manipulation.is_mod==false){
+      qwest.get(rpc_url,{},{}).success(function(model){model_to_three(model);});
+      return;
+    }
     // cycle the tcontrol
     if(mod_mesh===item_mesh){
       tcontrol.detach( item_mesh );
@@ -144,11 +147,7 @@
   // enter
   BarValve.init = function(){
     World.add(item_mesh);
-    qwest.get( rpc_url,{},{})
-    .success(function(model){
-      model_to_three(model);
-      mod_mesh = item_mesh;
-    });
+    mod_mesh = item_mesh;
   }
   // exit
   BarValve.deinit = function(){

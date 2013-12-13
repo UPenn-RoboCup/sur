@@ -116,7 +116,8 @@
     var wp = three_to_model();
     console.log('Send wp',wp);
     // For network efficiency, just send the waypoint coordinates
-    qwest.post( rpc_url, {val:JSON.stringify(wp)});
+    qwest.post( rpc_url, {val:JSON.stringify(wp)})
+    .success(function(){qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});});
     /*
     qwest.post( rpc_url, {val:JSON.stringify(wp)})
     .success(function(){

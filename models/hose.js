@@ -89,12 +89,10 @@
     // Set the position
     item_mesh.position.copy(p);
     Hose.mod_callback();
-    //Hose.send();
   }
   Hose.init = function(){
     // Add to the world
     World.add(item_mesh);
-    Hose.loop();
   }
   Hose.deinit = function(){
     // Add to the world
@@ -102,8 +100,11 @@
   }
   Hose.send = function(){
     var model = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
-    Waypoint.send();
+    qwest.post( rpc_url, {val:JSON.stringify(model)} )
+/*    .success(function(){
+      qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} );
+    })
+*/
   }
   Hose.get_mod_mesh = function(){
     return item_mesh;

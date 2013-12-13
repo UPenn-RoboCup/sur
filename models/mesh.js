@@ -115,7 +115,8 @@
         //console.log('fr_metadata debug',fr_metadata);
         
         var mesh     = meshes[fr_metadata.name];
-        mesh.pitch   = fr_metadata.rpy[1];
+        //mesh.pitch   = fr_metadata.rpy[1];
+        mesh.pitch   = 11*Math.PI/180;
         mesh.latency = e.timeStamp/1e6 - fr_metadata.t;
         mesh.depths  = fr_metadata.depths.slice();
         //

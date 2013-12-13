@@ -22,17 +22,20 @@ document.addEventListener( "DOMContentLoaded", function(){
   }
   
   // Data sharing
-  var peer = new Peer('cameras', {host: 'localhost', port: 9000});
-  var meshy_conn = peer.connect('meshy');
   var is_connected = false;
-  meshy_conn.on('open', function(conn){
-    console.log('Peer | meshy!!!');
-    is_connected = true;
-  });
-  meshy_conn.on('close', function(conn){
-    console.log('Peer | meshy offline');
-    is_connected = false;
-  });
+  var peer = new Peer('cameras', {host: 'localhost', port: 9000});
+  // Check if we have the peer available
+  if(peer.id!=null){
+    var meshy_conn = peer.connect('meshy');
+    meshy_conn.on('open', function(conn){
+      console.log('Peer | meshy!!!');
+      is_connected = true;
+    });
+    meshy_conn.on('close', function(conn){
+      console.log('Peer | meshy offline');
+      is_connected = false;
+    });
+  }
   
   // Single click looks somewhere
   var hammertime = Hammer(camera_container);

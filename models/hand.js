@@ -45,11 +45,20 @@
   left2_mesh.rotation.set(0,0,Math.PI/2);
   left2_mesh.position.set(0,0,0);
   //
-  //THREE.GeometryUtils.merge( left_geo, left1_geo );
-  //THREE.GeometryUtils.merge( left_geo, left2_geo );
   var left_mesh = new THREE.Mesh( left_geo, left_mat );
   left_mesh.add(left1_mesh);
   left_mesh.add(left2_mesh);
+  
+  /*
+  // lefty
+  var offy = 12; // 2cm
+  var szy = 200;
+  var isaa = szy/2*Math.sqrt(2)/2 /2
+  var left1a_geo   = new THREE.CylinderGeometry(5, 5, szy, 8, 1, false);
+  var left1a_mesh = new THREE.Mesh( left1a_geo, right_mat );
+  left1a_mesh.rotation.set(Math.PI/2,0,Math.PI/4);
+  left1a_mesh.position.set(offy-isaa,0,offy+isaa);
+  */
   
   // Right Hand
   var right_mat  = new THREE.MeshPhongMaterial({
