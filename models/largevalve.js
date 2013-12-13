@@ -123,7 +123,7 @@
     // Set the position from the double click
     item_mesh.position.copy(p);
     wp_callback();
-    LargeValve.send();
+    // LargeValve.send();
   }
   // modification loop
   LargeValve.loop = function(tcontrol){
@@ -146,6 +146,8 @@
   LargeValve.send = function(){
     var model = three_to_model();
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    Waypoint.send();
+    // console.log('Sent largevalve',model);
   }
   // enter
   LargeValve.init = function(){
