@@ -217,29 +217,32 @@
       override[0]  = model[0] - cur_l[0];
       override[1]  = model[1] - cur_l[1];
       override[2]  = model[2] - cur_l[2];
-      qwest.post( so_url, {val:JSON.stringify(override)} );
     } else {
       override[0]  = model[0] - cur_r[0];
       override[1]  = model[1] - cur_r[1];
       override[2]  = model[2] - cur_r[2];
-      qwest.post( so_url, {val:JSON.stringify(override)} );
     }
-    console.log('Sent override',override);
-    // reset
-    special1 = 0, special2 = 0;
-    override = [0,0,0, 0,0];
+    // Send the override
+    qwest.post( so_url, {val:JSON.stringify(override)} )
+    .success(function(){
+      qwest.post( rpc_url_proceed, {val:JSON.stringify([3])} );
+      console.log('Sent override',override);
+      // reset
+      special1 = 0, special2 = 0;
+      override = [0,0,0, 0,0];
+      if(cur_hand=='left'){cur_l = model.slice();}else{cur_r = model.slice();}
+    });
     
+    /*
     // raw hands
     if(cur_hand=='left') {
       qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
       console.log('Sent left transform',model);
-      cur_l = model.slice();
     } else {
       qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
       console.log('Sent right transform',model);
-      cur_r = model.slice();
     }
-    
+    */
   }
   Hand.mod_callback = function(){
     

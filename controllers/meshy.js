@@ -42,7 +42,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     */
     // See close
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
-      val:JSON.stringify([.25,.75])
+      val:JSON.stringify([.2,1])
     });
     // Once (PNG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
@@ -51,20 +51,20 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   // Proceed buttons
-  var rpc_url_proceed = rest_root+'/m/hcm/state/proceed';
   clicker('proceed_reverse',function(){
     qwest.post( rpc_url_proceed, {val:JSON.stringify([-1])} )
   });
   clicker('proceed_proceed',function(){
     qwest.post( rpc_url_proceed, {val:JSON.stringify([1])} )
   });
+  /*
   clicker('proceed_notify',function(){
     qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} )
   });
   clicker('proceed_override',function(){
     qwest.post( rpc_url_proceed, {val:JSON.stringify([3])} )
   });
-  
+  */
   // Vantage points (Position then target)
   clicker('vantage_top',function() {
     var cur = Robot.get_root();
@@ -149,9 +149,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('arm_smallvalvegrab',function(){
     qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'smallvalvegrab'});
   });
-  clicker('arm_largevalvegrab',function(){
-    qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'largevalvegrab'});
-  });
   clicker('arm_barvalvegrab',function(){
     qwest.post(fsm_url,{fsm: 'ArmFSM' , evt: 'barvalvegrab'});
   });
@@ -162,7 +159,9 @@ document.addEventListener( "DOMContentLoaded", function(){
   Hand.init();
   Manipulation.add_item(Hose);
   Manipulation.add_item(Wye);
+  /*
   Manipulation.add_item(SmallValve);
+  */
   Manipulation.add_item(LargeValve);
   Manipulation.add_item(BarValve);
   Manipulation.add_item(Door);

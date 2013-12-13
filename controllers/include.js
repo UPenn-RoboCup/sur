@@ -9,6 +9,7 @@ this.fsm_url = rest_root+'/s';
 // Override get/set
 this.so_url = rest_root+'/m/hcm/state/override_target';
 this.go_url = rest_root+'/m/hcm/state/override';
+this.rpc_url_proceed = rest_root+'/m/hcm/state/proceed';
 // http://macwright.org/presentations/dcjq/
 this.$ = function(x){return document.querySelectorAll(x);};
 this.clicker = function(id,fun){

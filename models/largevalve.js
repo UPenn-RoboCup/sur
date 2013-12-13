@@ -10,7 +10,8 @@
 
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(690,270);
+  //var offset = new THREE.Vector2(690,270);
+  var offset = new THREE.Vector2(720,270);
   
   /////////////////////
   // Mesh definition //
@@ -183,14 +184,13 @@
     // Move the roll
     start_mesh.rotation.z += dir*.1;
     stop_mesh.rotation.z  += dir*.1;
-    wp_callback();
-    LargeValve.send();
+    LargeValve.mod_callback();
   }
 
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
-  LargeValve.item_name = 'Big Valve';
+  LargeValve.item_name = 'Rotary Valve';
   // export
 	ctx.LargeValve = LargeValve;
 
