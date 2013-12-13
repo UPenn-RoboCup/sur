@@ -172,6 +172,7 @@
   
   // Keypressing hotkeys
   var dp = 10; // 1cm at a time
+  var ddp = 1; // 1mm at a time fine tune
   var item_hotkeys = [
   {
     "keys"          : "i",
@@ -185,9 +186,7 @@
       var dx = dp*ca, dy = dp*sa;
       mod_mesh.position.x += dy;
       mod_mesh.position.z += dx;
-      //
       cur_item.mod_callback();
-      //cur_item.send();
     },
     "this"          : ctx
   },
@@ -204,7 +203,6 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-      //cur_item.send();
     },
     "this"          : ctx
   },
@@ -220,9 +218,7 @@
       var dx = dp*sa, dy = -dp*ca;
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
-      //
       cur_item.mod_callback();
-      //cur_item.send();
     },
     "this"          : ctx
   },
@@ -240,7 +236,6 @@
         mod_mesh.position.z += dx;
         //
         cur_item.mod_callback();
-        //cur_item.send();
     },
     "this"          : ctx
   },
@@ -250,10 +245,8 @@
     "on_keyup"      : function(event) {
         event.preventDefault();
         var mod_mesh = cur_item.get_mod_mesh();
-        mod_mesh.position.y += 10;
+        mod_mesh.position.y += dp;
         cur_item.mod_callback();
-        // Send on each keypress modification
-        //cur_item.send();
     },
     "this"          : ctx
   },
@@ -263,13 +256,12 @@
     "on_keyup"      : function(event) {
         event.preventDefault();
         var mod_mesh = cur_item.get_mod_mesh();
-        mod_mesh.position.y -= 10;
+        mod_mesh.position.y -= dp;
         cur_item.mod_callback();
-        // Send on each keypress modification
-        //cur_item.send();
     },
     "this"          : ctx
   },
+  //
   {
     "keys"          : "h",
     "is_exclusive"  : true,
@@ -319,6 +311,94 @@
     },
     "this"          : ctx
   },
+  
+  
+  // FINE TUNE
+  {
+    "keys"          : "w",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+      event.preventDefault();
+      var mod_mesh = cur_item.get_mod_mesh();
+      // Relative direction wrt robot
+      var pa = Robot.pa;
+      var ca = Math.cos(pa), sa = Math.sin(pa);
+      var dx = ddp*ca, dy = ddp*sa;
+      mod_mesh.position.x += dy;
+      mod_mesh.position.z += dx;
+      cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "x",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+      event.preventDefault();
+      var mod_mesh = cur_item.get_mod_mesh();
+      var pa = Robot.pa;
+      var ca = Math.cos(pa), sa = Math.sin(pa);
+      var dx = ddp*ca, dy = ddp*sa;
+      mod_mesh.position.x -= dy;
+      mod_mesh.position.z -= dx;
+      cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "a",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+      event.preventDefault();
+      var mod_mesh = cur_item.get_mod_mesh();
+      var pa = Robot.pa;
+      var ca = Math.cos(pa), sa = Math.sin(pa);
+      var dx = ddp*sa, dy = -ddp*ca;
+      mod_mesh.position.x -= dy;
+      mod_mesh.position.z -= dx;
+      cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "d",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        var pa = Robot.pa;
+        var ca = Math.cos(pa), sa = Math.sin(pa);
+        var dx = ddp*sa, dy = -ddp*ca;
+        mod_mesh.position.x += dy;
+        mod_mesh.position.z += dx;
+        cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "q",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.position.y += ddp;
+        cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "z",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+        mod_mesh.position.y -= ddp;
+        cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  //
+  
   ];
 
   // export
