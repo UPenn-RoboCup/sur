@@ -13,9 +13,9 @@ var dgram   = require('dgram');
 var _       = require('underscore');
 
 /* Remote Procedure Call Configuration */
-var rpc_robot     = '192.168.123.26';
+//var rpc_robot     = '192.168.123.26';
 //var rpc_robot     = '192.168.123.24';
-//var rpc_robot     = 'localhost'
+var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
 var homepage = 'meshy';
@@ -189,6 +189,9 @@ var rest_shm = function (req, res, next) {
   // Form the Remote Procedure Call
   if(req.params.val!==undefined){
     req.params.val = JSON.parse( req.params.val );
+  }
+  if(req.params.delta!==undefined){
+    req.params.delta = JSON.parse( req.params.delta );
   }
   zmq_req_rest_skt.send( mp.pack(req.params) );
   

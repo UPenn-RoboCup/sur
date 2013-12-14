@@ -242,16 +242,16 @@
       if(cur_hand=='left'){cur_l = model.slice();}else{cur_r = model.slice();}
     });
     
-    /*
     // raw hands
     if(cur_hand=='left') {
       qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
       console.log('Sent left transform',model);
+      qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} )
     } else {
       qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
       console.log('Sent right transform',model);
+      qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} )
     }
-    */
   }
   Hand.mod_callback = function(){
     

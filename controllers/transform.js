@@ -454,21 +454,26 @@
 
   // Camera clicking
   Transform.head_look = function(coord){
+    var ang_url = rest_root+'/m/hcm/motion/headangle';
     // Head look
     var h_fov = 60;
     var v_fov = 30;//60;
+    // Make the change in angle coordinates
+    var dx = (.5-coord.ndx) * h_fov * DEG_TO_RAD;
+    var dy = (.5-coord.ndy) * v_fov * DEG_TO_RAD;
+    // Send the delta
+    qwest.post(ang_url,{delta: JSON.stringify([dx,dy])});
     //
-    var ang_url = rest_root+'/m/hcm/motion/headangle';
+    console.log('Head Look Delta',dx/Math.PI*180,dy/Math.PI*180);
+    /*
     // Adjust the angle based on the previous angle from the robot
     qwest.get(ang_url).success(function(cur_headangle){
       // Half fov
-      var x = (.5-coord.ndx) * h_fov * DEG_TO_RAD;
-      var y = (.5-coord.ndy) * v_fov * DEG_TO_RAD;
       x += cur_headangle[0];
       y += cur_headangle[1];
-      console.log(x/Math.PI*180,y/Math.PI*180,coord)
       qwest.post(ang_url,{val: JSON.stringify([x,y])});
     });
+    */
   }
   
   Transform.head_intersect = function(coord){
