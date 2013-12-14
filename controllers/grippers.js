@@ -25,18 +25,14 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   qwest.get('/a',{},{},function(){
     this.responseType = "arraybuffer";
-   })
-   .success(function(response){
-      // Blah blah blah
-      console.log('hi',response);
-      
-      context.decodeAudioData(response, function(buffer) {
-        console.log('huh?',buffer);
-        playSound(buffer)
-            //dogBarkingBuffer = buffer;
-      }, function(err){console.log('audio err',err)});
-      
-   });
+  })
+  .success(function(response){
+    context.decodeAudioData(response, function(buffer) {
+      playSound(buffer);
+    },
+    function(err){console.log('audio err',err)}
+    );
+  });
        
   // Right Trigger
   clicker('rt_trigger',function(){
