@@ -168,6 +168,21 @@
   // loop modify handles
   Hand.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
+      
+      if(cur_hand=='left'){
+        qwest.get( rpc_url_lget ).success(function(lmodel){
+          cur_l = lmodel.slice();
+          model_to_three(cur_l,'left');
+          console.log('Left Hand',cur_l);
+        });
+      } else {
+        qwest.get( rpc_url_rget ).success(function(rmodel){
+          cur_r = rmodel.slice();
+          model_to_three(cur_r,'right');
+          console.log('Right Hand',cur_r);
+        });
+      }
+      /*
       // Reload the models
       qwest.get( rpc_url_lget ).success(function(lmodel){
         cur_l = lmodel.slice();
@@ -185,7 +200,7 @@
           })
         });
       });
-      
+      */
       return;
     }
     // Switch hands
@@ -242,6 +257,7 @@
       if(cur_hand=='left'){cur_l = model.slice();}else{cur_r = model.slice();}
     });
     
+    /*
     // raw hands
     if(cur_hand=='left') {
       qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
@@ -252,6 +268,7 @@
       console.log('Sent right transform',model);
       qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} )
     }
+    */
   }
   Hand.mod_callback = function(){
     
@@ -262,7 +279,7 @@
   }
 
   Hand.special1 = function(dir){
-    special1 += dir*dSpecial1;
+    special1 -= dir*dSpecial1;
   }
   Hand.special2 = function(dir){
     special2 += dir*dSpecial2;
