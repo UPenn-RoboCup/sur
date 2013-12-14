@@ -182,6 +182,7 @@
           console.log('Right Hand',cur_r);
         });
       }
+      override = [0,0,0, 0,0];
       return;
     }
     // Switch hands

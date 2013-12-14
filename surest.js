@@ -13,9 +13,9 @@ var dgram   = require('dgram');
 var _       = require('underscore');
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.26';
+var rpc_robot     = '192.168.123.26';
 //var rpc_robot     = '192.168.123.24';
-var rpc_robot     = 'localhost'
+//var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
 var homepage = 'meshy';
@@ -159,6 +159,37 @@ var load_css = function (req, res, next) {
   res.end();
 };
 server.get('/css/:css', load_css.bind({base_dir: 'css'}) );
+
+var rest_audio = function(req, res, next){
+  var audio = fs.readFileSync('test.wav');
+  
+  fs.readFile( __dirname + '/test.wav', function (err, data) {
+    if (err) {throw err;}
+    //console.log(data.toString());
+    //console.log(Buffer.byteLength(data))
+    console.log(data.length)
+    res.writeHead(200, {
+      'Content-Length': data.length,
+      'Content-Type': 'arraybuffer'
+    });
+    
+    res.write(data);
+    res.end();
+    console.log('audio done!')
+  });
+  //res.send();
+  /*
+  console.log('done!!',audio);
+  console.log('done!!',Buffer.byteLength(audio));
+  res.writeHead(200, {
+    'Content-Length': Buffer.byteLength(audio),
+    'Content-Type': 'arraybuffer'
+  });
+  console.log('done!');
+  res.write(audio);
+  res.end();
+  */
+}
 
 /* Shared memory management: [memory].get_[segment]_[key]()
 * vcm.set_head_camera_t(val)
@@ -408,6 +439,9 @@ server.post('/m/:shm/:segment/:key', rest_shm);
 server.post('/s',rest_fsm);
 //
 server.post('/b',rest_body);
+
+//
+server.get('/a',rest_audio);
 
 /* Connect to the RPC server */
 var zmq_req_rest_skt = zmq.socket('req');

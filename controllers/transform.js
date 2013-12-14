@@ -457,7 +457,7 @@
     var ang_url = rest_root+'/m/hcm/motion/headangle';
     // Head look
     var h_fov = 60;
-    var v_fov = 30;//60;
+    var v_fov = 40;//30;//60;
     // Make the change in angle coordinates
     var dx = (.5-coord.ndx) * h_fov * DEG_TO_RAD;
     var dy = (.5-coord.ndy) * v_fov * DEG_TO_RAD;
