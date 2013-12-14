@@ -54,6 +54,14 @@ document.addEventListener( "DOMContentLoaded", function(){
   var ang_url = rest_root+'/m/hcm/motion/headangle';
   clicker('head_ahead',function(){
     qwest.post(ang_url,{val: JSON.stringify([0,0])});
-  })
-  
+  });
+  clicker('head_down',function(){
+    qwest.post(ang_url,{val: JSON.stringify([0,Math.PI/3])});
+  });
+  clicker('head_left',function(){
+    qwest.post(ang_url,{val: JSON.stringify([Math.PI/3,0])});
+  });
+  clicker('head_right',function(){
+    qwest.post(ang_url,{val: JSON.stringify([-Math.PI/3,0])});
+  });
 });
