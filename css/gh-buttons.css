@@ -38,6 +38,23 @@
     *display: inline;
 }
 
+.button.icon:before {
+    content: "";
+    position: relative;
+    top: 1px;
+    float:left;
+    width: 12px;
+    height: 12px;
+    margin: 0 0.75em 0 -0.25em;
+    background: url(../png/gh-icons.png) 0 99px no-repeat;
+}
+
+.button.arrowup.icon:before { background-position: 0 0; }
+.button.arrowleft.icon:before { background-position: 0 -24px; }
+.button.arrowright.icon:before { float:right; margin: 0 -0.25em 0 0.5em; background-position: 0 -36px; }
+.button.arrowdown.icon:before { background-position: 0 -12px; }
+
+/*
 .button:hover,
 .button:focus,
 .button:active,
@@ -65,28 +82,12 @@
     background-image: -o-linear-gradient(#3072b3, #599bdc);
     background-image: linear-gradient(#3072b3, #599bdc);
 }
-
-/* overrides extra padding on button elements in Firefox */
 .button::-moz-focus-inner {
     padding: 0;
     border: 0;
 }
 
 
-/* =============================================================================
-   Button icons
-   ========================================================================== */
-
-.button.icon:before {
-    content: "";
-    position: relative;
-    top: 1px;
-    float:left;
-    width: 12px;
-    height: 12px;
-    margin: 0 0.75em 0 -0.25em;
-    background: url(../png/gh-icons.png) 0 99px no-repeat;
-}
 
 .button.arrowup.icon:before { background-position: 0 0; }
 .button.arrowup.icon:hover:before,
@@ -243,6 +244,7 @@
 .button.user.icon:focus:before,
 .button.user.icon:active:before { background-position: -12px -360px; }
 
+*/
 
 /* =============================================================================
    Button extensions
@@ -307,6 +309,10 @@
 
 .label.big, .button.big {
     font-size: 14px;
+}
+
+.button.big.bigger {
+  height: 64px;
 }
 
 .label.big.icon:before, .button.big.icon:before {
