@@ -232,6 +232,43 @@ var rest_fsm = function (req, res, next) {
   return next();
 }
 
+/* Shared memory management: [memory].get_[segment]_[key]()
+* vcm.set_head_camera_t(val)
+* */
+var rest_body = function (req, res, next) {
+
+  // debug rest requests for shm
+  console.log(req.params);
+
+  // Send the reply to the host
+  var reply_handler = function(data){
+    // TODO: Add any timestamp information or anything?
+    var ret = mp.unpack(data)
+    
+    if(ret!=null){
+      res.json( ret );
+    } else {
+      res.send()
+    }
+    // Stop this emitter listener
+    //zmq_req_rest_skt.removeListener('message', this.cb);
+  }
+  //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
+  zmq_req_rest_skt.once('message', reply_handler);
+  
+  // Send the RPC over the ZMQ REQ/REP
+  // TODO: Deal with concurrent requests?
+  // Form the Remote Procedure Call
+  if(req.params.bargs!==undefined){
+    req.params.bargs = JSON.parse( req.params.bargs );
+  }
+  zmq_req_rest_skt.send( mp.pack(req.params) );
+  
+  // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
+  
+  return next();
+}
+
 /***
 * Communication with the robot uses ZeroMQ
 * Metadata is messagepack'd
@@ -369,6 +406,8 @@ server.post('/m/:shm/:segment/:key', rest_shm);
 //server.get('/s/:fsm', rest_fsm);
 //server.post('/s/:fsm',rest_fsm);
 server.post('/s',rest_fsm);
+//
+server.post('/b',rest_body);
 
 /* Connect to the RPC server */
 var zmq_req_rest_skt = zmq.socket('req');

@@ -64,4 +64,5 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('head_right',function(){
     qwest.post(ang_url,{val: JSON.stringify([-Math.PI/3,0])});
   });
+  
 });

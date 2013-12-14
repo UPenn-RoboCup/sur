@@ -5,7 +5,8 @@ if( host.length==0 ){ host = "localhost"; }
 this.URL = this.URL || this.webkitURL;
 // assume port 8080 for testing...
 this.rest_root = 'http://'+host+':8080';
-this.fsm_url = rest_root+'/s';
+this.fsm_url  = rest_root+'/s';
+this.body_url = rest_root+'/b';
 // Override get/set
 this.so_url = rest_root+'/m/hcm/state/override_target';
 this.go_url = rest_root+'/m/hcm/state/override';
