@@ -168,7 +168,7 @@
   // loop modify handles
   Hand.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
-      
+      // rset the hand positions
       if(cur_hand=='left'){
         qwest.get( rpc_url_lget ).success(function(lmodel){
           cur_l = lmodel.slice();
@@ -182,25 +182,6 @@
           console.log('Right Hand',cur_r);
         });
       }
-      /*
-      // Reload the models
-      qwest.get( rpc_url_lget ).success(function(lmodel){
-        cur_l = lmodel.slice();
-        console.log('Left Hand',cur_l);
-        // Convert the position to THREEjs
-        model_to_three(cur_l,'left');
-        qwest.get( rpc_url_rget ).success(function(rmodel){
-          cur_r = rmodel.slice();
-          console.log('Right Hand',cur_r);
-          // Convert the position to THREEjs
-          model_to_three(cur_r,'right');
-          qwest.get( go_url ).success(function(o){
-            console.log('Override',o);
-            override = o.slice();
-          })
-        });
-      });
-      */
       return;
     }
     // Switch hands

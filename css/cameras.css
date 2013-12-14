@@ -6,8 +6,19 @@ html, body {
 }
 #camera_container{
   height: 100%;
+  /*margin-left: 100px;*/
+  margin-left: 10%;
 }
 #camera_container img {
   width: 100%;
   height: 100%;
+}
+/* Buttons */
+#camera_buttons {
+  width: 10%;
+  position: absolute;
+}
+#camera_buttons button {
+  /*width: 100px;*/
+  width: 100%;
 }

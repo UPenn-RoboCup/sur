@@ -50,4 +50,10 @@ document.addEventListener( "DOMContentLoaded", function(){
     }
   });
   
+  // Head movement
+  var ang_url = rest_root+'/m/hcm/motion/headangle';
+  clicker('head_ahead',function(){
+    qwest.post(ang_url,{val: JSON.stringify([0,0])});
+  })
+  
 });
