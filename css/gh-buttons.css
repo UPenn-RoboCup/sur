@@ -264,6 +264,7 @@
     color: #900;
 }
 
+/*
 .button.danger:hover,
 .button.danger:focus,
 .button.danger:active {
@@ -289,7 +290,7 @@
     background-image: -o-linear-gradient(#b33630, #dc5f59);
     background-image: linear-gradient(#b33630, #dc5f59);
 }
-
+*/
 /* Pill button
    ========================================================================== */
 

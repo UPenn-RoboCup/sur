@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--HTML5 doctype-->
+<html>
+     
+<head>
+  <title>SUR Grippers</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+  
+  <!-- CSS for Styling the page -->
+  <link rel="stylesheet" type="text/css" href="/css/gh-buttons.css">
+  
+  <!-- Application Frameworks -->
+  <script src="/lib/d3.min.js"></script>
+  <script src="/lib/qwest.min.js"></script>
+  <script src="/lib/sprintf.min.js"></script>
+  <script src="/lib/hammer.min.js"></script>
+  <script src="/lib/keypress.min.js"></script>
+  <script src="/lib/peer.min.js"></script>
+
+  <!-- SUR data JS -->
+  <script src="/controllers/include.js"></script>
+  
+  <!-- App specific needs -->
+  <link rel="stylesheet" type="text/css" href="/css/grippers.css">
+  <script src="/controllers/grippers.js"></script>
+ 
+</head>
+
+<body>
+
+  <!-- Viewpoints -->
+  <div id="lt">
+    <div class="button-group">
+      <button href="#" class="big bigger button" id="lt_open">Open</button>
+      <button href="#" class="big bigger button" id="lt_loose">Loose</button>
+    </div>
+    <br/>
+    <div class="button-group">
+      <button href="#" class="big bigger button" id="lt_hold">Hold</button>
+      <button href="#" class="big bigger danger button" id="lt_trigger">
+        Trigger</button>
+    </div>
+  </div>
+  
+  <!-- Viewpoints -->
+  <div id="rt">
+    <div class="button-group">
+      <button href="#" class="big bigger button" id="rt_open">Open</button>
+      <button href="#" class="big bigger button" id="rt_loose">Loose</button>
+    </div>
+    <br/>
+    <div class="button-group">
+      <button href="#" class="big bigger button" id="rt_hold">Hold</button>
+      <button href="#" class="big bigger danger button" id="rt_trigger">
+        Trigger</button>
+    </div>
+  </div>
+  
+  <!-- FSM events -->
+  <div id="lg">
+    <div class="button-group">
+      <button href="#" class="big bigger button" id="lg_open">Open</button>
+      <button href="#" class="big bigger button" id="lg_loose">Loose</button>
+    </div>
+    <br/>
+    <div class="button-group">
+      <button href="#" class="big bigger button" id="lg_hold">Hold</button>
+      <button href="#" class="big bigger danger button" id="lg_trigger">
+        Trigger</button>
+    </div>
+  </div>
+  
+  <!-- Modify helpers -->
+  <div id="rg">
+    <div class="button-group">
+      <button href="#" class="big bigger button" id="rg_open">Open</button>
+      <button href="#" class="big bigger button" id="rg_loose">Loose</button>
+    </div>
+    <br/>
+    <div class="button-group">
+      <button href="#" class="big bigger button" id="rg_hold">Hold</button>
+      <button href="#" class="big bigger danger button" id="rg_trigger">
+        Trigger</button>
+    </div>
+  </div>
+
+</body>
+
+</html>

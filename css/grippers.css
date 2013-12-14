@@ -1,0 +1,32 @@
+html, body {
+  font-family: helvetica;
+  height: 100%;
+  margin: 0px;
+  overflow: hidden;
+}
+
+#lt {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+#rt {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+}
+
+#lg {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+}
+#rg {
+  position: fixed;
+  bottom: 0px;
+  right: 0px;
+}
+
+button {
+  width: 100px;
+}
