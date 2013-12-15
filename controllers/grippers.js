@@ -1,30 +1,8 @@
-var context;
-window.addEventListener('load', init, false);
-function init() {
-  try {
-    // Fix up for prefixing
-    window.AudioContext = window.AudioContext||window.webkitAudioContext;
-    context = new AudioContext();
-    console.log('Audio loaded!')
-  }
-  catch(e) {
-    alert('Web Audio API is not supported in this browser');
-  }
-}
-
-function playSound(buffer) {
-  var source = context.createBufferSource(); // creates a sound source
-  source.buffer = buffer;                    // tell the source which sound to play
-  source.connect(context.destination);       // connect the source to the context's destination (the speakers)
-  source.start(0);                           // play the source now
-                                             // note: on older systems, may have to use deprecated noteOn(time);
-}
-
 // Once the page is done loading, execute main
 document.addEventListener( "DOMContentLoaded", function(){
   
   Speaker.setup();
-  
+  /*
   qwest.get('/a',{},{},function(){
     this.responseType = "arraybuffer";
   })
@@ -35,6 +13,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     function(err){console.log('audio err',err)}
     );
   });
+  */
        
   // Right Trigger
   clicker('rt_trigger',function(){
