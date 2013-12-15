@@ -59,10 +59,9 @@
   // Model converters //
   //////////////////////
   var three_to_model = function(){
-    var roll_start = start_mesh.rotation.z;
     var roll_end = stop_mesh.rotation.z;
     var p = Transform.three_to_torso(item_mesh.position,Robot);
-    p.push(roll_start);
+    p.push(item_mesh.rotation.z);
     p.push(roll_end);
     return p;
   }
@@ -80,7 +79,6 @@
     
     var roll_start = model[3];
     var roll_end   = model[4];
-    start_mesh.rotation.set(0, 0, roll_start);
     stop_mesh.rotation.set(0, 0, roll_end);
   }
   
@@ -111,6 +109,8 @@
     // Set the position from the double click
     item_mesh.position.copy(p);
   
+    item_mesh.rotation.y = Robot.pa;
+  
     wp_callback();
     BarValve.send();
     // Re-render
@@ -120,15 +120,12 @@
   // modification loop
   BarValve.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
-      qwest.get(rpc_url,{},{}).success(function(model){model_to_three(model);});
+    //qwest.get(rpc_url,{},{}).success(function(model){model_to_three(model);});
       return;
     }
     // cycle the tcontrol
     if(mod_mesh===item_mesh){
       tcontrol.detach( item_mesh );
-      mod_mesh = start_mesh;
-    } else if(mod_mesh===start_mesh){
-      tcontrol.detach( start_mesh );
       mod_mesh = stop_mesh;
     } else {
       tcontrol.detach( stop_mesh );

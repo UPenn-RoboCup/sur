@@ -134,7 +134,7 @@
       "is_exclusive"  : true,
       "on_keyup"      : function(event) {
           event.preventDefault();
-          no_mod();
+          Manipulation.modify();
       },
       "this"          : ctx
     },
@@ -171,9 +171,40 @@
   ];
   
   // Keypressing hotkeys
-  var dp = 10; // 1cm at a time
-  var ddp = 1; // 1mm at a time fine tune
+  var dp = 100; // 10cm at a time
+  var ddp = 5; // 1mm at a time fine tune
   var item_hotkeys = [
+  {
+    // loop
+    "keys"          : "k",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        cur_item.loop();
+    },
+    "this"          : ctx
+  },
+  {
+    // proceed
+    "keys"          : "=",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        qwest.post( rpc_url_proceed, {val:JSON.stringify([1])} )
+    },
+    "this"          : ctx
+  },
+  {
+    // loop
+    "keys"          : "-",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        qwest.post( rpc_url_proceed, {val:JSON.stringify([-1])} )
+    },
+    "this"          : ctx
+  },
+  //
   {
     "keys"          : "i",
     "is_exclusive"  : true,
@@ -277,7 +308,7 @@
           cur_item.special1(-1);
         } else {
           var mod_mesh = cur_item.get_mod_mesh();
-          mod_mesh.rotation.y += .1;
+          mod_mesh.rotation.y += 10*DEG_TO_RAD;
           cur_item.mod_callback();
         //if(cur_item.item_name!='Waypoint'){cur_item.send();}
         }
@@ -293,7 +324,7 @@
           cur_item.special1(1);
         } else {
           var mod_mesh = cur_item.get_mod_mesh();
-          mod_mesh.rotation.y -= .1;
+          mod_mesh.rotation.y -= 10*DEG_TO_RAD;
           cur_item.mod_callback();
         //if(cur_item.item_name!='Waypoint'){cur_item.send();}
         }

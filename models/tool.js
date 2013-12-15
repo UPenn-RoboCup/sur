@@ -119,7 +119,7 @@
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
-  Tool.item_name = 'Tool';
+  Tool.item_name = 'Drill';
   // export
 	ctx.Tool = Tool;
 

@@ -104,7 +104,7 @@
   }
   Waypoint.loop = function(){
     model_to_three([Robot.px,Robot.py,Robot.pa]);
-    //model2_loop();
+    model2_loop();
   }
   // enter
   Waypoint.init = function(){

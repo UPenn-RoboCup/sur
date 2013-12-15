@@ -188,7 +188,7 @@
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
-  LargeValve.item_name = 'Rotary Valve';
+  LargeValve.item_name = 'Valve';
   // export
 	ctx.LargeValve = LargeValve;
 
