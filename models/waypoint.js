@@ -36,6 +36,9 @@
   );
   var first_indicator = true;
   
+  var item_mat2 = new THREE.MeshLambertMaterial({color: 0xAAAAAA,wireframe: true});
+  var item_mesh2 = new THREE.Mesh( item_geo.clone(), item_mat2 );
+  
   //////////////////////
   // Model converters //
   //////////////////////
@@ -56,6 +59,18 @@
     item_mesh.position.z = 1000*model[0];
     item_mesh.rotation.y = model[2];
   }
+  
+  var model2_loop = function(){
+    // Assumption: Global coordinates
+    /*
+    item_mesh2.position.x = 1000*Robot.py;
+    item_mesh2.position.z = 1000*Robot.px;
+    item_mesh2.rotation.y = Robot.pa;
+    */
+    item_mesh2.position.copy(item_mesh.position);
+    item_mesh2.rotation.copy(item_mesh.rotation);
+  }
+  Waypoint.curdicate = model2_loop;
   
   /////////////////////////////
   // Object manipulation API //
@@ -80,16 +95,15 @@
     // Swap indicators
     first_indicator = !first_indicator;
   }
-  // TODO: reset from SHM?
-  Waypoint.clear = function(){
-  }
   Waypoint.loop = function(){
-    model_to_three([Robot.px,Robot.py,Robot.pa])
+    model_to_three([Robot.px,Robot.py,Robot.pa]);
+    //model2_loop();
   }
   // enter
   Waypoint.init = function(){
     first_indicator = true;
     World.add( item_mesh );
+    World.add( item_mesh2 );
     World.add( l_indicator );
     World.add( r_indicator );
   }
@@ -110,22 +124,36 @@
   }
   // send to robot
   Waypoint.send = function(cb){
+    // Make a relative pose
+    var x = item_mesh.position.z / 1000;
+    var y = item_mesh.position.x / 1000;
+    var a = item_mesh.rotation.y;
+    var pa = Robot.pa;
+    var ca = Math.cos(pa);
+    var sa = Math.sin(pa);
+    var px = x - Robot.px;
+    var py = y - Robot.py;
+    var wp_x =  ca*px + sa*py;
+    var wp_y = -sa*px + ca*py;
+    var wp_a = Transform.mod_angle(a - Robot.pa);
+    
+    //
+    var wp = [wp_x,wp_y,wp_a];
+    console.log('Waypoint!',wp);
+    qwest.post( rpc_url, {val:JSON.stringify(wp)} )
+    .success(function(){qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});});
+    
+    // Reset the actual
+    model2_loop();
+    //Waypoint.loop();
+    
+    /*
     // Waypoint model
     var wp = three_to_model();
     console.log('Send wp',wp);
     // For network efficiency, just send the waypoint coordinates
     qwest.post( rpc_url, {val:JSON.stringify(wp)})
     .success(function(){qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});});
-    /*
-    qwest.post( rpc_url, {val:JSON.stringify(wp)})
-    .success(function(){
-      // One waypoint
-      qwest.post( rpc_url_n, {val:JSON.stringify(1)},function(){
-    } ).success(function(){
-        // Global wp
-        qwest.post( rpc_url_fr, {val:JSON.stringify(1)} ).success(cb);
-      })
-    });
     */
   }
   // get the mesh
