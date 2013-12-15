@@ -7,7 +7,7 @@
 
   function playSound(buffer) {
     var source = acontext.createBufferSource(); // creates a sound source
-    console.log('source',source,buffer)
+    //console.log('source',source,buffer)
     source.buffer = buffer;                    // tell the source which sound to play
     source.connect(acontext.destination);       // connect the source to the context's destination (the speakers)
     source.start(0);                           // play the source now
@@ -20,9 +20,9 @@
     // Connect to the websocket server
     var ws = new WebSocket('ws://' + host + ':' + port);
     ws.binaryType = "arraybuffer";
-    console.log('audio',ws);
+    //console.log('audio',ws);
     ws.onmessage = function(e){
-      console.log(e);
+      //console.log(e);
       if(typeof e.data === "string"){
         
       } else {

@@ -2,22 +2,11 @@
 document.addEventListener( "DOMContentLoaded", function(){
   
   Speaker.setup();
-  /*
-  qwest.get('/a',{},{},function(){
-    this.responseType = "arraybuffer";
-  })
-  .success(function(response){
-    context.decodeAudioData(response, function(buffer) {
-      playSound(buffer);
-    },
-    function(err){console.log('audio err',err)}
-    );
-  });
-  */
-       
+         
   // Right Trigger
   clicker('rt_trigger',function(){
     qwest.post(body_url,{body: 'move_rgrip1',bargs: 200});
+    qwest.post(rest_root+'/m/hcm/audio/request',{val: JSON.stringify([1])});
   });
   clicker('rt_hold',function(){
     qwest.post(body_url,{body: 'move_rgrip1',bargs: 50});
