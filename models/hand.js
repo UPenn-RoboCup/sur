@@ -34,7 +34,8 @@
     side: THREE.DoubleSide,
     wireframe: true
   });
-  var left_geo   = new THREE.CylinderGeometry(8, 8, 80, 8, 1, false);
+  var ind_len = 50;
+  var left_geo   = new THREE.CylinderGeometry(8, 8, ind_len, 8, 1, false);
   var left1_geo  = left_geo.clone();
   var left1_mesh = new THREE.Mesh( left1_geo, left_mat );
   left1_mesh.rotation.set(Math.PI/2,0,0);
@@ -49,16 +50,20 @@
   left_mesh.add(left1_mesh);
   left_mesh.add(left2_mesh);
   
-  /*
-  // lefty
-  var offy = 12; // 2cm
-  var szy = 200;
-  var isaa = szy/2*Math.sqrt(2)/2 /2
-  var left1a_geo   = new THREE.CylinderGeometry(5, 5, szy, 8, 1, false);
-  var left1a_mesh = new THREE.Mesh( left1a_geo, right_mat );
-  left1a_mesh.rotation.set(Math.PI/2,0,Math.PI/4);
-  left1a_mesh.position.set(offy-isaa,0,offy+isaa);
-  */
+  // chopstick helpers
+  var chop_off = 50;
+  var chop_len = 100;
+  var left1a_geo   = new THREE.CylinderGeometry(5, 5, chop_len, 8, 1, false);
+  var left1a_mesh = new THREE.Mesh( left1a_geo, left_mat );
+  left1a_mesh.rotation.set(Math.PI/2,0,0);
+  left1a_mesh.position.set(0,chop_off,0);
+  //
+  var left1b_mesh = new THREE.Mesh( left1a_geo.clone(), left_mat );
+  left1b_mesh.rotation.set(Math.PI/2,0,0);
+  left1b_mesh.position.set(0,-chop_off,0);
+  //
+  left_mesh.add(left1a_mesh);
+  left_mesh.add(left1b_mesh);
   
   // Right Hand
   var right_mat  = new THREE.MeshPhongMaterial({
@@ -201,7 +206,7 @@
   // enter stage
   Hand.init = function(tcontrol){
     Manipulation.modify('no');
-    Hand.loop();
+    //Hand.loop();
 
     // Add to the world
     World.add(left_mesh);

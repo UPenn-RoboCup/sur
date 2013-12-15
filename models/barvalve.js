@@ -10,7 +10,7 @@
   
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(610,240);  // tune this based on claw length
+  var offset = new THREE.Vector2(700,240);
   /////////////////////
   // Mesh definition //
   ///////////////////// 
@@ -110,6 +110,7 @@
     item_mesh.position.copy(p);
   
     item_mesh.rotation.y = Robot.pa;
+    item_mesh.rotation.z = Math.PI/2;
   
     wp_callback();
     BarValve.send();
