@@ -10,7 +10,7 @@
   
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(700,240);
+  var offset = new THREE.Vector2(880,300);
   /////////////////////
   // Mesh definition //
   ///////////////////// 
