@@ -28,8 +28,8 @@
   
   <div id="left_arm">
     <span class='title'>Left</span>
-    <button id='larm_reset'>Reset</button>
-    <button id='larm_go'>Go</button>
+    <button id='larm_reset'>L Reset</button>
+    <button id='larm_go'>L Go</button>
     <br/>
     1: <input type="range" name="qL1" id="qL1" min="-1.57" max="1.57" step=".01">
     <br/>
@@ -49,8 +49,8 @@
   
   <div id="right_arm">
     <span class='title'>Right</span>
-    <button id='rarm_reset'>Reset</button>
-    <button id='rarm_go'>Go</button>
+    <button id='rarm_reset'>R Reset</button>
+    <button id='rarm_go'>R Go</button>
     <br/>
     1: <input type="range" name="qR1" id="qR1" min="-1.57" max="1.57" step=".01">
     <br/>
@@ -69,14 +69,14 @@
   </div>
 
   <div id="waist">
-    Waist Pitch:
-    <input type="range" name="qW1" min="1" max="10">
-    <button>Reset</button>
-    <br/>
     Waist Yaw:
-    <input type="range" name="qW2" min="1" max="10">
-    <button>Reset</button>
+    <input type="range" name="qW1" id='qW1' step=".01">
     <br/>
+    Waist Pitch:
+    <input type="range" name="qW2" id='qW2' step=".01">
+    <br/>
+    <button id='waist_reset'>W Reset</button>
+    <button id='waist_go'>W Go</button>
     
 </body>
 
