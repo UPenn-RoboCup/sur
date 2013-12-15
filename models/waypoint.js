@@ -84,7 +84,7 @@
   Waypoint.clear = function(){
   }
   Waypoint.loop = function(){
-    item_mesh.rotation.z.copy(Robot.get_root().p);
+    model_to_three([Robot.px,Robot.py,Robot.pa])
   }
   // enter
   Waypoint.init = function(){
@@ -105,6 +105,7 @@
     item_mesh.rotation.z = 0;
     // Retain the same height
     item_mesh.position.y = 0;
+    // Mod-angle it...
     item_mesh.rotation.y = Transform.mod_angle(item_mesh.rotation.y);
   }
   // send to robot
