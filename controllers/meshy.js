@@ -6,43 +6,31 @@ document.addEventListener( "DOMContentLoaded", function(){
   Mesh.setup();
   Robot.setup();
   
+  // Speakers
+  Speaker.setup();
+  clicker('head_audio',function(){
+    qwest.post(rest_root+'/m/hcm/audio/request',{val: JSON.stringify([1])});
+  });
+  
   // Setup the GUI
   clicker('modify_obj',Manipulation.modify);
   clicker('loop_obj',Manipulation.loop);
-  //
-  /*
-  clicker('robot_show',Robot.show);
-  clicker('robot_hide',Robot.hide);
-  */
   clicker('robot_toggle',Robot.toggle);
   // Clearing the meshes
   clicker('wipe_mesh',World.clear_meshes);
   // During walking
   clicker('fast_mesh',function() {
-    /*
-    // Fast scan
-    qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
-      //val: JSON.stringify([-1.0472, 1.0472, 2/DEG_TO_RAD])
-      val: JSON.stringify([-1, 1, 1/DEG_TO_RAD])
-    });
-    */
     // See far
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
       val:JSON.stringify([.3,3])
     });
-    // Single (JPEG), so we get often
+    // Single (JPEG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
       val:JSON.stringify([3,1,90,1])
     });
   });
   // During manipulation
   clicker('slow_mesh',function() {
-    /*
-    // Slow scan
-    qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
-      val: JSON.stringify([-1.0472, 1.0472, 5/DEG_TO_RAD])
-    });
-    */
     // See close
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
       val:JSON.stringify([.2,1])
