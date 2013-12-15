@@ -30,3 +30,8 @@ html, body {
 button {
   width: 100px;
 }
+
+.chart rect {
+ fill: 0xff0000;
+ stroke: 0x00ff00;
+}
