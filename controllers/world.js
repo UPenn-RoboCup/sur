@@ -394,7 +394,7 @@
   
   if(ENABLE_WORKERS){
     // Add the webworker
-    mesh_worker = new Worker("/models/mesh_worker.js");
+    mesh_worker = new Worker("/controllers/mesh_worker.js");
     mesh_worker.onmessage = function(e) {
       process_lidar_results(e.data);
     };

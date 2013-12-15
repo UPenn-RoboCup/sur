@@ -13,7 +13,7 @@ var dgram   = require('dgram');
 var _       = require('underscore');
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.26';
+//var rpc_robot     = '192.168.123.26'; //teddy
 //var rpc_robot     = '192.168.123.24';
 var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
@@ -76,6 +76,13 @@ bridges.push({
 	udp: 54329,
 	clients : []
 });
+/*
+bridges.push({
+	name : 'audio',
+	ws : 9014,
+	clients : []
+});
+*/
 
 // rest look up table for the objects
 var reliable_lookup = {}
@@ -423,7 +430,7 @@ server.post('/m/:shm/:segment/:key', rest_shm);
 server.post('/s',rest_fsm);
 //
 server.post('/b',rest_body);
-
+server.get('/b',rest_body);
 //
 server.get('/a',rest_audio);
 

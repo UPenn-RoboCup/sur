@@ -107,6 +107,7 @@
     var b = a % (2*Math.PI);
     return (b >= Math.PI) ? (b - 2*Math.PI) : b;
   }
+  Transform.mod_angle = mod_angle;
   
   // x, y, z in the torso (upper body) frame
   // robot: pose (px,py,pa element) and bodyTilt elements

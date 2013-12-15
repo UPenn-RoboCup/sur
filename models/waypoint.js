@@ -46,7 +46,7 @@
     var px = p.z / 1000;
     var py = p.x / 1000;
     // Make the robot GLOBAL orientation
-    var pa = item_mesh.rotation.y;
+    var pa = Transform.mod_angle(item_mesh.rotation.y);
     // Pose_local to pose_global
     return [px,py,pa];
   }
@@ -84,11 +84,7 @@
   Waypoint.clear = function(){
   }
   Waypoint.loop = function(){
-    // Get the model from the robot
-    qwest.get( rpc_url,{},{},function(){/*this.timeout = 10000;*/})
-    .success(function(model){
-      model_to_three(model);
-    })
+    item_mesh.rotation.z.copy(Robot.get_root().p);
   }
   // enter
   Waypoint.init = function(){
@@ -109,6 +105,7 @@
     item_mesh.rotation.z = 0;
     // Retain the same height
     item_mesh.position.y = 0;
+    item_mesh.rotation.y = Transform.mod_angle(item_mesh.rotation.y);
   }
   // send to robot
   Waypoint.send = function(cb){

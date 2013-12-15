@@ -64,5 +64,13 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('head_right',function(){
     qwest.post(ang_url,{val: JSON.stringify([-Math.PI/3,0])});
   });
+  //
+  var speed_url = rest_root+'/m/vcm/head_camera/net';
+  clicker('head_slow',function(){
+    qwest.post(speed_url,{val: JSON.stringify([4,1,85,2])});
+  });
+  clicker('head_fast',function(){
+    qwest.post(speed_url,{val: JSON.stringify([4,1,75,.5])});
+  });
   
 });
