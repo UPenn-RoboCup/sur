@@ -150,7 +150,7 @@
   LargeValve.send = function(){
     var model = three_to_model();
     qwest.post( rpc_url, {val:JSON.stringify(model)} );
-    Waypoint.send();
+    //Waypoint.send();
     // console.log('Sent largevalve',model);
   }
   // enter

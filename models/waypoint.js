@@ -136,25 +136,13 @@
     var wp_x =  ca*px + sa*py;
     var wp_y = -sa*px + ca*py;
     var wp_a = Transform.mod_angle(a - Robot.pa);
-    
     //
     var wp = [wp_x,wp_y,wp_a];
     console.log('Waypoint!',wp);
-    qwest.post( rpc_url, {val:JSON.stringify(wp)} )
-    .success(function(){qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});});
+    qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow', shm:'hcm', segment: 'motion',key:'waypoints', val:JSON.stringify(wp)});
     
     // Reset the actual
     model2_loop();
-    //Waypoint.loop();
-    
-    /*
-    // Waypoint model
-    var wp = three_to_model();
-    console.log('Send wp',wp);
-    // For network efficiency, just send the waypoint coordinates
-    qwest.post( rpc_url, {val:JSON.stringify(wp)})
-    .success(function(){qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});});
-    */
   }
   // get the mesh
   Waypoint.get_mod_mesh = function(){
@@ -167,9 +155,6 @@
   }
   Waypoint.get_robot = function(){
     return three_to_model();
-  }
-  Waypoint.add_buttons = function(holder){
-
   }
   /////////////////////////
   // Metadata and Export //
