@@ -31,8 +31,22 @@ button {
   width: 100px;
 }
 
+#li {
+  position: fixed;
+  top: 200px;
+  left: 200px;
+}
+
+#ri {
+  position: fixed;
+  top: 200px;
+  right: 200px;
+}
+
+/*
 .chart{
   position: absolute;
   left: 25%;
   top: 10%;
 }
+*/
