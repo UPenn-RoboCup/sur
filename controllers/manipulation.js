@@ -114,7 +114,7 @@
     cur_item_id = 0;
     cur_item    = items[cur_item_id];
     cur_item.init();
-    cur_item.add_buttons();
+    //cur_item.add_buttons();
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
     // Make a tcontrol
@@ -187,7 +187,7 @@
       mod_mesh.position.x += dy;
       mod_mesh.position.z += dx;
       cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -204,7 +204,7 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -221,7 +221,7 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -239,7 +239,7 @@
         mod_mesh.position.z += dx;
         //
         cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -251,7 +251,7 @@
         var mod_mesh = cur_item.get_mod_mesh();
         mod_mesh.position.y += dp;
         cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -263,7 +263,7 @@
         var mod_mesh = cur_item.get_mod_mesh();
         mod_mesh.position.y -= dp;
         cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -279,7 +279,7 @@
           var mod_mesh = cur_item.get_mod_mesh();
           mod_mesh.rotation.y += .1;
           cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
         }
     },
     "this"          : ctx
@@ -295,7 +295,7 @@
           var mod_mesh = cur_item.get_mod_mesh();
           mod_mesh.rotation.y -= .1;
           cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
         }
     },
     "this"          : ctx
@@ -307,7 +307,7 @@
     "on_keyup"      : function(event) {
         event.preventDefault();
         cur_item.special2(-1);
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -317,7 +317,7 @@
     "on_keyup"      : function(event) {
         event.preventDefault();
         cur_item.special2(1);
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -337,7 +337,7 @@
       mod_mesh.position.x += dy;
       mod_mesh.position.z += dx;
       cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -353,7 +353,7 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -369,7 +369,7 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -385,7 +385,7 @@
         mod_mesh.position.x += dy;
         mod_mesh.position.z += dx;
         cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -397,7 +397,7 @@
         var mod_mesh = cur_item.get_mod_mesh();
         mod_mesh.position.y += ddp;
         cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -409,7 +409,7 @@
         var mod_mesh = cur_item.get_mod_mesh();
         mod_mesh.position.y -= ddp;
         cur_item.mod_callback();
-        if(cur_item.item_name!='Waypoint'){cur_item.send();}
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },

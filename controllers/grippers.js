@@ -23,6 +23,8 @@ function playSound(buffer) {
 // Once the page is done loading, execute main
 document.addEventListener( "DOMContentLoaded", function(){
   
+  Speaker.setup();
+  
   qwest.get('/a',{},{},function(){
     this.responseType = "arraybuffer";
   })

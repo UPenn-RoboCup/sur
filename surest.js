@@ -76,13 +76,13 @@ bridges.push({
 	udp: 54329,
 	clients : []
 });
-/*
+
 bridges.push({
 	name : 'audio',
 	ws : 9014,
+  tcp: 55557,
 	clients : []
 });
-*/
 
 // rest look up table for the objects
 var reliable_lookup = {}
