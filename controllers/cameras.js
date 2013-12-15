@@ -67,10 +67,16 @@ document.addEventListener( "DOMContentLoaded", function(){
   //
   var speed_url = rest_root+'/m/vcm/head_camera/net';
   clicker('head_slow',function(){
-    qwest.post(speed_url,{val: JSON.stringify([4,1,45,1.5])});
+    qwest.post(speed_url,{val: JSON.stringify([4,1,50,1])});
   });
   clicker('head_fast',function(){
-    qwest.post(speed_url,{val: JSON.stringify([4,1,25,.75])});
+    qwest.post(speed_url,{val: JSON.stringify([4,1,12,.25])});
+  });
+  
+  // Speakers
+  Speaker.setup();
+  clicker('head_audio',function(){
+    qwest.post(rest_root+'/m/hcm/audio/request',{val: JSON.stringify([1])});
   });
   
 });

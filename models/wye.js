@@ -66,14 +66,17 @@
     // Acquire the position of the tip:
     var p = (new THREE.Vector3()).copy(item_mesh.position);
     
-    // Make the global offset from the object    
+    // Make the global offset from the object
     var ca = Math.cos(pa), sa = Math.sin(pa);
     var dx = offset.x*ca - offset.y*sa;
     var dy = offset.y*ca + offset.x*sa;
-    
+
     // Change the THREE coordinates of the desired waypoint
     p.x -= dy;
     p.z -= dx;
+
+    // Update the Waypoint in the scene
+    Waypoint.set(p,pa);
 
     // Update the Waypoint in the scene
     Waypoint.set(p,pa);

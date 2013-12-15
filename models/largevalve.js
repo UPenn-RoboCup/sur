@@ -11,7 +11,7 @@
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
   //var offset = new THREE.Vector2(690,270);
-  var offset = new THREE.Vector2(720,270);
+  var offset = new THREE.Vector2(840,270);
   
   /////////////////////
   // Mesh definition //
@@ -129,7 +129,7 @@
   // modification loop
   LargeValve.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
-      qwest.get(rpc_url,{},{}).success(function(model){model_to_three(model);});
+      //qwest.get(rpc_url,{},{}).success(function(model){model_to_three(model);});
       return;
     }
     // cycle the tcontrol
@@ -148,8 +148,8 @@
   }
   // send data to the robot
   LargeValve.send = function(){
-    var model = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    //var model = three_to_model();
+    //qwest.post( rpc_url, {val:JSON.stringify(model)} );
     //Waypoint.send();
     // console.log('Sent largevalve',model);
   }

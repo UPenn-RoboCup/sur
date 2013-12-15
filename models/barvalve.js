@@ -111,12 +111,8 @@
   
     item_mesh.rotation.y = Robot.pa;
     item_mesh.rotation.z = Math.PI/2;
-  
-    wp_callback();
-    BarValve.send();
-    // Re-render
     
-
+    BarValve.mod_callback()
   }
   // modification loop
   BarValve.loop = function(tcontrol){
@@ -134,13 +130,12 @@
     }
     tcontrol.attach( mod_mesh );
     tcontrol.update();
-    
-
   }
   // send data to the robot
   BarValve.send = function(){
-    var model = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    //var model = three_to_model();
+    //qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    Waypoint.send();
   }
   // enter
   BarValve.init = function(){
@@ -157,10 +152,10 @@
   BarValve.mod_callback = function(){
     // Retain the same angles
     item_mesh.rotation.x = 0;
-    item_mesh.rotation.y = 0;
+    //item_mesh.rotation.y = 0;
     //
     stop_mesh.rotation.x = 0;
-    stop_mesh.rotation.y = 0;
+    //stop_mesh.rotation.y = 0;
     // Retain the same height
     item_mesh.position.y = off_ground;
 
@@ -170,7 +165,6 @@
     // Move the roll
     item_mesh.rotation.z += dir;//dir*.1;
     wp_callback();
-    //BarValve.send();
   }
 
   /////////////////////////

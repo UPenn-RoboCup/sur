@@ -99,8 +99,8 @@
     World.remove(item_mesh);
   }
   Hose.send = function(){
-    var model = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(model)} )
+    //var model = three_to_model();
+//    qwest.post( rpc_url, {val:JSON.stringify(model)} )
 /*    .success(function(){
       qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} );
     })
@@ -111,11 +111,13 @@
   }
   Hose.loop = function(){
     // Get the model from the robot (could be pesky...?)
+    /*
     qwest.get( rpc_url,{},{})
     .success(function(model){
       model_to_three(model);
       Hose.mod_callback();
     })
+    */
   }
   Hose.mod_callback = function(){
     wp_callback();

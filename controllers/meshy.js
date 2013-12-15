@@ -25,7 +25,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     */
     // See far
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
-      val:JSON.stringify([.2,5])
+      val:JSON.stringify([.3,3])
     });
     // Single (JPEG), so we get often
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
@@ -46,7 +46,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     });
     // Once (PNG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
-      val:JSON.stringify([3,3,90,1])
+      val:JSON.stringify([3,3,50,1])
     });
   });
   
