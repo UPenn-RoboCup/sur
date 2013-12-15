@@ -60,7 +60,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(body_url,{body: 'move_lgrip2',bargs: 0});
   });
   
-  // Feedback...
+  // Feedback of temperature
   var port = 9013;
   // Connect to the websocket server
   var ws = new WebSocket('ws://' + host + ':' + port);
@@ -79,13 +79,11 @@ document.addEventListener( "DOMContentLoaded", function(){
     var l_load = feedback.l_load
     // Update the initial time
     if(t0<0){t0 = feedback.t;}
+
     // Enter data to the chart
-    
     data.shift();
-      data.push({time:feedback.t-t0,value:r_temp[0]});
-      redraw();
-      //console.log(data)
-    
+      data.push({time:feedback.t-t0,value:r_temp[1]});
+      redraw();    
   }
   
   
@@ -107,6 +105,11 @@ document.addEventListener( "DOMContentLoaded", function(){
        .attr("class", "chart")
        .attr("width", w * data.length - 1)
        .attr("height", h)
+       
+       var yAxis = d3.svg.axis()
+           .scale(y)
+           .orient("left")
+           .ticks(10, "%");
 
   chart.selectAll("rect")
       .data(data)
@@ -124,6 +127,15 @@ document.addEventListener( "DOMContentLoaded", function(){
             .attr("y1", h - .5)
             .attr("y2", h - .5)
             .style("stroke", "#00f");
+            
+            chart.append("g")
+                  .call(yAxis)
+                .append("text")
+                  .attr("transform", "rotate(-90)")
+                  .attr("y", 5)
+                  .attr("dy", ".71em")
+                  .style("text-anchor", "end")
+                  .text("R Temp");
   
   
             function redraw() { 
@@ -132,15 +144,16 @@ document.addEventListener( "DOMContentLoaded", function(){
    
                rect.enter().insert("rect", "line")
                    .attr("x", function(d, i) { return x(i + 1) - .5; })
-                   .attr("y", function(d) { 
-                     //return h - y(d.value) - .5; 
-                     return h - y(d.value);
-                   })
+                   .attr("y", function(d) { return h - y(d.value); })
                    .attr("width", w)
                   .attr("height", function(d) { return y(d.value); })
-                .transition()
-                  .duration(100)
-                  .attr("x", function(d, i) { return x(i) - .5; });
+                  .style("fill", function(d){
+                    var r = Math.floor(d.value/80.1*10);
+                    return "#"+r+"00"
+                  })
+                  .transition()
+                    .duration(100)
+                    .attr("x", function(d, i) { return x(i) - .5; })
   
               rect.transition()
                   .duration(100)

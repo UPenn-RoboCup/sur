@@ -31,7 +31,8 @@ button {
   width: 100px;
 }
 
-.chart rect {
- fill: 0xff0000;
- stroke: 0x00ff00;
+.chart{
+  position: absolute;
+  left: 25%;
+  top: 10%;
 }
