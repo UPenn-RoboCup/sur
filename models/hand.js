@@ -266,10 +266,10 @@
   }
 
   Hand.special1 = function(dir){
-    special1 -= dir*dSpecial1;
+    special1 -= -1*dir;//*dSpecial1;
   }
   Hand.special2 = function(dir){
-    special2 += dir*dSpecial2;
+    special2 += -1*dir;//*dSpecial2;
   }
   
   /////////////////////////

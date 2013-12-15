@@ -10,7 +10,7 @@
   
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(880,300);
+  var offset = new THREE.Vector2(840,300);
   /////////////////////
   // Mesh definition //
   ///////////////////// 
@@ -168,9 +168,9 @@
   }
   BarValve.special2 = function(dir){
     // Move the roll
-    item_mesh.rotation.z += dir*.1;
+    item_mesh.rotation.z += dir;//dir*.1;
     wp_callback();
-    SmallValve.send();
+    //BarValve.send();
   }
 
   /////////////////////////
