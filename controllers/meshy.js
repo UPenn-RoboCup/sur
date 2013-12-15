@@ -10,8 +10,11 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('modify_obj',Manipulation.modify);
   clicker('loop_obj',Manipulation.loop);
   //
+  /*
   clicker('robot_show',Robot.show);
   clicker('robot_hide',Robot.hide);
+  */
+  clicker('robot_toggle',Robot.toggle);
   // Clearing the meshes
   clicker('wipe_mesh',World.clear_meshes);
   // During walking
@@ -118,9 +121,11 @@ document.addEventListener( "DOMContentLoaded", function(){
     var target = item.get_mod_mesh().position.toArray();
     World.set_view(view.position,target);
   });
+  /*
   clicker('vantage_robot',function(){
     World.set_view('robot');
   });
+  */
   
   // State machines
   clicker('body_init',function() {

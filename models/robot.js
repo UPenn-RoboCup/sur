@@ -428,14 +428,22 @@
     
   } // update skeleton
   
+  var is_shown = false;
+  
   Robot.show = function(){
+    is_shown = true;
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
   }
   Robot.hide = function(){
+    is_shown = false;
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.remove(m[i]);}
   }
+  Robot.toggle = function(){
+    if(is_shown){Robot.hide()}else{Robot.show()}
+  }
+  
   
   Robot.get_root = function(){
     return skeleton;

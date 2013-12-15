@@ -48,7 +48,8 @@
     ws.onmessage = function(e){
       if(typeof e.data === "string"){
         fr_metadata = JSON.parse(e.data);
-        Camera.latency.push( e.timeStamp/1e3-fr_metadata.t );
+        var latency = (e.timeStamp/1e3-time_offset) - fr_metadata.t;
+        Camera.latency.push( latency );
         if(Camera.latency.length>5){Camera.latency.shift()}
         console.log('Camera',fr_metadata.sz,Camera.latency);
         return;

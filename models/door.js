@@ -269,11 +269,13 @@
   Door.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
       // Just reload the model from the robot
+      /*
       qwest.get( rpc_url,{},{})
       .success(function(model){
         model_to_three(model);
         item_mesh = hinge_mesh;
       })
+      */
       return;
     }
     is_push = !is_push;
