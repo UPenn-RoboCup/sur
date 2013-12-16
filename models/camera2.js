@@ -8,24 +8,17 @@
   
   // Make the image object
   var old_imgs = []
-  var camera_img = new Image();
-  camera_img.id  = 'forehead_camera';
-  camera_img.alt = 'No forehead_camera image yet...'
-  var camera_container;
-  
+  var camera_img;
+
+Camera2.latency = [];  
+
   // network settings for the camera
   var rpc_url = rest_root+'/m/vcm/forehead_camera/net'
   
-  // Camera2 characteristics
-  var h_fov = 60;
-  var v_fov = 60;
-  var focal_base = 640;
-  var focal_length = 360;
-  //
-  var cam_width, cam_height, cam_mid_x, cam_mid_y;
-  //
-  var is_camclick = false;
-  
+  Camera2.get_image = function(){
+    return camera_img;
+  }
+
   /* Handle the onload of a new camera_image */
   var camera_handler = function(e){
     // revoke the object urls for memory management
@@ -38,15 +31,9 @@
   * Websocket setup
   ******/
   Camera2.setup = function(){
-    // put image into the dom
-    camera_container = $('#camera2_container')[0];
-    camera_container.appendChild( camera_img );
-    
-    // Save some variables
-    cam_width  = camera_container.clientWidth;
-    cam_height = camera_container.clientHeight;
-    cam_mid_x  = cam_width/2;
-    cam_mid_y  = cam_height/2;
+    camera_img = new Image();
+    camera_img.id  = 'head_camera';
+    camera_img.alt = 'No head_camera image yet...'
 
     // Websocket Configuration
     var port = 9004; // head cam

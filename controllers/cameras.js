@@ -74,7 +74,6 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   // Speakers
-  Speaker.setup();
   clicker('head_audio',function(){
     qwest.post(rest_root+'/m/hcm/audio/request',{val: JSON.stringify([1])});
   });
