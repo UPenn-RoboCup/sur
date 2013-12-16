@@ -219,10 +219,18 @@ Hand.special = 0;
       override[0]  = model[0] - cur_l[0];
       override[1]  = model[1] - cur_l[1];
       override[2]  = model[2] - cur_l[2];
+//
+override[3]  = model[3] - cur_l[3];
+override[4]  = model[4] - cur_l[4];
+override[5]  = model[5] - cur_l[5];
     } else {
       override[0]  = model[0] - cur_r[0];
       override[1]  = model[1] - cur_r[1];
       override[2]  = model[2] - cur_r[2];
+//
+override[3]  = model[3] - cur_r[3];
+override[4]  = model[4] - cur_r[4];
+override[5]  = model[5] - cur_r[5];
     }
 
 // Special

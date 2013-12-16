@@ -9,7 +9,6 @@ this.fsm_url  = rest_root+'/s';
 this.body_url = rest_root+'/b';
 // Override get/set
 this.so_url = rest_root+'/m/hcm/state/override';
-//this.go_url = rest_root+'/m/hcm/state/override';
 this.rpc_url_proceed = rest_root+'/m/hcm/state/proceed';
 //
 this.time_offset = 6.7; // how far in the future is the operator (in seconds)?
