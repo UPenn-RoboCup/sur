@@ -163,6 +163,15 @@ Hand.special = 0;
     // Set the position for the current mesh
     mod_mesh.position.copy(p);
   }
+Hand.switch = function(){
+    if(cur_hand=='left') {
+      cur_hand = 'right';
+      mod_mesh = right_mesh;
+    } else {
+      cur_hand = 'left';
+      mod_mesh = left_mesh;
+    }
+}
   // reset the hand
   // loop modify handles
   Hand.loop = function(tcontrol){

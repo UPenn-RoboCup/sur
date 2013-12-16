@@ -128,6 +128,7 @@
   //////
   // Keypressing hotkeys
   var tcontrol_hotkeys = [
+/*
     {
       // swap global/local for visual cue
       "keys"          : "`",
@@ -138,6 +139,7 @@
       },
       "this"          : ctx
     },
+*/
     {
       // translation
       "keys"          : "t",
@@ -164,7 +166,19 @@
   var dp = 100; // 10cm at a time waypoint
   var ddp = 25; // 1in at a time fine tune
   var item_hotkeys = [
-    {
+{
+      "keys"          : "`",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+        if(cur_item.item_name=='Hand'){
+		Hand.switch();
+	}
+          
+      },
+      "this"          : ctx
+    },   
+{
       // Escape modifications
       "keys"          : "0",
       "is_exclusive"  : true,
