@@ -50,7 +50,6 @@
     item_mesh.position.z = 1000*model[0];
     item_mesh.rotation.y = -1*model[2];
   }
-  // TODO: Need for override as well, now
   
   
   // Adjust the waypoint to the *perfect* position
@@ -94,14 +93,8 @@
     // DEPRECATED: Post to our model
     var model = three_to_model();
     //qwest.post( rpc_url, {val:JSON.stringify(model)} );
-    // New!
-    /*
-    var override = three_to_override();
-    qwest.post( so_url, {val:JSON.stringify(override)} );
-    */
     // Send our optimal waypoint
     Waypoint.send();
-    console.log('Sent tool',model);
   }
   Tool.get_mod_mesh = function(){
     return item_mesh;

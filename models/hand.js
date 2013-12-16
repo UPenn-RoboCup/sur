@@ -7,18 +7,13 @@
   // RPC URLs //
   //////////////
   var rpc_url_lget = rest_root+'/m/hcm/hands/left_tr';
-  var rpc_url_lset = rest_root+'/m/hcm/hands/left_tr_target';
-  //
   var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr';
-  var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target';
   
   // Specials
-  var special1 = 0, dSpecial1 = 0.1;
-  var special2 = 0, dSpecial2 = 0.1;
+Hand.special = 0;
   //
   var cur_l = [0,0,0,0,0];
   var cur_r = [0,0,0,0,0];
-  var override = [0,0,0, 0,0];
   
   /////////////////////
   // Mesh definition //
@@ -187,7 +182,6 @@
           console.log('Right Hand',cur_r);
         });
       }
-      override = [0,0,0, 0,0];
       return;
     }
     // Switch hands
@@ -206,8 +200,6 @@
   // enter stage
   Hand.init = function(tcontrol){
     Manipulation.modify('no');
-    //Hand.loop();
-
     // Add to the world
     World.add(left_mesh);
     World.add(right_mesh);
@@ -221,9 +213,8 @@
   Hand.send = function(){
     // Acquire the model
     var model = three_to_model(cur_hand);
-    // Specials
-    override[3]  = special1;
-    override[4]  = special2;
+    var override = [0,0,0, 0,0,0, 0];
+// x y z / r p y conditioning
     if(cur_hand=='left') {
       override[0]  = model[0] - cur_l[0];
       override[1]  = model[1] - cur_l[1];
@@ -233,29 +224,19 @@
       override[1]  = model[1] - cur_r[1];
       override[2]  = model[2] - cur_r[2];
     }
+
+// Special
+    override[6]  = Hand.special;
+
+console.log('Override!',override);
+
     // Send the override
-    qwest.post( so_url, {val:JSON.stringify(override)} )
-    .success(function(){
-      qwest.post( rpc_url_proceed, {val:JSON.stringify([3])} );
-      console.log('Sent override',override);
-      // reset
-      special1 = 0, special2 = 0;
-      override = [0,0,0, 0,0];
-      if(cur_hand=='left'){cur_l = model.slice();}else{cur_r = model.slice();}
-    });
-    
-    /*
-    // raw hands
-    if(cur_hand=='left') {
-      qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
-      console.log('Sent left transform',model);
-      qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} )
-    } else {
-      qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
-      console.log('Sent right transform',model);
-      qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} )
-    }
-    */
+qwest.post( so_url, {val:JSON.stringify(override)} )
+.success(function(){
+Hand.special = 0;
+if(cur_hand=='left'){cur_l = model.slice();}else{cur_r = model.slice();}
+});
+
   }
   Hand.mod_callback = function(){
     
@@ -264,19 +245,12 @@
   Hand.get_mod_mesh = function(){
     return mod_mesh;
   }
-
-  Hand.special1 = function(dir){
-    special1 -= -1*dir;//*dSpecial1;
-  }
-  Hand.special2 = function(dir){
-    special2 += -1*dir;//*dSpecial2;
-  }
   
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
   Hand.item_name = 'Hand';
   // export
-	ctx.Hand = Hand;
+  ctx.Hand = Hand;
 
 })(this);
