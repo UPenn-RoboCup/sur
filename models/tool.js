@@ -100,7 +100,7 @@
     qwest.post( so_url, {val:JSON.stringify(override)} );
     */
     // Send our optimal waypoint
-    //Waypoint.send();
+    Waypoint.send();
     console.log('Sent tool',model);
   }
   Tool.get_mod_mesh = function(){

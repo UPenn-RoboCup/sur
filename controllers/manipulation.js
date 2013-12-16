@@ -129,16 +129,6 @@
   // Keypressing hotkeys
   var tcontrol_hotkeys = [
     {
-      // Escape modifications
-      "keys"          : "escape",
-      "is_exclusive"  : true,
-      "on_keyup"      : function(event) {
-          event.preventDefault();
-          Manipulation.modify();
-      },
-      "this"          : ctx
-    },
-    {
       // swap global/local for visual cue
       "keys"          : "`",
       "is_exclusive"  : true,
@@ -174,13 +164,24 @@
   var dp = 100; // 10cm at a time
   var ddp = 5; // 1mm at a time fine tune
   var item_hotkeys = [
+    {
+      // Escape modifications
+      "keys"          : "0",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          Manipulation.modify();
+      },
+      "this"          : ctx
+    },
+
   {
     // loop
     "keys"          : "k",
     "is_exclusive"  : true,
     "on_keyup"      : function(event) {
         event.preventDefault();
-        cur_item.loop();
+        Manipulation.loop();
     },
     "this"          : ctx
   },

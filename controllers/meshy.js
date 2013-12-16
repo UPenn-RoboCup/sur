@@ -167,6 +167,36 @@ document.addEventListener( "DOMContentLoaded", function(){
       this.blur();
     }, false);
   }
+
+var select_hotkeys = [
+    {
+      // swap global/local for visual cue
+      "keys"          : "1",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+	  Manipulation.cycle_item(0)
+menu.value=0;
+      },
+      "this"          : window
+    },
+    {
+      // swap global/local for visual cue
+      "keys"          : "2",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          Manipulation.cycle_item(1)
+menu.value=1
+      },
+      "this"          : window
+    },
+
+]
+
+keypress.register_many(select_hotkeys)
+
+
   // Fine tune modify non-keypress
   clicker('modify_obj',Manipulation.modify);
   clicker('loop_obj',Manipulation.loop);
