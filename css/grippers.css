@@ -31,16 +31,16 @@ button {
   width: 100px;
 }
 
-#li {
+#lgi {
   position: fixed;
   top: 200px;
   left: 200px;
 }
 
-#ri {
+#rgi {
   position: fixed;
-  top: 200px;
-  right: 200px;
+  top: 400px;
+  left: 200px;
 }
 
 /*

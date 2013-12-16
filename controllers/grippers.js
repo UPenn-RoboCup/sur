@@ -35,7 +35,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(body_url,{body: 'move_lgrip1',bargs: 200});
   });
   clicker('lt_hold',function(){
-    qwest.post(body_url,{body: 'move_lgrip1',bargs: 50});
+    qwest.post(body_url,{body: 'move_lgrip1',bargs: 10});
   });
   clicker('lt_open',function(){
     qwest.post(body_url,{body: 'move_lgrip1',bargs: -10});
@@ -49,7 +49,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(body_url,{body: 'move_lgrip2',bargs: 200});
   });
   clicker('lg_hold',function(){
-    qwest.post(body_url,{body: 'move_lgrip2',bargs: 50});
+    qwest.post(body_url,{body: 'move_lgrip2',bargs: 20});
   });
   clicker('lg_open',function(){
     qwest.post(body_url,{body: 'move_lgrip2',bargs: -10});
@@ -70,12 +70,12 @@ document.addEventListener( "DOMContentLoaded", function(){
     //console.log(e);
     var feedback = JSON.parse(e.data);
     //console.log(feedback)
-    $('#rp')[0].innerHTML = feedback.r_gpos;
-    $('#lp')[0].innerHTML = feedback.l_gpos
-    $('#rt')[0].innerHTML = feedback.r_temp
-    $('#lt')[0].innerHTML = feedback.l_temp
-    $('#rl')[0].innerHTML = feedback.r_load
-    $('#ll')[0].innerHTML = feedback.l_load
+    $('#rg_p')[0].innerHTML = feedback.r_gpos;
+    $('#lg_p')[0].innerHTML = feedback.l_gpos
+    $('#rg_t')[0].innerHTML = feedback.r_temp
+    $('#lg_t')[0].innerHTML = feedback.l_temp
+    $('#rg_l')[0].innerHTML = feedback.r_load
+    $('#lg_l')[0].innerHTML = feedback.l_load
     // Update the initial time
     if(t0<0){t0 = feedback.t;}
   }

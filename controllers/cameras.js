@@ -70,7 +70,7 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(speed_url,{val: JSON.stringify([4,1,50,1])});
   });
   clicker('head_fast',function(){
-    qwest.post(speed_url,{val: JSON.stringify([4,1,12,.25])});
+    qwest.post(speed_url,{val: JSON.stringify([4,1,12,.4])});
   });
   
 });
