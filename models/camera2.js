@@ -50,6 +50,7 @@ Camera2.latency = [];
         Camera2.latency.push( e.timeStamp/1e6-fr_metadata.t );
         if(Camera2.latency.length>5){Camera2.latency.shift()}
         */
+console.log('Camera2',fr_metadata.sz);
         return;
       }
       /* Use the size as a sort of checksum
