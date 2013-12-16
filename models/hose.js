@@ -10,7 +10,7 @@
 
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(450,120);
+  var offset = new THREE.Vector2(500,420);
   
   /////////////////////
   // Mesh definition //
@@ -99,6 +99,7 @@
     World.remove(item_mesh);
   }
   Hose.send = function(){
+Waypoint.send();
     //var model = three_to_model();
 //    qwest.post( rpc_url, {val:JSON.stringify(model)} )
 /*    .success(function(){

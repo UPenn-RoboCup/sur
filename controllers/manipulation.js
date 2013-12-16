@@ -220,7 +220,7 @@ var dx,dy;
 	if(cur_item.item_name=='Waypoint'){
 dx = dp*sa, dy = dp*ca;
 	} else {
-dx = dp*sa, dy = ddp*ca;
+dx = ddp*sa, dy = ddp*ca;
 }
 
       mod_mesh.position.x += dx;
@@ -244,7 +244,7 @@ var dx,dy;
 	if(cur_item.item_name=='Waypoint'){
 dx = dp*sa, dy = dp*ca;
 	} else {
-dx = dp*sa, dy = ddp*ca;
+dx = ddp*sa, dy = ddp*ca;
 }
 
       mod_mesh.position.x -= dx;
@@ -266,7 +266,7 @@ var dx,dy;
 	if(cur_item.item_name=='Waypoint'){
 dx = dp*sa, dy = dp*ca;
 	} else {
-dx = dp*sa, dy = ddp*ca;
+dx = ddp*sa, dy = ddp*ca;
 }
       mod_mesh.position.x += dy;
       mod_mesh.position.z -= dx;
@@ -287,7 +287,7 @@ var dx,dy;
 	if(cur_item.item_name=='Waypoint'){
 dx = dp*sa, dy = -dp*ca;
 	} else {
-dx = dp*sa, dy = -ddp*ca;
+dx = ddp*sa, dy = -ddp*ca;
 }
         
         mod_mesh.position.x += dy;

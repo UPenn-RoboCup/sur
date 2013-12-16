@@ -26,9 +26,10 @@ document.addEventListener( "DOMContentLoaded", function(){
     });
     // Single (JPEG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
-      val:JSON.stringify([3,1,90,1])
+      val:JSON.stringify([3,1,60,1])
     });
   });
+/*
   // During manipulation
   clicker('slow_mesh',function() {
     // See close
@@ -38,6 +39,18 @@ document.addEventListener( "DOMContentLoaded", function(){
     // Once (PNG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
       val:JSON.stringify([3,3,50,1])
+    });
+  });
+*/
+  // try
+  clicker('quick_mesh',function() {
+    // See close
+    qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
+      val:JSON.stringify([.2,1])
+    });
+    // Once (JPEG)
+    qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
+      val:JSON.stringify([3,1,88,1])
     });
   });
   

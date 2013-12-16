@@ -1,7 +1,5 @@
 // Once the page is done loading, execute main
 document.addEventListener( "DOMContentLoaded", function(){
-  
-  Speaker.setup();
 
   // Right Trigger
   clicker('rt_trigger',function(){

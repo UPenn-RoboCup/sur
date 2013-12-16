@@ -152,7 +152,6 @@ Hand.special = 0;
     // RPY
     var rpy = (new THREE.Euler()).setFromQuaternion(q_rel);
     tr.push(rpy.z, rpy.x, rpy.y);
-        
     return tr;
   }
   
