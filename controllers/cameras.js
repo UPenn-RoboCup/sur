@@ -5,8 +5,10 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Place on the page
   var camera_container = $('#camera_container')[0];
+  Camera.lag_ind = $('#lag_seconds')[0];
   var img = Camera.get_image();
   camera_container.appendChild( img );
+  
   
   // Normalized Device Coordinates
   var get_coord = function(event){
