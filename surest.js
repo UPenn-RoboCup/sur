@@ -367,7 +367,7 @@ var zmq_message = function(metadata,payload){
 * UDP robot data receiving
 */
 var udp_message = function(msg,rinfo){
-  //console.log('got udp',rinfo);
+  console.log('got udp',rinfo);
   /* msgpack -> JSON */
   /* the jpeg is right after the messagepacked metadata (concatenated) */
   var meta = mp.unpack(msg);

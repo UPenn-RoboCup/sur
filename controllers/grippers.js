@@ -58,6 +58,13 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(body_url,{body: 'move_lgrip2',bargs: 0});
   });
   
+  // Information requesting
+  clicker('lg_read',function(){
+    qwest.post( rest_root+'/m/hcm/hands/read', {val:JSON.stringify([1,0])} );
+  });
+  clicker('rg_read',function(){
+    qwest.post( rest_root+'/m/hcm/hands/read', {val:JSON.stringify([0,1])} );
+  });
   
   // Feedback of temperature
   var port = 9013;

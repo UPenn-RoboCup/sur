@@ -6,8 +6,8 @@
   //////////////
   // RPC URLs //
   //////////////
-  var rpc_url_lget = rest_root+'/m/hcm/hands/left_tr';
-  var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr';
+  //var rpc_url_lget = rest_root+'/m/hcm/hands/left_tr';
+  //var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr';
   
   // Specials
 Hand.special = 0;
@@ -178,17 +178,27 @@ Hand.switch = function(){
     if(Manipulation.is_mod==false){
       // rset the hand positions
       if(cur_hand=='left'){
+        /*
         qwest.get( rpc_url_lget ).success(function(lmodel){
           cur_l = lmodel.slice();
           model_to_three(cur_l,'left');
           console.log('Left Hand',cur_l);
         });
+        */
+        cur_l = Robot.left_tr.slice();
+        model_to_three(cur_l,'left');
+        console.log('Left Hand',cur_l);
       } else {
+        /*
         qwest.get( rpc_url_rget ).success(function(rmodel){
           cur_r = rmodel.slice();
           model_to_three(cur_r,'right');
           console.log('Right Hand',cur_r);
         });
+        */
+        cur_r = Robot.right_tr.slice();
+        model_to_three(cur_r,'right');
+        console.log('Right Hand',cur_r);
       }
       return;
     }

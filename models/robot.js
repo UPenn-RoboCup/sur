@@ -483,6 +483,10 @@
       skeleton.p.x = 1000*Robot.py;
       skeleton.p.z = 1000*Robot.px;
       
+      // Update the hand transforms for ease of use
+      Robot.left_tr = feedback.l_tr;
+      Robot.right_tr = feedback.r_tr;
+      
       // placeholder
       placeholder_mesh.position.copy(skeleton.p);
       placeholder_mesh.position.y = 0;
