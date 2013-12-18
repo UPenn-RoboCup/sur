@@ -32,3 +32,10 @@ html, body {
   width: 100%;
   height: 100%;
 }
+
+.camera_overlay {
+  position: fixed;
+  right: 20px;
+  top: 0px;
+  color: red;
+}

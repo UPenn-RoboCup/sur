@@ -10,6 +10,7 @@
   var old_imgs = [];
   var camera_img;
   Camera.latency = [];
+  var lag_seconds;
   
   // network settings for the camera
   var rpc_url = rest_root+'/m/vcm/head_camera/net'
@@ -32,6 +33,8 @@
   
   Camera.setup = function(){
 
+    lag_seconds = $('#lag_seconds');
+
     camera_img = new Image();
     camera_img.id  = 'head_camera';
     camera_img.alt = 'No head_camera image yet...'
@@ -48,7 +51,9 @@
     ws.onmessage = function(e){
       if(typeof e.data === "string"){
         fr_metadata = JSON.parse(e.data);
+        // latency in seconds
         var latency = (e.timeStamp/1e3-time_offset) - fr_metadata.t;
+        lag_seconds.innerHTML = latency;
         Camera.latency.push( latency );
         if(Camera.latency.length>5){Camera.latency.shift()}
         console.log('Camera',fr_metadata.sz,Camera.latency);
