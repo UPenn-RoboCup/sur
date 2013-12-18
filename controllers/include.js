@@ -10,8 +10,8 @@ this.body_url = rest_root+'/b';
 // Override get/set
 this.so_url = rest_root+'/m/hcm/state/override';
 this.rpc_url_proceed = rest_root+'/m/hcm/state/proceed';
-//
-this.time_offset = -2.7; // how far in the future is the operator (in seconds)?
+// how far in the future is the operator (in seconds)?
+this.time_offset = -2.8; // teddy
 // http://macwright.org/presentations/dcjq/
 this.$ = function(x){return document.querySelectorAll(x);};
 this.clicker = function(id,fun){
