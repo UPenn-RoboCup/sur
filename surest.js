@@ -13,8 +13,8 @@ var dgram   = require('dgram');
 var _       = require('underscore');
 
 /* Remote Procedure Call Configuration */
-var rpc_robot     = '192.168.123.26'; //teddy
-//var rpc_robot     = '192.168.123.24';
+//var rpc_robot     = '192.168.123.26'; //teddy
+var rpc_robot     = '192.168.123.24';
 //var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
@@ -50,6 +50,21 @@ bridges.push({
 });
 
 bridges.push({
+	name : 'feedback',
+	ws : 9013,
+	udp: 54329,
+	clients : []
+});
+
+bridges.push({
+	name : 'audio',
+	ws : 9014,
+  tcp: 55557,
+	clients : []
+});
+
+/*
+bridges.push({
 	name : 'rgbd_depth',
 	ws : 9010,
 	udp: 33346,
@@ -69,20 +84,7 @@ bridges.push({
 	sub: 'spacemouse',
 	clients : []
 });
-
-bridges.push({
-	name : 'feedback',
-	ws : 9013,
-	udp: 54329,
-	clients : []
-});
-
-bridges.push({
-	name : 'audio',
-	ws : 9014,
-  tcp: 55557,
-	clients : []
-});
+*/
 
 // rest look up table for the objects
 var reliable_lookup = {}
