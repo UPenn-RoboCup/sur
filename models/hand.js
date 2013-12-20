@@ -241,6 +241,8 @@ Hand.switch = function(){
 override[3]  = model[3] - cur_l[3];
 override[4]  = model[4] - cur_l[4];
 override[5]  = model[5] - cur_l[5];
+//
+cur_l = model.slice();
     } else {
       override[0]  = model[0] - cur_r[0];
       override[1]  = model[1] - cur_r[1];
@@ -249,19 +251,24 @@ override[5]  = model[5] - cur_l[5];
 override[3]  = model[3] - cur_r[3];
 override[4]  = model[4] - cur_r[4];
 override[5]  = model[5] - cur_r[5];
+//
+cur_r = model.slice();
     }
 
-// Special
+    // Special
     override[6]  = Hand.special;
+    Hand.special = 0;
 
-console.log('Override!',override);
+    console.log('Override!',override);
 
+    // Fix the Float (mm precision)
+    for(var i=0;i<override.length;i++){
+      override[i] = Math.floor(override[i]*1000)/1000;
+    }
+    
     // Send the override
-qwest.post( so_url, {val:JSON.stringify(override)} )
-.success(function(){
-Hand.special = 0;
-if(cur_hand=='left'){cur_l = model.slice();}else{cur_r = model.slice();}
-});
+    qwest.post( so_url, {val:JSON.stringify(override)} )
+    
 
   }
   Hand.mod_callback = function(){

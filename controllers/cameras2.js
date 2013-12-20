@@ -18,5 +18,4 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('head_stop',function(){
     qwest.post(speed_url,{val: JSON.stringify([0,1,40,1])});
   });
-  
 });

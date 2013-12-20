@@ -39,14 +39,6 @@ button {
 
 #rgi {
   position: fixed;
-  top: 400px;
-  left: 200px;
+  top: 200px;
+  left: 400px;
 }
-
-/*
-.chart{
-  position: absolute;
-  left: 25%;
-  top: 10%;
-}
-*/

@@ -164,7 +164,7 @@
   
   // Keypressing hotkeys
   var dp = 100; // 10cm at a time waypoint
-  var ddp = 25; // 1in at a time fine tune
+  var ddp = 10;//25; // 1in at a time fine tune
   var item_hotkeys = [
 {
       "keys"          : "`",

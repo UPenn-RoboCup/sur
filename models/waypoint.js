@@ -26,10 +26,11 @@
   ], 12, -Math.PI, -Math.PI);
   var item_mesh  = new THREE.Mesh( item_geo, item_mat );
   
-  var bbox_geo = new THREE.CubeGeometry(600,20,400,10,1,10);
+  var bbox_geo = new THREE.CubeGeometry(800,20,1000,10,1,10);
   var bbox_mat = new THREE.MeshLambertMaterial({color: 0x444400,wireframe: true});
   var bbox_mesh  = new THREE.Mesh( bbox_geo, bbox_mat );
   bbox_mesh.position.y = 10;
+  bbox_mesh.position.z = 350;
   item_mesh.add(bbox_mesh)
   
   // make the indicators;

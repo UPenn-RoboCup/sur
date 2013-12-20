@@ -29,8 +29,10 @@ html, body {
   margin-left: 10%;
 }
 #camera2_container img {
-  width: 100%;
-  height: 100%;
+  width: 640px;
+  height: 480px;
+  -webkit-transform: rotate(90deg) translateX(100px);
+  transform: rotate(90deg) translateX(100px);
 }
 
 .camera_overlay {
