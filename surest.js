@@ -14,7 +14,8 @@ var _       = require('underscore');
 
 /* Remote Procedure Call Configuration */
 //var rpc_robot     = '192.168.123.26'; //teddy
-var rpc_robot     = '192.168.123.24'; //alvin
+//var rpc_robot     = '192.168.123.24'; //alvin
+var rpc_robot     = '192.168.123.27'; // simon
 //var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;

@@ -78,7 +78,11 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(speed_url,{val: JSON.stringify([0,1,12,.5])});
   });
   clicker('head_once',function(){
-    qwest.post(speed_url,{val: JSON.stringify([3,1,75,1])});
+    // png?
+    qwest.post(speed_url,{val: JSON.stringify([3,3,90,1])});
+  });
+  clicker('head_robotis',function(){
+    qwest.post(speed_url,{val: JSON.stringify([2,1,50,2])});
   });
   
 });
