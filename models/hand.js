@@ -262,13 +262,10 @@ cur_r = model.slice();
     console.log('Override!',override);
 
     // Fix the Float (mm precision)
-    for(var i=0;i<override.length;i++){
-      override[i] = Math.floor(override[i]*1000)/1000;
-    }
-    
+    var p = 1000; // precision
+    for(var i=0;i<override.length;i++){override[i] = Math.floor(override[i]*p)/p;}
     // Send the override
     qwest.post( so_url, {val:JSON.stringify(override)} )
-    
 
   }
   Hand.mod_callback = function(){
