@@ -89,8 +89,8 @@ document.addEventListener( "DOMContentLoaded", function(){
     //console.log(e);
     var feedback = JSON.parse(e.data);
     //console.log(feedback)
-    $('#rg_p')[0].innerHTML = Math.floor(feedback.r_gpos*RAD_TO_DEG*100)/100;
-    $('#lg_p')[0].innerHTML = Math.floor(feedback.l_gpos*RAD_TO_DEG*100)/100;
+    $('#rg_p')[0].innerHTML = feedback.r_gpos.toString();
+    $('#lg_p')[0].innerHTML = feedback.l_gpos.toString();
     $('#rg_t')[0].innerHTML = feedback.r_temp;
     $('#lg_t')[0].innerHTML = feedback.l_temp;
     $('#rg_l')[0].innerHTML = feedback.r_load;

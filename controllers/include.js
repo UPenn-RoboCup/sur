@@ -12,7 +12,7 @@ this.so_url = rest_root+'/m/hcm/state/override';
 this.rpc_url_proceed = rest_root+'/m/hcm/state/proceed';
 // how far in the future is the operator (in seconds)?
 //this.time_offset = -2.8; // teddy
-this.time_offset = -14.455; // alvin
+this.time_offset = -13.4395; // alvin
 // http://macwright.org/presentations/dcjq/
 this.$ = function(x){return document.querySelectorAll(x);};
 this.clicker = function(id,fun){

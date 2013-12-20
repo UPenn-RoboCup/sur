@@ -150,7 +150,14 @@
     var p = 100; // precision
     for(var i=0;i<wp.length;i++){wp[i] = Math.floor(wp[i]*p)/p;}
     console.log('Waypoint!',wp);
-    qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow', shm:'hcm', segment: 'motion',key:'waypoints', val:JSON.stringify(wp)});
+    qwest.post(fsm_url,{
+      fsm: 'BodyFSM',
+      evt: 'follow',
+      shm: 'hcm',
+      segment: 'motion',
+      key: 'waypoints',
+      val:JSON.stringify(wp)
+    });
     
     // Reset the actual
     model2_loop();
