@@ -117,7 +117,12 @@
     console.log('Send wp',wp);
     // For network efficiency, just send the waypoint coordinates
     qwest.post( rpc_url, {val:JSON.stringify(wp)})
-    .success(function(){qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});});
+    .success(function(){
+    	//Default frame is LOCAL in hcm
+      qwest.post( rpc_url_fr, {val:JSON.stringify(1)} )
+    	.success(function(){qwest.post(fsm_url,{fsm: 'BodyFSM' , evt: 'follow'});
+    	});
+    });
     /*
     qwest.post( rpc_url, {val:JSON.stringify(wp)})
     .success(function(){
