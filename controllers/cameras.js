@@ -61,24 +61,25 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(ang_url,{val: JSON.stringify([0,50*Math.PI/180])});
   });
   clicker('head_left',function(){
-    qwest.post(ang_url,{val: JSON.stringify([Math.PI/3,0])});
+    qwest.post(ang_url,{val: JSON.stringify([Math.PI/6,0])});
   });
   clicker('head_right',function(){
-    qwest.post(ang_url,{val: JSON.stringify([-Math.PI/3,0])});
+    qwest.post(ang_url,{val: JSON.stringify([-Math.PI/6,0])});
   });
   //
   var speed_url = rest_root+'/m/vcm/head_camera/net';
   clicker('head_slow',function(){
-    qwest.post(speed_url,{val: JSON.stringify([2,1,50,1])});
+    qwest.post(speed_url,{val: JSON.stringify([2,1,40,3])});
   });
+  /*
   clicker('head_fast',function(){
     qwest.post(speed_url,{val: JSON.stringify([2,1,12,.5])});
   });
+  */
   clicker('head_stop',function(){
     qwest.post(speed_url,{val: JSON.stringify([0,1,12,.5])});
   });
   clicker('head_once',function(){
-    // png?
     qwest.post(speed_url,{val: JSON.stringify([3,3,90,1])});
   });
   clicker('head_robotis',function(){

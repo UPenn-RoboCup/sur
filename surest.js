@@ -13,9 +13,10 @@ var dgram   = require('dgram');
 var _       = require('underscore');
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.26'; //teddy
+//var rpc_robot     = '192.168.123.26'; // teddy
 //var rpc_robot     = '192.168.123.24'; //alvin
-var rpc_robot     = '192.168.123.27'; // simon
+//var rpc_robot     = '192.168.123.27'; // simon
+var rpc_robot = '192.168.1.138' // YouBot
 //var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
@@ -191,13 +192,16 @@ var rest_audio = function(req, res, next){
 var rest_shm = function (req, res, next) {
 
   // debug rest requests for shm
-  console.log(req.params);
+  //console.log(req.params);
+  var msg = {}
 
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
     var ret = mp.unpack(data)
     
+    console.log(msg,ret);
+
     if(ret!=null){
       res.json( ret );
     } else {
@@ -212,13 +216,20 @@ var rest_shm = function (req, res, next) {
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
+  msg.shm = req.params.shm
+
   if(req.params.val!==undefined){
-    req.params.val = JSON.parse( req.params.val );
+    msg.val = JSON.parse( req.params.val );
+    msg.access = 'set_'+req.params.segment+'_'+req.params.key;
+  } else if(req.params.delta!==undefined){
+    msg.val = JSON.parse( req.params.delta );
+    msg.access = 'delta_'+req.params.segment+'_'+req.params.key;
+  } else {
+    msg.access = 'get_'+req.params.segment+'_'+req.params.key;
   }
-  if(req.params.delta!==undefined){
-    req.params.delta = JSON.parse( req.params.delta );
-  }
-  zmq_req_rest_skt.send( mp.pack(req.params) );
+
+  console.log(msg);
+  zmq_req_rest_skt.send( mp.pack(msg) );
   
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
   
@@ -249,9 +260,11 @@ var rest_fsm = function (req, res, next) {
   if(req.params.val!==undefined){
     req.params.val = JSON.parse( req.params.val );
   }
+  /*
   if(req.params.delta!==undefined){
     req.params.delta = JSON.parse( req.params.delta );
   }
+  */
   
   //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
   zmq_req_rest_skt.once('message', reply_handler);

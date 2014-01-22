@@ -29,12 +29,19 @@ html, body {
   margin-left: 10%;
 }
 #camera2_container img {
+  width: 95%;
+  height: 95%;
+  -webkit-transform: rotate(180deg);
+  transform: rotate(180deg);
+  /*
   width: 640px;
   height: 480px;
-  -webkit-transform: rotate(90deg);
+  -webkit-transform: rotate(-90deg);
+  transform:
   position: absolute;
   top: 100px;
-  
+  left: 200px;
+  */
   /*
   -webkit-transform-origin: 50% 100%;
   transform: rotate(90deg) translateX(100px) translateY(100px);
