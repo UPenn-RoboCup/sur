@@ -7,6 +7,7 @@ this.URL = this.URL || this.webkitURL;
 this.rest_root = 'http://'+host+':8080';
 this.fsm_url  = rest_root+'/s';
 this.body_url = rest_root+'/b';
+this.shm_url = rest_root+'/m';
 // Override get/set
 this.so_url = rest_root+'/m/hcm/state/override';
 this.rpc_url_proceed = rest_root+'/m/hcm/state/proceed';
