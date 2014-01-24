@@ -16,8 +16,8 @@ var _       = require('underscore');
 //var rpc_robot     = '192.168.123.26'; // teddy
 //var rpc_robot     = '192.168.123.24'; //alvin
 //var rpc_robot     = '192.168.123.27'; // simon
-var rpc_robot = '192.168.1.138' // YouBot
-//var rpc_robot     = 'localhost'
+//var rpc_robot = '192.168.1.138' // YouBot
+var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
 var homepage = 'meshy';
@@ -154,6 +154,7 @@ var load_img = function(req, res, next) {
 };
 server.get('/png/:img', load_img.bind({base_dir: 'png'}) );
 server.get('/jpg/:img', load_img.bind({base_dir: 'jpg'}) );
+
 // stl loader ignores content type, so we are ok :)
 server.get('/stl/:img', load_img.bind({base_dir: 'stl'}) );
 server.get('/vrml/:img', load_img.bind({base_dir: 'vrml'}) );
