@@ -65,6 +65,13 @@ bridges.push({
 	clients : []
 });
 
+bridges.push({
+	name : 'lidar0',
+	ws : 9015,
+	sub: 'lidar0',
+	clients : []
+});
+
 /*
 bridges.push({
 	name : 'rgbd_depth',
