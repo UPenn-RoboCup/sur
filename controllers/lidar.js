@@ -36,40 +36,17 @@ this.addEventListener("load", function () {
 		.attr("height", '100%');
 	lidar_path = svg.append("path");
 
-	//Draw the Circle
-	/*
- var circle = svg.append("circle")
-                          .attr("cx", 30)
-                          .attr("cy", 30)
-                         .attr("r", 20);
-	*/
-
+	// Draw the Pose marker
 	var pose_symbol = d3.svg
 		.symbol()
 		.type('triangle-up');
-	//console.log( d3.svg.symbolTypes );
 	var pose_marker = svg.append("path")
-		.attr("transform", "translate("+w/2+","+h/2+")")
+		.attr("transform", "translate("+w/2+","+h+")")
 	 	.attr("d", pose_symbol)
 		.style("fill", "red");
 
-	// Receive the laser scans
-	ws.binaryType = "arraybuffer";
-	ws.onmessage = function (e) {
-		//console.log(e);
-		if (typeof e.data === 'string') {
-			metadata = JSON.parse(e.data);
-			return;
-		}
-		// Parse the lidar information as Float32
-		var returns = new Float32Array(e.data);
-		// Process into an svg path
-		lidar2svg(metadata,returns)
-	};
-
+	// Make the line of lidar ranges
 	var lineFunction = d3.svg.line()
-		.x(function(d) { return d.x; })
-		.y(function(d) { return d.y; })
 		.interpolate("linear-closed");
 
 	lidar2svg = function (meta, r) {
@@ -82,7 +59,7 @@ this.addEventListener("load", function () {
 			i,
 			lineData = [];
 
-		lineData.push({x:w/2,y:h/2});
+		lineData.push([ w/2, h ]);
 
 		//console.log(svg_container,w,h);
 
@@ -91,10 +68,10 @@ this.addEventListener("load", function () {
 			range = r[i];
 			dx = range * Math.cos( theta );
 			dy = range * Math.sin( theta );
-			lineData.push({
-				x: -dy / 30 * w + w / 2, // Browser frame
-				y: -dx / 30 * h + h / 2
-			});
+			lineData.push([
+				w / 2 - (dy / 30) * (w/2), // Browser frame x
+				h - (dx / 30) * h  // Browser frame y
+			]);
 			//console.log(x,y);
 			//path_seglist.appendItem(path.createSVGPathSegLinetoAbs(xpos, ypos));
 		}
@@ -111,5 +88,19 @@ this.addEventListener("load", function () {
 		w = svg_container.clientWidth;
 		h = svg_container.clientHeight;
 	});
+
+	// Receive the laser scans
+	ws.binaryType = "arraybuffer";
+	ws.onmessage = function (e) {
+		//console.log(e);
+		if (typeof e.data === 'string') {
+			metadata = JSON.parse(e.data);
+			return;
+		}
+		// Parse the lidar information as Float32
+		var returns = new Float32Array(e.data);
+		// Process into an svg path
+		lidar2svg(metadata,returns)
+	};
 
 });
