@@ -5,12 +5,14 @@ this.addEventListener("load", function () {
 	var b = $('body')[0];
 	
 	// TODO: Loop through all markdown documents...	
+	// TODO: Loop through all snaps js files and load
 	var task_el = document.createElement('div');
 	task_el.id = "task";
 	task_el.classList.add("chapter");
 	
 	// Load resources and render
-	qwest.get('/md/task',{},{},function(){this.responseType='text';}).success(function(text){
+	qwest.get('/md/task', {}, {}, function () {this.responseType = 'text'; })
+	.success(function(text){
 		
 		// Place the text into the element
 		task_el.innerHTML = text;
@@ -26,17 +28,22 @@ this.addEventListener("load", function () {
 			// Place the element into the DOM
 			task_el.innerHTML = marked_up;
 			b.appendChild(task_el);
-			// TODO: Fetch the SVG JavaScript based on the id :)
 			var svgs = $('#'+task_el.id+' svg');
-			for(var i=0;i<svgs.length;i++){add_svg(svgs[i]);}
+			for(var i=0;i<svgs.length;i++){
+				var s = svgs[i];
+				// Fetch the correct drawing function, which is loaded externally
+				var sf = snaps[s.id];
+				if(sf!==undefined){
+					sf(s);
+					// Remove the associated image
+					var img_alt = $('img[alt="'+s.id+'"]')[0];
+					if(img_alt!==undefined){
+						img_alt.parentNode.removeChild(img_alt);
+					}
+				}
+			}
 		});
 		// Done the GET request
 	});
-	
-	function add_svg(el){
-		console.log(el);
-		var s = Snap(el);
-		var bigCircle = s.circle(150, 150, 100);
-	}
 	
 }); // Page load listener

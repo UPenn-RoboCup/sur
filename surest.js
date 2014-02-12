@@ -166,6 +166,7 @@ server.get('/lib/MathJax/extensions/:js', load_js.bind({base_dir: 'lib/MathJax/e
 server.get('/lib/MathJax/config/:js', load_js.bind({base_dir: 'lib/MathJax/config'}) );
 server.get('/models/:js', load_js.bind({base_dir: 'models'}) );
 server.get('/controllers/:js', load_js.bind({base_dir: 'controllers'}) );
+server.get('/snap/:js', load_js.bind({base_dir: 'snap'}) );
 
 // Images
 var load_img = function(req, res, next) {
