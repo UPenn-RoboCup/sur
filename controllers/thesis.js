@@ -4,17 +4,25 @@ this.addEventListener("load", function () {
 	// Grab the body element
 	var b = $('body')[0];
 	
+	// TODO: Loop through all markdown documents...	
+	var task_el = document.createElement('div');
+	task_el.id = "task";
+	
 	// Load resources and render
-	qwest.get('/md/task',{},{},function(){console.log(this);this.responseType='text';}).success(function(text){
-		//console.log(this);
-		// We have the markdown text now, so let's parse it
-		var md_html = marked(text);
-		// Add this html to the page
-		var math_el = document.createElement('div');
-		math_el.innerHTML = md_html;
-		// Now let's put through mathjax
-		MathJax.Hub.Queue(["Typeset",MathJax.Hub,math_el]);
-		b.appendChild(math_el);
+	qwest.get('/md/task',{},{},function(){this.responseType='text';}).success(function(text){
+		
+		// Place the text into the element
+		task_el.innerHTML = text;
+		// Typeset the element
+		MathJax.Hub.Typeset(task_el,function(e){
+			// Process the markdown after the math is parsed
+			// This is a more flexible method, and we can
+			// use even \begin{} things...
+			task_el.innerHTML = marked(task_el.innerHTML);
+			// Place the element into the DOM
+			b.appendChild(task_el);
+		});
+		// Done the GET request
 	});
 	
-});
+}); // Page load listener
