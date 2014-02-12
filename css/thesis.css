@@ -1,3 +1,19 @@
 html, body {
   font-family: palatino;
 }
+
+div.chapter {
+	width: 720px;
+	margin-left: auto;
+  margin-right: auto;
+	text-align: justify;
+	border:1px solid #333;
+	padding:40px;
+}
+
+div.chapter img, div.chapter svg {
+	display: block;
+	width: 100%;
+	margin-left: auto;
+  margin-right: auto;
+}

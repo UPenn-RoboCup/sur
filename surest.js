@@ -183,6 +183,7 @@ var load_img = function(req, res, next) {
   });
 };
 server.get('/png/:img', load_img.bind({base_dir: 'png'}) );
+server.get('/figures/:img', load_img.bind({base_dir: 'figures'}) );
 server.get('/lib/MathJax/images/:img', load_img.bind({base_dir: 'lib/MathJax/images'}) );
 server.get('/jpg/:img', load_img.bind({base_dir: 'jpg'}) );
 
