@@ -131,6 +131,24 @@ server.get('/', load_html );
 // Other html views
 server.get('/v/:html', load_html );
 
+// Text files
+var load_txt = function (req, res, next) {
+  // Select a page
+  var page;
+  if(req.params.md!==undefined){
+    page = 'md/'+req.params.md+'.md';
+  }
+  // Perform the load
+  var body = fs.readFileSync(page,{encoding:'utf8'});
+  res.writeHead(200, {
+    'Content-Length': Buffer.byteLength(body),
+    'Content-Type': 'text/plain'
+  });
+  res.write(body);
+  res.end();
+};
+server.get('/md/:md', load_txt );
+
 // Javascript libraries
 var load_js = function (req, res, next) {
   //console.log('library',req.params.js)
@@ -143,6 +161,9 @@ var load_js = function (req, res, next) {
   res.end();
 };
 server.get('/lib/:js', load_js.bind({base_dir: 'lib'}) );
+server.get('/lib/MathJax/:js', load_js.bind({base_dir: 'lib/MathJax'}) );
+server.get('/lib/MathJax/extensions/:js', load_js.bind({base_dir: 'lib/MathJax/extensions'}) );
+server.get('/lib/MathJax/config/:js', load_js.bind({base_dir: 'lib/MathJax/config'}) );
 server.get('/models/:js', load_js.bind({base_dir: 'models'}) );
 server.get('/controllers/:js', load_js.bind({base_dir: 'controllers'}) );
 
@@ -162,6 +183,7 @@ var load_img = function(req, res, next) {
   });
 };
 server.get('/png/:img', load_img.bind({base_dir: 'png'}) );
+server.get('/lib/MathJax/images/:img', load_img.bind({base_dir: 'lib/MathJax/images'}) );
 server.get('/jpg/:img', load_img.bind({base_dir: 'jpg'}) );
 
 // stl loader ignores content type, so we are ok :)
