@@ -4,6 +4,8 @@
 * (c) Stephen McGill, 2013
 */
 
+// TODO: Add a logging bridge
+
 var util    = require('util');
 var fs      = require('fs');
 var zmq     = require('zmq');
