@@ -49,3 +49,20 @@ html, body {
   color: red;
   font-size: x-large;
 }
+
+.landmarks{
+  height: 100%;
+  margin-left: 10%;
+  background-color: transparent;
+}
+
+.ball {
+  position: relative; /*depends on vision feedback*/
+}
+
+#ball_info {
+  position: absolute;
+  right: 40px;
+  color: red;
+  font-size: large;
+}

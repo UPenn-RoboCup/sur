@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!--HTML5 doctype-->
+<html>
+     
+<head>
+  <title>SUR Cameras</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+  
+  <!-- CSS for Styling the page -->
+  <link rel="stylesheet" type="text/css" href="/css/gh-buttons.css">
+  <link rel="stylesheet" type="text/css" href="/css/fb-buttons.css">
+  
+  <!-- Application Frameworks -->
+  <script src="/lib/d3.min.js"></script>
+  <script src="/lib/qwest.min.js"></script>
+  <script src="/lib/sprintf.min.js"></script>
+  <script src="/lib/hammer.min.js"></script>
+  <script src="/lib/keypress.min.js"></script>
+  <script src="/lib/peer.min.js"></script>
+
+  <!-- SUR data JS -->
+  <script src="/controllers/include.js"></script>
+  <script src="/controllers/transform.js"></script>
+  <script src="/models/camera.js"></script>
+  <script src="/models/vision.js"></script>
+  
+  <!-- App specific needs -->
+  <link rel="stylesheet" type="text/css" href="/css/cameras.css">
+  <script src="/controllers/cameras.js"></script>
+ 
+</head>
+
+<body>
+  
+  <!-- Camera Request Buttons -->
+  <div id="camera_buttons">
+    <button class="big bigger button icon arrowup" id="head_ahead">
+      Ahead</button><br/>
+    <button class="big bigger button icon arrowdown" id="head_down">
+      Down</button><br/>
+    <button class="big bigger button icon arrowleft" id="head_left">
+      Left</button><br/>
+    <button class="big bigger button icon arrowright" id="head_right">
+      Right</button><br/>
+    <button class="big bigger button" id="head_fast">
+      Fast</button><br/>
+    <button class="big bigger button" id="head_slow">
+      Slow</button><br/>
+    <button class="big bigger button" id="head_stop">
+      Stop</button><br/>
+    <button class="big bigger button" id="head_once">
+      Once</button><br/>
+    <button class="big bigger button" id="head_robotis">
+      Robotis</button><br/>
+  </div>
+  
+  <!-- Head Camera Image Stream -->
+  <div id="camera_container"></div>
+
+  <!-- Head Camera Image Stream -->
+  <div class="camera_overlay">
+    <span id="lag_seconds">1</span> sec lag
+  </div>
+
+  <!-- Referene Frame and Info: disply ball for now -->
+  <div class="landmarks">
+      <div class="ball">
+        <div id="ball_info">
+        </div>
+      </div>
+  </div>
+
+</body>
+
+</html>
