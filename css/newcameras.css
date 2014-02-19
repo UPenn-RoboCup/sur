@@ -50,3 +50,16 @@ html, body {
   font-size: x-large;
 }
 
+.landmarks{
+  height: 100%;
+  margin-left: 10%;
+  background-color: transparent;
+}
+
+/*
+#ball_info {
+  position: center;
+  color: red;
+  font-size: large;
+}
+*/
