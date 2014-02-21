@@ -9,6 +9,11 @@
   // Make the image object
   var old_imgs = []
   var camera_img;
+	
+	var myPanel;
+  var circle;
+	var label;
+	var goalpost, obstacle;
 
 Camera2.latency = [];  
 
@@ -46,11 +51,15 @@ Camera2.latency = [];
     ws.onmessage = function(e){
       if(typeof e.data === "string"){
         fr_metadata = JSON.parse(e.data);
-        /*
-        Camera2.latency.push( e.timeStamp/1e6-fr_metadata.t );
-        if(Camera2.latency.length>5){Camera2.latency.shift()}
-        */
-console.log('Camera2',fr_metadata.sz);
+				
+				// Process vision landmarks messages
+				// var ballDia = fr_metadata.ballDia;
+				var ballPos = fr_metadata.ballPos;
+				$('#ball_info')[0].innerHTML = ballPos[0].toString();
+				
+				update_model(ballPos);
+				
+				// console.log('Camera2',fr_metadata.sz);
         return;
       }
       /* Use the size as a sort of checksum
@@ -75,7 +84,61 @@ console.log('Camera2',fr_metadata.sz);
       }); //animframe
 
     };
+		
+		setup_model();
+		
   } // Websocket handling
+	
+	
+	var setup_model = function(){
+	  myPanel = new jsgl.Panel(document.getElementById("test_draw"));
+
+	  /* Start drawing! */
+
+	  /* Create circle and modify it */
+	  circle = myPanel.createCircle();
+	  circle.setCenterLocationXY(50,50);
+	  circle.setRadius(30);
+	  circle.getStroke().setWeight(5);
+	  circle.getStroke().setColor("rgb(255,0,0)");
+	  circle.getFill().setColor("rgb(255,0,0)");
+	  circle.getFill().setOpacity(0.5);
+	  myPanel.addElement(circle);
+
+	  /* Create polygon and modify it */
+	  // polygon = myPanel.createPolygon();
+	  // polygon.addPointXY(50,50);
+	  // polygon.addPointXY(110,50);
+	  // polygon.addPointXY(150,80);
+	  // polygon.addPointXY(110,110);
+	  // polygon.addPointXY(50,110);
+	  // polygon.getStroke().setWeight(5);
+	  // polygon.getStroke().setColor("rgb(0,0,255)");
+	  // polygon.getFill().setColor("rgb(0,255,0)");
+	  // polygon.getFill().setOpacity(0.5);
+	  // myPanel.addElement(polygon);
+
+	  /* Create text label and modify it */
+	  label = myPanel.createLabel();
+	  label.setText("Hello World!");
+	  label.setLocationXY(30,120);
+	  // label.setBold(true);
+	  label.setFontFamily("sans-serif");
+	  label.setFontSize(20);
+	  myPanel.addElement(label);
+		
+	}
+	
+	var update_model = function(ballPos){
+	  // circle.setCenterLocationXY(ballPos[0],ballPos[1]);
+		circle.setCenterLocationXY(50,50);
+	  // circle.setRadius(30);
+
+    /* Create text label and modify it */
+	  label.setText(ballPos[0].toString() + ',' + ballPos[1].toString());
+	  label.setLocationXY(ballPos.x-20,ballPos.y);
+		
+	}
 
   // export
 	ctx.Camera2 = Camera2;

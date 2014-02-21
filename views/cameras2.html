@@ -18,6 +18,7 @@
   <script src="/lib/hammer.min.js"></script>
   <script src="/lib/keypress.min.js"></script>
   <script src="/lib/peer.min.js"></script>
+  <script src="/lib/jsgl.min.js"></script>
 
   <!-- SUR data JS -->
   <script src="/controllers/include.js"></script>
@@ -25,7 +26,7 @@
   <script src="/models/camera2.js"></script>
   
   <!-- App specific needs -->
-  <link rel="stylesheet" type="text/css" href="/css/cameras.css">
+  <link rel="stylesheet" type="text/css" href="/css/newcameras.css">
   <script src="/controllers/cameras2.js"></script>
  
 </head>
@@ -52,6 +53,15 @@
   
   <!-- Head Camera Image Stream -->
   <div id="camera2_container"></div>
+	
+  <!-- Referene Frame and Info: disply ball for now -->
+  <div class="landmarks">
+    <a id="ball_info"></a>
+		<div id="test_draw" style="width: 640px; height: 480px"></div>
+  </div>
+	
+	
+	
 
 </body>
 
