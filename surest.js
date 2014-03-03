@@ -151,8 +151,9 @@ server.get('/md/:md', load_txt );
 
 // Javascript libraries
 var load_js = function (req, res, next) {
-  //console.log('library',req.params.js)
-  var body = fs.readFileSync(this.base_dir+'/'+req.params.js,{encoding:'utf8'});
+  //console.log('library',req.params);
+	var fname = req.params[0]+'/'+req.params[1]+'.js';
+  var body = fs.readFileSync(fname,{encoding:'utf8'});
   res.writeHead(200, {
     'Content-Length': Buffer.byteLength(body),
     'Content-Type': 'text/javascript'
@@ -160,13 +161,7 @@ var load_js = function (req, res, next) {
   res.write(body);
   res.end();
 };
-server.get('/lib/:js', load_js.bind({base_dir: 'lib'}) );
-server.get('/lib/MathJax/:js', load_js.bind({base_dir: 'lib/MathJax'}) );
-server.get('/lib/MathJax/extensions/:js', load_js.bind({base_dir: 'lib/MathJax/extensions'}) );
-server.get('/lib/MathJax/config/:js', load_js.bind({base_dir: 'lib/MathJax/config'}) );
-server.get('/models/:js', load_js.bind({base_dir: 'models'}) );
-server.get('/controllers/:js', load_js.bind({base_dir: 'controllers'}) );
-server.get('/snap/:js', load_js.bind({base_dir: 'snap'}) );
+server.get(/^\/([a-zA-Z0-9_\.~-]+)\/(.*)\.js/, load_js);
 
 // Images
 var load_img = function(req, res, next) {
