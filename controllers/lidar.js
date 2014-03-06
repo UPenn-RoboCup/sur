@@ -2,83 +2,92 @@
 this.addEventListener("load", function () {
 	"use strict";
 
-	// Add the canvas to the page
 	var port = 9015,
-		ws = new WebSocket('ws://' + host + ':' + port),
+		// Access globals
+		d3 = this.d3,
+		requestAnimationFrame = this.requestAnimationFrame,
+		Float32Array = this.Float32Array,
+		DEG_TO_RAD = this.DEG_TO_RAD,
+		cos = Math.cos,
+		sin = Math.sin,
+		// Process WebSocket data
+		ws = new this.WebSocket('ws://' + this.hostname + ':' + port),
+		meta,
+		raw,
+		anim = false,
+		// Add the canvas to the page
 		svg = d3.select("body")
 			.append("svg")
 			.attr("class", "overlay")
 			.attr("width", '100%')
 			.attr("height", '100%'),
 		svg_container = svg[0][0],
-		w = svg_container.clientWidth,
-		h = svg_container.clientHeight,
-		h2 = h / 2,
-		w2 = w / 2,
-		lidar_path = svg.append("path")
-			.attr("stroke", "blue")
-			.attr("stroke-width", 2)
-			.attr("fill", "none"),
-		pose_symbol = d3.svg
-			.symbol()
-			.type('triangle-up'),
-		pose_marker = svg.append("path")
-			.attr("transform", "translate(" + w2 + "," + h2 + ")")
-			.attr("d", pose_symbol)
-			.style("fill", "red"),
-		lineFunction = d3.svg.line() // Line of ranges
-			.interpolate("linear-closed"),
-		maxRange = 30,
-		metadata,
-		returnsData,
-		lineData = [],
-		lidar2svg = function (meta, r) {
-			var half_fov = meta.n * meta.res * DEG_TO_RAD / 2,
-				factor = -1 * DEG_TO_RAD * meta.res,
-				w_factor = -1 * w2 / maxRange,
-				h_factor = -1 * h2 / maxRange,
+		// Add helpers for calculations
+		maxRange = 5,
+		nlidar = 0,
+		resolution,
+		fov_half,
+		// Transform to the browser frame
+		local_group = svg.append("g"),
+		adjust_tr = function () {
+			var w = svg_container.clientWidth,
+				h = svg_container.clientHeight;
+			local_group
+				.attr("transform", "translate(" + w / 2 + "," + h / 2 + ") scale(" + w / (-2 * maxRange) + "," + h / (2 * maxRange) + ")");
+		},
+		// Add the path for the lidar returns
+		lidar_path = local_group.append("path")
+			.attr("stroke", "none")
+			.attr("fill", "grey"),
+		pathEl = lidar_path[0][0],
+		// TODO: Add the Pose marker of the robot
+		// Add the callback to update the SVG data
+		lidar2svg = function () {
+			if (!raw) {
+				anim = false;
+				return;
+			}
+			// Process Float32 lidar returns into an svg path
+			var r = new Float32Array(raw),
+				pathStr = 'M0,0',
 				theta,
 				range,
-				dx, // Robot frame
-				dy, // Robot frame
-				i;
-			// Form the browser coordinate line data
-			for (i = 0; i < r.length; i = i + 1) {
-				theta = i * factor + half_fov;
+				i,
+				n;
+			for (i = 0, n = r.length; i < n; i = i + 1) {
 				range = r[i];
-				dx = range * Math.cos(theta);
-				dy = range * Math.sin(theta);
-				lineData[i] = [
-					w2 + w_factor * dy, // Browser frame x
-					h2 + h_factor * dx  // Browser frame y
-				];
+				theta = i * resolution + fov_half;
+				pathStr += ' L' + range * sin(theta) + ',' + range * cos(theta);
 			}
-			lineData[i] = [ w2, h2 ];
+			pathStr += 'Z';
 			// Draw the path
-			lidar_path.attr("d", lineFunction(lineData));
+			pathEl.setAttribute('d', pathStr);
+			// Reset raw
+			raw = null;
+			requestAnimationFrame(lidar2svg);
 		};
 
-	// Resize helper
-	window.addEventListener('resize', function () {
-		w = svg_container.clientWidth;
-		h = svg_container.clientHeight;
-		h2 = h / 2;
-		w2 = w / 2;
-		pose_marker.attr("transform", "translate(" + w2 + "," + h2 + ")");
-	});
+	// Add the resize helper
+	adjust_tr();
+	this.addEventListener('resize', adjust_tr);
 
 	// Receive the laser scans
 	ws.binaryType = "arraybuffer";
 	ws.onmessage = function (e) {
 		//console.log(e);
 		if (typeof e.data === 'string') {
-			metadata = JSON.parse(e.data);
-			return;
+			meta = JSON.parse(e.data);
+			if (nlidar !== meta.n) {
+				nlidar = meta.n;
+				resolution = DEG_TO_RAD * meta.res;
+				fov_half = nlidar * resolution / 2;
+			}
+		} else {
+			raw = e.data;
+			if (!anim) {
+				requestAnimationFrame(lidar2svg);
+			}
 		}
-		// Parse the lidar information as Float32
-		returnsData = new Float32Array(e.data);
-		// Process into an svg path
-		lidar2svg(metadata, returnsData);
 	};
 
 });
