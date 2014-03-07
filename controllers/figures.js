@@ -153,11 +153,70 @@ this.addEventListener("load", function () {
 		.style("fill", "none")
 		.attr("marker-end", "url(#arrowhead)")
 		.attr("d", connect([west('rpc'),east('mesh')]));
+	// rpc state
+	svg.append("svg:path")
+		.style("stroke-width", 2)
+		.style("stroke", "steelblue")
+		.style("fill", "none")
+		.attr("marker-end", "url(#arrowhead)")
+		.attr("d", connect([south('rpc'),northwest('state')]));
+	svg.append("svg:path")
+		.style("stroke-width", 2)
+		.style("stroke", "steelblue")
+		.style("fill", "none")
+		.attr("marker-end", "url(#arrowhead)")
+		.attr("d", connect([east('rpc'),northwest('nodejs')]));
+	svg.append("svg:path")
+		.style("stroke-width", 2)
+		.style("stroke", "steelblue")
+		.style("fill", "none")
+		.attr("marker-end", "url(#arrowhead)")
+		.attr("d", connect([southwest('nodejs'),southeast('rpc')]));
+	svg.append("svg:path")
+		.style("stroke-width", 2)
+		.style("stroke", "steelblue")
+		.style("fill", "none")
+		.attr("marker-end", "url(#arrowhead)")
+		.attr("d", connect([northeast('nodejs'),west('browser')]));
+	svg.append("svg:path")
+		.style("stroke-width", 2)
+		.style("stroke", "steelblue")
+		.style("fill", "none")
+		.attr("marker-end", "url(#arrowhead)")
+		.attr("d", connect([southwest('browser'),southeast('nodejs')]));
 	
 	// Broadcast
 	add_radio('camera2');
 	add_radio('audio');
 	add_radio('mesh');
 	add_radio('rpc');
+	//(function(){
+	var sn = south('nodejs');
+	sn.y+=20;
+		// Broadcast
+		var radio0 = d3.svg.arc()
+			.innerRadius(4)
+			.outerRadius(6)
+			.startAngle(-Math.PI/4)
+			.endAngle(Math.PI/4);
+		var radio1 = d3.svg.arc()
+			.innerRadius(8)
+			.outerRadius(10)
+			.startAngle(-Math.PI/4)
+			.endAngle(Math.PI/4);
+		var radio2 = d3.svg.arc()
+			.innerRadius(12)
+			.outerRadius(14)
+			.startAngle(-Math.PI/4)
+			.endAngle(Math.PI/4);
+		var radio = svg.append('g')
+			.attr("transform","translate("+sn.x+","+sn.y+")");
+		radio.append("svg:path")
+			.attr("d",radio0);
+		radio.append("svg:path")
+			.attr("d",radio1);
+		radio.append("svg:path")
+			.attr("d",radio2);
+	//})();
 	
 }); // Page load listener

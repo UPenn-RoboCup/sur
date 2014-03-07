@@ -27,32 +27,45 @@ div.process {
 	/*width: 3in;*/
 	/*height: 2in;*/
 	border:1px solid #333;
-	padding: .025in;
+	padding: .01in;
 	border-radius: 0.1in;
 	float: left;
 }
-.ipc {
-	/*width: 2.8in;*/
-	clear: both;
-	height: .4in;
+#operator{
+	position: absolute;
 	border:1px solid #333;
-	padding: .05in;
-	border-radius: .1in;
-	background-color: #ffb;
-	margin-left: 0.05in;
-	margin-right: 0.05in;
-	margin-bottom: 0.05in;
+	top: .2in;
+	left: 3.45in;
+	width: 2.3in;
+	height: 1.35in;
+}
+#operator div{
+	position: absolute;
+	bottom: 0.05in;
+	right: 0.1in;
 }
 .thread {
-	/*width: 1.3in;*/
-	/*height: 1.25in;*/
 	border:1px solid #333;
 	padding: .05in;
 	border-radius: .1in;
-	margin-right: 0.05in;
-	margin-left: 0.05in;
-	margin-top: 0.05in;
-	margin-bottom: 0.05in;
+	margin-right: 0.025in;
+	margin-left: 0.025in;
+	margin-top: 0.025in;
+	margin-bottom: 0.025in;
+}
+.thread#arm {
+	position: absolute;
+	left: 1.25in;
+	top: 0in;
+	height: 1.35in;
+	background-color: #ffb;
+}
+.thread#motion {
+	position: absolute;
+	left: 2.5in;
+	top: .0in;
+	height: 1.35in;
+	background-color: #ffb;
 }
 div._l {
 	background-color: #fbb;
@@ -71,11 +84,11 @@ div._r {
 	left: .2in;
 }
 #camera2 {
-	top: 1.9in;
+	top: 1.8in;
 	left: .25in;
 }
 #camera {
-	top: 1.95in;
+	top: 1.85in;
 	left: .2in;
 }
 #audio {
@@ -84,11 +97,26 @@ div._r {
 }
 #rpc {
 	top: .27in;
-	left: 2.25in;
+	left: 2in;
 }
 #state {
-	top: 1.65in;
-	left: 2.25in;
+	top: 1.75in;
+	left: 2in;
 	height: 1.5in;
-	width: 3in;
+	width: 3.75in;
+}
+#state .thread {
+	width: 1.1in;
+}
+#nodejs {
+	top: 1in;
+	left: 3.5in;
+}
+#ssh {
+	top: .25in;
+	left: 3.5in;
+}
+#browser {
+	top: .25in;
+	left: 4.4in;
 }

@@ -46,8 +46,8 @@
 		<div class="thread _l">
 			Modify SHM<br/>
 			FSM Events<br/>
-			Toggle Broadcasts<br/>
-			Remote Procedures
+			Net Settings<br/>
+			RPC Execution
 		</div>
 		<div class="thread _r">
 			Broadcast state
@@ -74,15 +74,59 @@
 	<!-- State -->
 	<div id='state' class="process">
 		<div class="thread _l">
-			Modify SHM<br/>
-			FSM Events<br/>
-			Toggle Broadcasts<br/>
-			Remote Procedures
+			HeadFSM<br/>
+			BodyFSM<br/>
+			LidarFSM<br/>
 		</div>
 		<div class="thread _r">
-			Broadcast state
+			Servo Comms
+		</div>
+		<div class="thread" id='arm'>
+			<u>ArmFSM</u><br/>
+			<div>
+			Trajectory<br/>
+				<span style="margin-left:0.1in;">Optimization</span><br/>
+			Inverse<br/>
+				<span style="margin-left:.1in;">Kinematics</span><br/>
+			</div>
+		</div>
+		<div class="thread" id='motion'>
+			<u>MotionFSM</u><br/>
+			Torso<br/>
+				<span style="margin-left:0.05in;">Compensation</span><br/>
+			Emergency<br/>
+				<span style="margin-left:0.05in;">Stabilization</span><br/>
+			Reactive ZMP<br/>
+			Preview ZMP<br/>
 		</div>
 	</div>
+	
+	<div id="operator"><div>Operator Console</div></div>
+	<!-- State -->
+	<div id='nodejs' class="process">
+		<div class="thread">
+			Bridge
+		</div>
+	</div>
+	<!-- State -->
+	<div id='ssh' class="process">
+		<div class="thread">
+			<u>SSH</u><br/>
+			Scripts
+		</div>
+	</div>
+	<!-- State -->
+	<div id='browser' class="process">
+		<div class="thread _l">
+			<u>Browser GUI</u><br/>
+			3D Scene<br/>
+			Camera Feeds<br/>
+		</div>
+		<div class="thread _r">
+			Command Line<br/>
+		</div>
+	</div>
+	
 </body>
 
 </html>
