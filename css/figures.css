@@ -1,0 +1,94 @@
+html, body {
+  font-family: palatino;
+  height: 100%;
+  margin: 0px;
+  overflow: hidden;
+}
+svg#full {
+	position: absolute;
+	width: 100%;
+	margin-left: auto;
+  margin-right: auto;
+}
+div.sensor {
+	/*display: none;*/
+	position: absolute;
+	height: auto;
+	width: auto;
+	border-radius: .1in;
+	background-color: #bff;
+	padding: .1in;
+	border:1px solid #333;
+}
+div.process {
+	/*display: none;*/
+	position: absolute;
+	background-color: lightgrey;
+	/*width: 3in;*/
+	/*height: 2in;*/
+	border:1px solid #333;
+	padding: .025in;
+	border-radius: 0.1in;
+	float: left;
+}
+.ipc {
+	/*width: 2.8in;*/
+	clear: both;
+	height: .4in;
+	border:1px solid #333;
+	padding: .05in;
+	border-radius: .1in;
+	background-color: #ffb;
+	margin-left: 0.05in;
+	margin-right: 0.05in;
+	margin-bottom: 0.05in;
+}
+.thread {
+	/*width: 1.3in;*/
+	/*height: 1.25in;*/
+	border:1px solid #333;
+	padding: .05in;
+	border-radius: .1in;
+	margin-right: 0.05in;
+	margin-left: 0.05in;
+	margin-top: 0.05in;
+	margin-bottom: 0.05in;
+}
+div._l {
+	background-color: #fbb;
+}
+div._r {
+	background-color: #bfb;
+}
+
+/* Position the nodes */
+#lidar {
+	top: .2in;
+	left: .6in;
+}
+#mesh {
+	top: .8in;
+	left: .2in;
+}
+#camera2 {
+	top: 1.9in;
+	left: .25in;
+}
+#camera {
+	top: 1.95in;
+	left: .2in;
+}
+#audio {
+	top: 2.7in;
+	left: .2in;
+}
+#rpc {
+	top: .27in;
+	left: 2.25in;
+}
+#state {
+	top: 1.65in;
+	left: 2.25in;
+	height: 1.5in;
+	width: 3in;
+}

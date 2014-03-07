@@ -8,30 +8,81 @@
   <meta name="viewport" content="width=device-width,user-scalable=no">
 
   <!-- CSS for Styling the page -->
-  <link rel="stylesheet" type="text/css" href="/css/gh-buttons.css">
 
   <!-- Application Frameworks -->
 	<script src="/lib/qwest.min.js"></script>
-  <script src="/lib/marked.js"></script>
-	<script src="/lib/snap.svg-min.js"></script>
+	<script src="/lib/d3.min.js"></script>
+	<!--
+	<script src="/lib/marked.js"></script>
 	<script type="text/x-mathjax-config">
   	MathJax.Hub.Config({ TeX: { equationNumbers: {autoNumber: "AMS"} } });
 	</script>
-	<!--<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">-->
-	<script type="text/javascript" src="/lib/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+	<script type="text/javascript" src="/lib/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML">-->
 	</script>
 
   <!-- SUR data JS -->
   <script src="/controllers/include.js"></script>
-	<script src="/controllers/thesis.js"></script>
-	
-	<!-- Snap JS Scripts -->
-	<script src="/snap/task.js"></script>
+	<script src="/controllers/figures.js"></script>
 
 	<link rel="stylesheet" type="text/css" href="/css/thesis.css">
+	<link rel="stylesheet" type="text/css" href="/css/figures.css">
 
 </head>
 
-<body></body>
+<body>
+	<svg id='full'></svg>
+	<!-- Mesh -->
+	<div id='mesh' class="process">
+		<div class="thread _l">
+			Laser Scan Cache
+		</div>
+		<div class="thread _r">
+			Form Depthmap<br/>
+			Broadcast JPEG
+		</div>
+	</div>
+	<!-- RPC -->
+	<div id='rpc' class="process">
+		<div class="thread _l">
+			Modify SHM<br/>
+			FSM Events<br/>
+			Toggle Broadcasts<br/>
+			Remote Procedures
+		</div>
+		<div class="thread _r">
+			Broadcast state
+		</div>
+	</div>
+	<!-- Lidar -->
+	<div id='lidar' class="sensor">
+		LIDAR
+	</div>
+	<!-- Cameras -->
+	<div id='camera2' class="sensor">
+		Camera Image<br/>
+		Broadcast JPEG
+	</div>
+	<div id='camera' class="sensor">
+		Camera Stream<br/>
+		Broadcast JPEG
+	</div>
+	<!-- Audio -->
+	<div id='audio' class="sensor">
+		Microphone<br/>
+		Broadcast MP3
+	</div>
+	<!-- State -->
+	<div id='state' class="process">
+		<div class="thread _l">
+			Modify SHM<br/>
+			FSM Events<br/>
+			Toggle Broadcasts<br/>
+			Remote Procedures
+		</div>
+		<div class="thread _r">
+			Broadcast state
+		</div>
+	</div>
+</body>
 
 </html>
