@@ -24,6 +24,7 @@ html, body {
 }
 
 #camera2_container{
+  position: fixed;
   height: 100%;
   /*margin-left: 100px;*/
   margin-left: 10%;
@@ -50,17 +51,15 @@ html, body {
   font-size: x-large;
 }
 
-#landmarks {
+#monitor {
+  position: fixed;
   height: 100%;
-  
-  position: absolute;
-  top: 0px;
-}
+  margin-left: 10%;  
+} 
 
-#test_draw{
+#monitor_overlay{
   width: 640px;
   height: 480px;
   position: absolute;
   top: 100px;
-  margin-left: 10%;
 }

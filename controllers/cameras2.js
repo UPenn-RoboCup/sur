@@ -2,6 +2,7 @@
 document.addEventListener( "DOMContentLoaded", function(){
   // Set up the camera
   Camera2.setup();
+  Vision.setup();
   
   // Place on the page
   var camera_container = $('#camera2_container')[0];

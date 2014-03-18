@@ -67,7 +67,7 @@ bridges.push({
 bridges.push({
 	name : 'vision',
 	ws : 9015,
-    udp: 33331,
+  udp: 33331,
 	clients : []
 });
 
