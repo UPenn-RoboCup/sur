@@ -50,3 +50,17 @@ html, body {
   font-size: x-large;
 }
 
+#landmarks {
+  height: 100%;
+  
+  position: absolute;
+  top: 0px;
+}
+
+#test_draw{
+  width: 640px;
+  height: 480px;
+  position: absolute;
+  top: 100px;
+  margin-left: 10%;
+}

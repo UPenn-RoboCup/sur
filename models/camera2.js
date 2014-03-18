@@ -10,6 +10,7 @@
   var old_imgs = []
   var camera_img;
 	
+  // Declare landmarks
 	var myPanel;
   var circle;
 	var label;
@@ -38,7 +39,7 @@ Camera2.latency = [];
   Camera2.setup = function(){
     camera_img = new Image();
     camera_img.id  = 'head_camera';
-    camera_img.alt = 'No head_camera image yet...'
+    camera_img.alt = 'No head_camera image yet...'    
 
     // Websocket Configuration
     var port = 9004; // head cam
@@ -48,16 +49,32 @@ Camera2.latency = [];
     var ws = new WebSocket('ws://' + host + ':' + port);
     ws.binaryType = "blob";
     // Send data to the webworker
-    ws.onmessage = function(e){
-      if(typeof e.data === "string"){
+    ws.onmessage = function(e){      
+      if(typeof e.data === "string"){        
         fr_metadata = JSON.parse(e.data);
 				
 				// Process vision landmarks messages
-				// var ballDia = fr_metadata.ballDia;
-				var ballPos = fr_metadata.ballPos;
-				$('#ball_info')[0].innerHTML = ballPos[0].toString();
+        var ballDetected = fr_metadata.ballDetect;
+				var ballSize = fr_metadata.ballSize;
+				var ballCenter = fr_metadata.ballCenter;
+				var ballX = fr_metadata.ballX;
+				var ballY = fr_metadata.ballY;        
+
+
+        // Display information
+        var detect_str = "Detected?  ";
+        if (ballDetected == 1) {detect_str = "See ball :) <br>";}
+        else {detect_str = "See No ball :( <br>";}
+				var centerx_str = "centroidX = " + Math.round(ballCenter[0]).toString() + " <br>";        
+				var centery_str = "centroidY = " + Math.round(ballCenter[1]).toString() + " <br>";
+        // var dia_str = "Diameter = " + ballSize.toFixed(2).toString() + " <br>";
+				var px_str = "ball_x = " + ballX.toFixed(2).toString() + " m <br>";
+				var py_str = "ball_y = " + ballY.toFixed(2).toString() + " m <br>";
+        
+				var out_str = detect_str+centerx_str+centery_str+px_str+py_str;        
+        $('#ball_info')[0].innerHTML = out_str;
 				
-				update_model(ballPos);
+				update_model(ballCenter, ballSize);
 				
 				// console.log('Camera2',fr_metadata.sz);
         return;
@@ -93,6 +110,7 @@ Camera2.latency = [];
 	var setup_model = function(){
 	  myPanel = new jsgl.Panel(document.getElementById("test_draw"));
 
+    //TODO: use snap.svg maybe. shouldn't be much different tho...
 	  /* Start drawing! */
 
 	  /* Create circle and modify it */
@@ -119,25 +137,20 @@ Camera2.latency = [];
 	  // myPanel.addElement(polygon);
 
 	  /* Create text label and modify it */
-	  label = myPanel.createLabel();
-	  label.setText("Hello World!");
-	  label.setLocationXY(30,120);
-	  // label.setBold(true);
-	  label.setFontFamily("sans-serif");
-	  label.setFontSize(20);
-	  myPanel.addElement(label);
+    // label = myPanel.createLabel();
+    // label.setText("Hello World!");
+    // label.setLocationXY(30,120);
+    // label.setBold(true);
+    // label.setFontFamily("sans-serif");
+    // label.setFontSize(20);
+    // myPanel.addElement(label);
 		
 	}
 	
-	var update_model = function(ballPos){
-	  // circle.setCenterLocationXY(ballPos[0],ballPos[1]);
-		circle.setCenterLocationXY(50,50);
-	  // circle.setRadius(30);
-
-    /* Create text label and modify it */
-	  label.setText(ballPos[0].toString() + ',' + ballPos[1].toString());
-	  label.setLocationXY(ballPos.x-20,ballPos.y);
-		
+	var update_model = function(ballCenter, ballSize){
+    // TODO: when no ball detected, do not overlay
+    circle.setCenterLocationXY(ballCenter[0]*2,ballCenter[1]*2);
+    circle.setRadius(ballSize);		
 	}
 
   // export
