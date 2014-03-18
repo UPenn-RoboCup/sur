@@ -39,7 +39,9 @@ Camera2.latency = [];
   Camera2.setup = function(){
     camera_img = new Image();
     camera_img.id  = 'head_camera';
-    camera_img.alt = 'No head_camera image yet...'    
+    camera_img.alt = 'No head_camera image yet...' 
+    
+		setup_model();   
 
     // Websocket Configuration
     var port = 9004; // head cam
@@ -61,20 +63,26 @@ Camera2.latency = [];
 				var ballY = fr_metadata.ballY;        
 
 
-        // Display information
+        // Display information        
         var detect_str = "Detected?  ";
         if (ballDetected == 1) {detect_str = "See ball :) <br>";}
         else {detect_str = "See No ball :( <br>";}
-				var centerx_str = "centroidX = " + Math.round(ballCenter[0]).toString() + " <br>";        
-				var centery_str = "centroidY = " + Math.round(ballCenter[1]).toString() + " <br>";
+				var centerx_str = "centroid_I = " + Math.round(ballCenter[0]).toString() + "<br>";        
+				var centery_str = "centroid_J = " + Math.round(ballCenter[1]).toString() + "<br>";
         // var dia_str = "Diameter = " + ballSize.toFixed(2).toString() + " <br>";
-				var px_str = "ball_x = " + ballX.toFixed(2).toString() + " m <br>";
-				var py_str = "ball_y = " + ballY.toFixed(2).toString() + " m <br>";
+				var px_str = "ball_x = " + ballX.toFixed(2).toString() + " m<br>";
+				var py_str = "ball_y = " + ballY.toFixed(2).toString() + " m<br>";
         
 				var out_str = detect_str+centerx_str+centery_str+px_str+py_str;        
         $('#ball_info')[0].innerHTML = out_str;
 				
-				update_model(ballCenter, ballSize);
+        // If no ball detected, then don't show
+        if (ballDetected == 1) {
+          update_model(ballCenter, ballSize);
+           if (myPanel.containsElement(circle) == false) {myPanel.addElement(circle);}
+        } else if (myPanel.containsElement(circle) == true) {
+          myPanel.removeElement(circle);
+        }
 				
 				// console.log('Camera2',fr_metadata.sz);
         return;
@@ -101,9 +109,7 @@ Camera2.latency = [];
       }); //animframe
 
     };
-		
-		setup_model();
-		
+    		
   } // Websocket handling
 	
 	
@@ -121,7 +127,7 @@ Camera2.latency = [];
 	  circle.getStroke().setColor("rgb(255,0,0)");
 	  circle.getFill().setColor("rgb(255,0,0)");
 	  circle.getFill().setOpacity(0.5);
-	  myPanel.addElement(circle);
+    myPanel.addElement(circle);
 
 	  /* Create polygon and modify it */
 	  // polygon = myPanel.createPolygon();
@@ -148,7 +154,6 @@ Camera2.latency = [];
 	}
 	
 	var update_model = function(ballCenter, ballSize){
-    // TODO: when no ball detected, do not overlay
     circle.setCenterLocationXY(ballCenter[0]*2,ballCenter[1]*2);
     circle.setRadius(ballSize);		
 	}
