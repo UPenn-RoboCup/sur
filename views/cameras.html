@@ -23,10 +23,14 @@
   <script src="/controllers/include.js"></script>
   <script src="/controllers/transform.js"></script>
   <script src="/models/camera.js"></script>
+  <script src="/models/vision.js"></script>
+  
   
   <!-- App specific needs -->
   <link rel="stylesheet" type="text/css" href="/css/cameras.css">
   <script src="/controllers/cameras.js"></script>
+  <script src="/controllers/cameras2.js"></script>
+  
  
 </head>
 
@@ -60,8 +64,14 @@
   <!-- Head Camera Image Stream -->
   <div class="camera_overlay">
     <span id="lag_seconds">1</span> sec lag
+    <span id="ball_info"></span>
+    
   </div>
 
+  <div class="monitor">
+    <div id="monitor_overlay2"></div>
+  </div>
+  
 </body>
 
 </html>

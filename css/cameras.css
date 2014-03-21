@@ -4,15 +4,18 @@ html, body {
   margin: 0px;
   overflow: hidden;
 }
+
+/*Camera feed container*/
 #camera_container{
+/* TODO overlay on video feed*/
   height: 100%;
-  /*margin-left: 100px;*/
   margin-left: 10%;
 }
 #camera_container img {
   width: 100%;
   height: 100%;
 }
+
 /* Buttons */
 #camera_buttons {
   width: 10%;
@@ -23,43 +26,51 @@ html, body {
   width: 100%;
 }
 
+/*Label image container*/
 #camera2_container{
-  position: fixed;
-  height: 100%;
-  /*margin-left: 100px;*/
+/*  height: 20%;*/
   margin-left: 10%;
 }
 #camera2_container img {
-  width: 640px;
-  height: 480px;
-  /*-webkit-transform: rotate(90deg);*/
   position: absolute;
-  top: 100px;
+  width: 640px;
+  height: 360px;
   
-  /*
-  -webkit-transform-origin: 50% 100%;
-  transform: rotate(90deg) translateX(100px) translateY(100px);
-  transform-origin: 50% 50%;
-  */
+/*  width: 100%;
+  height: 100%;*/
 }
 
+/*Monitor overlay*/
+.monitor {
+  height: 100%;
+  margin-left: 10%;
+} 
+#monitor_overlay{
+  position: absolute;
+  width: 640px;
+  height: 360px;
+  
+/*  width: 100%;
+  height: 100%;*/
+}
+
+
+
+
+#monitor_overlay2{
+  width: 640px;
+  height: 360px;
+  position: absolute;
+  
+/*  width: 100%;
+  height: 100%;*/
+}
+
+/*Moniter info display*/
 .camera_overlay {
   position: fixed;
   right: 20px;
   top: 0px;
   color: red;
   font-size: x-large;
-}
-
-#monitor {
-  position: fixed;
-  height: 100%;
-  margin-left: 10%;  
-} 
-
-#monitor_overlay{
-  width: 640px;
-  height: 480px;
-  position: absolute;
-  top: 100px;
 }

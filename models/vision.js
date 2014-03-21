@@ -10,7 +10,8 @@
   // Declare landmarks
 	var myPanel;
   var ball;
-	var goalpost, obstacle;
+	var goal;
+  var scaleFactors = {};
   
   
   var to_show = true;
@@ -54,35 +55,13 @@
       var vision = JSON.parse(e.data);
             
 			// Retriet ballStats
-      var ballDetected = vision.ball.ballDetect;
-			var ballSize = vision.ball.ballSize;
-			var ballCenter = vision.ball.ballCenter;
-			var ballX = vision.ball.ballX;
-			var ballY = vision.ball.ballY;        
-
-      // Display information        
-      var detect_str = "Detected?  ";
-      if (ballDetected == 1) {detect_str = "See ball :) <br>";}
-      else {detect_str = "See No ball :( <br>";}
-			var centerx_str = "centroid_I = " + Math.round(ballCenter[0]).toString() + "<br>";        
-			var centery_str = "centroid_J = " + Math.round(ballCenter[1]).toString() + "<br>";
-      // var dia_str = "Diameter = " + ballSize.toFixed(2).toString() + " <br>";
-			var px_str = "ball_x = " + ballX.toFixed(3).toString() + " m<br>";
-			var py_str = "ball_y = " + ballY.toFixed(3).toString() + " m<br>";
+      var ballStats = vision.ball;
+      var goalStats = vision.goal;
       
-			var out_str = detect_str+centerx_str+centery_str+px_str+py_str;        
-      $('#ball_info')[0].innerHTML = out_str;
-			
-      // If no ball detected, then don't show
-      if (ballDetected == 1) {
-        update_model(ballCenter, ballSize);
-         if (myPanel.containsElement(ball) == false) {myPanel.addElement(ball);}
-      } else if (myPanel.containsElement(ball) == true) {
-        myPanel.removeElement(ball);
-      }
-      
-  
-      update_model(ballCenter, ballSize);      
+      getScaleFactors();
+      update_ball(ballStats);
+      update_goal(goalStats);
+        
     }    
 		
   }
@@ -98,39 +77,159 @@
 	  ball.setCenterLocationXY(50,50);
 	  ball.setRadius(30);
 	  ball.getStroke().setWeight(5);
-	  ball.getStroke().setColor("rgb(255,0,0)");
-	  ball.getFill().setColor("rgb(255,0,0)");
-	  ball.getFill().setOpacity(0.5);
+	  ball.getStroke().setColor("rgb(0,0,255)");
+    ball.getFill().setOpacity(0.3);
     myPanel.addElement(ball);
 
-	  /* Create polygon and modify it */
-	  // polygon = myPanel.createPolygon();
-	  // polygon.addPointXY(50,50);
-	  // polygon.addPointXY(110,50);
-	  // polygon.addPointXY(150,80);
-	  // polygon.addPointXY(110,110);
-	  // polygon.addPointXY(50,110);
-	  // polygon.getStroke().setWeight(5);
-	  // polygon.getStroke().setColor("rgb(0,0,255)");
-	  // polygon.getFill().setColor("rgb(0,255,0)");
-	  // polygon.getFill().setOpacity(0.5);
-	  // myPanel.addElement(polygon);
-
-	  /* Create text label and modify it */
-    // label = myPanel.createLabel();
-    // label.setText("Hello World!");
-    // label.setLocationXY(30,120);
-    // label.setBold(true);
-    // label.setFontFamily("sans-serif");
-    // label.setFontSize(20);
-    // myPanel.addElement(label);
+    /* Create goal and modify it */
+    goal = myPanel.createRectangle();
+    goal.setHorizontalAnchor(jsgl.HorizontalAnchor.CENTER);
+    goal.setVerticalAnchor(jsgl.VerticalAnchor.MIDDLE);
+    goal.setWidth(50);
+    goal.setHeight(50);
+    goal.setLocationXY(200,200);
+    goal.getStroke().setWeight(5);
+    goal.getStroke().setColor("rgb(0,0,255)");
+    goal.getFill().setOpacity(0);
+    myPanel.addElement(goal);
 		
 	}
-	
-	var update_model = function(ballCenter, ballSize){
-    ball.setCenterLocationXY(ballCenter[0]*2,ballCenter[1]*2);
-    ball.setRadius(ballSize);		
-	}
+  
+  
+  var update_ball = function(ballStats) {
+    var ballDetected = ballStats.ballDetect;
+		var ballSize = ballStats.ballSize;
+		var ballCenter = ballStats.ballCenter;
+		var ballX = ballStats.ballX;
+		var ballY = ballStats.ballY;        
+
+    // Display information  
+    // Detect?      
+    if (ballDetected == 1) {
+      var detect_str = "See ball :) <br>";
+      // ball position
+			var px_str = "ball_x = " + ballX.toFixed(3).toString() + " m<br>";
+			var py_str = "ball_y = " + ballY.toFixed(3).toString() + " m<br>";      
+			var out_str = detect_str+px_str+py_str;        
+      $('#ball_info')[0].innerHTML = out_str;    
+      
+      // Update and show overlay            
+      var centerX = ballCenter[0]*scaleFactors.x;
+      var centerY = ballCenter[1]*scaleFactors.y;
+      // ballSize = Math.sqrt(Math.min(scaleFactors.x, scaleFactors.y)) * ballSize; // ROUGHLY resize
+    
+      ball.setCenterLocationXY(centerX, centerY);
+      ball.setRadius(ballSize);		      
+      if (myPanel.containsElement(ball) == false)
+        { myPanel.addElement(ball); }
+                  
+    } else {
+      var detect_str = "See No ball :( <br>";
+      $('#ball_info')[0].innerHTML = detect_str;
+      // Do not show
+      if (myPanel.containsElement(ball) == true) 
+        { myPanel.removeElement(ball); }
+    }
+    
+  }
+
+
+  var update_goal = function(goalStats) {
+    
+    var goalDetected = goalStats.goalDetect;
+    var type = goalStats.goalType;
+    
+    if (goalDetected==1){
+      if (type<3) {
+        if (type==0){
+          var goal_type = "Single unknown post <br>";
+        } else if (type==1) {
+          var goal_type = "LEFT post <br>";
+        } else {
+          var goal_type = "RIGHT post <br>";
+        }
+        
+        // World info               
+        var x = goalStats.positions[0][0];
+        var y = goalStats.positions[0][1];
+  			var px_str = "goal_x = " + x.toFixed(2).toString() + " m<br>";
+  			var py_str = "goal_y = " + y.toFixed(2).toString() + " m<br>";      
+  			
+        var out_str = "=======<br>"+goal_type+px_str+py_str;        
+        $('#debug_info')[0].innerHTML = out_str;
+        
+        // Overlay info
+        var center_i = goalStats.centroids[0][0]*scaleFactors.x;
+        var center_j = goalStats.centroids[0][1]*scaleFactors.y;
+        var height = goalStats.heights[0]*scaleFactors.y;
+        var width = goalStats.widths[0]*scaleFactors.x;
+        
+        // Update overlay
+        goal.setWidth(width);
+        goal.setHeight(height);
+        goal.setLocationXY(center_i,center_j);
+        
+        if (myPanel.containsElement(goal) == false)
+          { myPanel.addElement(goal); }
+      } else {
+        // two posts detected, draw the whole bounding box
+        var goal_type = "Two posts <br>";
+        
+        // World info
+        var x1 = goalStats.positions[0][0];
+        var y1 = goalStats.positions[0][1];      
+        var x2 = goalStats.positions[1][0];
+        var y2 = goalStats.positions[1][1]; 
+        var x = (x1+x2)/2;
+        var y = (y1+y2)/2;
+  			var px_str = "goal_x = " + x.toFixed(2) + " m<br>";
+  			var py_str = "goal_y = " + y.toFixed(2) + " m<br>"; 
+        
+        var out_str = "=======<br>"+goal_type+px_str+py_str;        
+        $('#debug_info')[0].innerHTML = out_str;
+
+        
+        // Overlay info
+        var BBox = goalStats.goalBBox;
+        
+        var width = (BBox[1]-BBox[0])*scaleFactors.x;
+        var height = (BBox[3]-BBox[2])*scaleFactors.y;
+        var center_i = (BBox[0]+BBox[1])/2*scaleFactors.x;
+        var center_j = (BBox[2]+BBox[3])/2*scaleFactors.y;
+
+        // $('#debug_info')[0].innerHTML = "tesing";//BBox.toString();
+        
+        // $('#debug_info')[0].innerHTML = width.toString()+"<br>"+height.toString();
+        
+        // Update overlay
+        goal.setWidth(width);
+        goal.setHeight(height);
+        goal.setLocationXY(center_i,center_j);
+             
+        if (myPanel.containsElement(goal) == false)
+          { myPanel.addElement(goal); }
+        
+      }
+    
+    } else {
+      var detect_str = "No goal detected :( <br>";
+      $('#debug_info')[0].innerHTML = "=======<br>"+detect_str;
+      // Do not show
+      if (myPanel.containsElement(goal) == true) 
+        { myPanel.removeElement(goal); }
+    }
+        
+  }
+
+  
+  var getScaleFactors = function(){
+    // TODO: call this function only when window size changes
+    var x = document.getElementById("monitor_overlay");
+    var width = x.offsetWidth;
+    var height = x.offsetHeight;
+    scaleFactors.x = width / 320;
+    scaleFactors.y = height/ 180;
+  }
    
   // export
 	ctx.Vision = Vision;
