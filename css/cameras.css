@@ -72,5 +72,13 @@ html, body {
   right: 20px;
   top: 0px;
   color: red;
+  font-size: large;
+}
+
+.world_info {
+  position: fixed;
+  left: 10px;
+  bottom: 0px;
+  color: red;
   font-size: x-large;
 }

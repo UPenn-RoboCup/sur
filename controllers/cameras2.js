@@ -20,6 +20,17 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(speed_url,{val: JSON.stringify([0,1,40,1])});
   });
   
+  
+  
+  clicker('ball',function(){
+    OVERLAY = "ball";
+  });
+ 
+  clicker('goal',function(){
+    OVERLAY = "goal";
+  });
+  
+  
   // Tweak the left hand (optionally change the right)
   clicker('roll_up',function(){
     qwest.get(body_url,{body: 'get_rarm_command_position'}).success(function(pos){

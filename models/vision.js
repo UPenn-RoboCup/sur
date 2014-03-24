@@ -103,6 +103,7 @@
 		var ballX = ballStats.ballX;
 		var ballY = ballStats.ballY;        
 
+    var debug_msg = ballStats.debug_msg;
     // Display information  
     // Detect?      
     if (ballDetected == 1) {
@@ -131,6 +132,12 @@
         { myPanel.removeElement(ball); }
     }
     
+    if (OVERLAY == "ball") {
+      var new_msg = debug_msg.replace(/\n/g, "<br>");
+      $('#debug_info')[0].innerHTML = new_msg;
+    }
+    
+    
   }
 
 
@@ -138,6 +145,7 @@
     
     var goalDetected = goalStats.goalDetect;
     var type = goalStats.goalType;
+    var debug_msg = goalStats.debug_msg;
     
     if (goalDetected==1){
       if (type<3) {
@@ -156,7 +164,7 @@
   			var py_str = "goal_y = " + y.toFixed(2).toString() + " m<br>";      
   			
         var out_str = "=======<br>"+goal_type+px_str+py_str;        
-        $('#debug_info')[0].innerHTML = out_str;
+        $('#goal_info')[0].innerHTML = out_str;
         
         // Overlay info
         var center_i = goalStats.centroids[0][0]*scaleFactors.x;
@@ -186,7 +194,7 @@
   			var py_str = "goal_y = " + y.toFixed(2) + " m<br>"; 
         
         var out_str = "=======<br>"+goal_type+px_str+py_str;        
-        $('#debug_info')[0].innerHTML = out_str;
+        $('#goal_info')[0].innerHTML = out_str;
 
         
         // Overlay info
@@ -196,10 +204,6 @@
         var height = (BBox[3]-BBox[2])*scaleFactors.y;
         var center_i = (BBox[0]+BBox[1])/2*scaleFactors.x;
         var center_j = (BBox[2]+BBox[3])/2*scaleFactors.y;
-
-        // $('#debug_info')[0].innerHTML = "tesing";//BBox.toString();
-        
-        // $('#debug_info')[0].innerHTML = width.toString()+"<br>"+height.toString();
         
         // Update overlay
         goal.setWidth(width);
@@ -213,11 +217,16 @@
     
     } else {
       var detect_str = "No goal detected :( <br>";
-      $('#debug_info')[0].innerHTML = "=======<br>"+detect_str;
       // Do not show
       if (myPanel.containsElement(goal) == true) 
         { myPanel.removeElement(goal); }
     }
+    
+    if (OVERLAY == "goal") {
+      var new_msg = debug_msg.replace(/\n/g, "<br>");
+      $('#debug_info')[0].innerHTML = new_msg;
+    }
+    
         
   }
 

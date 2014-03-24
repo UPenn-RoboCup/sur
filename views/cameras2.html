@@ -35,8 +35,22 @@
 <body>
   
   <div id="camera_buttons">
+    <!-- Buttons for debugging -->
+    <button class="big bigger button" id="ball">
+      Ball</button><br/>
+    <button class="big bigger button" id="goal">
+      Goal</button><br/>
+    <button class="big bigger button" id="line">
+      Line</button><br/>
+    <button class="big bigger button" id="corner">
+      Corner</button><br/>
+    <button class="big bigger button" id="obstacle">
+      Obstacle</button><br/>
+    
+    
+    
     <!-- Head Camera Buttons -->
-    <button class="big bigger button" id="head_slow">
+    <!-- <button class="big bigger button" id="head_slow">
       Slow</button><br/>
     <button class="big bigger button" id="head_single">
       Single</button><br/>
@@ -49,17 +63,20 @@
     <button class="big bigger button" id="pitch_up">
       Pitch +</button><br/>
     <button class="big bigger button" id="pitch_down">
-      Pitch -</button><br/>
+      Pitch -</button><br/> -->
   </div>
   
   <!-- Head Camera Image Stream -->
   <div id="camera2_container"></div>
 	
-  <!-- Referene Frame and Info: disply ball for now -->
-  <div class="camera_overlay">
+  <!-- World info from perception -->
+  <div class="world_info">
     <span id="ball_info"></span>
+    <span id="goal_info"></span>
+  </div>
+  
+  <div class="camera_overlay">
     <span id="debug_info"></span>
-    
   </div>
   
   <div class="monitor">

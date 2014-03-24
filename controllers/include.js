@@ -36,3 +36,6 @@ this.unclicker = function(id,fun){
 }
 this.DEG_TO_RAD = Math.PI/180;
 this.RAD_TO_DEG = 180/Math.PI;
+
+// For monitor overlay
+this.OVERLAY = "goal"
