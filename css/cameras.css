@@ -26,6 +26,26 @@ html, body {
   width: 100%;
 }
 
+/* Buttons */
+#monitor_buttons {
+  width: 10%;
+  position: absolute;
+}
+#monitor_buttons button {
+  /*width: 100px;*/
+  width: 100%;
+}
+
+#fsm_buttons {
+  width: 10%;
+  bottom: 0px;
+  position: absolute;
+}
+#fsm_buttons button {
+  /*width: 100px;*/
+  width: 100%;
+}
+
 /*Label image container*/
 #camera2_container{
 /*  height: 20%;*/
@@ -54,6 +74,12 @@ html, body {
   height: 100%;*/
 }
 
+#snap{
+  position: absolute;
+  width: 640px;
+  height: 360px;
+}
+
 
 
 
@@ -72,13 +98,13 @@ html, body {
   right: 20px;
   top: 0px;
   color: red;
-  font-size: large;
+  font-size: small;
 }
 
 .world_info {
   position: fixed;
-  left: 10px;
+  left: 30%;
   bottom: 0px;
   color: red;
-  font-size: x-large;
+  font-size: large;
 }

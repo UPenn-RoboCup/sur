@@ -19,6 +19,7 @@
   <script src="/lib/keypress.min.js"></script>
   <script src="/lib/peer.min.js"></script>
   <script src="/lib/jsgl.min.js"></script>
+  <script src="/lib/snap.svg-min.js"></script>
 
   <!-- SUR data JS -->
   <script src="/controllers/include.js"></script>
@@ -34,7 +35,7 @@
 
 <body>
   
-  <div id="camera_buttons">
+  <div id="monitor_buttons">
     <!-- Buttons for debugging -->
     <button class="big bigger button" id="ball">
       Ball</button><br/>
@@ -66,6 +67,14 @@
       Pitch -</button><br/> -->
   </div>
   
+  <div id="fsm_buttons">
+    <!-- Head FSM Buttons -->
+    <button class="big bigger button" id="head_center">
+    Look Ahead</button><br/>
+    <button class="big bigger button" id="detect_ball">
+    Detect Ball</button><br/>    
+  </div>
+  
   <!-- Head Camera Image Stream -->
   <div id="camera2_container"></div>
 	
@@ -73,6 +82,7 @@
   <div class="world_info">
     <span id="ball_info"></span>
     <span id="goal_info"></span>
+    <span id="line_info"></span>
   </div>
   
   <div class="camera_overlay">
@@ -81,6 +91,8 @@
   
   <div class="monitor">
     <div id="monitor_overlay"></div>
+    <div id="snap"></div>
+    
   </div>
 	
 

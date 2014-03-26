@@ -21,15 +21,18 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   
+  // Buttons for debug message display
+  clicker('ball',function(){ OVERLAY = "ball"; });
+  clicker('goal',function(){ OVERLAY = "goal"  });
+  clicker('line',function(){ OVERLAY = "line"  });
   
-  clicker('ball',function(){
-    OVERLAY = "ball";
+  // Buttons for head FSMs
+  clicker('head_center',function(){
+    qwest.post(fsm_url,{fsm: 'HeadFSM' , evt: 'center'});
   });
- 
-  clicker('goal',function(){
-    OVERLAY = "goal";
-  });
-  
+  clicker('detect_ball',function(){
+    qwest.post(fsm_url,{fsm: 'HeadFSM' , evt: 'scan'});
+  });  
   
   // Tweak the left hand (optionally change the right)
   clicker('roll_up',function(){

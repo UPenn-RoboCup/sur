@@ -9,8 +9,8 @@
   
   // Declare landmarks
 	var myPanel;
-  var ball;
-	var goal;
+  var ball, goal;
+  // var line1,line2,line3,line4,line5,line6;  //TODO
   var scaleFactors = {};
   
   
@@ -57,10 +57,13 @@
 			// Retriet ballStats
       var ballStats = vision.ball;
       var goalStats = vision.goal;
+      var lineStats = vision.line;
       
       getScaleFactors();
+      myPanel.clear();
       update_ball(ballStats);
       update_goal(goalStats);
+      update_line(lineStats);
         
     }    
 		
@@ -70,45 +73,78 @@
 	  myPanel = new jsgl.Panel(document.getElementById("monitor_overlay"));
 
     //TODO: use snap.svg maybe. shouldn't be much different tho...
-	  /* Start drawing! */
+	  /* Stroke objects */
+    var blueStroke = new jsgl.stroke.SolidStroke();
+    blueStroke.setColor("blue");
+    blueStroke.setWeight(5);
+    var redStroke = new jsgl.stroke.SolidStroke();
+    redStroke.setColor("red");
+    redStroke.setWeight(8);
+    
 
-	  /* Create ball and modify it */
+	  /* Create ball model */
 	  ball = myPanel.createCircle();
 	  ball.setCenterLocationXY(50,50);
 	  ball.setRadius(30);
-	  ball.getStroke().setWeight(5);
-	  ball.getStroke().setColor("rgb(0,0,255)");
+    ball.setStroke(blueStroke)
     ball.getFill().setOpacity(0.3);
-    myPanel.addElement(ball);
 
-    /* Create goal and modify it */
+    /* Create goal model */
     goal = myPanel.createRectangle();
     goal.setHorizontalAnchor(jsgl.HorizontalAnchor.CENTER);
     goal.setVerticalAnchor(jsgl.VerticalAnchor.MIDDLE);
     goal.setWidth(50);
     goal.setHeight(50);
     goal.setLocationXY(200,200);
-    goal.getStroke().setWeight(5);
-    goal.getStroke().setColor("rgb(0,0,255)");
+    goal.setStroke(blueStroke);
     goal.getFill().setOpacity(0);
-    myPanel.addElement(goal);
-		
+    
+    // Create multiple lines    
+    for (var i=0; i<6; i++) {
+      window['line'+i] = myPanel.createLine();
+      window['line'+i].setStartPointXY(50,50);
+      window['line'+i].setEndPointXY(100,100);
+      window['line'+i].setStroke(redStroke);
+    }
+    
+    
+    /*
+    // TODO: HOW TO DEAL WITH MULTIPLE LINES
+    var s = new Snap("#snap");
+    // Lets create big circle in the middle:
+    var bigCircle = s.circle(150, 150, 100);
+    // By default its black, lets change its attributes
+    bigCircle.attr({
+        fill: "#bada55",
+        stroke: "#000",
+        strokeWidth: 5
+    });
+    // Now lets create another small circle:
+    var smallCircle = s.circle(100, 150, 70);
+    // Lets put this small circle and another one into a group:
+    var discs = s.group(smallCircle, s.circle(200, 150, 70));
+    */
 	}
   
   
   var update_ball = function(ballStats) {
-    var ballDetected = ballStats.ballDetect;
-		var ballSize = ballStats.ballSize;
-		var ballCenter = ballStats.ballCenter;
-		var ballX = ballStats.ballX;
-		var ballY = ballStats.ballY;        
-
+    var ballDetect = ballStats.ballDetect;
     var debug_msg = ballStats.debug_msg;
+    
+    if (OVERLAY == "ball") {
+      var new_msg = debug_msg.replace(/\n/g, "<br>");
+      $('#debug_info')[0].innerHTML = new_msg;
+    }
+    
     // Display information  
     // Detect?      
-    if (ballDetected == 1) {
+    if (ballDetect == 1) {
+  		var ballSize = ballStats.ballSize;
+  		var ballCenter = ballStats.ballCenter;
+  		var ballX = ballStats.ballX;
+  		var ballY = ballStats.ballY;        
+      
       var detect_str = "See ball :) <br>";
-      // ball position
 			var px_str = "ball_x = " + ballX.toFixed(3).toString() + " m<br>";
 			var py_str = "ball_y = " + ballY.toFixed(3).toString() + " m<br>";      
 			var out_str = detect_str+px_str+py_str;        
@@ -117,37 +153,31 @@
       // Update and show overlay            
       var centerX = ballCenter[0]*scaleFactors.x;
       var centerY = ballCenter[1]*scaleFactors.y;
-      // ballSize = Math.sqrt(Math.min(scaleFactors.x, scaleFactors.y)) * ballSize; // ROUGHLY resize
     
       ball.setCenterLocationXY(centerX, centerY);
       ball.setRadius(ballSize);		      
-      if (myPanel.containsElement(ball) == false)
-        { myPanel.addElement(ball); }
+      myPanel.addElement(ball); 
                   
     } else {
       var detect_str = "See No ball :( <br>";
       $('#ball_info')[0].innerHTML = detect_str;
-      // Do not show
-      if (myPanel.containsElement(ball) == true) 
-        { myPanel.removeElement(ball); }
     }
-    
-    if (OVERLAY == "ball") {
-      var new_msg = debug_msg.replace(/\n/g, "<br>");
-      $('#debug_info')[0].innerHTML = new_msg;
-    }
-    
     
   }
 
 
   var update_goal = function(goalStats) {
     
-    var goalDetected = goalStats.goalDetect;
+    var goalDetect = goalStats.goalDetect;
     var type = goalStats.goalType;
     var debug_msg = goalStats.debug_msg;
     
-    if (goalDetected==1){
+    if (OVERLAY == "goal") {
+      var new_msg = debug_msg.replace(/\n/g, "<br>");
+      $('#debug_info')[0].innerHTML = new_msg;
+    }
+    
+    if (goalDetect==1){
       if (type<3) {
         if (type==0){
           var goal_type = "Single unknown post <br>";
@@ -209,37 +239,56 @@
         goal.setWidth(width);
         goal.setHeight(height);
         goal.setLocationXY(center_i,center_j);
-             
-        if (myPanel.containsElement(goal) == false)
-          { myPanel.addElement(goal); }
-        
+        myPanel.addElement(goal);
       }
     
     } else {
-      var detect_str = "No goal detected :( <br>";
-      // Do not show
-      if (myPanel.containsElement(goal) == true) 
-        { myPanel.removeElement(goal); }
+      $('#goal_info')[0].innerHTML = "=======<br>No goal detected :( <br>";
     }
+            
+  }
+
+  var update_line = function(lineStats) {
+    var lineDetect = lineStats.lineDetect;
+    var debug_msg = lineStats.debug_msg;
     
-    if (OVERLAY == "goal") {
+    if (OVERLAY == "line") {
       var new_msg = debug_msg.replace(/\n/g, "<br>");
       $('#debug_info')[0].innerHTML = new_msg;
     }
     
+    if (lineDetect==1){
+      for (var i=0; i<lineStats.nLines; i++) {
+        // Overlay info
+        var start_i = lineStats.endpointIJ[i][0]*scaleFactors.x;
+        var start_j = lineStats.endpointIJ[i][2]*scaleFactors.y;
+        var end_i = lineStats.endpointIJ[i][1]*scaleFactors.x;
+        var end_j = lineStats.endpointIJ[i][3]*scaleFactors.y;
         
+        var temp = window['line'+i]
+        temp.setStartPointXY(start_i,start_j);
+        temp.setEndPointXY(end_i,end_j);
+        
+        if (myPanel.containsElement(temp) == false)
+          {myPanel.addElement(temp); }       
+      }
+      $('#line_info')[0].innerHTML = "=======<br>"+lineStats.nLines+" lines<br>";
+    
+    } else {
+      $('#line_info')[0].innerHTML = "=======<br>No line detected :( <br>";
+    }
+    
   }
-
   
   var getScaleFactors = function(){
-    // TODO: call this function only when window size changes
+    // TODO: call this function only when window size changes?
     var x = document.getElementById("monitor_overlay");
     var width = x.offsetWidth;
     var height = x.offsetHeight;
     scaleFactors.x = width / 320;
     scaleFactors.y = height/ 180;
   }
-   
+
   // export
 	ctx.Vision = Vision;
 
