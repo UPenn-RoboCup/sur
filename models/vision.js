@@ -7,23 +7,12 @@
   // Object to hold our various setup/interaction methods from main.js
   function Vision(){}
   
-  // Declare landmarks
-	var myPanel;
-  var ball, goal;
-  // var line1,line2,line3,line4,line5,line6;  //TODO
+	var overlay, ball, goal;
+  var field, robot, ballGlobal;
   var scaleFactors = {};
   
   
   var to_show = true;
-
-  var show_model = function(){
-    //if (to_show) { 
-      var px_str = "x =  " + Vision.ball_x.toString() + " <br>";
-      var py_str = "y =  " + Vision.ball_y.toString() + "  <br>";
-      var dist_str = "dist =  " + Vision.ball_r.toString() + " m";
-      var out_str = px_str + py_str + dist_str;
-    //}
-  }
   
   var is_shown = false;
   
@@ -44,6 +33,7 @@
   // Setup canvas and WebSocket
   Vision.setup = function(){  	
     setup_model();
+    setup_field();
     
     // Websocket configuration for vision landmarks
     var port = 9015;
@@ -58,19 +48,20 @@
       var ballStats = vision.ball;
       var goalStats = vision.goal;
       var lineStats = vision.line;
+      var robotStats = vision.robot;
       
       getScaleFactors();
-      myPanel.clear();
+      overlay.clear();
       update_ball(ballStats);
       update_goal(goalStats);
       update_line(lineStats);
-        
+      update_world(ballStats, robotStats);
     }    
 		
   }
   
 	var setup_model = function(){
-	  myPanel = new jsgl.Panel(document.getElementById("monitor_overlay"));
+	  overlay = new jsgl.Panel(document.getElementById("monitor_overlay"));
 
     //TODO: use snap.svg maybe. shouldn't be much different tho...
 	  /* Stroke objects */
@@ -83,14 +74,14 @@
     
 
 	  /* Create ball model */
-	  ball = myPanel.createCircle();
+	  ball = overlay.createCircle();
 	  ball.setCenterLocationXY(50,50);
 	  ball.setRadius(30);
     ball.setStroke(blueStroke)
     ball.getFill().setOpacity(0.3);
 
     /* Create goal model */
-    goal = myPanel.createRectangle();
+    goal = overlay.createRectangle();
     goal.setHorizontalAnchor(jsgl.HorizontalAnchor.CENTER);
     goal.setVerticalAnchor(jsgl.VerticalAnchor.MIDDLE);
     goal.setWidth(50);
@@ -101,7 +92,7 @@
     
     // Create multiple lines    
     for (var i=0; i<6; i++) {
-      window['line'+i] = myPanel.createLine();
+      window['line'+i] = overlay.createLine();
       window['line'+i].setStartPointXY(50,50);
       window['line'+i].setEndPointXY(100,100);
       window['line'+i].setStroke(redStroke);
@@ -126,6 +117,127 @@
     */
 	}
   
+  var setup_field = function() {
+	  field = new jsgl.Panel(document.getElementById("monitor_field"));
+    var x_margin = 10;
+    var y_margin = 10;
+    var blueStroke = new jsgl.stroke.SolidStroke();
+    blueStroke.setColor("blue");
+    blueStroke.setWeight(4);
+   
+    var boundary = field.createRectangle();
+    boundary.setWidth(480);
+    boundary.setHeight(320);
+    boundary.setLocationXY(x_margin,y_margin);
+    boundary.setStroke(blueStroke);
+    boundary.getFill().setOpacity(0);
+    field.addElement(boundary);
+    
+    var goalAread1 = field.createRectangle();
+    goalAread1.setWidth(53);
+    goalAread1.setHeight(267);
+    goalAread1.setLocationXY(x_margin,y_margin+26.5);
+    goalAread1.setStroke(blueStroke);
+    goalAread1.getFill().setOpacity(0);
+    field.addElement(goalAread1);
+    
+    var goalAread2 = field.createRectangle();
+    goalAread2.setWidth(53);
+    goalAread2.setHeight(267);
+    goalAread2.setLocationXY(x_margin+427,y_margin+26.5);
+    goalAread2.setStroke(blueStroke);
+    goalAread2.getFill().setOpacity(0);
+    field.addElement(goalAread2);
+    
+	  var circle = field.createCircle();
+	  circle.setCenterLocationXY(x_margin+240,y_margin+160);
+	  circle.setRadius(40);
+    circle.setStroke(blueStroke)
+    circle.getFill().setOpacity(0);
+    field.addElement(circle);
+    
+    var center_line = field.createLine();
+    center_line.setStartPointXY(x_margin+240,y_margin);
+    center_line.setEndPointXY(x_margin+240,y_margin+320);
+    center_line.setStroke(blueStroke);
+    field.addElement(center_line);
+    
+    var spot1 = field.createCircle();
+	  spot1.setCenterLocationXY(x_margin+112,y_margin+160);
+	  spot1.setRadius(3);
+    spot1.setStroke(blueStroke)
+    field.addElement(spot1);
+
+    var spot2 = field.createCircle();
+	  spot2.setCenterLocationXY(x_margin+368,y_margin+160);
+	  spot2.setRadius(3);
+    spot2.setStroke(blueStroke)
+    field.addElement(spot2);
+    
+    // Robot 
+    robot = field.createGroup();
+    field.addElement(robot);
+    var triangle = field.createPolygon();
+    triangle.addPointXY(-15,0);
+    triangle.addPointXY(15,-10);
+    triangle.addPointXY(15,10);
+    triangle.getStroke().setColor('rgb(0,255,0)')
+    triangle.getFill().setColor("rgb(0,255,0)");
+    robot.addElement(triangle);
+    robot.setLocationXY(x_margin+240, y_margin+160);
+    
+    // Ball
+    ballGlobal = field.createCircle();
+	  ballGlobal.setCenterLocationXY(x_margin+300,y_margin+160);
+	  ballGlobal.setRadius(5);
+    ballGlobal.getStroke().setColor('rgb(255,0,0)');
+    ballGlobal.getFill().setColor("rgb(255,0,0)");
+    field.addElement(ballGlobal);
+    
+    
+    // Obstacle
+    
+  }
+  
+  
+  var local2global = function(pose, v) {
+    //Transform pose from local to global
+  }
+  
+  var global2image = function(p) {
+    // Transform pose from global to pixel frame
+  }
+  
+  var update_world = function(ballStats, robotStats) {
+    // update ball
+		var ballX = ballStats.ballX;
+		var ballY = ballStats.ballY;        
+		var px_str = "ball_x = " + ballX.toFixed(3).toString() + " m<br>";
+		var py_str = "ball_y = " + ballY.toFixed(3).toString() + " m<br>";      
+		var out_str = px_str+py_str;        
+    $('#ball_info')[0].innerHTML = "=======<br>"+out_str;    
+
+    
+    // Update robot pose
+    var robot_x = robotStats.pose.x;
+    var robot_y = robotStats.pose.y;
+    var robot_a = robotStats.pose.a;
+    var x_str = "robot_x = "+robot_x.toFixed(2).toString()+" m<br>";
+    var y_str = "robot_y = "+robot_y.toFixed(2).toString()+" m<br>";
+    var a_str = "robot_a = "+robot_a.toFixed(2).toString()+" rad<br>";
+		var pose_str = x_str+y_str+a_str;        
+    $('#robot_info')[0].innerHTML = pose_str;    
+    // $('#robot_info')[0].innerHTML = "TESTING";    
+    
+    
+    // var debug_msg = robotStats.debug_msg;
+    // var new_msg = debug_msg.replace(/\n/g, "<br>");
+    // $('#debug_info')[0].innerHTML = new_msg;
+    
+    // TODO: update triangle 
+    
+  }
+  
   
   var update_ball = function(ballStats) {
     var ballDetect = ballStats.ballDetect;
@@ -141,14 +253,6 @@
     if (ballDetect == 1) {
   		var ballSize = ballStats.ballSize;
   		var ballCenter = ballStats.ballCenter;
-  		var ballX = ballStats.ballX;
-  		var ballY = ballStats.ballY;        
-      
-      var detect_str = "See ball :) <br>";
-			var px_str = "ball_x = " + ballX.toFixed(3).toString() + " m<br>";
-			var py_str = "ball_y = " + ballY.toFixed(3).toString() + " m<br>";      
-			var out_str = detect_str+px_str+py_str;        
-      $('#ball_info')[0].innerHTML = out_str;    
       
       // Update and show overlay            
       var centerX = ballCenter[0]*scaleFactors.x;
@@ -156,12 +260,9 @@
     
       ball.setCenterLocationXY(centerX, centerY);
       ball.setRadius(ballSize);		      
-      myPanel.addElement(ball); 
+      overlay.addElement(ball); 
                   
-    } else {
-      var detect_str = "See No ball :( <br>";
-      $('#ball_info')[0].innerHTML = detect_str;
-    }
+    } 
     
   }
 
@@ -207,8 +308,8 @@
         goal.setHeight(height);
         goal.setLocationXY(center_i,center_j);
         
-        if (myPanel.containsElement(goal) == false)
-          { myPanel.addElement(goal); }
+        if (overlay.containsElement(goal) == false)
+          { overlay.addElement(goal); }
       } else {
         // two posts detected, draw the whole bounding box
         var goal_type = "Two posts <br>";
@@ -239,7 +340,7 @@
         goal.setWidth(width);
         goal.setHeight(height);
         goal.setLocationXY(center_i,center_j);
-        myPanel.addElement(goal);
+        overlay.addElement(goal);
       }
     
     } else {
@@ -269,8 +370,8 @@
         temp.setStartPointXY(start_i,start_j);
         temp.setEndPointXY(end_i,end_j);
         
-        if (myPanel.containsElement(temp) == false)
-          {myPanel.addElement(temp); }       
+        if (overlay.containsElement(temp) == false)
+          {overlay.addElement(temp); }       
       }
       $('#line_info')[0].innerHTML = "=======<br>"+lineStats.nLines+" lines<br>";
     
@@ -281,7 +382,7 @@
   }
   
   var getScaleFactors = function(){
-    // TODO: call this function only when window size changes?
+    // Label image
     var x = document.getElementById("monitor_overlay");
     var width = x.offsetWidth;
     var height = x.offsetHeight;
