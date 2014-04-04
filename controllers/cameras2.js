@@ -25,6 +25,7 @@ document.addEventListener( "DOMContentLoaded", function(){
   clicker('ball',function(){ OVERLAY = "ball"; });
   clicker('goal',function(){ OVERLAY = "goal"  });
   clicker('line',function(){ OVERLAY = "line"  });
+  clicker('world',function(){ OVERLAY = "world"  });
   
   // Buttons for head FSMs
   clicker('head_center',function(){

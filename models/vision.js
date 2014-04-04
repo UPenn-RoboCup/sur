@@ -32,6 +32,8 @@
 
   // Setup canvas and WebSocket
   Vision.setup = function(){  	
+    //TODO: OccMap for path planning
+    
     setup_model();
     setup_field();
     
@@ -209,6 +211,12 @@
   }
   
   var update_world = function(ballStats, robotStats) {
+    if (OVERLAY == 'world') {
+      var debug_msg = robotStats.debug_msg;
+      var new_msg = debug_msg.replace(/\n/g, "<br>");
+      $('#debug_info')[0].innerHTML = new_msg;
+    }
+    
     // update ball
 		var ballX = ballStats.ballX;
 		var ballY = ballStats.ballY;        
@@ -219,9 +227,9 @@
 
     
     // Update robot pose
-    var robot_x = robotStats.pose.x;
-    var robot_y = robotStats.pose.y;
-    var robot_a = robotStats.pose.a;
+    var robot_x = robotStats.pose[0];
+    var robot_y = robotStats.pose[1];
+    var robot_a = robotStats.pose[2];
     var x_str = "robot_x = "+robot_x.toFixed(2).toString()+" m<br>";
     var y_str = "robot_y = "+robot_y.toFixed(2).toString()+" m<br>";
     var a_str = "robot_a = "+robot_a.toFixed(2).toString()+" rad<br>";
@@ -230,9 +238,6 @@
     // $('#robot_info')[0].innerHTML = "TESTING";    
     
     
-    // var debug_msg = robotStats.debug_msg;
-    // var new_msg = debug_msg.replace(/\n/g, "<br>");
-    // $('#debug_info')[0].innerHTML = new_msg;
     
     // TODO: update triangle 
     
