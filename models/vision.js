@@ -10,10 +10,11 @@
 	var overlay, ball, goal;
   var field, robot, ballGlobal;
   var scaleFactors = {};
-  
+  // Offset values for field monitor
+  var x_margin = 10;
+  var y_margin = 10;
   
   var to_show = true;
-  
   var is_shown = false;
   
   Vision.show = function(){
@@ -121,8 +122,6 @@
   
   var setup_field = function() {
 	  field = new jsgl.Panel(document.getElementById("monitor_field"));
-    var x_margin = 10;
-    var y_margin = 10;
     var blueStroke = new jsgl.stroke.SolidStroke();
     blueStroke.setColor("blue");
     blueStroke.setWeight(4);
@@ -177,20 +176,29 @@
     field.addElement(spot2);
     
     // Robot 
-    robot = field.createGroup();
+    // robot = field.createGroup();
+    // field.addElement(robot);
+    // var triangle = field.createPolygon();
+    // triangle.addPointXY(-15,10);
+    // triangle.addPointXY(-15,-10);
+    // triangle.addPointXY(15,0);
+    // triangle.getStroke().setColor('rgb(0,255,0)')
+    // triangle.getFill().setColor("rgb(0,255,0)");
+    // robot.addElement(triangle);
+    // robot.setLocationXY(x_margin+240, y_margin+160);
+    
+    // TODO: add another object to form group
+    robot = field.createEllipse();
+    robot.setWidth(30);
+    robot.setHeight(20);
+    robot.getStroke().setColor('rgb(0,255,0)');
+    robot.getFill().setColor('rgb(0,255,0)');
+    robot.setCenterLocationXY(x_margin+240, y_margin+160);
     field.addElement(robot);
-    var triangle = field.createPolygon();
-    triangle.addPointXY(-15,0);
-    triangle.addPointXY(15,-10);
-    triangle.addPointXY(15,10);
-    triangle.getStroke().setColor('rgb(0,255,0)')
-    triangle.getFill().setColor("rgb(0,255,0)");
-    robot.addElement(triangle);
-    robot.setLocationXY(x_margin+240, y_margin+160);
     
     // Ball
     ballGlobal = field.createCircle();
-	  ballGlobal.setCenterLocationXY(x_margin+300,y_margin+160);
+	  ballGlobal.setCenterLocationXY(x_margin+180,y_margin+160);
 	  ballGlobal.setRadius(5);
     ballGlobal.getStroke().setColor('rgb(255,0,0)');
     ballGlobal.getFill().setColor("rgb(255,0,0)");
@@ -202,12 +210,27 @@
   }
   
   
-  var local2global = function(pose, v) {
+  var local2global = function(vLocal, pose) {
     //Transform pose from local to global
+    var ca = Math.cos(pose.a);
+    var sa = Math.sin(pose.a);
+
+    var vGlobal = {};
+    vGlobal.x = pose.x + ca*vLocal.x - sa*vLocal.y;
+    vGlobal.y = pose.y + sa*vLocal.x + ca*vLocal.y;
+    return vGlobal;
   }
   
   var global2image = function(p) {
     // Transform pose from global to pixel frame
+    // 480, 320, x_margin, y_margin
+    var pos = {};
+    var scale = 480/9;
+    pos.x = Math.round((4.5+p.x)*scale + x_margin);
+    pos.y = Math.round((3-p.y)*scale + y_margin);
+    pos.a = -p.a/Math.PI*180;
+     
+    return pos;
   }
   
   var update_world = function(ballStats, robotStats) {
@@ -218,29 +241,42 @@
     }
     
     // update ball
-		var ballX = ballStats.ballX;
-		var ballY = ballStats.ballY;        
-		var px_str = "ball_x = " + ballX.toFixed(3).toString() + " m<br>";
-		var py_str = "ball_y = " + ballY.toFixed(3).toString() + " m<br>";      
-		var out_str = px_str+py_str;        
+    var ballLocal = {};
+    ballLocal.x = ballStats.ballX;
+    ballLocal.y = ballStats.ballY;        
+    var px_str = "ball_x = " + ballLocal.x.toFixed(3).toString() + " m<br>";
+    var py_str = "ball_y = " + ballLocal.y.toFixed(3).toString() + " m<br>";          
+    var out_str = px_str+py_str;        
     $('#ball_info')[0].innerHTML = "=======<br>"+out_str;    
-
     
     // Update robot pose
-    var robot_x = robotStats.pose[0];
-    var robot_y = robotStats.pose[1];
-    var robot_a = robotStats.pose[2];
-    var x_str = "robot_x = "+robot_x.toFixed(2).toString()+" m<br>";
-    var y_str = "robot_y = "+robot_y.toFixed(2).toString()+" m<br>";
-    var a_str = "robot_a = "+robot_a.toFixed(2).toString()+" rad<br>";
+    var robotPose = {};
+    //TODO: button to toggle between odom and vision
+    robotPose.x = robotStats.pose_odom[0];
+    robotPose.y = robotStats.pose_odom[1];
+    robotPose.a = robotStats.pose_odom[2];
+    var x_str = "robot_x = "+robotPose.x.toFixed(2).toString()+" m<br>";
+    var y_str = "robot_y = "+robotPose.y.toFixed(2).toString()+" m<br>";
+    var a_str = "robot_a = "+robotPose.a.toFixed(2).toString()+" rad<br>";
 		var pose_str = x_str+y_str+a_str;        
     $('#robot_info')[0].innerHTML = pose_str;    
-    // $('#robot_info')[0].innerHTML = "TESTING";    
+    var poseField = global2image(robotPose);
     
+    var ballPos = local2global(ballLocal,robotPose);    
+    var ballPosField = global2image(ballPos);
     
+    //----------- Debugging msg ------------
+    var db_x = poseField.x.toString() + "<br>";
+    var db_y = poseField.y.toString() + "<br>";
+    var db_a = poseField.a.toString() + "<br>";
+    var db_str = db_x + db_y + db_a;
+    $('#robot_info')[0].innerHTML = db_str;    
+    //--------------------------------------
     
-    // TODO: update triangle 
-    
+    // Update field monitor 
+    ballGlobal.setCenterLocationXY(ballPosField.x, ballPosField.y);
+    robot.setCenterLocationXY(poseField.x, poseField.y);
+    robot.setRotation(poseField.a);
   }
   
   
