@@ -74,6 +74,13 @@ bridges.push({
 	clients : []
 });
 
+bridges.push({
+	name : 'touch',
+	ws : 9064,
+	pub: 'touch',
+	clients : []
+});
+
 /*
 bridges.push({
 	name : 'rgbd_depth',
@@ -359,9 +366,11 @@ var ws_error = function(e){
 }
 
 var ws_message = function(msg){
-  /* Accept JSON browser commands and no binary */
-  var cmd = JSON.parse(msg);
-  console.log('\nBrowser '+bridges[this.id]+' | ',cmd);
+  /* Accept JSON browser data */
+  var data = JSON.parse(msg);
+	var b = bridges[this.id];
+  console.log('\nBrowser '+b+' | ',data);
+	b.zmq_pub.send(mp.pack(data));
 }
 
 var ws_close = function(e){
@@ -468,6 +477,13 @@ for( var w=0; w<bridges.length; w++) {
       zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
       console.log('\tTCP Sub Bridge',b.tcp);
     }
+		
+		if( b.pub !== undefined ) {
+			var zmq_recv_skt = zmq.socket('pub');
+			zmq_recv_skt.bind('ipc:///tmp/'+b.pub);
+			console.log('\Publisher Bridge',b.pub);
+			b.zmq_pub = zmq_recv_skt;
+		}
 
 	} //ws check
 
