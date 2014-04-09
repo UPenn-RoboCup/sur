@@ -7,39 +7,59 @@ this.addEventListener("load", function () {
 			port = 9064,
 			ws = new this.WebSocket('ws://' + this.hostname + ':' + port);
 	
+	function procEvent(evt,name){
+		var data = {
+			t: evt.timeStamp,
+			e: name,
+			touch: [],
+		}
+		var t = evt.changedTouches;
+		var n = t.length
+		for(var i = 0; i<n; i++){
+			var tmp = t[i];
+			var touch = {
+				x: tmp.clientX,
+				y: tmp.clientY,
+				id: tmp.identifier,
+			}
+			data.touch.push(touch);
+		}
+		ws.send(JSON.stringify(data));
+	}
+	
 	function handleStart(evt){
 		evt.preventDefault();
-		// TODO: Is there timestamping already?
-		// Let's add one anyway...
-		evt.ts = Date.now();
-		ws.send(JSON.stringify(evt));
+		procEvent(evt,'start');
 	}
 	function handleEnd(evt){
 		evt.preventDefault();
-		ws.send(JSON.stringify(evt));
+		procEvent(evt,'end');
 	}
 	function handleCancel(evt){
 		evt.preventDefault();
-		ws.send(JSON.stringify(evt));
+		procEvent(evt,'cancel');
 	}
 	function handleLeave(evt){
 		evt.preventDefault();
-		ws.send(JSON.stringify(evt));
+		procEvent(evt,'leave');
 	}
 	function handleMove(evt){
 		evt.preventDefault();
-		ws.send(JSON.stringify(evt));
+		procEvent(evt,'move');
 	}
 	
-  el.addEventListener("touchstart", handleStart, false);
-  el.addEventListener("touchend", handleEnd, false);
-  el.addEventListener("touchcancel", handleCancel, false);
-  el.addEventListener("touchleave", handleLeave, false);
-  el.addEventListener("touchmove", handleMove, false);
+  this.addEventListener("touchstart", handleStart, false);
+  this.addEventListener("touchend", handleEnd, false);
+  this.addEventListener("touchcancel", handleCancel, false);
+  this.addEventListener("touchleave", handleLeave, false);
+  this.addEventListener("touchmove", handleMove, false);
 	
 	// Send when loaded
 	ws.onopen = function(evt){
-		ws.send(JSON.stringify(evt));
+		ws.send(JSON.stringify({
+			t: Date.now(),
+			e: 'refresh'
+		}));
 	}
 	
 });

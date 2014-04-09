@@ -369,7 +369,7 @@ var ws_message = function(msg){
   /* Accept JSON browser data */
   var data = JSON.parse(msg);
 	var b = bridges[this.id];
-  console.log('\nBrowser '+b+' | ',data);
+  //console.log('\nBrowser '+b+' | ',data);
 	b.zmq_pub.send(mp.pack(data));
 }
 
