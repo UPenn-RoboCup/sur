@@ -4,7 +4,7 @@ this.addEventListener("load", function () {
 	// Open the websockets to send back to the host for processing
   var el = document.getElementsByTagName("body")[0],
 		port = 9064,
-		ws = new this.WebSocket('ws://' + this.hostname + ':' + port),
+		ws = new window.WebSocket('ws://' + this.hostname + ':' + port),
 		beats = {},
 		BEAT_INTERVAL = 1000 / 5, // fps
 		trails = {},
@@ -150,14 +150,14 @@ this.addEventListener("load", function () {
 		trail_counts[1] = 0;
 	}
 	
-  this.addEventListener("touchstart", handleStart, false);
-  this.addEventListener("touchend", handleEnd, false);
-  this.addEventListener("touchcancel", handleCancel, false);
-  this.addEventListener("touchleave", handleLeave, false);
-  this.addEventListener("touchmove", handleMove, false);
+  window.addEventListener("touchstart", handleStart, false);
+  window.addEventListener("touchend", handleEnd, false);
+  window.addEventListener("touchcancel", handleCancel, false);
+  window.addEventListener("touchleave", handleLeave, false);
+  window.addEventListener("touchmove", handleMove, false);
 	// Compatibility with desktop
-	this.addEventListener("mousedown", handleMouseDown, false);
-	this.addEventListener("mouseup", handleMouseUp, false);
+	window.addEventListener("mousedown", handleMouseDown, false);
+	window.addEventListener("mouseup", handleMouseUp, false);
 	// Send when loaded
 	ws.onopen = refresh;
 	
