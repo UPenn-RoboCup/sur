@@ -33,7 +33,7 @@ this.addEventListener("load", function () {
 	}
 	function handleEnd(evt){
 		evt.preventDefault();
-		procEvent(evt,'end');
+		procEvent(evt,'stop');
 	}
 	function handleCancel(evt){
 		evt.preventDefault();
