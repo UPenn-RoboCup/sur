@@ -38,10 +38,11 @@ bridges.push({
 });
 
 bridges.push({
-  name : 'head_camera',
+  name : 'camera0',
   ws : 9003,
   udp: 33333,
   tcp : 33334,
+	sub : 'camera0',
   clients : []
 });
 

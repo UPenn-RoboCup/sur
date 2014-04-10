@@ -2,7 +2,7 @@ this.addEventListener("load", function () {
 	'use strict';
 	// Add the touches for the whole page...
 	// Open the websockets to send back to the host for processing
-  var el = document.getElementsByTagName("body")[0],
+  var body = document.getElementsByTagName("body")[0],
 		port = 9064,
 		ws = new window.WebSocket('ws://' + this.hostname + ':' + port),
 		beats = {},
@@ -10,7 +10,9 @@ this.addEventListener("load", function () {
 		trails = {},
 		trail_counts = {},
 		TRAIL_COUNT = 5,
-		TRAIL_INTERVAL = 500 / TRAIL_COUNT;
+		TRAIL_INTERVAL = 500 / TRAIL_COUNT,
+		V1,
+		V2;
 	
 	function refresh(evt) {
 		ws.send(JSON.stringify({
@@ -162,5 +164,11 @@ this.addEventListener("load", function () {
 	ws.onopen = refresh;
 	
 	// Use animation frames to send the websocket data...?
+	
+	// Add the Video stream overlay
+	V1 = new this.Video('arm_cam', 9003);
+	//V2 = new this.Video('kinect_cam', 9004);
+	// Place on the page
+  body.appendChild(V1.img);
 	
 });
