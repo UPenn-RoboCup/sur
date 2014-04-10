@@ -5,7 +5,16 @@ this.addEventListener("load", function () {
 	// Open the websockets to send back to the host for processing
   var el = document.getElementsByTagName("body")[0],
 			port = 9064,
-			ws = new this.WebSocket('ws://' + this.hostname + ':' + port);
+			ws = new this.WebSocket('ws://' + this.hostname + ':' + port),
+			to = {};
+	
+	function heartbeat(){
+		this.ws.send(JSON.stringify({
+			t: Date.now(),
+			e: 'beat',
+			id: this.id
+		}));
+	}
 	
 	function procEvent(evt,name){
 		var data = {
@@ -17,12 +26,29 @@ this.addEventListener("load", function () {
 		var n = t.length
 		for(var i = 0; i<n; i++){
 			var tmp = t[i];
+			var id = tmp.identifier;
 			var touch = {
 				x: tmp.clientX,
 				y: tmp.clientY,
-				id: tmp.identifier,
+				id: id,
 			}
 			data.touch.push(touch);
+			/*
+			Clear the timeout for this id,
+			since an event happened
+			*/
+			if( to[id] !== undefined ){
+				clearInterval( to[id] );
+			}
+			/* If touch is dead, remove key so 
+				memory does not leak
+			*/
+			if(name!=='start' && name!=='move'){
+				delete to[id];
+			} else {
+				// Set the timeout anew
+				to[id] = setInterval( heartbeat.bind({id: id, ws: ws}), 33 );
+			}
 		}
 		ws.send(JSON.stringify(data));
 	}
