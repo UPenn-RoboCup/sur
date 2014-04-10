@@ -1,114 +1,153 @@
 this.addEventListener("load", function () {
-	"use strict";
-	
+	'use strict';
 	// Add the touches for the whole page...
 	// Open the websockets to send back to the host for processing
   var el = document.getElementsByTagName("body")[0],
-			port = 9064,
-			ws = new this.WebSocket('ws://' + this.hostname + ':' + port),
-			beats = {},
-			BEAT_INTERVAL = 1000/5, // fps
-			trails = {},
-			trail_counts = {},
-			TRAIL_COUNT = 5,
-			TRAIL_INTERVAL = 500/TRAIL_COUNT;
+		port = 9064,
+		ws = new this.WebSocket('ws://' + this.hostname + ':' + port),
+		beats = {},
+		BEAT_INTERVAL = 1000 / 5, // fps
+		trails = {},
+		trail_counts = {},
+		TRAIL_COUNT = 5,
+		TRAIL_INTERVAL = 500 / TRAIL_COUNT;
 	
-	function heartbeat(){
+	function refresh(evt) {
+		ws.send(JSON.stringify({
+			t: Date.now(),
+			e: 'refresh'
+		}));
+	}
+	
+	function heartbeat(id) {
 		var beater = {
 			t: Date.now(),
 			e: 'beat',
-			id: this.id
-		}
-		this.ws.send(JSON.stringify(beater));
+			id: id
+		};
+		ws.send(JSON.stringify(beater));
 	}
 
-	function trail(){
-		var id = this.id;
-		var cnt = trail_counts[id];
+	function trail(id) {
+		var cnt = trail_counts[id],
+			trailer;
 		// Increment the count
 		trail_counts[id] = cnt + 1;
 		// Check if done the trail
-		if(cnt>TRAIL_COUNT){
-			clearInterval( trails[id] );
+		if (cnt > TRAIL_COUNT) {
+			clearInterval(trails[id]);
 			delete trails[id];
 			delete trail_counts[id];
 			return;
 		}
-		var trailer = {
+		trailer = {
 			t: Date.now(),
 			id: id,
 			e: 'trail',
 			cnt: cnt // cnt begins at 1
 		};
-		this.ws.send(JSON.stringify(trailer));
-		console.log(trailer);
+		ws.send(JSON.stringify(trailer));
 	}
 	
-	function procEvent(evt,name){
+	function procTouch(evt, name) {
 		var data = {
 			t: evt.timeStamp,
 			e: name,
-			touch: [],
-		}
-		var t = evt.changedTouches;
-		var n = t.length
-		for(var i = 0; i<n; i++){
-			var tmp = t[i];
-			var id = tmp.identifier;
-			var touch = {
+			touch: []
+		},
+			t = evt.changedTouches,
+			n = t.length,
+			i, tmp, id, touch;
+		for (i = 0; i < n; i = i + 1) {
+			tmp = t[i];
+			id = tmp.identifier;
+			touch = {
 				x: tmp.clientX,
 				y: tmp.clientY,
-				id: id,
-			}
+				id: id
+			};
 			data.touch.push(touch);
 			/*
 			Clear the timeout for this id,
 			since an event happened
 			*/
-			if( beats[id] !== undefined ){
-				clearInterval( beats[id] );
+			if (beats[id] !== undefined) {
+				clearInterval(beats[id]);
 			}
 			/* If touch is dead, remove key so 
 				memory does not leak. Leave a trail on stop
 			*/
-			switch(name){
-					case 'start':
-					case 'move':
-						beats[id] = setInterval( heartbeat.bind({id: id, ws: ws}), BEAT_INTERVAL );
-						break;
-					case 'stop':
-						trails[id] = setInterval( trail.bind({id: id, ws: ws}), TRAIL_INTERVAL );
-						trail_counts[id] = 0;
-						break;
-					case 'cancel':
-					case 'leave':
-					default:
-						delete beats[id];
-						break;
+			switch (name) {
+			case 'start':
+			case 'move':
+				beats[id] = setInterval(heartbeat.bind(undefined, id), BEAT_INTERVAL);
+				break;
+			case 'stop':
+				trails[id] = setInterval(trail.bind(undefined, id), TRAIL_INTERVAL);
+				trail_counts[id] = 0;
+				break;
+			case 'cancel':
+			case 'leave':
+				delete beats[id];
+				break;
 			}
 		}
 		ws.send(JSON.stringify(data));
 	}
 	
-	function handleStart(evt){
-		evt.preventDefault();
-		procEvent(evt,'start');
+	function procMouse(evt, name) {
+		var data = {
+			t: evt.timeStamp,
+			e: name,
+			touch: [{
+				x: evt.clientX,
+				y: evt.clientY,
+				id: 1
+			}]
+		};
+		ws.send(JSON.stringify(data));
+		if (beats[1] !== undefined) {
+			clearInterval(beats[1]);
+		}
 	}
-	function handleEnd(evt){
+	
+	function handleStart(evt) {
 		evt.preventDefault();
-		procEvent(evt,'stop');
+		procTouch(evt, 'start');
 	}
-	function handleCancel(evt){
+	function handleEnd(evt) {
 		evt.preventDefault();
-		procEvent(evt,'cancel');
+		procTouch(evt, 'stop');
 	}
-	function handleLeave(evt){
+	function handleCancel(evt) {
 		evt.preventDefault();
-		procEvent(evt,'leave');
+		procTouch(evt, 'cancel');
 	}
-	function handleMove(evt){
+	function handleLeave(evt) {
 		evt.preventDefault();
-		procEvent(evt,'move');
+		procTouch(evt, 'leave');
+	}
+	function handleMove(evt) {
+		evt.preventDefault();
+		procTouch(evt, 'move');
+	}
+	function handleMouseMove(evt) {
+		evt.preventDefault();
+		procMouse(evt, 'move');
+		beats[1] = setInterval(heartbeat.bind(undefined, 1), BEAT_INTERVAL);
+	}
+	function handleMouseDown(evt) {
+		evt.preventDefault();
+		procMouse(evt, 'start');
+		window.addEventListener("mousemove", handleMouseMove, false);
+		beats[1] = setInterval(heartbeat.bind(undefined, 1), BEAT_INTERVAL);
+	}
+	function handleMouseUp(evt) {
+		evt.preventDefault();
+		procMouse(evt, 'stop');
+		window.removeEventListener("mousemove", handleMouseMove, false);
+		trails[1] = setInterval(trail.bind(undefined, 1), TRAIL_INTERVAL);
+		trail_counts[1] = 0;
 	}
 	
   this.addEventListener("touchstart", handleStart, false);
@@ -116,13 +155,12 @@ this.addEventListener("load", function () {
   this.addEventListener("touchcancel", handleCancel, false);
   this.addEventListener("touchleave", handleLeave, false);
   this.addEventListener("touchmove", handleMove, false);
-	
+	// Compatibility with desktop
+	this.addEventListener("mousedown", handleMouseDown, false);
+	this.addEventListener("mouseup", handleMouseUp, false);
 	// Send when loaded
-	ws.onopen = function(evt){
-		ws.send(JSON.stringify({
-			t: Date.now(),
-			e: 'refresh'
-		}));
-	}
+	ws.onopen = refresh;
+	
+	// Use animation frames to send the websocket data...?
 	
 });
