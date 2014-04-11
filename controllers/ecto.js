@@ -6,19 +6,72 @@ this.addEventListener("load", function () {
 		port = 9064,
 		ws = new window.WebSocket('ws://' + this.hostname + ':' + port),
 		beats = {},
-		BEAT_INTERVAL = 50,
+		BEAT_INTERVAL = 75,
 		trails = {},
 		trail_counts = {},
-		TRAIL_COUNT = 5,
-		TRAIL_INTERVAL = 500 / TRAIL_COUNT,
+		N_TRAILS = 5,
+		TRAIL_INTERVAL = 500 / N_TRAILS,
 		V1,
-		V2;
+		V2,
+		d3 = this.d3,
+		svg = d3.select("body").append("svg")
+			.attr("class", "overlay")
+			.attr("width", '100%')
+			.attr("height", '100%'),
+		standardLineF = d3.svg.line()
+			.x(function (d) { return d.x; })
+			.y(function (d) { return d.y; })
+			.interpolate("linear"),
+		circleSymbolF = d3.svg.symbol()
+			.type('circle'),
+		symbolTransF = function (d) {
+			return "translate(" + d.x + "," + d.y + ")";
+		};
 	
-	function draw(e){
+	function draw(e) {
 		// Parse the data
 		var processed = JSON.parse(e.data);
 		// Plot some items
-		console.log(processed);
+		//window.console.log(processed);
+		// Draw with d3
+		// TODO: Should I be using enter and data?
+		// Add contacts and trails
+		svg.append("path")
+			.attr("d", standardLineF(processed.move))
+			.attr("stroke", "blue")
+			.attr("stroke-width", 4)
+			.attr("fill", "none");
+		svg.append("path")
+			.attr("d", standardLineF(processed.trail))
+			.attr("stroke", "red")
+			.attr("stroke-width", 2)
+			.attr("fill", "none");
+		// Heartbeats
+		if (processed.beats !== undefined) {
+			var beats_group = svg.append('g'),
+				beats_data = [],
+				beats = processed.beats,
+				i,
+				b,
+				m,
+				datum;
+			for (i = 0; i < beats.length; i = i + 1) {
+				b = beats[i];
+				m = processed.move[b.i - 1];
+				datum = {
+					x: m.x,
+					y: m.y,
+					sz: b.n
+				};
+				beats_data.push(datum);
+			}
+			beats_group.selectAll('path')
+				.data(beats_data)
+				.enter()
+				.append("path")
+				.attr("transform", symbolTransF)
+				.attr("d", circleSymbolF);
+		}// if beats
 	}
 	
 	function refresh(evt) {
@@ -43,7 +96,7 @@ this.addEventListener("load", function () {
 		// Increment the count
 		trail_counts[id] = cnt + 1;
 		// Check if done the trail
-		if (cnt > TRAIL_COUNT) {
+		if (cnt > N_TRAILS) {
 			clearInterval(trails[id]);
 			delete trails[id];
 			delete trail_counts[id];
