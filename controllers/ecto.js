@@ -6,13 +6,20 @@ this.addEventListener("load", function () {
 		port = 9064,
 		ws = new window.WebSocket('ws://' + this.hostname + ':' + port),
 		beats = {},
-		BEAT_INTERVAL = 1000 / 5, // fps
+		BEAT_INTERVAL = 50,
 		trails = {},
 		trail_counts = {},
 		TRAIL_COUNT = 5,
 		TRAIL_INTERVAL = 500 / TRAIL_COUNT,
 		V1,
 		V2;
+	
+	function draw(e){
+		// Parse the data
+		var processed = JSON.parse(e.data);
+		// Plot some items
+		console.log(processed);
+	}
 	
 	function refresh(evt) {
 		ws.send(JSON.stringify({
@@ -40,14 +47,19 @@ this.addEventListener("load", function () {
 			clearInterval(trails[id]);
 			delete trails[id];
 			delete trail_counts[id];
-			return;
+			trailer = {
+				t: Date.now(),
+				id: id,
+				e: 'finish'
+			};
+		} else {
+			trailer = {
+				t: Date.now(),
+				id: id,
+				e: 'trail',
+				cnt: cnt // cnt begins at 1
+			};
 		}
-		trailer = {
-			t: Date.now(),
-			id: id,
-			e: 'trail',
-			cnt: cnt // cnt begins at 1
-		};
 		ws.send(JSON.stringify(trailer));
 	}
 	
@@ -107,10 +119,10 @@ this.addEventListener("load", function () {
 				id: 1
 			}]
 		};
-		ws.send(JSON.stringify(data));
 		if (beats[1] !== undefined) {
 			clearInterval(beats[1]);
 		}
+		ws.send(JSON.stringify(data));
 	}
 	
 	function handleStart(evt) {
@@ -162,8 +174,10 @@ this.addEventListener("load", function () {
 	window.addEventListener("mouseup", handleMouseUp, false);
 	// Send when loaded
 	ws.onopen = refresh;
+	// Overlay some svg of the swipe
+	ws.onmessage = draw;
 	
-	// Use animation frames to send the websocket data...?
+	// TODO: Use animation frames to send the websocket data...?
 	
 	// Add the Video stream overlay
 	V1 = new this.Video('arm_cam', 9003);

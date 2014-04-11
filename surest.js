@@ -79,6 +79,7 @@ bridges.push({
 	name : 'touch',
 	ws : 9064,
 	pub: 'touch',
+	sub: 'touche',
 	clients : []
 });
 
@@ -480,10 +481,10 @@ for( var w=0; w<bridges.length; w++) {
     }
 		
 		if( b.pub !== undefined ) {
-			var zmq_recv_skt = zmq.socket('pub');
-			zmq_recv_skt.bind('ipc:///tmp/'+b.pub);
+			var zmq_send_skt = zmq.socket('pub');
+			zmq_send_skt.bind('ipc:///tmp/'+b.pub);
 			console.log('\Publisher Bridge',b.pub);
-			b.zmq_pub = zmq_recv_skt;
+			b.zmq_pub = zmq_send_skt;
 		}
 
 	} //ws check
