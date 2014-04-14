@@ -160,8 +160,17 @@ server.get('/md/:md', load_txt );
 
 // Javascript libraries
 var load_js = function (req, res, next) {
-  //console.log('library',req.params);
-	var fname = req.params[0]+'/'+req.params[1]+'.js';
+	var mrdir;
+	var myfile = req.params.js;
+	//console.log('library',req.params);
+	if (myfile===undefined){
+		mydir = req.params[0];
+		myfile = req.params[1]+'.js';
+	} else {
+		mydir = this.base_dir;
+	}
+	//console.log('parsed_libs',mydir,myfile);
+	var fname = mydir+'/'+myfile;
   var body = fs.readFileSync(fname,{encoding:'utf8'});
   res.writeHead(200, {
     'Content-Length': Buffer.byteLength(body),
@@ -170,6 +179,7 @@ var load_js = function (req, res, next) {
   res.write(body);
   res.end();
 };
+server.get('/snap/:js', load_js.bind({base_dir: 'snap'}));
 server.get(/^\/([a-zA-Z0-9_\.~-]+)\/(.*)\.js/, load_js);
 
 // Images
