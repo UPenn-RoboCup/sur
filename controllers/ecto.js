@@ -23,7 +23,8 @@ this.addEventListener("load", function () {
 			.y(function (d) { return d.y; })
 			.interpolate("linear"),
 		circleSymbolF = d3.svg.symbol()
-			.type('circle'),
+			.type('circle')
+			.size(function(d){ return 10*d.sz; }),
 		symbolTransF = function (d) {
 			return "translate(" + d.x + "," + d.y + ")";
 		};
