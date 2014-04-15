@@ -24,10 +24,11 @@ this.addEventListener("load", function () {
 			.interpolate("linear"),
 		circleSymbolF = d3.svg.symbol()
 			.type('circle')
-			.size(function(d){ return 10*d.sz; }),
+			.size(function (d) { return 10 * d.sz; }),
 		symbolTransF = function (d) {
 			return "translate(" + d.x + "," + d.y + ")";
-		};
+		},
+		beats_group = svg.append('g');
 	
 	function draw(e) {
 		// Parse the data
@@ -49,8 +50,7 @@ this.addEventListener("load", function () {
 			.attr("fill", "none");
 		// Heartbeats
 		if (processed.beats !== undefined) {
-			var beats_group = svg.append('g'),
-				beats_data = [],
+			var beats_data = [],
 				beats = processed.beats,
 				i,
 				b,

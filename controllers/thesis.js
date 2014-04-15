@@ -11,7 +11,10 @@ this.addEventListener("load", function () {
 		tex_done = false,
 		marked = this.marked,
 		MathJax = this.MathJax,
-		qwest = this.qwest;
+		qwest = this.qwest,
+		snaps = {},
+		figure_count = 0;
+	this.snaps = snaps;
 
 	function setFigures() {
 		// Check if everything is available...
@@ -25,20 +28,31 @@ this.addEventListener("load", function () {
 			i = 0,
 			s,
 			sf,
-			img_alt;
+			prev,
+			caption,
+			caption_el;
 		// Replace each figure with SVG if possible
 		for (i = 0; i < n; i = i + 1) {
 			s = svgs[i];
-			//window.console.log('s', s);
 			// Fetch the correct drawing function, which is loaded externally
 			sf = snaps[s.id];
 			if (sf !== undefined) {
 				sf(s);
+				figure_count = figure_count + 1;
 				// Remove the associated image
-				img_alt = document.querySelectorAll('img[alt="' + s.id + '"]')[0];
-				if (img_alt !== undefined) {
-					img_alt.parentNode.removeChild(img_alt);
+				prev = s.previousElementSibling;
+				if (prev && prev.hasChildNodes() && prev.lastChild.tagName === 'IMG') {
+					caption = prev.lastChild.alt;
+					prev.parentNode.removeChild(prev);
+				} else if (prev && prev.tagName === 'IMG') {
+					caption = prev.alt;
+					prev.parentNode.removeChild(prev);
 				}
+				// Add the caption
+				caption_el = document.createElement('div');
+				caption_el.innerHTML = 'Figure ' + figure_count + ': ' + caption;
+				caption_el.classList.add('caption');
+				s.parentNode.insertBefore(caption_el, s.nextSibling);
 			}
 		}
 	}

@@ -18,3 +18,11 @@ div.chapter img, div.chapter svg {
 	margin-left: auto;
   margin-right: auto;
 }
+
+.caption {
+	width: 520px;
+	margin-left: auto;
+  margin-right: auto;
+	text-align: justify;
+	padding: 10px;
+}
