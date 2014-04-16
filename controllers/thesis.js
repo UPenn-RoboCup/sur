@@ -72,6 +72,9 @@ this.addEventListener("load", function () {
 		// Replace the double dash
 		marked_up = marked_up.replace(/--/g, "&mdash;");
 		//marked_up = marked_up.replace(/.../g,"&hellip;");
+		// Replace the latex quotations
+		marked_up = marked_up.replace(/``/g, '"');
+		marked_up = marked_up.replace(/''/g, '"');
 		// Place the element into the DOM
 		chapter_el.innerHTML = marked_up;
 		// Place in the HTML
