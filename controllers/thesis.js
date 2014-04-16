@@ -15,7 +15,7 @@ this.addEventListener("load", function () {
 		snaps = {},
 		figure_count = 0;
 	this.snaps = snaps;
-
+	
 	function setFigures() {
 		// Check if everything is available...
 		if (!svg_script_el || !tex_done) {
@@ -68,17 +68,59 @@ this.addEventListener("load", function () {
 	}
 
 	function runMarked() {
-		var marked_up = marked(chapter_el.innerHTML);
+		var marked_up = marked(chapter_el.innerHTML),
+			heading,
+			heading_el,
+			title,
+			authors,
+			date,
+			i;
 		// Replace the double dash
 		marked_up = marked_up.replace(/--/g, "&mdash;");
 		//marked_up = marked_up.replace(/.../g,"&hellip;");
 		// Replace the latex quotations
 		marked_up = marked_up.replace(/``/g, '"');
 		marked_up = marked_up.replace(/''/g, '"');
+		//window.console.log(date);
+		/*
+		title = marked_up.match(/%.+/);
+		if(title){
+			window.console.log(title);
+			title = title[0].substr(2);
+			marked_up = marked_up.replace(/%.+/, '');
+			authors = marked_up.match(/%.+/);
+			if(authors){
+				authors = authors[0].substr(2);
+				marked_up = marked_up.replace(/%.+/, '');
+				date = marked_up.match(/%.+/);
+				if(date){
+					date = date[0].substr(2);
+					marked_up = marked_up.replace(/%.+/, '');
+				}
+			}
+		}
+		window.console.log(title);
+		window.console.log(authors);
+		window.console.log(date);
+		*/
+		
 		// Place the element into the DOM
 		chapter_el.innerHTML = marked_up;
 		// Place in the HTML
 		b.appendChild(chapter_el);
+		
+		// Find the title block, a la Pandoc
+		heading_el = chapter_el.firstChild;
+		if (heading_el && heading_el.innerHTML[0] === '%') {
+			heading = heading_el.innerHTML.match(/%.+/g);
+			chapter_el.removeChild(heading_el);
+			title = heading[0].substr(2);
+			authors = heading[1].substr(2);
+			date = heading[2].substr(2);
+			// TODO: Process
+			document.getElementsByTagName("title")[0].innerHTML = title;
+		}
+		
 		// Set flag
 		tex_done = true;
 	} // runMarked
