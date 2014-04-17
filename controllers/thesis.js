@@ -55,6 +55,19 @@ this.addEventListener("load", function () {
 				s.parentNode.insertBefore(caption_el, s.nextSibling);
 			}
 		}
+		svgs = document.querySelectorAll('img'),
+			n = svgs.length,
+			i = 0;
+		for (i = 0; i < n; i = i + 1) {
+			figure_count = figure_count + 1;
+			s = svgs[i];
+			// Add the caption for images
+			caption_el = document.createElement('div');
+			caption_el.innerHTML = 'Figure ' + figure_count + ': ' + s.alt;
+			caption_el.classList.add('caption');
+			s.parentNode.insertBefore(caption_el, s.nextSibling);
+		}
+				
 	}
 
 	function run_svgjs(snippet) {
