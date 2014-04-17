@@ -1,4 +1,4 @@
-function Video(id, port) {
+function Video(port) {
 	'use strict';
 	var ws = new window.WebSocket('ws://' + window.hostname + ':' + port),// Connect to the websocket server
 		fr_sz_checksum,
@@ -61,7 +61,6 @@ function Video(id, port) {
 	};
 	
 	// Set the camera properties
-	camera_img.id  = id;
 	camera_img.alt = 'No image yet...';
 	camera_img.onload = on_img_loaded;
 	

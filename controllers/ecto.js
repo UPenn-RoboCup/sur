@@ -234,7 +234,8 @@ this.addEventListener("load", function () {
 	// TODO: Use animation frames to send the websocket data...?
 	
 	// Add the Video stream overlay
-	V1 = new this.Video('arm_cam', 9003);
+	V1 = new this.Video(9003);
+	V1.id  = 'arm_cam';
 	//V2 = new this.Video('kinect_cam', 9004);
 	// Place on the page
   body.appendChild(V1.img);
