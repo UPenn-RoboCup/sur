@@ -11,23 +11,30 @@ this.addEventListener("load", function () {
 		N_TRAILS = 5,
 		TRAIL_INTERVAL = 500 / N_TRAILS,
 		V1,
-		V2,
+		img,
 		d3 = this.d3,
 		svg = d3.select("body").append("svg")
 			.attr("class", "overlay")
 			.attr("width", '100%')
 			.attr("height", '100%'),
 		standardLineF = d3.svg.line()
-			.x(function (d) { return d.x; })
-			.y(function (d) { return d.y; })
-			.interpolate("linear"),
-		circleSymbolF = d3.svg.symbol()
-			.type('circle')
-			.size(function (d) { return 10 * d.sz; }),
-		symbolTransF = function (d) {
-			return "translate(" + d.x + "," + d.y + ")";
-		},
-		beats_group = svg.append('g');
+			.x(function (d) {
+				var img_meta = img.metadata;
+				if (img_meta!==undefined) {
+					return img.clientWidth * d.x / img_meta.w;
+				} else {
+					return img.clientWidth * d.x / 320;
+				}
+			})
+			.y(function (d) {
+				var img_meta = img.metadata;
+				if (img_meta!==undefined) {
+					return img.clientHeight * d.y / img_meta.h;
+				} else {
+					return img.clientHeight * d.y / 240;
+				}
+			})
+			.interpolate("linear");
 
 	function drawSwipe (swipe) {
 		// Plot some items
@@ -43,33 +50,54 @@ this.addEventListener("load", function () {
 	}
 
 	function drawBBox (bbox) {
-		var xc = bbox.xc - bbox.major/2,
-			yc = bbox.yc - bbox.minor/2,
-			a = bbox.a * RAD_TO_DEG,
-			rStr = "rotate("+a+","+(xc+bbox.major/2)+","+(yc+bbox.minor/2)+")";
 
-		svg
-			//.append("g")
-    	//.attr("transform", "translate("+xc+","+yc+")")
-			.append("rect")
-			.attr("x", xc)
-			.attr("y", yc)
-			.attr("width", bbox.major)
-			.attr("height", bbox.minor)
-			.attr("transform", rStr);
+		var img_meta = img.metadata,
+			scaleX,
+			scaleY,
+			xc = bbox.xc,
+			yc = bbox.yc,
+			a = bbox.a * RAD_TO_DEG,
+			major = bbox.major,
+			minor = bbox.minor;
+
+		if (img_meta!==undefined){
+			scaleX = img.clientWidth / img_meta.w;
+			scaleY = img.clientHeight / img_meta.h;
+		} else {
+			scaleX = img.clientWidth / 320;
+			scaleY = img.clientHeight / 240;
+		}
+		major *= scaleX;
+		minor *= scaleY;
+		xc *= scaleX;
+		yc *= scaleY;
+
+		svg.append("rect")
+			.attr("x", xc - major/2)
+			.attr("y", yc - minor/2)
+			.attr("width", major)
+			.attr("height", minor)
+			.attr("transform", "rotate(" + a + "," + xc + "," + yc + ")")
+			.attr("stroke", "red")
+			.attr("stroke-width", 4)
+			.attr("fill", "none");
 	}
 
 	function addTouch (changedTouches) {
 		var i, tmp, id, touch,
-			n = changedTouches.length;
+			n = changedTouches.length,
+			px_x,
+			px_y;
 		for (i = 0; i < n; i = i + 1) {
 			tmp = changedTouches[i];
 			id = tmp.identifier;
+			px_x = img.metadata.w * tmp.clientX / img.clientWidth;
+			px_y = img.metadata.h * tmp.clientY / img.clientHeight;
 			touch = {
 				e: name,
-				t: evt.timeStamp/1e3,
-				x: tmp.clientX,
-				y: tmp.clientY,
+				t: tmp.timeStamp/1e3, // TODO: hope this exists
+				x: px_x,
+				y: px_y,
 				id: id
 			};
 			if (touches[id]===undefined) {
@@ -112,14 +140,24 @@ this.addEventListener("load", function () {
 	}
 
 	function procMouse(evt, name) {
-		var touch = {
-			e: name,
-			t: evt.timeStamp/1e3,
-			x: evt.clientX,
-			y: evt.clientY,
-			id: 1
-		},
-		swipe = touches[1];
+		var img_meta = img.metadata;
+		if(img_meta===undefined){
+			img_meta = {
+				w: 320,
+				h: 240,
+			};
+		}
+		// Must handle the image display width/height vs the actual image
+		var px_x = img_meta.w * evt.clientX / img.clientWidth,
+			px_y = img_meta.h * evt.clientY / img.clientHeight,
+			touch = {
+				e: name,
+				t: evt.timeStamp/1e3,
+				x: px_x,
+				y: px_y,
+				id: 1,
+			},
+			swipe = touches[1];
 		if (swipe===undefined) {
 			// Make the object array
 			swipe = [touch];
@@ -197,6 +235,13 @@ this.addEventListener("load", function () {
 	V1.id  = 'arm_cam';
 	//V2 = new this.Video('kinect_cam', 9004);
 	// Place on the page
-  body.appendChild(V1.img);
+  img = body.appendChild(V1.img);
+
+	// When the window size changes
+	window.addEventListener('resize', function (e) {
+		//img.clientWidth;
+		//img.clientHeight;
+		console.log(img.metadata);
+	}, false);
 
 });

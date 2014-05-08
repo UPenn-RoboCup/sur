@@ -228,7 +228,7 @@ var rest_audio = function(req, res, next){
       'Content-Length': data.length,
       'Content-Type': 'arraybuffer'
     });
-    
+
     res.write(data);
     res.end();
     console.log('audio done!');
@@ -248,7 +248,7 @@ var rest_shm = function (req, res, next) {
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
     var ret = mp.unpack(data)
-    
+
     console.log(msg,ret);
 
     if(ret!=null){
@@ -261,7 +261,7 @@ var rest_shm = function (req, res, next) {
   }
   //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
   zmq_req_rest_skt.once('message', reply_handler);
-  
+
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
@@ -279,9 +279,9 @@ var rest_shm = function (req, res, next) {
 
   console.log(msg);
   zmq_req_rest_skt.send( mp.pack(msg) );
-  
+
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
-  
+
   return next();
 }
 
@@ -289,10 +289,10 @@ var rest_shm = function (req, res, next) {
 * sm:add_event('standup')
 * */
 var rest_fsm = function (req, res, next) {
-  
+
   // debug rest requests for fsm
   //console.log(req.params);
-  
+
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
@@ -305,7 +305,7 @@ var rest_fsm = function (req, res, next) {
     // Stop this emitter listener
     //zmq_req_rest_skt.removeListener('message', this.cb);
   }
-  
+
   if(req.params.val!==undefined){
     req.params.val = JSON.parse( req.params.val );
   }
@@ -314,15 +314,15 @@ var rest_fsm = function (req, res, next) {
     req.params.delta = JSON.parse( req.params.delta );
   }
   */
-  
+
   //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
   zmq_req_rest_skt.once('message', reply_handler);
-  
+
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
   zmq_req_rest_skt.send( mp.pack(req.params) );
-  
+
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
   return next();
 }
@@ -339,7 +339,7 @@ var rest_body = function (req, res, next) {
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
     var ret = mp.unpack(data)
-    
+
     if(ret!=null){
       res.json( ret );
     } else {
@@ -350,7 +350,7 @@ var rest_body = function (req, res, next) {
   }
   //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
   zmq_req_rest_skt.once('message', reply_handler);
-  
+
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
@@ -358,9 +358,9 @@ var rest_body = function (req, res, next) {
     req.params.bargs = JSON.parse( req.params.bargs );
   }
   zmq_req_rest_skt.send( mp.pack(req.params) );
-  
+
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
-  
+
   return next();
 }
 
@@ -451,7 +451,7 @@ var udp_message = function(msg,rinfo){
 for( var w=0; w<bridges.length; w++) {
 
 	var b = bridges[w];
-  
+
 	if( b.ws !== undefined ) {
 
 		var wss = new WebSocketServer({port: b.ws});
@@ -490,7 +490,7 @@ for( var w=0; w<bridges.length; w++) {
       zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
       console.log('\tTCP Sub Bridge',b.tcp);
     }
-		
+
 		if( b.pub !== undefined ) {
 			var zmq_send_skt = zmq.socket('pub');
 			zmq_send_skt.bind('ipc:///tmp/'+b.pub);

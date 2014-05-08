@@ -8,15 +8,17 @@ function Video(port) {
 		camera_img = new Image(),
 		is_rendering = false,
 		anim = false;
-	
+
 	function on_img_loaded() {
 		// Revoke
 		window.URL.revokeObjectURL(img_src);
 		// Remove last reference to the data
 		raw = null;
 		is_rendering = false;
+		// Save the metadata
+		camera_img.metadata = fr_metadata;
 	}
-	
+
 	// Render the image
 	function frame2img() {
 		if (!raw || is_rendering) {
@@ -30,7 +32,7 @@ function Video(port) {
 		// Trigger processing once the image is fully loaded
 		window.requestAnimationFrame(frame2img);
 	}
-	
+
 	// Setup the WebSocket
 	ws.binaryType = "blob";
 	ws.onmessage = function (e) {
@@ -59,12 +61,12 @@ function Video(port) {
 			window.requestAnimationFrame(frame2img);
 		}
 	};
-	
+
 	// Set the camera properties
 	camera_img.alt = 'No image yet...';
 	camera_img.onload = on_img_loaded;
-	
+
 	// Exports
 	this.img = camera_img;
-	
+
 }
