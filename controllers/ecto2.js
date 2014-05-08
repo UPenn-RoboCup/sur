@@ -6,6 +6,7 @@ this.addEventListener("load", function () {
 		port = 9064,
 		ws = new window.WebSocket('ws://' + this.hostname + ':' + port),
 		touches = {},
+		RAD_TO_DEG = 180 / Math.PI,
 		BEAT_INTERVAL = 75,
 		N_TRAILS = 5,
 		TRAIL_INTERVAL = 500 / N_TRAILS,
@@ -28,7 +29,7 @@ this.addEventListener("load", function () {
 		},
 		beats_group = svg.append('g');
 
-	function draw (swipe) {
+	function drawSwipe (swipe) {
 		// Plot some items
 		//window.console.log(processed);
 		// Draw with d3
@@ -41,6 +42,23 @@ this.addEventListener("load", function () {
 			.attr("fill", "none");
 	}
 
+	function drawBBox (bbox) {
+		var xc = bbox.xc - bbox.major/2,
+			yc = bbox.yc - bbox.minor/2,
+			a = bbox.a * RAD_TO_DEG,
+			rStr = "rotate("+a+","+(xc+bbox.major/2)+","+(yc+bbox.minor/2)+")";
+
+		svg
+			//.append("g")
+    	//.attr("transform", "translate("+xc+","+yc+")")
+			.append("rect")
+			.attr("x", xc)
+			.attr("y", yc)
+			.attr("width", bbox.major)
+			.attr("height", bbox.minor)
+			.attr("transform", rStr);
+	}
+
 	function addTouch (changedTouches) {
 		var i, tmp, id, touch,
 			n = changedTouches.length;
@@ -49,7 +67,7 @@ this.addEventListener("load", function () {
 			id = tmp.identifier;
 			touch = {
 				e: name,
-				t: evt.timeStamp,
+				t: evt.timeStamp/1e3,
 				x: tmp.clientX,
 				y: tmp.clientY,
 				id: id
@@ -88,7 +106,7 @@ this.addEventListener("load", function () {
 			// Send when done a swipe
 			ws.send(JSON.stringify(packet));
 			for (i = 0, n = packet.length; i < n; i = i + 1) {
-				draw(packet);
+				drawSwipe(packet);
 			}
 		}
 	}
@@ -96,7 +114,7 @@ this.addEventListener("load", function () {
 	function procMouse(evt, name) {
 		var touch = {
 			e: name,
-			t: evt.timeStamp,
+			t: evt.timeStamp/1e3,
 			x: evt.clientX,
 			y: evt.clientY,
 			id: 1
@@ -113,7 +131,7 @@ this.addEventListener("load", function () {
 		if(name==='stop' || name==='cancel' || name==='leave'){
 			// Send when done a swipe
 			ws.send(JSON.stringify([swipe]));
-			draw(swipe);
+			drawSwipe(swipe);
 			// Kill it off
 			delete touches[1];
 		}
@@ -165,7 +183,12 @@ this.addEventListener("load", function () {
 	// Send when loaded
 	//ws.onopen = refresh;
 	// Overlay some svg of the swipe
-	//ws.onmessage = draw;
+	ws.onmessage = function(e){
+		var msg = JSON.parse(e.data);
+		if (msg.id==='bbox'){
+			drawBBox(msg);
+		}
+	};
 
 	// TODO: Use animation frames to send the websocket data...?
 
