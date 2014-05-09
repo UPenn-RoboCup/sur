@@ -3,8 +3,10 @@ this.addEventListener("load", function () {
 	// Add the touches for the whole page...
 	// Open the websockets to send back to the host for processing
   var body = document.getElementsByTagName("body")[0],
-		port = 9064,
-		ws = new window.WebSocket('ws://' + this.hostname + ':' + port),
+		port_edge = 9064,
+		ws_touch = new window.WebSocket('ws://' + this.hostname + ':' + port_edge),
+		port_line = 9065,
+		ws_line = new window.WebSocket('ws://' + this.hostname + ':' + port_line),
 		touches = {},
 		RAD_TO_DEG = 180 / Math.PI,
 		BEAT_INTERVAL = 75,
@@ -18,6 +20,8 @@ this.addEventListener("load", function () {
 			.attr("width", '100%')
 			.attr("height", '100%'),
 		swipecross = svg.append("path"),
+		pline1 = svg.append("path"),
+		pline2 = svg.append("path"),
 		swipebox = svg.append("rect"),
 		standardLineF = d3.svg.line()
 			.x(function (d) {
@@ -47,6 +51,24 @@ this.addEventListener("load", function () {
 		swipecross
 			.attr("d", standardLineF(swipe))
 			.attr("stroke", "green")
+			.attr("stroke-width", 4)
+			.attr("fill", "none");
+	}
+
+	function drawPlines (p1, p2) {
+		// Plot some items
+		window.console.log(p1, p2);
+		// Draw with d3
+		// TODO: Should I be using enter and data?
+		// Add contacts and trails
+		pline1
+			.attr("d", standardLineF(p1))
+			.attr("stroke", "orange")
+			.attr("stroke-width", 4)
+			.attr("fill", "none");
+		pline2
+			.attr("d", standardLineF(p2))
+			.attr("stroke", "yellow")
 			.attr("stroke-width", 4)
 			.attr("fill", "none");
 	}
@@ -112,12 +134,11 @@ this.addEventListener("load", function () {
 			px_y = im_h * tmp.clientY / img.clientHeight;
 			touch = {
 				e: name,
-				t: evt.timeStamp/1e3, // TODO: hope this exists
+				t: evt.timeStamp/1e3,
 				x: px_x,
 				y: px_y,
 				id: id
 			};
-			console.log(touch);
 			if (touches[id]===undefined) {
 				// Make the object array
 				touches[id] = [touch];
@@ -150,7 +171,7 @@ this.addEventListener("load", function () {
 		if(name==='stop' || name==='cancel' || name==='leave'){
 			packet = formTouchPacket(evt.changedTouches);
 			// Send when done a swipe
-			ws.send(JSON.stringify(packet));
+			ws_touch.send(JSON.stringify(packet));
 			for (i = 0, n = packet.length; i < n; i = i + 1) {
 				drawSwipe(packet[i]);
 			}
@@ -186,7 +207,7 @@ this.addEventListener("load", function () {
 		}
 		if(name==='stop' || name==='cancel' || name==='leave'){
 			// Send when done a swipe
-			ws.send(JSON.stringify([swipe]));
+			ws_touch.send(JSON.stringify([swipe]));
 			drawSwipe(swipe);
 			// Kill it off
 			delete touches[1];
@@ -239,10 +260,17 @@ this.addEventListener("load", function () {
 	// Send when loaded
 	//ws.onopen = refresh;
 	// Overlay some svg of the swipe
-	ws.onmessage = function(e){
+	ws_touch.onmessage = function(e){
 		var msg = JSON.parse(e.data);
-		if (msg.id==='bbox'){
+		if (msg.id==='bbox') {
 			drawBBox(msg);
+		}
+	};
+	ws_line.onmessage = function(e){
+		var msg = JSON.parse(e.data);
+		console.log(msg)
+		if (msg.name==='pline') {
+			drawPlines(msg.l1, msg.l2);
 		}
 	};
 
@@ -259,7 +287,7 @@ this.addEventListener("load", function () {
 	window.addEventListener('resize', function (e) {
 		//img.clientWidth;
 		//img.clientHeight;
-		console.log(img.metadata);
+		//console.log(img.metadata);
 	}, false);
 
 });

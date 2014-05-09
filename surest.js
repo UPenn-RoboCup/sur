@@ -84,6 +84,13 @@ bridges.push({
 	clients : []
 });
 
+bridges.push({
+	name : 'line',
+	ws : 9065,
+	sub: 'line',
+	clients : []
+});
+
 /*
 bridges.push({
 	name : 'rgbd_depth',
