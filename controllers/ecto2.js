@@ -17,6 +17,8 @@ this.addEventListener("load", function () {
 			.attr("class", "overlay")
 			.attr("width", '100%')
 			.attr("height", '100%'),
+		swipecross = svg.append("path"),
+		swipebox = svg.append("rect"),
 		standardLineF = d3.svg.line()
 			.x(function (d) {
 				var img_meta = img.metadata;
@@ -42,7 +44,7 @@ this.addEventListener("load", function () {
 		// Draw with d3
 		// TODO: Should I be using enter and data?
 		// Add contacts and trails
-		svg.append("path")
+		swipecross
 			.attr("d", standardLineF(swipe))
 			.attr("stroke", "green")
 			.attr("stroke-width", 4)
@@ -72,7 +74,7 @@ this.addEventListener("load", function () {
 		xc *= scaleX;
 		yc *= scaleY;
 
-		svg.append("rect")
+		swipebox
 			.attr("x", xc - major/2)
 			.attr("y", yc - minor/2)
 			.attr("width", major)
@@ -81,25 +83,41 @@ this.addEventListener("load", function () {
 			.attr("stroke", "red")
 			.attr("stroke-width", 4)
 			.attr("fill", "none");
+		// Kill off the old swipe
+		//swipecross.attr("d", "")
 	}
 
-	function addTouch (changedTouches) {
+	function addTouch (evt, name) {
 		var i, tmp, id, touch,
+			changedTouches = evt.changedTouches,
 			n = changedTouches.length,
 			px_x,
-			px_y;
+			px_y,
+			im_w,
+			im_h,
+			img_meta = img.metadata;
+
+		if (img_meta!==undefined){
+			im_w = img.metadata.w;
+			im_h = img.metadata.h;
+		} else {
+			im_w = 320;
+			im_h = 240;
+		}
+
 		for (i = 0; i < n; i = i + 1) {
 			tmp = changedTouches[i];
 			id = tmp.identifier;
-			px_x = img.metadata.w * tmp.clientX / img.clientWidth;
-			px_y = img.metadata.h * tmp.clientY / img.clientHeight;
+			px_x = im_w * tmp.clientX / img.clientWidth;
+			px_y = im_h * tmp.clientY / img.clientHeight;
 			touch = {
 				e: name,
-				t: tmp.timeStamp/1e3, // TODO: hope this exists
+				t: evt.timeStamp/1e3, // TODO: hope this exists
 				x: px_x,
 				y: px_y,
 				id: id
 			};
+			console.log(touch);
 			if (touches[id]===undefined) {
 				// Make the object array
 				touches[id] = [touch];
@@ -115,7 +133,7 @@ this.addEventListener("load", function () {
 		var i,
 			id,
 			n = changedTouches.length,
-			packet = {};
+			packet = [];
 		for (i = 0; i < n; i = i + 1) {
 			id = changedTouches[i].identifier;
 			// Append the array with more data
@@ -128,13 +146,13 @@ this.addEventListener("load", function () {
 
 	function procTouch (evt, name) {
 		var packet, i, n;
-		addTouch(evt.changedTouches);
+		addTouch(evt, name);
 		if(name==='stop' || name==='cancel' || name==='leave'){
 			packet = formTouchPacket(evt.changedTouches);
 			// Send when done a swipe
 			ws.send(JSON.stringify(packet));
 			for (i = 0, n = packet.length; i < n; i = i + 1) {
-				drawSwipe(packet);
+				drawSwipe(packet[i]);
 			}
 		}
 	}
