@@ -19,7 +19,7 @@ var _       = require('underscore');
 //var rpc_robot     = '192.168.123.24'; //alvin
 //var rpc_robot     = '192.168.123.27'; // simon
 //var rpc_robot = '20.20.20.6'; // YouBot
-var rpc_robot = '20.20.20.34';
+var rpc_robot = '25.25.1.112';
 //var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
@@ -34,7 +34,7 @@ bridges.push({
 	name : 'mesh', // reliable name
 	ws : 9001,
 	udp: 33344,
-  tcp: 33345,
+  //tcp: 33345,
 	clients : []
 });
 
@@ -42,7 +42,7 @@ bridges.push({
   name : 'camera0',
   ws : 9003,
   udp: 33333,
-  tcp : 33334,
+  //tcp : 33334,
 	sub : 'camera0',
   clients : []
 });
@@ -51,7 +51,7 @@ bridges.push({
   name : 'forehead_camera',
   ws : 9004,
   udp: 33335,
-  tcp: 33336,
+  //tcp: 33336,
   clients : []
 });
 
@@ -65,7 +65,7 @@ bridges.push({
 bridges.push({
 	name : 'audio',
 	ws : 9014,
-  tcp: 55557,
+  //tcp: 55557,
 	clients : []
 });
 
@@ -81,6 +81,7 @@ bridges.push({
 	ws : 9064,
 	pub: 'touch',
 	sub: 'touche',
+	/*tcp: '55588',*/
 	clients : []
 });
 
@@ -88,6 +89,7 @@ bridges.push({
 	name : 'line',
 	ws : 9065,
 	sub: 'line',
+	tcp: '55589',
 	clients : []
 });
 
@@ -492,8 +494,9 @@ for( var w=0; w<bridges.length; w++) {
 
     if( b.tcp !== undefined ) {
       var zmq_tcp_skt = zmq.socket('sub');
-      zmq_tcp_skt.connect('tcp://'+rpc_robot+':'+b.tcp);
-      zmq_tcp_skt.subscribe('');
+			zmq_tcp_skt.subscribe('');
+      //zmq_tcp_skt.connect('tcp://'+rpc_robot+':'+b.tcp);
+			zmq_tcp_skt.bind('tcp://*:'+b.tcp);
       zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
       console.log('\tTCP Sub Bridge',b.tcp);
     }
@@ -501,7 +504,7 @@ for( var w=0; w<bridges.length; w++) {
 		if( b.pub !== undefined ) {
 			var zmq_send_skt = zmq.socket('pub');
 			zmq_send_skt.bind('ipc:///tmp/'+b.pub);
-			console.log('\Publisher Bridge',b.pub);
+			console.log('\tPublisher Bridge',b.pub);
 			b.zmq_pub = zmq_send_skt;
 		}
 
