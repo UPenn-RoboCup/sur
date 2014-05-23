@@ -19,8 +19,8 @@ var _       = require('underscore');
 //var rpc_robot     = '192.168.123.24'; //alvin
 //var rpc_robot     = '192.168.123.27'; // simon
 //var rpc_robot = '20.20.20.6'; // YouBot
-var rpc_robot = '25.25.1.112';
-//var rpc_robot     = 'localhost'
+//var rpc_robot = '25.25.1.112';
+var rpc_robot     = 'localhost'
 var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
 var homepage = 'meshy';
@@ -80,15 +80,15 @@ bridges.push({
 	name : 'touch',
 	ws : 9064,
 	pub: 'touch',
-	sub: 'touche',
+	sub: 'bbox', // listen for the bounding box
 	/*tcp: '55588',*/
 	clients : []
 });
 
 bridges.push({
-	name : 'line',
+	name : 'wire',
 	ws : 9065,
-	sub: 'line',
+	sub: 'wire',
 	tcp: '55589',
 	clients : []
 });
