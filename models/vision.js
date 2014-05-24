@@ -47,13 +47,13 @@
       //console.log(e);
       var vision = JSON.parse(e.data);
             
-			// Retriet ballStats
+			// Get Stats
       var ballStats = vision.ball;
       var goalStats = vision.goal;
       var lineStats = vision.line;
       var robotStats = vision.robot;
       
-      getScaleFactors();
+      getScaleFactors(vision.wA, vision.hA);
       overlay.clear();
       update_ball(ballStats);
       update_goal(goalStats);
@@ -422,13 +422,14 @@
     
   }
   
-  var getScaleFactors = function(){
+  var getScaleFactors = function(wA, hA){
     // Label image
     var x = document.getElementById("monitor_overlay");
     var width = x.offsetWidth;
     var height = x.offsetHeight;
-    scaleFactors.x = width / 320;
-    scaleFactors.y = height/ 180;
+    //TODO: the camera resolutions should come from meta
+    scaleFactors.x = width / wA;
+    scaleFactors.y = height/ hA;
   }
 
   // export
