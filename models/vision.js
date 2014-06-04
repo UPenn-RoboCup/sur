@@ -270,7 +270,7 @@
     var db_y = poseField.y.toString() + "<br>";
     var db_a = poseField.a.toString() + "<br>";
     var db_str = db_x + db_y + db_a;
-    $('#robot_info')[0].innerHTML = db_str;    
+    //$('#robot_info')[0].innerHTML = db_str;    
     //--------------------------------------
     
     // Update field monitor 
