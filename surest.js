@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 /***
 * SUR: Data forwarding
 * (c) Stephen McGill, 2013
@@ -132,9 +132,11 @@ server.use(restify.bodyParser());
 var load_html = function (req, res, next) {
   // Select a page
   var page;
-  if(req.params.html!==undefined){
+  if(req.params.html !== undefined) {
     page = 'views/'+req.params.html+'.html';
-  } else {
+  } else if(req.params.long !== undefined) {
+		page = 'views/'+req.params.long;
+	} else {
     page = 'views/'+homepage+'.html';
   }
   // Perform the load
@@ -149,6 +151,7 @@ var load_html = function (req, res, next) {
 server.get('/', load_html );
 // Other html views
 server.get('/v/:html', load_html );
+server.get('/views/:long', load_html );
 
 // Text files
 var load_txt = function (req, res, next) {

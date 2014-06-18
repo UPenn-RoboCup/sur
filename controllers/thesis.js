@@ -1,5 +1,6 @@
+/*jslint regexp: true*/
 // TODO: Loop through all markdown documents...	
-// TODO: Loop through all snaps js files and load
+// TODO: Loop through all js_figures js files and load
 this.addEventListener("load", function () {
 	"use strict";
 
@@ -12,16 +13,17 @@ this.addEventListener("load", function () {
 		marked = this.marked,
 		MathJax = this.MathJax,
 		qwest = this.qwest,
-		snaps = {},
+		js_figures = {},
 		figure_count = 0;
-	this.snaps = snaps;
+	
+	// Must make globally available for dynamically loading figures
+	this.js_figures = js_figures;
 	
 	function setFigures() {
 		// Check if everything is available...
 		if (!svg_script_el || !tex_done) {
 			return;
 		}
-		//window.console.log('here');
 		// Grab the SVG elements inside this chapter
 		var svgs = document.querySelectorAll('#' + chapter_el.id + ' svg'),
 			n = svgs.length,
@@ -35,7 +37,7 @@ this.addEventListener("load", function () {
 		for (i = 0; i < n; i = i + 1) {
 			s = svgs[i];
 			// Fetch the correct drawing function, which is loaded externally
-			sf = snaps[s.id];
+			sf = js_figures[s.id];
 			if (sf !== undefined) {
 				sf(s);
 				figure_count = figure_count + 1;
@@ -55,9 +57,9 @@ this.addEventListener("load", function () {
 				s.parentNode.insertBefore(caption_el, s.nextSibling);
 			}
 		}
-		svgs = document.querySelectorAll('img'),
-			n = svgs.length,
-			i = 0;
+		svgs = document.querySelectorAll('img');
+		n = svgs.length;
+		i = 0;
 		for (i = 0; i < n; i = i + 1) {
 			figure_count = figure_count + 1;
 			s = svgs[i];
@@ -94,28 +96,6 @@ this.addEventListener("load", function () {
 		// Replace the latex quotations
 		marked_up = marked_up.replace(/``/g, '"');
 		marked_up = marked_up.replace(/''/g, '"');
-		//window.console.log(date);
-		/*
-		title = marked_up.match(/%.+/);
-		if(title){
-			window.console.log(title);
-			title = title[0].substr(2);
-			marked_up = marked_up.replace(/%.+/, '');
-			authors = marked_up.match(/%.+/);
-			if(authors){
-				authors = authors[0].substr(2);
-				marked_up = marked_up.replace(/%.+/, '');
-				date = marked_up.match(/%.+/);
-				if(date){
-					date = date[0].substr(2);
-					marked_up = marked_up.replace(/%.+/, '');
-				}
-			}
-		}
-		window.console.log(title);
-		window.console.log(authors);
-		window.console.log(date);
-		*/
 		
 		// Place the element into the DOM
 		chapter_el.innerHTML = marked_up;
@@ -155,7 +135,7 @@ this.addEventListener("load", function () {
 		})
 			.success(runMathJax);
 		// Load the SVG replacement code
-		qwest.get('/snap/' + chapter_el.id + '.js', {}, {}, function () {
+		qwest.get('/figuresJS/' + chapter_el.id + '.js', {}, {}, function () {
 			this.responseType = 'text';
 		})
 			.success(run_svgjs)
@@ -165,7 +145,7 @@ this.addEventListener("load", function () {
 	// Set the div element as a chapter
 	chapter_el.classList.add("chapter");
 	// TODO: Which chapter to load
-	chapter_el.id = "swipe_radon";
+	chapter_el.id = "cut_the_rope";
 	// Only begin rendering when MathJax is loaded fully
 	MathJax.Hub.Register.StartupHook("End", loadTex);
 
