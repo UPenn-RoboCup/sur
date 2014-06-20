@@ -86,39 +86,41 @@ this.addEventListener("load", function () {
 		var marked_up = marked(chapter_el.innerHTML),
 			heading,
 			heading_el,
-			title,
-			authors,
-			date,
 			i;
-		// Replace the double dash
-		marked_up = marked_up.replace(/--/g, "&mdash;");
-		//marked_up = marked_up.replace(/.../g,"&hellip;");
-		// Replace the latex quotations
-		marked_up = marked_up.replace(/``/g, '"');
-		marked_up = marked_up.replace(/''/g, '"');
+
+		var nice_text = marked_up
+			.replace(/--/g, "&mdash;") // Replace the double dash
+			.replace(/``/g, '"') // Replace the latex quotations
+			.replace(/''/g, '"');
+		//.replace(/.../g,"&hellip;");
 		
 		// Place the element into the DOM
-		chapter_el.innerHTML = marked_up;
+		chapter_el.innerHTML = nice_text;
 		// Place in the HTML
 		b.appendChild(chapter_el);
-		
-		// Find the title block, a la Pandoc
-		heading_el = chapter_el.firstChild;
-		if (heading_el && heading_el.innerHTML[0] === '%') {
-			heading = heading_el.innerHTML.match(/%.+/g);
-			chapter_el.removeChild(heading_el);
-			title = heading[0].substr(2);
-			authors = heading[1].substr(2);
-			date = heading[2].substr(2);
-			// TODO: Process
-			document.getElementsByTagName("title")[0].innerHTML = title;
-		}
-		
+
 		// Set flag
 		tex_done = true;
 	} // runMarked
 
 	function runMathJax(text) {
+		// Parse the Pandoc title block
+		var title_patt = new RegExp('% .*\n', 'g');
+		var title_matches = text.match(title_patt);
+		text = text.replace(title_patt, '');
+		// Set the title
+		var title = title_matches[0].replace(/(% |\n)/g, '');
+		var authors = title_matches[1].replace(/(% |\n)/g, '').split('; ');
+		var date = title_matches[1].replace(/(% |\n)/g, '');
+		document.getElementsByTagName("title")[0].innerHTML = title;
+
+		// Parse the YAML header
+		var yaml_patt = new RegExp('---\n(.|\n)*---\n', 'g');
+		var yaml_matches = text.match(yaml_patt);
+		text = text.replace(yaml_patt, '');
+		var yaml_str = yaml_matches[0].replace('---\n','').replace('---\n','');
+		var yaml_metadata = jsyaml.safeLoad(yaml_str);
+
 		// Place the text into the element
 		chapter_el.innerHTML = text;
 		// Enqueue
@@ -126,6 +128,7 @@ this.addEventListener("load", function () {
 		MathJax.Hub.Queue(runMarked);
 		// Try fixing the figures always...?
 		MathJax.Hub.Queue(setFigures);
+
 	} // runMathJax
 
 	function loadTex(e) {
