@@ -13,6 +13,7 @@ this.addEventListener("load", function () {
 		marked = this.marked,
 		MathJax = this.MathJax,
 		qwest = this.qwest,
+		jsyaml = this.jsyaml,
 		js_figures = {},
 		figure_count = 0;
 	
@@ -86,9 +87,10 @@ this.addEventListener("load", function () {
 		var marked_up = marked(chapter_el.innerHTML),
 			heading,
 			heading_el,
-			i;
+			i,
+			nice_text;
 
-		var nice_text = marked_up
+		nice_text = marked_up
 			.replace(/--/g, "&mdash;") // Replace the double dash
 			.replace(/``/g, '"') // Replace the latex quotations
 			.replace(/''/g, '"');
@@ -104,22 +106,24 @@ this.addEventListener("load", function () {
 	} // runMarked
 
 	function runMathJax(text) {
+		var title_patt, title_matches, title, authors, date,
+			yaml_patt, yaml_matches, yaml_str, yaml_metadata;
 		// Parse the Pandoc title block
-		var title_patt = new RegExp('% .*\n', 'g');
-		var title_matches = text.match(title_patt);
+		title_patt = new RegExp('% .*\n', 'g');
+		title_matches = text.match(title_patt);
 		text = text.replace(title_patt, '');
 		// Set the title
-		var title = title_matches[0].replace(/(% |\n)/g, '');
-		var authors = title_matches[1].replace(/(% |\n)/g, '').split('; ');
-		var date = title_matches[1].replace(/(% |\n)/g, '');
+		title = title_matches[0].replace(/(% |\n)/g, '');
+		authors = title_matches[1].replace(/(% |\n)/g, '').split('; ');
+		date = title_matches[1].replace(/(% |\n)/g, '');
 		document.getElementsByTagName("title")[0].innerHTML = title;
 
 		// Parse the YAML header
-		var yaml_patt = new RegExp('---\n(.|\n)*---\n', 'g');
-		var yaml_matches = text.match(yaml_patt);
+		yaml_patt = new RegExp('---\n(.|\n)*---\n', 'g');
+		yaml_matches = text.match(yaml_patt);
 		text = text.replace(yaml_patt, '');
-		var yaml_str = yaml_matches[0].replace('---\n','').replace('---\n','');
-		var yaml_metadata = jsyaml.safeLoad(yaml_str);
+		yaml_str = yaml_matches[0].replace('---\n', '').replace('---\n', '');
+		yaml_metadata = jsyaml.safeLoad(yaml_str);
 
 		// Place the text into the element
 		chapter_el.innerHTML = text;
