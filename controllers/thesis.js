@@ -126,8 +126,8 @@ this.addEventListener("load", function () {
 		yaml_metadata = jsyaml.safeLoad(yaml_str);
 
 		// Kill off citations for now...
-		text = text.replace(/\\cite\{.*\}/, '');
-		text = text.replace(/\[@.*\]/, '');
+		text = text.replace(/\\cite\{.*\}/g, '');
+		text = text.replace(/\[@.*\]/g, '');
 
 		// Place the text into the element
 		chapter_el.innerHTML = text;
