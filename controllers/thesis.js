@@ -125,6 +125,10 @@ this.addEventListener("load", function () {
 		yaml_str = yaml_matches[0].replace('---\n', '').replace('---\n', '');
 		yaml_metadata = jsyaml.safeLoad(yaml_str);
 
+		// Kill off citations for now...
+		text = text.replace(/\\cite\{.*\}/, '');
+		text = text.replace(/\[@.*\]/, '');
+
 		// Place the text into the element
 		chapter_el.innerHTML = text;
 		// Enqueue
