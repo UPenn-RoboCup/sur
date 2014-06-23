@@ -14,12 +14,25 @@ this.addEventListener("load", function () {
 		MathJax = this.MathJax,
 		qwest = this.qwest,
 		jsyaml = this.jsyaml,
+		bibtexParser = this.BibtexParser,
 		js_figures = {},
 		figure_count = 0;
 	
 	// Must make globally available for dynamically loading figures
 	this.js_figures = js_figures;
 	
+	function setBibliography(bibtext) {
+		var bib = bibtexParser(bibtext),
+			entries = bib.entries,
+			i,
+			en,
+			n = entries.length;
+		for (i = 0; i < n; i = i + 1) {
+			en = entries[i];
+			console.log(en);
+		}
+	}
+
 	function setFigures() {
 		// Check if everything is available...
 		if (!svg_script_el || !tex_done) {
@@ -70,7 +83,13 @@ this.addEventListener("load", function () {
 			caption_el.classList.add('caption');
 			s.parentNode.insertBefore(caption_el, s.nextSibling);
 		}
-				
+
+		// Load the bibliography
+		qwest.get('/md/' + chapter_el.id + '.bib', {}, {}, function () {
+			this.responseType = 'text';
+		})
+			.success(setBibliography);
+
 	}
 
 	function run_svgjs(snippet) {
@@ -141,7 +160,7 @@ this.addEventListener("load", function () {
 
 	function loadTex(e) {
 		// Load the text
-		qwest.get('/md/' + chapter_el.id, {}, {}, function () {
+		qwest.get('/md/' + chapter_el.id + '.md', {}, {}, function () {
 			this.responseType = 'text';
 		})
 			.success(runMathJax);

@@ -157,8 +157,9 @@ server.get('/views/:long', load_html );
 var load_txt = function (req, res, next) {
   // Select a page
   var page;
+	console.log(req.params);
   if(req.params.md!==undefined){
-    page = 'md/'+req.params.md+'.md';
+    page = 'md/'+req.params.md;
   }
   // Perform the load
   var body = fs.readFileSync(page,{encoding:'utf8'});
