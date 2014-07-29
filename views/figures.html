@@ -32,56 +32,60 @@
 <body>
 	<svg id='full'></svg>
 	<!-- Mesh -->
-	<div id='mesh' class="process">
-		<div class="thread _l">
-			Laser Scan Cache
-		</div>
-		<div class="thread _r">
+	<div id='mesh' class="process process_c">
+		<div class="thread fsm">
+			Laser Scan Cache<br/>
 			Form Depthmap<br/>
 			Broadcast JPEG
 		</div>
 	</div>
 	<!-- RPC -->
-	<div id='rpc' class="process">
+	<div id='rpc' class="process process_c">
 		<div class="thread _l">
 			Modify SHM<br/>
 			FSM Events<br/>
 			Net Settings<br/>
-			RPC Execution
-		</div>
-		<div class="thread _r">
+			RPC Execution<br/>
 			Broadcast state
 		</div>
 	</div>
 	<!-- Lidar -->
-	<div id='lidar' class="sensor">
-		LIDAR
+	<div id='lidar' class="process process_c">
+		<div class="thread sensor_c">
+			LIDAR
+		</div>
 	</div>
 	<!-- Cameras -->
-	<div id='camera2' class="sensor">
-		Camera Image<br/>
-		Broadcast JPEG
+	<div id='camera2' class="process process_c">
+		<div class="thread sensor_c">
+			Camera Image<br/>
+			Broadcast JPEG
+		</div>
 	</div>
-	<div id='camera' class="sensor">
-		Camera Stream<br/>
-		Broadcast JPEG
+	<div id='camera' class="process process_c">
+		<div class="thread sensor_c">
+			Camera Image<br/>
+			Broadcast JPEG
+		</div>
 	</div>
 	<!-- Audio -->
-	<div id='audio' class="sensor">
-		Microphone<br/>
-		Broadcast MP3
+	<div id='audio' class="process process_c">
+		<div class="thread sensor_c">
+			Microphone<br/>
+			Broadcast MP3
+		</div>
 	</div>
 	<!-- State -->
-	<div id='state' class="process">
-		<div class="thread _l">
+	<div id='state' class="process process_c">
+		<div class="thread fsm">
 			HeadFSM<br/>
 			BodyFSM<br/>
 			LidarFSM<br/>
 		</div>
-		<div class="thread _r">
+		<div class="thread sensor_c">
 			Servo Comms
 		</div>
-		<div class="thread" id='arm'>
+		<div class="thread fsm" id='arm'>
 			<u>ArmFSM</u><br/>
 			<div>
 			Trajectory<br/>
@@ -103,27 +107,24 @@
 	
 	<div id="operator"><div>Operator Console</div></div>
 	<!-- State -->
-	<div id='nodejs' class="process">
-		<div class="thread">
+	<div id='nodejs' class="process process_c">
+		<div class="thread _l">
 			Bridge
 		</div>
 	</div>
 	<!-- State -->
-	<div id='ssh' class="process">
-		<div class="thread">
-			<u>SSH</u><br/>
+	<div id='ssh' class="process process_c">
+		<div class="thread _r">
+			SSH<br/>
 			Scripts
 		</div>
 	</div>
 	<!-- State -->
-	<div id='browser' class="process">
-		<div class="thread _l">
+	<div id='browser' class="process process_c">
+		<div class="thread _r">
 			<u>Browser GUI</u><br/>
 			3D Scene<br/>
 			Camera Feeds<br/>
-		</div>
-		<div class="thread _r">
-			Command Line<br/>
 		</div>
 	</div>
 	

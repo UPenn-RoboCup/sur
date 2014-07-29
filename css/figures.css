@@ -10,23 +10,23 @@ svg#full {
 	margin-left: auto;
   margin-right: auto;
 }
+div.sensor_c {
+	background-color: #bff;
+}
+div.process_c {
+	background-color: lightgrey;
+}
 div.sensor {
-	/*display: none;*/
+	border: 1px solid #333;
 	position: absolute;
 	height: auto;
 	width: auto;
 	border-radius: .1in;
-	background-color: #bff;
 	padding: .1in;
-	border:1px solid #333;
 }
 div.process {
-	/*display: none;*/
+	border: 1px solid #333;
 	position: absolute;
-	background-color: lightgrey;
-	/*width: 3in;*/
-	/*height: 2in;*/
-	border:1px solid #333;
 	padding: .01in;
 	border-radius: 0.1in;
 	float: left;
@@ -35,13 +35,13 @@ div.process {
 	position: absolute;
 	border:1px solid #333;
 	top: .2in;
-	left: 3.45in;
-	width: 2.3in;
+	left: 3.5in;
+	width: 2.25in;
 	height: 1.35in;
 }
 #operator div{
 	position: absolute;
-	bottom: 0.05in;
+	top	: 0.05in;
 	right: 0.1in;
 }
 .thread {
@@ -58,7 +58,6 @@ div.process {
 	left: 1.25in;
 	top: 0in;
 	height: 1.35in;
-	background-color: #ffb;
 }
 .thread#motion {
 	position: absolute;
@@ -73,11 +72,14 @@ div._l {
 div._r {
 	background-color: #bfb;
 }
+div.fsm {
+	background-color: #ffb;
+}
 
 /* Position the nodes */
 #lidar {
-	top: .2in;
-	left: .6in;
+	top: .24in;
+	left: .575in;
 }
 #mesh {
 	top: .8in;
@@ -85,15 +87,15 @@ div._r {
 }
 #camera2 {
 	top: 1.8in;
-	left: .25in;
+	left: .3in;
 }
 #camera {
-	top: 1.85in;
+	top: 1.9in;
 	left: .2in;
 }
 #audio {
 	top: 2.7in;
-	left: .2in;
+	left: .3in;
 }
 #rpc {
 	top: .27in;
@@ -110,13 +112,13 @@ div._r {
 }
 #nodejs {
 	top: 1in;
-	left: 3.5in;
+	left: 3.55in;
 }
 #ssh {
 	top: .25in;
-	left: 3.5in;
+	left: 3.55in;
 }
 #browser {
-	top: .25in;
+	top: .5in;
 	left: 4.4in;
 }
