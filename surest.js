@@ -25,6 +25,17 @@ var rpc_reliable_port   = 55555;
 var rpc_unreliable_port = 55556;
 var homepage = 'meshy';
 
+/* Load config from Lua */
+var exec = require('child_process').exec;
+var a;
+function proc_mpack(err, packed){
+  console.log(err, packed, packed.length)
+  //var buf = Buffer(packed);
+  //var Config = mp.unpack(Buffer(packed));
+  //console.log(buf, Config, buf.length, packed.length)
+}
+a = exec("cd ../UPennDev; lua pack_config.lua", proc_mpack)
+
 /**
 * Load configuration values
 * TODO: Make these JSON for both the browser and node
@@ -445,7 +456,7 @@ var zmq_message = function(metadata,payload){
 /**
 * UDP robot data receiving
 */
-var udp_message = function(msg,rinfo){
+var udp_message = function(msg, rinfo){
   //console.log('got udp',rinfo);
   /* msgpack -> JSON */
   /* the jpeg is right after the messagepacked metadata (concatenated) */
@@ -460,59 +471,57 @@ var udp_message = function(msg,rinfo){
 }
 
 /* Bridge to  websockets */
-for( var w=0; w<bridges.length; w++) {
+for(var w=0; w<bridges.length; w++) {
 
 	var b = bridges[w];
 
-	if( b.ws !== undefined ) {
+	if(b.ws === undefined) { continue; }
 
-		var wss = new WebSocketServer({port: b.ws});
-		wss.on('connection', ws_connection.bind({id: w}) );
-		console.log('\n'+b.name);
-    console.log('\tWebsocket: '+b.ws)
+	var wss = new WebSocketServer({port: b.ws});
+	wss.on('connection', ws_connection.bind({id: w}) );
+  
+	console.log('\n'+b.name);
+  console.log('\tWebsocket: '+b.ws)
 
-		if( b.sub !== undefined ) {
-			var zmq_recv_skt = zmq.socket('sub');
-			zmq_recv_skt.connect('ipc:///tmp/'+b.sub);
-			zmq_recv_skt.subscribe('');
-			zmq_recv_skt.on('message', zmq_message.bind({id:w}) );
-			console.log('\tSubscriber Bridge',b.sub);
-		}
+	if(b.sub !== undefined) {
+		var zmq_recv_skt = zmq.socket('sub');
+		zmq_recv_skt.connect('ipc:///tmp/'+b.sub);
+		zmq_recv_skt.subscribe('');
+		zmq_recv_skt.on('message', zmq_message.bind({id:w}) );
+		console.log('\tSubscriber Bridge',b.sub);
+	}
 
-		if( b.udp !== undefined ){
-      console.log('\tUDP Bridge',b.udp);
-			var udp_recv_skt = dgram.createSocket("udp4");
-			udp_recv_skt.bind( b.udp );
-			udp_recv_skt.on( "message", udp_message.bind({id:w}) );
-		}
+	if(b.udp !== undefined){
+    console.log('\tUDP Bridge',b.udp);
+		var udp_recv_skt = dgram.createSocket("udp4");
+		udp_recv_skt.bind( b.udp );
+		udp_recv_skt.on( "message", udp_message.bind({id:w}) );
+	}
 
-    if( b.req !== undefined ) {
-      var zmq_req_skt = zmq.socket('req');
-      zmq_req_skt.connect('tcp://'+rpc_robot+':'+b.req);
-      zmq_req_skt.on('message', zmq_message.bind({id:w}) );
-      console.log('\tRequester Bridge',b.req);
-      b.requester = zmq_req_skt;
-      reliable_lookup[b.name]=b;
-    }
+  if(b.req !== undefined) {
+    var zmq_req_skt = zmq.socket('req');
+    zmq_req_skt.connect('tcp://'+rpc_robot+':'+b.req);
+    zmq_req_skt.on('message', zmq_message.bind({id:w}) );
+    console.log('\tRequester Bridge',b.req);
+    b.requester = zmq_req_skt;
+    reliable_lookup[b.name]=b;
+  }
 
-    if( b.tcp !== undefined ) {
-      var zmq_tcp_skt = zmq.socket('sub');
-			zmq_tcp_skt.subscribe('');
-      //zmq_tcp_skt.connect('tcp://'+rpc_robot+':'+b.tcp);
-			zmq_tcp_skt.bind('tcp://*:'+b.tcp);
-      zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
-      console.log('\tTCP Sub Bridge',b.tcp);
-    }
+  if(b.tcp !== undefined) {
+    var zmq_tcp_skt = zmq.socket('sub');
+		zmq_tcp_skt.subscribe('');
+    //zmq_tcp_skt.connect('tcp://'+rpc_robot+':'+b.tcp);
+		zmq_tcp_skt.bind('tcp://*:'+b.tcp);
+    zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
+    console.log('\tTCP Sub Bridge',b.tcp);
+  }
 
-		if( b.pub !== undefined ) {
-			var zmq_send_skt = zmq.socket('pub');
-			zmq_send_skt.bind('ipc:///tmp/'+b.pub);
-			console.log('\tPublisher Bridge',b.pub);
-			b.zmq_pub = zmq_send_skt;
-		}
-
-	} //ws check
-
+	if(b.pub !== undefined) {
+		var zmq_send_skt = zmq.socket('pub');
+		zmq_send_skt.bind('ipc:///tmp/'+b.pub);
+		console.log('\tPublisher Bridge',b.pub);
+		b.zmq_pub = zmq_send_skt;
+	}
 } // for w
 
 /* Setup the REST routes */
