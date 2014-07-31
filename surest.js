@@ -26,15 +26,17 @@ var rpc_unreliable_port = 55556;
 var homepage = 'meshy';
 
 /* Load config from Lua */
-var exec = require('child_process').exec;
-var a;
-function proc_mpack(err, packed){
-  console.log(err, packed, packed.length)
-  //var buf = Buffer(packed);
-  //var Config = mp.unpack(Buffer(packed));
-  //console.log(buf, Config, buf.length, packed.length)
+var exec = require('child_process').exec,
+	child, Config;
+
+function proc_mpack(err, packed) {
+	Config = mp.unpack(Buffer(packed, 'binary'));
 }
-a = exec("cd ../UPennDev; lua pack_config.lua", proc_mpack)
+child = exec("cd ../UPennDev; lua pack_config.lua", {
+		encoding: 'binary',
+		maxBuffer: 64 * 1024,
+	},
+	proc_mpack)
 
 /**
 * Load configuration values
