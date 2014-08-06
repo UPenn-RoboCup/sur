@@ -9,7 +9,15 @@ var restify = require('restify'),
 	WebSocketServer = require('ws').Server,
 	dgram = require('dgram'),
 	zmq = require('zmq'),
-	mp = require('msgpack');
+	mp = require('msgpack'),
+	PeerServer = require('peer').PeerServer;
+
+/* Is this Needed? */
+/*
+server.use(restify.acceptParser(server.acceptable));
+server.use(restify.queryParser());
+server.use(restify.bodyParser());
+*/
 
 // Load config from Lua
 var lua = new nodelua.LuaState('config');
@@ -113,6 +121,20 @@ function wss_error (ws) {
 	console.log('WSS ERROR', ws);
 }
 
+/* Connect to the RPC server */
+var rpc = Config.net.rpc;
+var robot_ip;
+if(Config.net.use_wireless){
+	robot_ip = Config.net.robot.wireless;
+} else {
+	robot_ip = Config.net.robot.wired;
+}
+var rpc_reliable_port = rpc.tcp_reply;
+var rpc_unreliable_port = rpc.udp;
+var zmq_req_rest_skt = zmq.socket('req');
+var ret = zmq_req_rest_skt.connect('tcp://'+robot_ip+':'+rpc_reliable_port);
+console.log('\nRESTful reliable RPC connected to ',robot_ip,rpc_reliable_port);
+
 /* Bridges for websockets streams */
 var streams = Config.net.streams
 for(var w in streams) {
@@ -122,7 +144,7 @@ for(var w in streams) {
 	var wss = new WebSocketServer({port: b.ws});
 	wss.on('connection', wss_connection);
 	wss.on('error', wss_error);
-	// Save the sserver reference
+	// Save the wsserver reference
 	b.wss = wss;
 	wss.sur_stream = b;
 	// Add UDP listening
@@ -143,3 +165,6 @@ for(var w in streams) {
 		zmq_recv_skt.sur_stream = b;
 	}
 }
+
+/* PeerServer for WebRTC */
+var pserver = new PeerServer({ port: 9000 });
