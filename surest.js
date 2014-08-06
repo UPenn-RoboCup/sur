@@ -13,124 +13,24 @@ var mp      = require('msgpack');
 var restify = require('restify');
 var dgram   = require('dgram');
 var _       = require('underscore');
-
-/* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.26'; // teddy
-//var rpc_robot     = '192.168.123.24'; //alvin
-//var rpc_robot     = '192.168.123.27'; // simon
-//var rpc_robot = '20.20.20.6'; // YouBot
-//var rpc_robot = '25.25.1.112';
-var rpc_robot     = 'localhost'
-var rpc_reliable_port   = 55555;
-var rpc_unreliable_port = 55556;
-var homepage = 'meshy';
+var nodelua = require('nodelua');
 
 /* Load config from Lua */
-var exec = require('child_process').exec,
-	child, Config;
+var lua = new nodelua.LuaState('config');
+var Config = lua.doFileSync('UPennDev/include.lua');
+var streams = Config.net.streams
+var rpc = Config.net.rpc;
 
-function proc_mpack(err, packed) {
-	Config = mp.unpack(Buffer(packed, 'binary'));
+/* Remote Procedure Call Configuration */
+var robot_ip;
+if(Config.net.use_wireless){
+	robot_ip = Config.net.robot.wireless;
+} else {
+	robot_ip = Config.net.robot.wired;
 }
-child = exec("cd ../UPennDev; lua pack_config.lua", {
-		encoding: 'binary',
-		maxBuffer: 64 * 1024,
-	},
-	proc_mpack)
-
-/**
-* Load configuration values
-* TODO: Make these JSON for both the browser and node
-*/
-var bridges = [];
-bridges.push({
-	name : 'mesh', // reliable name
-	ws : 9001,
-	udp: 33344,
-  //tcp: 33345,
-	clients : []
-});
-
-bridges.push({
-  name : 'camera0',
-  ws : 9003,
-  udp: 33333,
-  //tcp : 33334,
-	sub : 'camera0',
-  clients : []
-});
-
-bridges.push({
-  name : 'forehead_camera',
-  ws : 9004,
-  udp: 33335,
-  //tcp: 33336,
-  clients : []
-});
-
-bridges.push({
-	name : 'feedback',
-	ws : 9013,
-	udp: 54329,
-	clients : []
-});
-
-bridges.push({
-	name : 'audio',
-	ws : 9014,
-  //tcp: 55557,
-	clients : []
-});
-
-bridges.push({
-	name : 'lidar0',
-	ws : 9015,
-	sub: 'lidar0',
-	clients : []
-});
-
-bridges.push({
-	name : 'touch',
-	ws : 9064,
-	pub: 'touch',
-	sub: 'bbox', // listen for the bounding box
-	/*tcp: '55588',*/
-	clients : []
-});
-
-bridges.push({
-	name : 'wire',
-	ws : 9065,
-	sub: 'wire',
-	tcp: '55589',
-	clients : []
-});
-
-/*
-bridges.push({
-	name : 'rgbd_depth',
-	ws : 9010,
-	udp: 33346,
-	clients : []
-});
-
-bridges.push({
-  name : 'rgbd_color',
-  ws : 9011,
-  udp: 33347,
-  clients : []
-});
-
-bridges.push({
-	name : 'spacemouse',
-	ws : 9012,
-	sub: 'spacemouse',
-	clients : []
-});
-*/
-
-// rest look up table for the objects
-var reliable_lookup = {}
+var rpc_reliable_port   = rpc.tcp_reply;
+var rpc_unreliable_port = rpc.udp;
+var homepage = 'meshy';
 
 /* Begin the REST HTTP server */
 var server = restify.createServer({
@@ -473,17 +373,17 @@ var udp_message = function(msg, rinfo){
 }
 
 /* Bridge to  websockets */
-for(var w=0; w<bridges.length; w++) {
-
-	var b = bridges[w];
+for(var w in streams) {
+	var b = streams[w];
+	b.clients = [];
+	
+	console.log('\n'+w);
+  console.log('\tWebsocket: '+b.ws)
 
 	if(b.ws === undefined) { continue; }
 
 	var wss = new WebSocketServer({port: b.ws});
 	wss.on('connection', ws_connection.bind({id: w}) );
-  
-	console.log('\n'+b.name);
-  console.log('\tWebsocket: '+b.ws)
 
 	if(b.sub !== undefined) {
 		var zmq_recv_skt = zmq.socket('sub');
@@ -502,17 +402,16 @@ for(var w=0; w<bridges.length; w++) {
 
   if(b.req !== undefined) {
     var zmq_req_skt = zmq.socket('req');
-    zmq_req_skt.connect('tcp://'+rpc_robot+':'+b.req);
+    zmq_req_skt.connect('tcp://'+robot_ip+':'+b.req);
     zmq_req_skt.on('message', zmq_message.bind({id:w}) );
     console.log('\tRequester Bridge',b.req);
     b.requester = zmq_req_skt;
-    reliable_lookup[b.name]=b;
   }
 
   if(b.tcp !== undefined) {
     var zmq_tcp_skt = zmq.socket('sub');
 		zmq_tcp_skt.subscribe('');
-    //zmq_tcp_skt.connect('tcp://'+rpc_robot+':'+b.tcp);
+    //zmq_tcp_skt.connect('tcp://'+robot_ip+':'+b.tcp);
 		zmq_tcp_skt.bind('tcp://*:'+b.tcp);
     zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
     console.log('\tTCP Sub Bridge',b.tcp);
@@ -542,13 +441,13 @@ server.get('/a',rest_audio);
 
 /* Connect to the RPC server */
 var zmq_req_rest_skt = zmq.socket('req');
-var ret = zmq_req_rest_skt.connect('tcp://'+rpc_robot+':'+rpc_reliable_port);
-console.log('\nRESTful reliable RPC connected to ',rpc_robot,rpc_reliable_port);
+var ret = zmq_req_rest_skt.connect('tcp://'+robot_ip+':'+rpc_reliable_port);
+console.log('\nRESTful reliable RPC connected to ',robot_ip,rpc_reliable_port);
 
 /*
 var udp_rpc_skt = dgram.createSocket("udp4");
 var ret = udp_rpc_skt.connect(rpc_unreliable_port);
-console.log('\nRESTful unreliable RPC connected to ', rpc_robot, rpc_unreliable_port);
+console.log('\nRESTful unreliable RPC connected to ', robot_ip, rpc_unreliable_port);
 */
 
 /* Listen for HTTP on port 8080 */
