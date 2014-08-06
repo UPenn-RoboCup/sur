@@ -114,7 +114,7 @@
     cur_item_id = 0;
     cur_item    = items[cur_item_id];
     cur_item.init();
-    cur_item.add_buttons();
+    //cur_item.add_buttons();
     // Handle intersections with meshes in the world
     World.handle_intersection(cur_item.select);
     // Make a tcontrol
@@ -128,16 +128,7 @@
   //////
   // Keypressing hotkeys
   var tcontrol_hotkeys = [
-    {
-      // Escape modifications
-      "keys"          : "escape",
-      "is_exclusive"  : true,
-      "on_keyup"      : function(event) {
-          event.preventDefault();
-          no_mod();
-      },
-      "this"          : ctx
-    },
+/*
     {
       // swap global/local for visual cue
       "keys"          : "`",
@@ -148,6 +139,7 @@
       },
       "this"          : ctx
     },
+*/
     {
       // translation
       "keys"          : "t",
@@ -171,9 +163,63 @@
   ];
   
   // Keypressing hotkeys
-  var dp = 10; // 1cm at a time
-  var ddp = 1; // 1mm at a time fine tune
+  var dp = 100; // 10cm at a time waypoint
+  var ddp = 10;//25; // 1in at a time fine tune
   var item_hotkeys = [
+{
+      "keys"          : "`",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+        if(cur_item.item_name=='Hand'){
+		Hand.switch();
+	}
+          
+      },
+      "this"          : ctx
+    },   
+{
+      // Escape modifications
+      "keys"          : "0",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          Manipulation.modify();
+      },
+      "this"          : ctx
+    },
+
+  {
+    // loop
+    "keys"          : "k",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        Manipulation.loop();
+    },
+    "this"          : ctx
+  },
+  {
+    // proceed
+    "keys"          : "=",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        qwest.post( rpc_url_proceed, {val:JSON.stringify([1])} )
+    },
+    "this"          : ctx
+  },
+  {
+    // reverse
+    "keys"          : "-",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        qwest.post( rpc_url_proceed, {val:JSON.stringify([-1])} )
+    },
+    "this"          : ctx
+  },
+  //
   {
     "keys"          : "i",
     "is_exclusive"  : true,
@@ -183,11 +229,17 @@
       // Relative direction wrt robot
       var pa = Robot.pa;
       var ca = Math.cos(pa), sa = Math.sin(pa);
-      var dx = dp*ca, dy = dp*sa;
-      mod_mesh.position.x += dy;
-      mod_mesh.position.z += dx;
+
+var dx,dy;
+	if(cur_item.item_name=='Waypoint'){
+dx = dp*sa, dy = dp*ca;
+	} else {
+dx = ddp*sa, dy = ddp*ca;
+}
+
+      mod_mesh.position.x += dx;
+      mod_mesh.position.z += dy;
       cur_item.mod_callback();
-        cur_item.send();
     },
     "this"          : ctx
   },
@@ -200,11 +252,18 @@
       // Relative direction wrt robot
       var pa = Robot.pa;
       var ca = Math.cos(pa), sa = Math.sin(pa);
-      var dx = dp*ca, dy = dp*sa;
-      mod_mesh.position.x -= dy;
-      mod_mesh.position.z -= dx;
+
+
+var dx,dy;
+	if(cur_item.item_name=='Waypoint'){
+dx = dp*sa, dy = dp*ca;
+	} else {
+dx = ddp*sa, dy = ddp*ca;
+}
+
+      mod_mesh.position.x -= dx;
+      mod_mesh.position.z -= dy;
       cur_item.mod_callback();
-        cur_item.send();
     },
     "this"          : ctx
   },
@@ -217,11 +276,15 @@
       // Relative direction wrt robot
       var pa = Robot.pa;
       var ca = Math.cos(pa), sa = Math.sin(pa);
-      var dx = dp*sa, dy = -dp*ca;
-      mod_mesh.position.x -= dy;
+var dx,dy;
+	if(cur_item.item_name=='Waypoint'){
+dx = dp*sa, dy = dp*ca;
+	} else {
+dx = ddp*sa, dy = ddp*ca;
+}
+      mod_mesh.position.x += dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-        cur_item.send();
     },
     "this"          : ctx
   },
@@ -234,12 +297,17 @@
         // Relative direction wrt robot
         var pa = Robot.pa;
         var ca = Math.cos(pa), sa = Math.sin(pa);
-        var dx = dp*sa, dy = -dp*ca;
+var dx,dy;
+	if(cur_item.item_name=='Waypoint'){
+dx = dp*sa, dy = -dp*ca;
+	} else {
+dx = ddp*sa, dy = -ddp*ca;
+}
+        
         mod_mesh.position.x += dy;
         mod_mesh.position.z += dx;
         //
         cur_item.mod_callback();
-        cur_item.send();
     },
     "this"          : ctx
   },
@@ -249,9 +317,12 @@
     "on_keyup"      : function(event) {
         event.preventDefault();
         var mod_mesh = cur_item.get_mod_mesh();
-        mod_mesh.position.y += dp;
+	if(cur_item.item_name=='Waypoint'){
+mod_mesh.position.y += dp;
+	} else {
+mod_mesh.position.y += ddp;
+}
         cur_item.mod_callback();
-        cur_item.send();
     },
     "this"          : ctx
   },
@@ -261,42 +332,107 @@
     "on_keyup"      : function(event) {
         event.preventDefault();
         var mod_mesh = cur_item.get_mod_mesh();
-        mod_mesh.position.y -= dp;
+	if(cur_item.item_name=='Waypoint'){
+mod_mesh.position.y -= dp;
+	} else {
+mod_mesh.position.y -= ddp;
+}
+        
         cur_item.mod_callback();
-        cur_item.send();
+        
     },
     "this"          : ctx
   },
-  //
-  {
-    "keys"          : "h",
-    "is_exclusive"  : true,
-    "on_keyup"      : function(event) {
-        event.preventDefault();
-        if(cur_item.special1){
-          cur_item.special1(-1);
-        } else {
-          var mod_mesh = cur_item.get_mod_mesh();
-          mod_mesh.rotation.y += .1;
-          cur_item.mod_callback();
-        cur_item.send();
-        }
-    },
-    "this"          : ctx
-  },
+  // yaw
   {
     "keys"          : ";",
     "is_exclusive"  : true,
     "on_keyup"      : function(event) {
         event.preventDefault();
-        if(cur_item.special1){
-          cur_item.special1(1);
-        } else {
-          var mod_mesh = cur_item.get_mod_mesh();
-          mod_mesh.rotation.y -= .1;
-          cur_item.mod_callback();
-        cur_item.send();
-        }
+        var mod_mesh = cur_item.get_mod_mesh();
+if(cur_item.item_name=='Waypoint'){
+        mod_mesh.rotation.y += 10*DEG_TO_RAD;
+} else {
+        mod_mesh.rotation.y += 5*DEG_TO_RAD;
+} 
+       cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "'",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+if(cur_item.item_name=='Waypoint'){
+        mod_mesh.rotation.y -= 10*DEG_TO_RAD;
+} else {
+        mod_mesh.rotation.y -= 5*DEG_TO_RAD;
+} 
+        cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  // pitch
+  {
+    "keys"          : "o",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+if(cur_item.item_name=='Waypoint'){
+        mod_mesh.rotation.x += 10*DEG_TO_RAD;
+} else {
+        mod_mesh.rotation.x += 5*DEG_TO_RAD;
+} 
+        cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "p",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+if(cur_item.item_name=='Waypoint'){
+        mod_mesh.rotation.x -= 10*DEG_TO_RAD;
+} else {
+        mod_mesh.rotation.x -= 5*DEG_TO_RAD;
+} 
+        cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  // roll
+  {
+    "keys"          : ".",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+if(cur_item.item_name=='Waypoint'){
+        mod_mesh.rotation.z += 10*DEG_TO_RAD;
+} else {
+        mod_mesh.rotation.z += 5*DEG_TO_RAD;
+} 
+        cur_item.mod_callback();
+    },
+    "this"          : ctx
+  },
+  {
+    "keys"          : "/",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+        var mod_mesh = cur_item.get_mod_mesh();
+if(cur_item.item_name=='Waypoint'){
+        mod_mesh.rotation.z -= 10*DEG_TO_RAD;
+} else {
+        mod_mesh.rotation.z -= 5*DEG_TO_RAD;
+} 
+        cur_item.mod_callback();
     },
     "this"          : ctx
   },
@@ -306,8 +442,7 @@
     "is_exclusive"  : true,
     "on_keyup"      : function(event) {
         event.preventDefault();
-        cur_item.special2(-1);
-        cur_item.send();
+        if(cur_item.item_name=='Hand'){Hand.special-=1}
     },
     "this"          : ctx
   },
@@ -316,13 +451,12 @@
     "is_exclusive"  : true,
     "on_keyup"      : function(event) {
         event.preventDefault();
-        cur_item.special2(1);
-        cur_item.send();
+	if(cur_item.item_name=='Hand'){Hand.special+=1}
     },
     "this"          : ctx
   },
   
-  
+/*
   // FINE TUNE
   {
     "keys"          : "w",
@@ -337,7 +471,7 @@
       mod_mesh.position.x += dy;
       mod_mesh.position.z += dx;
       cur_item.mod_callback();
-        cur_item.send();
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -353,7 +487,7 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-        cur_item.send();
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -369,7 +503,7 @@
       mod_mesh.position.x -= dy;
       mod_mesh.position.z -= dx;
       cur_item.mod_callback();
-        cur_item.send();
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -385,7 +519,7 @@
         mod_mesh.position.x += dy;
         mod_mesh.position.z += dx;
         cur_item.mod_callback();
-        cur_item.send();
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -397,7 +531,7 @@
         var mod_mesh = cur_item.get_mod_mesh();
         mod_mesh.position.y += ddp;
         cur_item.mod_callback();
-        cur_item.send();
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
     },
     "this"          : ctx
   },
@@ -409,7 +543,18 @@
         var mod_mesh = cur_item.get_mod_mesh();
         mod_mesh.position.y -= ddp;
         cur_item.mod_callback();
-        cur_item.send();
+        //if(cur_item.item_name!='Waypoint'){cur_item.send();}
+    },
+    "this"          : ctx
+  },
+*/
+  //
+  {
+    "keys"          : "space",
+    "is_exclusive"  : true,
+    "on_keyup"      : function(event) {
+        event.preventDefault();
+console.log('sending...')
         cur_item.send();
     },
     "this"          : ctx

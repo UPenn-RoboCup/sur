@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!--HTML5 doctype-->
+<html>
+
+<head>
+  <title>SUR Cameras</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+
+  <!-- CSS for Styling the page -->
+  <link rel="stylesheet" type="text/css" href="/css/gh-buttons.css">
+  <link rel="stylesheet" type="text/css" href="/css/fb-buttons.css">
+
+  <!-- Application Frameworks -->
+  <script src="/lib/d3.min.js" charset="utf-8"></script>
+  <script src="/lib/qwest.min.js"></script>
+  <script src="/lib/sprintf.min.js"></script>
+  <script src="/lib/hammer.min.js"></script>
+  <script src="/lib/keypress.min.js"></script>
+  <script src="/lib/peer.min.js"></script>
+
+  <!-- SUR data JS -->
+  <script src="/controllers/include.js"></script>
+	<script src="/controllers/map.js"></script>
+
+  <!-- App specific needs -->
+	<link rel="stylesheet" type="text/css" href="/css/map.css">
+
+</head>
+
+<body>
+
+  <!-- Static Map -->
+	<div id="map_container">
+		<img id='map' src="/png/cur_map.png" alt="map"/>
+	</div>
+
+
+	<!-- Pose overlay -->
+	<div id="map_overlay"></div>
+
+</body>
+
+</html>

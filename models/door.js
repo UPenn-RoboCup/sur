@@ -263,17 +263,19 @@
   Door.send = function(){
     //var model = three_to_model();
     //qwest.post( rpc_url, {val:JSON.stringify(model)} );
-    Waypoint.send();
+    //Waypoint.send();
   }
   // loop the tcontrol
   Door.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
       // Just reload the model from the robot
+      /*
       qwest.get( rpc_url,{},{})
       .success(function(model){
         model_to_three(model);
         item_mesh = hinge_mesh;
       })
+      */
       return;
     }
     is_push = !is_push;

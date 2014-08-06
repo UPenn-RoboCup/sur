@@ -1,45 +1,16 @@
-var context;
-window.addEventListener('load', init, false);
-function init() {
-  try {
-    // Fix up for prefixing
-    window.AudioContext = window.AudioContext||window.webkitAudioContext;
-    context = new AudioContext();
-    console.log('Audio loaded!')
-  }
-  catch(e) {
-    alert('Web Audio API is not supported in this browser');
-  }
-}
-
-function playSound(buffer) {
-  var source = context.createBufferSource(); // creates a sound source
-  source.buffer = buffer;                    // tell the source which sound to play
-  source.connect(context.destination);       // connect the source to the context's destination (the speakers)
-  source.start(0);                           // play the source now
-                                             // note: on older systems, may have to use deprecated noteOn(time);
-}
-
 // Once the page is done loading, execute main
 document.addEventListener( "DOMContentLoaded", function(){
-  
-  qwest.get('/a',{},{},function(){
-    this.responseType = "arraybuffer";
-  })
-  .success(function(response){
-    context.decodeAudioData(response, function(buffer) {
-      playSound(buffer);
-    },
-    function(err){console.log('audio err',err)}
-    );
-  });
-       
+
   // Right Trigger
-  clicker('rt_trigger',function(){
-    qwest.post(body_url,{body: 'move_rgrip1',bargs: 200});
+  clicker('rt_light',function(){
+    qwest.post(body_url,{body: 'move_rgrip1',bargs: 8});
   });
   clicker('rt_hold',function(){
     qwest.post(body_url,{body: 'move_rgrip1',bargs: 50});
+  });
+  clicker('rt_trigger',function(){
+    qwest.post(rest_root+'/m/hcm/audio/request',{val: JSON.stringify([1])});
+    qwest.post(body_url,{body: 'move_rgrip1',bargs: 200});
   });
   clicker('rt_open',function(){
     qwest.post(body_url,{body: 'move_rgrip1',bargs: -10});
@@ -49,11 +20,14 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   // Right Grip
-  clicker('rg_trigger',function(){
-    qwest.post(body_url,{body: 'move_rgrip2',bargs: 200});
+  clicker('rg_light',function(){
+    qwest.post(body_url,{body: 'move_rgrip2',bargs: 5});
   });
   clicker('rg_hold',function(){
-    qwest.post(body_url,{body: 'move_rgrip2',bargs: 50});
+    qwest.post(body_url,{body: 'move_rgrip2',bargs: 40});
+  });
+  clicker('rg_trigger',function(){
+    qwest.post(body_url,{body: 'move_rgrip2',bargs: 200});
   });
   clicker('rg_open',function(){
     qwest.post(body_url,{body: 'move_rgrip2',bargs: -10});
@@ -63,11 +37,14 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   // Left Trigger
-  clicker('lt_trigger',function(){
-    qwest.post(body_url,{body: 'move_lgrip1',bargs: 200});
+  clicker('lt_light',function(){
+    qwest.post(body_url,{body: 'move_lgrip1',bargs: 10});
   });
   clicker('lt_hold',function(){
-    qwest.post(body_url,{body: 'move_lgrip1',bargs: 50});
+    qwest.post(body_url,{body: 'move_lgrip1',bargs: 20});
+  });
+  clicker('lt_trigger',function(){
+    qwest.post(body_url,{body: 'move_lgrip1',bargs: 200});
   });
   clicker('lt_open',function(){
     qwest.post(body_url,{body: 'move_lgrip1',bargs: -10});
@@ -77,11 +54,14 @@ document.addEventListener( "DOMContentLoaded", function(){
   });
   
   // Left Grip
-  clicker('lg_trigger',function(){
-    qwest.post(body_url,{body: 'move_lgrip2',bargs: 200});
+  clicker('lg_light',function(){
+    qwest.post(body_url,{body: 'move_lgrip2',bargs: 10});
   });
   clicker('lg_hold',function(){
-    qwest.post(body_url,{body: 'move_lgrip2',bargs: 50});
+    qwest.post(body_url,{body: 'move_lgrip2',bargs: 20});
+  });
+  clicker('lg_trigger',function(){
+    qwest.post(body_url,{body: 'move_lgrip2',bargs: 200});
   });
   clicker('lg_open',function(){
     qwest.post(body_url,{body: 'move_lgrip2',bargs: -10});
@@ -90,4 +70,33 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(body_url,{body: 'move_lgrip2',bargs: 0});
   });
   
+  // Information requesting
+  clicker('lg_read',function(){
+    qwest.post( rest_root+'/m/hcm/hands/read', {val:JSON.stringify([1,0])} );
+  });
+  clicker('rg_read',function(){
+    qwest.post( rest_root+'/m/hcm/hands/read', {val:JSON.stringify([0,1])} );
+  });
+  
+  // Feedback of temperature
+  var port = 9013;
+  // Connect to the websocket server
+  var ws = new WebSocket('ws://' + host + ':' + port);
+  var t0 = -1;
+  // Should not need this...
+  ws.binaryType = "arraybuffer";
+  ws.onmessage = function(e){
+    //console.log(e);
+    var feedback = JSON.parse(e.data);
+    //console.log(feedback)
+    $('#rg_p')[0].innerHTML = feedback.r_gpos.toString();
+    $('#lg_p')[0].innerHTML = feedback.l_gpos.toString();
+    $('#rg_t')[0].innerHTML = feedback.r_temp;
+    $('#lg_t')[0].innerHTML = feedback.l_temp;
+    $('#rg_l')[0].innerHTML = feedback.r_load;
+    $('#lg_l')[0].innerHTML = feedback.l_load;
+    // Update the initial time
+    if(t0<0){t0 = feedback.t;}
+  }
+
 });

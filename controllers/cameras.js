@@ -5,8 +5,10 @@ document.addEventListener( "DOMContentLoaded", function(){
   
   // Place on the page
   var camera_container = $('#camera_container')[0];
+  Camera.lag_ind = $('#lag_seconds')[0];
   var img = Camera.get_image();
   camera_container.appendChild( img );
+  
   
   // Normalized Device Coordinates
   var get_coord = function(event){
@@ -59,10 +61,29 @@ document.addEventListener( "DOMContentLoaded", function(){
     qwest.post(ang_url,{val: JSON.stringify([0,50*Math.PI/180])});
   });
   clicker('head_left',function(){
-    qwest.post(ang_url,{val: JSON.stringify([Math.PI/3,0])});
+    qwest.post(ang_url,{val: JSON.stringify([Math.PI/6,0])});
   });
   clicker('head_right',function(){
-    qwest.post(ang_url,{val: JSON.stringify([-Math.PI/3,0])});
+    qwest.post(ang_url,{val: JSON.stringify([-Math.PI/6,0])});
+  });
+  //
+  var speed_url = rest_root+'/m/vcm/head_camera/net';
+  clicker('head_slow',function(){
+    qwest.post(speed_url,{val: JSON.stringify([2,1,40,3])});
+  });
+  /*
+  clicker('head_fast',function(){
+    qwest.post(speed_url,{val: JSON.stringify([2,1,12,.5])});
+  });
+  */
+  clicker('head_stop',function(){
+    qwest.post(speed_url,{val: JSON.stringify([0,1,12,.5])});
+  });
+  clicker('head_once',function(){
+    qwest.post(speed_url,{val: JSON.stringify([3,3,90,1])});
+  });
+  clicker('head_robotis',function(){
+    qwest.post(speed_url,{val: JSON.stringify([2,1,50,2])});
   });
   
 });

@@ -64,7 +64,7 @@
   // Returns a point in xyz of the torso frame
   var get_hokuyo_chest_xyz = function(u,v,w,mesh){
     // do not use saturated pixels
-    if(w==0||w==255){return null;}
+    if(w<=1||w>=254){return null;}
   
     // Convert w of 0-255 to actual meters value
     var near   = mesh.depths[0];
@@ -107,6 +107,7 @@
     var b = a % (2*Math.PI);
     return (b >= Math.PI) ? (b - 2*Math.PI) : b;
   }
+  Transform.mod_angle = mod_angle;
   
   // x, y, z in the torso (upper body) frame
   // robot: pose (px,py,pa element) and bodyTilt elements

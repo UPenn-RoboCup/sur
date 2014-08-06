@@ -6,19 +6,14 @@
   //////////////
   // RPC URLs //
   //////////////
-  var rpc_url_lget = rest_root+'/m/hcm/hands/left_tr';
-  var rpc_url_lset = rest_root+'/m/hcm/hands/left_tr_target';
-  //
-  var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr';
-  var rpc_url_rset = rest_root+'/m/hcm/hands/right_tr_target';
+  //var rpc_url_lget = rest_root+'/m/hcm/hands/left_tr';
+  //var rpc_url_rget = rest_root+'/m/hcm/hands/right_tr';
   
   // Specials
-  var special1 = 0, dSpecial1 = 0.1;
-  var special2 = 0, dSpecial2 = 0.1;
+Hand.special = 0;
   //
   var cur_l = [0,0,0,0,0];
   var cur_r = [0,0,0,0,0];
-  var override = [0,0,0, 0,0];
   
   /////////////////////
   // Mesh definition //
@@ -34,7 +29,8 @@
     side: THREE.DoubleSide,
     wireframe: true
   });
-  var left_geo   = new THREE.CylinderGeometry(8, 8, 80, 8, 1, false);
+  var ind_len = 50;
+  var left_geo   = new THREE.CylinderGeometry(8, 8, ind_len, 8, 1, false);
   var left1_geo  = left_geo.clone();
   var left1_mesh = new THREE.Mesh( left1_geo, left_mat );
   left1_mesh.rotation.set(Math.PI/2,0,0);
@@ -49,16 +45,20 @@
   left_mesh.add(left1_mesh);
   left_mesh.add(left2_mesh);
   
-  /*
-  // lefty
-  var offy = 12; // 2cm
-  var szy = 200;
-  var isaa = szy/2*Math.sqrt(2)/2 /2
-  var left1a_geo   = new THREE.CylinderGeometry(5, 5, szy, 8, 1, false);
-  var left1a_mesh = new THREE.Mesh( left1a_geo, right_mat );
-  left1a_mesh.rotation.set(Math.PI/2,0,Math.PI/4);
-  left1a_mesh.position.set(offy-isaa,0,offy+isaa);
-  */
+  // chopstick helpers
+  var chop_off = 50;
+  var chop_len = 100;
+  var left1a_geo   = new THREE.CylinderGeometry(5, 5, chop_len, 8, 1, false);
+  var left1a_mesh = new THREE.Mesh( left1a_geo, left_mat );
+  left1a_mesh.rotation.set(Math.PI/2,0,0);
+  left1a_mesh.position.set(0,chop_off,0);
+  //
+  var left1b_mesh = new THREE.Mesh( left1a_geo.clone(), left_mat );
+  left1b_mesh.rotation.set(Math.PI/2,0,0);
+  left1b_mesh.position.set(0,-chop_off,0);
+  //
+  left_mesh.add(left1a_mesh);
+  left_mesh.add(left1b_mesh);
   
   // Right Hand
   var right_mat  = new THREE.MeshPhongMaterial({
@@ -152,7 +152,6 @@
     // RPY
     var rpy = (new THREE.Euler()).setFromQuaternion(q_rel);
     tr.push(rpy.z, rpy.x, rpy.y);
-        
     return tr;
   }
   
@@ -164,25 +163,43 @@
     // Set the position for the current mesh
     mod_mesh.position.copy(p);
   }
+Hand.switch = function(){
+    if(cur_hand=='left') {
+      cur_hand = 'right';
+      mod_mesh = right_mesh;
+    } else {
+      cur_hand = 'left';
+      mod_mesh = left_mesh;
+    }
+}
   // reset the hand
   // loop modify handles
   Hand.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
       // rset the hand positions
       if(cur_hand=='left'){
+        /*
         qwest.get( rpc_url_lget ).success(function(lmodel){
           cur_l = lmodel.slice();
           model_to_three(cur_l,'left');
           console.log('Left Hand',cur_l);
         });
+        */
+        cur_l = Robot.left_tr.slice();
+        model_to_three(cur_l,'left');
+        console.log('Left Hand',cur_l);
       } else {
+        /*
         qwest.get( rpc_url_rget ).success(function(rmodel){
           cur_r = rmodel.slice();
           model_to_three(cur_r,'right');
           console.log('Right Hand',cur_r);
         });
+        */
+        cur_r = Robot.right_tr.slice();
+        model_to_three(cur_r,'right');
+        console.log('Right Hand',cur_r);
       }
-      override = [0,0,0, 0,0];
       return;
     }
     // Switch hands
@@ -201,8 +218,6 @@
   // enter stage
   Hand.init = function(tcontrol){
     Manipulation.modify('no');
-    Hand.loop();
-
     // Add to the world
     World.add(left_mesh);
     World.add(right_mesh);
@@ -216,41 +231,42 @@
   Hand.send = function(){
     // Acquire the model
     var model = three_to_model(cur_hand);
-    // Specials
-    override[3]  = special1;
-    override[4]  = special2;
+    var override = [0,0,0, 0,0,0, 0];
+// x y z / r p y conditioning
     if(cur_hand=='left') {
       override[0]  = model[0] - cur_l[0];
       override[1]  = model[1] - cur_l[1];
       override[2]  = model[2] - cur_l[2];
+//
+override[3]  = model[3] - cur_l[3];
+override[4]  = model[4] - cur_l[4];
+override[5]  = model[5] - cur_l[5];
+//
+cur_l = model.slice();
     } else {
       override[0]  = model[0] - cur_r[0];
       override[1]  = model[1] - cur_r[1];
       override[2]  = model[2] - cur_r[2];
+//
+override[3]  = model[3] - cur_r[3];
+override[4]  = model[4] - cur_r[4];
+override[5]  = model[5] - cur_r[5];
+//
+cur_r = model.slice();
     }
+
+    // Special
+    override[6]  = Hand.special;
+    Hand.special = 0;
+
+    console.log('Override!',override);
+
+    // Fix the Float (mm precision)
+    var p = 1000; // precision
+    for(var i=0;i<override.length;i++){override[i] = Math.floor(override[i]*p)/p;}
     // Send the override
     qwest.post( so_url, {val:JSON.stringify(override)} )
-    .success(function(){
-      qwest.post( rpc_url_proceed, {val:JSON.stringify([3])} );
-      console.log('Sent override',override);
-      // reset
-      special1 = 0, special2 = 0;
-      override = [0,0,0, 0,0];
-      if(cur_hand=='left'){cur_l = model.slice();}else{cur_r = model.slice();}
-    });
-    
-    /*
-    // raw hands
-    if(cur_hand=='left') {
-      qwest.post( rpc_url_lset, {val:JSON.stringify(model)} );
-      console.log('Sent left transform',model);
-      qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} )
-    } else {
-      qwest.post( rpc_url_rset, {val:JSON.stringify(model)} );
-      console.log('Sent right transform',model);
-      qwest.post( rpc_url_proceed, {val:JSON.stringify([2])} )
-    }
-    */
+
   }
   Hand.mod_callback = function(){
     
@@ -259,19 +275,12 @@
   Hand.get_mod_mesh = function(){
     return mod_mesh;
   }
-
-  Hand.special1 = function(dir){
-    special1 -= dir*dSpecial1;
-  }
-  Hand.special2 = function(dir){
-    special2 += dir*dSpecial2;
-  }
   
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
   Hand.item_name = 'Hand';
   // export
-	ctx.Hand = Hand;
+  ctx.Hand = Hand;
 
 })(this);

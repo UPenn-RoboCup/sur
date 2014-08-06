@@ -11,7 +11,6 @@
   <link rel="stylesheet" type="text/css" href="/css/gh-buttons.css">
   
   <!-- Application Frameworks -->
-  <script src="/lib/d3.min.js"></script>
   <script src="/lib/qwest.min.js"></script>
   <script src="/lib/sprintf.min.js"></script>
   <script src="/lib/hammer.min.js"></script>
@@ -37,6 +36,7 @@
     </div>
     <br/>
     <div class="button-group">
+      <button href="#" class="big bigger button" id="lt_light">Light</button>
       <button href="#" class="big bigger button" id="lt_hold">Hold</button>
       <button href="#" class="big bigger danger button" id="lt_trigger">
         Trigger</button>
@@ -51,6 +51,7 @@
     </div>
     <br/>
     <div class="button-group">
+      <button href="#" class="big bigger button" id="rt_light">Light</button>
       <button href="#" class="big bigger button" id="rt_hold">Hold</button>
       <button href="#" class="big bigger danger button" id="rt_trigger">
         Trigger</button>
@@ -65,6 +66,7 @@
     </div>
     <br/>
     <div class="button-group">
+      <button href="#" class="big bigger button" id="lg_light">Light</button>
       <button href="#" class="big bigger button" id="lg_hold">Hold</button>
       <button href="#" class="big bigger danger button" id="lg_trigger">
         Trigger</button>
@@ -79,10 +81,27 @@
     </div>
     <br/>
     <div class="button-group">
+      <button href="#" class="big bigger button" id="rg_light">Light</button>
       <button href="#" class="big bigger button" id="rg_hold">Hold</button>
       <button href="#" class="big bigger danger button" id="rg_trigger">
         Trigger</button>
     </div>
+  </div>
+  
+  <!-- Left information -->
+  <div id="lgi">
+    <a href='#' id='lg_read'>Left</a> <br/>
+    Temperature <span class='info' id='lg_t'>?</span><br/>
+    Position <span class='info' id='lg_p'>?</span><br/>
+    Load <span class='info' id='lg_l'>?</span><br/>
+  </div>
+  
+  <!-- Right information -->
+  <div id="rgi">
+    <a href='#' id='rg_read'>Right</a><br/>
+    Temperature <span class='info' id='rg_t'>?</span><br/>
+    Position <span class='info' id='rg_p'>?</span><br/>
+    Load <span class='info' id='rg_l'>?</span><br/>
   </div>
 
 </body>

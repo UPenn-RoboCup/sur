@@ -428,14 +428,22 @@
     
   } // update skeleton
   
+  var is_shown = false;
+  
   Robot.show = function(){
+    is_shown = true;
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.add(m[i]);}
   }
   Robot.hide = function(){
+    is_shown = false;
     var m = Robot.meshes;
     for(var i=0,j=m.length;i<j;i++){World.remove(m[i]);}
   }
+  Robot.toggle = function(){
+    if(is_shown){Robot.hide()}else{Robot.show()}
+  }
+  
   
   Robot.get_root = function(){
     return skeleton;
@@ -474,6 +482,10 @@
       // Update the skeleton model
       skeleton.p.x = 1000*Robot.py;
       skeleton.p.z = 1000*Robot.px;
+      
+      // Update the hand transforms for ease of use
+      Robot.left_tr = feedback.l_tr;
+      Robot.right_tr = feedback.r_tr;
       
       // placeholder
       placeholder_mesh.position.copy(skeleton.p);

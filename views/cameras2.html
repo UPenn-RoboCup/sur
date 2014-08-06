@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--HTML5 doctype-->
+<html>
+     
+<head>
+  <title>SUR Hand Cameras</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+  
+  <!-- CSS for Styling the page -->
+  <link rel="stylesheet" type="text/css" href="/css/gh-buttons.css">
+  <link rel="stylesheet" type="text/css" href="/css/fb-buttons.css">
+  
+  <!-- Application Frameworks -->
+  <script src="/lib/d3.min.js"></script>
+  <script src="/lib/qwest.min.js"></script>
+  <script src="/lib/sprintf.min.js"></script>
+  <script src="/lib/hammer.min.js"></script>
+  <script src="/lib/keypress.min.js"></script>
+  <script src="/lib/peer.min.js"></script>
+
+  <!-- SUR data JS -->
+  <script src="/controllers/include.js"></script>
+  <script src="/controllers/transform.js"></script>
+  <script src="/models/camera2.js"></script>
+  
+  <!-- App specific needs -->
+  <link rel="stylesheet" type="text/css" href="/css/cameras.css">
+  <script src="/controllers/cameras2.js"></script>
+ 
+</head>
+
+<body>
+  
+  <div id="camera_buttons">
+    <!-- Head Camera Buttons -->
+    <button class="big bigger button" id="head_slow">
+      Slow</button><br/>
+    <button class="big bigger button" id="head_single">
+      Single</button><br/>
+    <button class="big bigger button" id="head_stop">
+      Stop</button><br/>
+    <button class="big bigger button" id="roll_up">
+      Roll +</button><br/>
+    <button class="big bigger button" id="roll_down">
+      Roll -</button><br/>
+    <button class="big bigger button" id="pitch_up">
+      Pitch +</button><br/>
+    <button class="big bigger button" id="pitch_down">
+      Pitch -</button><br/>
+  </div>
+  
+  <!-- Head Camera Image Stream -->
+  <div id="camera2_container"></div>
+
+</body>
+
+</html>

@@ -9,6 +9,7 @@
   // Make the image object
   var old_imgs = [];
   var camera_img;
+  Camera.latency = [];
   
   // network settings for the camera
   var rpc_url = rest_root+'/m/vcm/head_camera/net'
@@ -47,10 +48,12 @@
     ws.onmessage = function(e){
       if(typeof e.data === "string"){
         fr_metadata = JSON.parse(e.data);
-        /*
-        Camera.latency.push( e.timeStamp/1e6-fr_metadata.t );
+        // latency in seconds
+        var latency = (e.timeStamp/1e3-time_offset) - fr_metadata.t;
+        Camera.lag_ind.innerHTML = Math.floor(latency*1000)/1000;
+        Camera.latency.push( latency );
         if(Camera.latency.length>5){Camera.latency.shift()}
-        */
+        console.log('Camera',fr_metadata.sz,Camera.latency);
         return;
       }
       /* Use the size as a sort of checksum

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!--HTML5 doctype-->
+<html>
+
+<head>
+  <title>Stephen McGill's Thesis</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no">
+
+  <!-- CSS for Styling the page -->
+
+  <!-- Application Frameworks -->
+	<script src="/lib/qwest.min.js"></script>
+	<script src="/lib/d3.min.js"></script>
+	<!--
+	<script src="/lib/marked.js"></script>
+	<script type="text/x-mathjax-config">
+  	MathJax.Hub.Config({ TeX: { equationNumbers: {autoNumber: "AMS"} } });
+	</script>
+	<script type="text/javascript" src="/lib/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML">-->
+	</script>
+
+  <!-- SUR data JS -->
+  <script src="/controllers/include.js"></script>
+	<script src="/controllers/figures.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="/css/thesis.css">
+	<link rel="stylesheet" type="text/css" href="/css/figures.css">
+
+</head>
+
+<body>
+	<svg id='full'></svg>
+	<!-- Mesh -->
+	<div id='mesh' class="process process_c">
+		<div class="thread fsm">
+			Laser Scan Cache<br/>
+			Form Depthmap<br/>
+			Broadcast JPEG
+		</div>
+	</div>
+	<!-- RPC -->
+	<div id='rpc' class="process process_c">
+		<div class="thread _l">
+			Modify SHM<br/>
+			FSM Events<br/>
+			Net Settings<br/>
+			RPC Execution<br/>
+			Broadcast state
+		</div>
+	</div>
+	<!-- Lidar -->
+	<div id='lidar' class="process process_c">
+		<div class="thread sensor_c">
+			LIDAR
+		</div>
+	</div>
+	<!-- Cameras -->
+	<div id='camera2' class="process process_c">
+		<div class="thread sensor_c">
+			Camera Image<br/>
+			Broadcast JPEG
+		</div>
+	</div>
+	<div id='camera' class="process process_c">
+		<div class="thread sensor_c">
+			Camera Image<br/>
+			Broadcast JPEG
+		</div>
+	</div>
+	<!-- Audio -->
+	<div id='audio' class="process process_c">
+		<div class="thread sensor_c">
+			Microphone<br/>
+			Broadcast MP3
+		</div>
+	</div>
+	<!-- State -->
+	<div id='state' class="process process_c">
+		<div class="thread fsm">
+			HeadFSM<br/>
+			BodyFSM<br/>
+			LidarFSM<br/>
+		</div>
+		<div class="thread sensor_c">
+			Servo Comms
+		</div>
+		<div class="thread fsm" id='arm'>
+			<u>ArmFSM</u><br/>
+			<div>
+			Trajectory<br/>
+				<span style="margin-left:0.1in;">Optimization</span><br/>
+			Inverse<br/>
+				<span style="margin-left:.1in;">Kinematics</span><br/>
+			</div>
+		</div>
+		<div class="thread" id='motion'>
+			<u>MotionFSM</u><br/>
+			Torso<br/>
+				<span style="margin-left:0.05in;">Compensation</span><br/>
+			Emergency<br/>
+				<span style="margin-left:0.05in;">Stabilization</span><br/>
+			Reactive ZMP<br/>
+			Preview ZMP<br/>
+		</div>
+	</div>
+	
+	<div id="operator"><div>Operator Console</div></div>
+	<!-- State -->
+	<div id='nodejs' class="process process_c">
+		<div class="thread _l">
+			Bridge
+		</div>
+	</div>
+	<!-- State -->
+	<div id='ssh' class="process process_c">
+		<div class="thread _r">
+			SSH<br/>
+			Scripts
+		</div>
+	</div>
+	<!-- State -->
+	<div id='browser' class="process process_c">
+		<div class="thread _r">
+			<u>Browser GUI</u><br/>
+			3D Scene<br/>
+			Camera Feeds<br/>
+		</div>
+	</div>
+	
+</body>
+
+</html>

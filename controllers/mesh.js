@@ -112,7 +112,8 @@
       if(typeof e.data === "string"){
         // Need to save the metadata for next frame
         fr_metadata  = JSON.parse(e.data);
-        //console.log('fr_metadata debug',fr_metadata);
+        //console.log('Got Mesh',fr_metadata);
+        console.log('Got Mesh',fr_metadata.c,fr_metadata.sz);
         
         var mesh     = meshes[fr_metadata.name];
         //mesh.pitch   = fr_metadata.rpy[1];
@@ -146,6 +147,7 @@
         console.log('Checksum fail!',fr_metadata.sz,fr_sz_checksum);
         return;
       }
+      //console.log(e.data.size)
       last_mesh_img = e.data;
       requestAnimationFrame( function(){
         // Put received JPEG/PNG data into the image

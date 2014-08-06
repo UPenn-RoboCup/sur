@@ -29,3 +29,6 @@ html, body {
   bottom: 0px;
   right: 0px;
 }
+select{
+  font-size: 200%;
+}

@@ -6,47 +6,51 @@ document.addEventListener( "DOMContentLoaded", function(){
   Mesh.setup();
   Robot.setup();
   
+  // Speakers
+  Speaker.setup();
+  clicker('head_audio',function(){
+    qwest.post(rest_root+'/m/hcm/audio/request',{val: JSON.stringify([1])});
+  });
+  
   // Setup the GUI
   clicker('modify_obj',Manipulation.modify);
   clicker('loop_obj',Manipulation.loop);
-  //
-  clicker('robot_show',Robot.show);
-  clicker('robot_hide',Robot.hide);
+  clicker('robot_toggle',Robot.toggle);
   // Clearing the meshes
   clicker('wipe_mesh',World.clear_meshes);
   // During walking
   clicker('fast_mesh',function() {
-    /*
-    // Fast scan
-    qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
-      //val: JSON.stringify([-1.0472, 1.0472, 2/DEG_TO_RAD])
-      val: JSON.stringify([-1, 1, 1/DEG_TO_RAD])
-    });
-    */
     // See far
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
-      val:JSON.stringify([.2,5])
+      val:JSON.stringify([.3,3])
     });
-    // Single (JPEG), so we get often
+    // Single (JPEG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
-      val:JSON.stringify([3,1,90,1])
+      val:JSON.stringify([3,1,60,1])
     });
   });
+/*
   // During manipulation
   clicker('slow_mesh',function() {
-    /*
-    // Slow scan
-    qwest.post(rest_root+'/m/vcm/chest_lidar/scanlines',{
-      val: JSON.stringify([-1.0472, 1.0472, 5/DEG_TO_RAD])
-    });
-    */
     // See close
     qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
       val:JSON.stringify([.2,1])
     });
     // Once (PNG)
     qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
-      val:JSON.stringify([3,3,90,1])
+      val:JSON.stringify([3,3,50,1])
+    });
+  });
+*/
+  // try
+  clicker('quick_mesh',function() {
+    // See close
+    qwest.post( rest_root+'/m/vcm/chest_lidar/depths',{
+      val:JSON.stringify([.2,1])
+    });
+    // Once (JPEG)
+    qwest.post( rest_root+'/m/vcm/chest_lidar/net',{
+      val:JSON.stringify([3,1,88,1])
     });
   });
   
@@ -118,9 +122,11 @@ document.addEventListener( "DOMContentLoaded", function(){
     var target = item.get_mod_mesh().position.toArray();
     World.set_view(view.position,target);
   });
+  /*
   clicker('vantage_robot',function(){
     World.set_view('robot');
   });
+  */
   
   // State machines
   clicker('body_init',function() {
@@ -174,6 +180,36 @@ document.addEventListener( "DOMContentLoaded", function(){
       this.blur();
     }, false);
   }
+
+var select_hotkeys = [
+    {
+      // swap global/local for visual cue
+      "keys"          : "1",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+	  Manipulation.cycle_item(0)
+menu.value=0;
+      },
+      "this"          : window
+    },
+    {
+      // swap global/local for visual cue
+      "keys"          : "2",
+      "is_exclusive"  : true,
+      "on_keyup"      : function(event) {
+          event.preventDefault();
+          Manipulation.cycle_item(1)
+menu.value=1
+      },
+      "this"          : window
+    },
+
+]
+
+keypress.register_many(select_hotkeys)
+
+
   // Fine tune modify non-keypress
   clicker('modify_obj',Manipulation.modify);
   clicker('loop_obj',Manipulation.loop);

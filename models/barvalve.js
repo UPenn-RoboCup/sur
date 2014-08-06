@@ -10,7 +10,7 @@
   
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(610,240);  // tune this based on claw length
+  var offset = new THREE.Vector2(840,300);
   /////////////////////
   // Mesh definition //
   ///////////////////// 
@@ -59,10 +59,9 @@
   // Model converters //
   //////////////////////
   var three_to_model = function(){
-    var roll_start = start_mesh.rotation.z;
     var roll_end = stop_mesh.rotation.z;
     var p = Transform.three_to_torso(item_mesh.position,Robot);
-    p.push(roll_start);
+    p.push(item_mesh.rotation.z);
     p.push(roll_end);
     return p;
   }
@@ -80,7 +79,6 @@
     
     var roll_start = model[3];
     var roll_end   = model[4];
-    start_mesh.rotation.set(0, 0, roll_start);
     stop_mesh.rotation.set(0, 0, roll_end);
   }
   
@@ -111,24 +109,20 @@
     // Set the position from the double click
     item_mesh.position.copy(p);
   
-    wp_callback();
-    BarValve.send();
-    // Re-render
+    item_mesh.rotation.y = Robot.pa;
+    item_mesh.rotation.z = Math.PI/2;
     
-
+    BarValve.mod_callback()
   }
   // modification loop
   BarValve.loop = function(tcontrol){
     if(Manipulation.is_mod==false){
-      qwest.get(rpc_url,{},{}).success(function(model){model_to_three(model);});
+    //qwest.get(rpc_url,{},{}).success(function(model){model_to_three(model);});
       return;
     }
     // cycle the tcontrol
     if(mod_mesh===item_mesh){
       tcontrol.detach( item_mesh );
-      mod_mesh = start_mesh;
-    } else if(mod_mesh===start_mesh){
-      tcontrol.detach( start_mesh );
       mod_mesh = stop_mesh;
     } else {
       tcontrol.detach( stop_mesh );
@@ -136,13 +130,12 @@
     }
     tcontrol.attach( mod_mesh );
     tcontrol.update();
-    
-
   }
   // send data to the robot
   BarValve.send = function(){
-    var model = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    //var model = three_to_model();
+    //qwest.post( rpc_url, {val:JSON.stringify(model)} );
+    Waypoint.send();
   }
   // enter
   BarValve.init = function(){
@@ -159,10 +152,10 @@
   BarValve.mod_callback = function(){
     // Retain the same angles
     item_mesh.rotation.x = 0;
-    item_mesh.rotation.y = 0;
+    //item_mesh.rotation.y = 0;
     //
     stop_mesh.rotation.x = 0;
-    stop_mesh.rotation.y = 0;
+    //stop_mesh.rotation.y = 0;
     // Retain the same height
     item_mesh.position.y = off_ground;
 
@@ -170,9 +163,8 @@
   }
   BarValve.special2 = function(dir){
     // Move the roll
-    item_mesh.rotation.z += dir*.1;
+    item_mesh.rotation.z += dir;//dir*.1;
     wp_callback();
-    SmallValve.send();
   }
 
   /////////////////////////

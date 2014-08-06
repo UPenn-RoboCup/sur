@@ -1,8 +1,10 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 /***
 * SUR: Data forwarding
 * (c) Stephen McGill, 2013
 */
+
+// TODO: Add a logging bridge
 
 var util    = require('util');
 var fs      = require('fs');
@@ -11,74 +13,24 @@ var mp      = require('msgpack');
 var restify = require('restify');
 var dgram   = require('dgram');
 var _       = require('underscore');
+var nodelua = require('nodelua');
+
+/* Load config from Lua */
+var lua = new nodelua.LuaState('config');
+var Config = lua.doFileSync('UPennDev/include.lua');
+var streams = Config.net.streams
+var rpc = Config.net.rpc;
 
 /* Remote Procedure Call Configuration */
-//var rpc_robot     = '192.168.123.26';
-//var rpc_robot     = '192.168.123.24';
-var rpc_robot     = 'localhost'
-var rpc_reliable_port   = 55555;
-var rpc_unreliable_port = 55556;
+var robot_ip;
+if(Config.net.use_wireless){
+	robot_ip = Config.net.robot.wireless;
+} else {
+	robot_ip = Config.net.robot.wired;
+}
+var rpc_reliable_port   = rpc.tcp_reply;
+var rpc_unreliable_port = rpc.udp;
 var homepage = 'meshy';
-
-/**
-* Load configuration values
-* TODO: Make these JSON for both the browser and node
-*/
-var bridges = [];
-bridges.push({
-	name : 'mesh', // reliable name
-	ws : 9001,
-	udp: 33344,
-  tcp: 33345,
-	clients : []
-});
-
-bridges.push({
-  name : 'head_camera',
-  ws : 9003,
-  udp: 33333,
-  tcp : 33334,
-  clients : []
-});
-
-bridges.push({
-  name : 'forehead_camera',
-  ws : 9004,
-  udp: 33335,
-  tcp: 33336,
-  clients : []
-});
-
-bridges.push({
-	name : 'rgbd_depth',
-	ws : 9010,
-	udp: 33346,
-	clients : []
-});
-
-bridges.push({
-  name : 'rgbd_color',
-  ws : 9011,
-  udp: 33347,
-  clients : []
-});
-
-bridges.push({
-	name : 'spacemouse',
-	ws : 9012,
-	sub: 'spacemouse',
-	clients : []
-});
-
-bridges.push({
-	name : 'feedback',
-	ws : 9013,
-	udp: 54329,
-	clients : []
-});
-
-// rest look up table for the objects
-var reliable_lookup = {}
 
 /* Begin the REST HTTP server */
 var server = restify.createServer({
@@ -93,9 +45,11 @@ server.use(restify.bodyParser());
 var load_html = function (req, res, next) {
   // Select a page
   var page;
-  if(req.params.html!==undefined){
+  if(req.params.html !== undefined) {
     page = 'views/'+req.params.html+'.html';
-  } else {
+  } else if(req.params.long !== undefined) {
+		page = 'views/'+req.params.long;
+	} else {
     page = 'views/'+homepage+'.html';
   }
   // Perform the load
@@ -110,11 +64,40 @@ var load_html = function (req, res, next) {
 server.get('/', load_html );
 // Other html views
 server.get('/v/:html', load_html );
+server.get('/views/:long', load_html );
+
+// Text files
+var load_txt = function (req, res, next) {
+  // Select a page
+  var page;
+  if(req.params.md!==undefined){
+    page = 'md/'+req.params.md;
+  }
+  // Perform the load
+  var body = fs.readFileSync(page,{encoding:'utf8'});
+  res.writeHead(200, {
+    'Content-Length': Buffer.byteLength(body),
+    'Content-Type': 'text/plain'
+  });
+  res.write(body);
+  res.end();
+};
+server.get('/md/:md', load_txt );
 
 // Javascript libraries
 var load_js = function (req, res, next) {
-  //console.log('library',req.params.js)
-  var body = fs.readFileSync(this.base_dir+'/'+req.params.js,{encoding:'utf8'});
+	var mrdir;
+	var myfile = req.params.js;
+	//console.log('library',req.params);
+	if (myfile===undefined){
+		mydir = req.params[0];
+		myfile = req.params[1]+'.js';
+	} else {
+		mydir = this.base_dir;
+	}
+	//console.log('parsed_libs',mydir,myfile);
+	var fname = mydir+'/'+myfile;
+  var body = fs.readFileSync(fname,{encoding:'utf8'});
   res.writeHead(200, {
     'Content-Length': Buffer.byteLength(body),
     'Content-Type': 'text/javascript'
@@ -122,9 +105,8 @@ var load_js = function (req, res, next) {
   res.write(body);
   res.end();
 };
-server.get('/lib/:js', load_js.bind({base_dir: 'lib'}) );
-server.get('/models/:js', load_js.bind({base_dir: 'models'}) );
-server.get('/controllers/:js', load_js.bind({base_dir: 'controllers'}) );
+server.get('/snap/:js', load_js.bind({base_dir: 'snap'}));
+server.get(/^\/([a-zA-Z0-9_\.~-]+)\/(.*)\.js/, load_js);
 
 // Images
 var load_img = function(req, res, next) {
@@ -142,7 +124,10 @@ var load_img = function(req, res, next) {
   });
 };
 server.get('/png/:img', load_img.bind({base_dir: 'png'}) );
+server.get('/figures/:img', load_img.bind({base_dir: 'figures'}) );
+server.get('/lib/MathJax/images/:img', load_img.bind({base_dir: 'lib/MathJax/images'}) );
 server.get('/jpg/:img', load_img.bind({base_dir: 'jpg'}) );
+
 // stl loader ignores content type, so we are ok :)
 server.get('/stl/:img', load_img.bind({base_dir: 'stl'}) );
 server.get('/vrml/:img', load_img.bind({base_dir: 'vrml'}) );
@@ -168,7 +153,7 @@ var rest_audio = function(req, res, next){
       'Content-Length': data.length,
       'Content-Type': 'arraybuffer'
     });
-    
+
     res.write(data);
     res.end();
     console.log('audio done!');
@@ -181,13 +166,16 @@ var rest_audio = function(req, res, next){
 var rest_shm = function (req, res, next) {
 
   // debug rest requests for shm
-  console.log(req.params);
+  //console.log(req.params);
+  var msg = {}
 
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
     var ret = mp.unpack(data)
-    
+
+    console.log(msg,ret);
+
     if(ret!=null){
       res.json( ret );
     } else {
@@ -198,20 +186,27 @@ var rest_shm = function (req, res, next) {
   }
   //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
   zmq_req_rest_skt.once('message', reply_handler);
-  
+
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
+  msg.shm = req.params.shm
+
   if(req.params.val!==undefined){
-    req.params.val = JSON.parse( req.params.val );
+    msg.val = JSON.parse( req.params.val );
+    msg.access = 'set_'+req.params.segment+'_'+req.params.key;
+  } else if(req.params.delta!==undefined){
+    msg.val = JSON.parse( req.params.delta );
+    msg.access = 'delta_'+req.params.segment+'_'+req.params.key;
+  } else {
+    msg.access = 'get_'+req.params.segment+'_'+req.params.key;
   }
-  if(req.params.delta!==undefined){
-    req.params.delta = JSON.parse( req.params.delta );
-  }
-  zmq_req_rest_skt.send( mp.pack(req.params) );
-  
+
+  console.log(msg);
+  zmq_req_rest_skt.send( mp.pack(msg) );
+
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
-  
+
   return next();
 }
 
@@ -219,10 +214,10 @@ var rest_shm = function (req, res, next) {
 * sm:add_event('standup')
 * */
 var rest_fsm = function (req, res, next) {
-  
+
   // debug rest requests for fsm
   //console.log(req.params);
-  
+
   // Send the reply to the host
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
@@ -235,14 +230,24 @@ var rest_fsm = function (req, res, next) {
     // Stop this emitter listener
     //zmq_req_rest_skt.removeListener('message', this.cb);
   }
+
+  if(req.params.val!==undefined){
+    req.params.val = JSON.parse( req.params.val );
+  }
+  /*
+  if(req.params.delta!==undefined){
+    req.params.delta = JSON.parse( req.params.delta );
+  }
+  */
+
   //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
   zmq_req_rest_skt.once('message', reply_handler);
-  
+
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
   zmq_req_rest_skt.send( mp.pack(req.params) );
-  
+
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
   return next();
 }
@@ -259,7 +264,7 @@ var rest_body = function (req, res, next) {
   var reply_handler = function(data){
     // TODO: Add any timestamp information or anything?
     var ret = mp.unpack(data)
-    
+
     if(ret!=null){
       res.json( ret );
     } else {
@@ -270,7 +275,7 @@ var rest_body = function (req, res, next) {
   }
   //zmq_req_rest_skt.once('message', reply_handler.bind({cb:reply_handler}));
   zmq_req_rest_skt.once('message', reply_handler);
-  
+
   // Send the RPC over the ZMQ REQ/REP
   // TODO: Deal with concurrent requests?
   // Form the Remote Procedure Call
@@ -278,9 +283,9 @@ var rest_body = function (req, res, next) {
     req.params.bargs = JSON.parse( req.params.bargs );
   }
   zmq_req_rest_skt.send( mp.pack(req.params) );
-  
+
   // TODO: Set a timeout for the REP for HTTP sanity, via LINGER?
-  
+
   return next();
 }
 
@@ -299,9 +304,11 @@ var ws_error = function(e){
 }
 
 var ws_message = function(msg){
-  /* Accept JSON browser commands and no binary */
-  var cmd = JSON.parse(msg);
-  console.log('\nBrowser '+bridges[this.id]+' | ',cmd);
+  /* Accept JSON browser data */
+  var data = JSON.parse(msg);
+	var b = bridges[this.id];
+  //console.log('\nBrowser '+b+' | ',data);
+	b.zmq_pub.send(mp.pack(data));
 }
 
 var ws_close = function(e){
@@ -351,7 +358,7 @@ var zmq_message = function(metadata,payload){
 /**
 * UDP robot data receiving
 */
-var udp_message = function(msg,rinfo){
+var udp_message = function(msg, rinfo){
   //console.log('got udp',rinfo);
   /* msgpack -> JSON */
   /* the jpeg is right after the messagepacked metadata (concatenated) */
@@ -366,51 +373,56 @@ var udp_message = function(msg,rinfo){
 }
 
 /* Bridge to  websockets */
-for( var w=0; w<bridges.length; w++) {
+for(var w in streams) {
+	var b = streams[w];
+	b.clients = [];
+	
+	console.log('\n'+w);
+  console.log('\tWebsocket: '+b.ws)
 
-	var b = bridges[w];
-  
-	if( b.ws !== undefined ) {
+	if(b.ws === undefined) { continue; }
 
-		var wss = new WebSocketServer({port: b.ws});
-		wss.on('connection', ws_connection.bind({id: w}) );
-		console.log('\n'+b.name);
-    console.log('\tWebsocket: '+b.ws)
+	var wss = new WebSocketServer({port: b.ws});
+	wss.on('connection', ws_connection.bind({id: w}) );
 
-		if( b.sub !== undefined ) {
-			var zmq_recv_skt = zmq.socket('sub');
-			zmq_recv_skt.connect('ipc:///tmp/'+b.sub);
-			zmq_recv_skt.subscribe('');
-			zmq_recv_skt.on('message', zmq_message.bind({id:w}) );
-			console.log('\tSubscriber Bridge',b.sub);
-		}
+	if(b.sub !== undefined) {
+		var zmq_recv_skt = zmq.socket('sub');
+		zmq_recv_skt.connect('ipc:///tmp/'+b.sub);
+		zmq_recv_skt.subscribe('');
+		zmq_recv_skt.on('message', zmq_message.bind({id:w}) );
+		console.log('\tSubscriber Bridge',b.sub);
+	}
 
-		if( b.udp !== undefined ){
-      console.log('\tUDP Bridge',b.udp);
-			var udp_recv_skt = dgram.createSocket("udp4");
-			udp_recv_skt.bind( b.udp );
-			udp_recv_skt.on( "message", udp_message.bind({id:w}) );
-		}
+	if(b.udp !== undefined){
+    console.log('\tUDP Bridge',b.udp);
+		var udp_recv_skt = dgram.createSocket("udp4");
+		udp_recv_skt.bind( b.udp );
+		udp_recv_skt.on( "message", udp_message.bind({id:w}) );
+	}
 
-    if( b.req !== undefined ) {
-      var zmq_req_skt = zmq.socket('req');
-      zmq_req_skt.connect('tcp://'+rpc_robot+':'+b.req);
-      zmq_req_skt.on('message', zmq_message.bind({id:w}) );
-      console.log('\tRequester Bridge',b.req);
-      b.requester = zmq_req_skt;
-      reliable_lookup[b.name]=b;
-    }
+  if(b.req !== undefined) {
+    var zmq_req_skt = zmq.socket('req');
+    zmq_req_skt.connect('tcp://'+robot_ip+':'+b.req);
+    zmq_req_skt.on('message', zmq_message.bind({id:w}) );
+    console.log('\tRequester Bridge',b.req);
+    b.requester = zmq_req_skt;
+  }
 
-    if( b.tcp !== undefined ) {
-      var zmq_tcp_skt = zmq.socket('sub');
-      zmq_tcp_skt.connect('tcp://'+rpc_robot+':'+b.tcp);
-      zmq_tcp_skt.subscribe('');
-      zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
-      console.log('\tTCP Sub Bridge',b.tcp);
-    }
+  if(b.tcp !== undefined) {
+    var zmq_tcp_skt = zmq.socket('sub');
+		zmq_tcp_skt.subscribe('');
+    //zmq_tcp_skt.connect('tcp://'+robot_ip+':'+b.tcp);
+		zmq_tcp_skt.bind('tcp://*:'+b.tcp);
+    zmq_tcp_skt.on('message', zmq_message.bind({id:w}) );
+    console.log('\tTCP Sub Bridge',b.tcp);
+  }
 
-	} //ws check
-
+	if(b.pub !== undefined) {
+		var zmq_send_skt = zmq.socket('pub');
+		zmq_send_skt.bind('ipc:///tmp/'+b.pub);
+		console.log('\tPublisher Bridge',b.pub);
+		b.zmq_pub = zmq_send_skt;
+	}
 } // for w
 
 /* Setup the REST routes */
@@ -423,19 +435,19 @@ server.post('/m/:shm/:segment/:key', rest_shm);
 server.post('/s',rest_fsm);
 //
 server.post('/b',rest_body);
-
+server.get('/b',rest_body);
 //
 server.get('/a',rest_audio);
 
 /* Connect to the RPC server */
 var zmq_req_rest_skt = zmq.socket('req');
-var ret = zmq_req_rest_skt.connect('tcp://'+rpc_robot+':'+rpc_reliable_port);
-console.log('\nRESTful reliable RPC connected to ',rpc_robot,rpc_reliable_port);
+var ret = zmq_req_rest_skt.connect('tcp://'+robot_ip+':'+rpc_reliable_port);
+console.log('\nRESTful reliable RPC connected to ',robot_ip,rpc_reliable_port);
 
 /*
 var udp_rpc_skt = dgram.createSocket("udp4");
 var ret = udp_rpc_skt.connect(rpc_unreliable_port);
-console.log('\nRESTful unreliable RPC connected to ', rpc_robot, rpc_unreliable_port);
+console.log('\nRESTful unreliable RPC connected to ', robot_ip, rpc_unreliable_port);
 */
 
 /* Listen for HTTP on port 8080 */

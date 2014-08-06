@@ -10,7 +10,7 @@
   
   // Relative waypoint offset in ROBOT coordinates
   // but with THREE scale (mm)
-  var offset = new THREE.Vector2(550,-60);
+  var offset = new THREE.Vector2(550,-200);
   
   /////////////////////
   // Mesh definition //
@@ -50,19 +50,19 @@
     item_mesh.position.z = 1000*model[0];
     item_mesh.rotation.y = -1*model[2];
   }
-  // TODO: Need for override as well, now
   
   
   // Adjust the waypoint to the *perfect* position
   var wp_callback = function(){
     // Grab the (global) orientation of the mesh
-    var pa = -1*item_mesh.rotation.y;
+    var pa = item_mesh.rotation.y;
     // Acquire the position of the tip:
     var p = (new THREE.Vector3()).copy(item_mesh.position);
     
-    // Make the global offset from the object    
-    var dx = offset.x*Math.cos(pa) + offset.y*Math.sin(pa);
-    var dy = offset.y*Math.cos(pa) - offset.x*Math.sin(pa);
+    // Make the global offset from the object
+    var ca = Math.cos(pa), sa = Math.sin(pa);
+    var dx = offset.x*ca - offset.y*sa;
+    var dy = offset.y*ca + offset.x*sa;
 
     // Change the THREE coordinates of the desired waypoint
     p.x -= dy;
@@ -79,7 +79,7 @@
   Tool.select = function(p,r){
     // Set the position
     item_mesh.position.copy(p);
-    wp_callback();
+    Tool.mod_callback();
   }
   Tool.init = function(){
     // Add to the world
@@ -92,25 +92,21 @@
   Tool.send = function(){
     // DEPRECATED: Post to our model
     var model = three_to_model();
-    qwest.post( rpc_url, {val:JSON.stringify(model)} );
-    // New!
-    /*
-    var override = three_to_override();
-    qwest.post( so_url, {val:JSON.stringify(override)} );
-    */
+    //qwest.post( rpc_url, {val:JSON.stringify(model)} );
     // Send our optimal waypoint
     Waypoint.send();
-    console.log('Sent tool',model);
   }
   Tool.get_mod_mesh = function(){
     return item_mesh;
   }
   Tool.loop = function(){
+    /*
     // Get the model from the robot (could be pesky...?)
     qwest.get( rpc_url,{},{})
     .success(function(model){
       model_to_three(model);
     });
+    */
   }
   Tool.mod_callback = function(){
     wp_callback();
@@ -119,7 +115,7 @@
   /////////////////////////
   // Metadata and Export //
   /////////////////////////
-  Tool.item_name = 'Tool';
+  Tool.item_name = 'Drill';
   // export
 	ctx.Tool = Tool;
 
