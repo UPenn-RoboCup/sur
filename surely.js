@@ -12,27 +12,81 @@ var restify = require('restify'),
 	mp = require('msgpack'),
 	PeerServer = require('peer').PeerServer;
 
-/* Is this Needed? */
-/*
+/* Is this Needed? Seems so, to get JSON data posted. TODO: See why */
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
-*/
 
 // Load config from Lua
 var lua = new nodelua.LuaState('config');
 var Config = lua.doFileSync('UPennDev/include.lua');
 
-// Process GET
-server.get('/api/:id', function (req, res, next) {
-	console.log('HERE I AM');
-	res.send();
+/* Connect to the RPC server */
+var rpc = Config.net.rpc;
+var robot_ip;
+
+if(Config.net.use_wireless){
+	robot_ip = Config.net.robot.wireless;
+} else {
+	robot_ip = Config.net.robot.wired;
+}
+var rpc_skt = zmq.socket('req');
+//rpc_skt.connect('tcp://'+robot_ip+':'+rpc.tcp_reply);
+rpc_skt.connect('ipc:///tmp/'+rpc.uds);
+rpc_skt.http_responses = [];
+// Since a REP/REQ pattern, we can use a queue and know we are OK
+// This means one node.js per robot rpc server!
+rpc_skt.on('message', function(msg){
+	this.http_responses.shift().json(JSON.stringify(mp.unpack(msg)));
+});
+
+// Process POST on FSMs
+server.post('/fsm/:sm/:event', function (req, res, next) {
+	rpc_skt.send(mp.pack({
+		fsm: req.params.sm,
+		evt: req.params.event,
+	})).http_responses.push(res);
+	return next();
+});
+
+// Process GET on SHM
+server.get('/shm/:cm/:segment/:key', function (req, res, next) {
+	rpc_skt.send(mp.pack({
+		shm : req.params.cm,
+		seg : req.params.segment,
+		key : req.params.key,
+	})).http_responses.push(res);
+	return next();
+});
+
+// Process PUT on SHM
+server.put('/shm/:cm/:segment/:key', function (req, res, next) {
+	rpc_skt.send(mp.pack({
+		shm : req.params.cm,
+		seg : req.params.segment,
+		key : req.params.key,
+		val : req.params.val,
+	})).http_responses.push(res);
+	return next();
+});
+
+// Process GET on Body
+server.get('/body/time', function (req, res, next) {
+	rpc_skt.send(mp.pack({
+		body: 'get_time',
+	})).http_responses.push(res);
+	return next();
+});
+server.get('/body/:part/:component', function (req, res, next) {
+	rpc_skt.send(mp.pack({
+		body: 'get_' + req.params.part + '_' + req.params.component,
+	})).http_responses.push(res);
 	return next();
 });
 
 // Process Config request
 // TODO: Route elements as keys to go deep into the tree?
-server.get("/config", function (req, res, next) {
+server.get(/\/config/, function (req, res, next) {
 	console.log('Config');
 	res.json(Config);
 	return next();
@@ -120,20 +174,6 @@ function wss_connection (ws) {
 function wss_error (ws) {
 	console.log('WSS ERROR', ws);
 }
-
-/* Connect to the RPC server */
-var rpc = Config.net.rpc;
-var robot_ip;
-if(Config.net.use_wireless){
-	robot_ip = Config.net.robot.wireless;
-} else {
-	robot_ip = Config.net.robot.wired;
-}
-var rpc_reliable_port = rpc.tcp_reply;
-var rpc_unreliable_port = rpc.udp;
-var zmq_req_rest_skt = zmq.socket('req');
-var ret = zmq_req_rest_skt.connect('tcp://'+robot_ip+':'+rpc_reliable_port);
-console.log('\nRESTful reliable RPC connected to ',robot_ip,rpc_reliable_port);
 
 /* Bridges for websockets streams */
 var streams = Config.net.streams
