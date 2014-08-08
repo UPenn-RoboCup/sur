@@ -14,8 +14,14 @@ var restify = require('restify'),
 
 /* Is this Needed? Seems so, to get JSON data posted. TODO: See why */
 server.use(restify.acceptParser(server.acceptable));
-server.use(restify.queryParser());
-server.use(restify.bodyParser());
+// The query parser *may* have t from the AJAX lib used. May be useful
+//server.use(restify.queryParser());
+server.use(restify.bodyParser({
+	mapParams: false,
+	maxBodySize: 1024, // Attempt to prevent overflow
+}));
+// Try this to find the clock skew... may be useful
+server.use(restify.dateParser());
 
 // Load config from Lua
 var lua = new nodelua.LuaState('config');
@@ -40,49 +46,35 @@ rpc_skt.on('message', function(msg){
 	this.http_responses.shift().json(JSON.stringify(mp.unpack(msg)));
 });
 
-// Process POST on FSMs
-server.post('/fsm/:sm/:event', function (req, res, next) {
-	rpc_skt.send(mp.pack({
-		fsm: req.params.sm,
-		evt: req.params.event,
-	})).http_responses.push(res);
+/* Standard forwarding pattern to rpc */
+function rest_req(req, res, next) {
+	// Ensure we get a val inside the body of a PUT or POST operation
+	// Save the parsed body in the params
+	if( req.method=='PUT' || req.method=='POST' ){
+		if (req.body.val === undefined) {
+			res.send('No val given!');
+			return next();
+		} else {
+			req.params.val = req.body.val;
+		}
+	}
+	// Send to the RPC server
+	rpc_skt.send(mp.pack(req.params)).http_responses.push(res);
 	return next();
-});
+}
 
-// Process GET on SHM
-server.get('/shm/:cm/:segment/:key', function (req, res, next) {
-	rpc_skt.send(mp.pack({
-		shm : req.params.cm,
-		seg : req.params.segment,
-		key : req.params.key,
-	})).http_responses.push(res);
-	return next();
-});
+// POST will send FSM events
+server.post('/fsm/:fsm/:evt', rest_req);
 
-// Process PUT on SHM
-server.put('/shm/:cm/:segment/:key', function (req, res, next) {
-	rpc_skt.send(mp.pack({
-		shm : req.params.cm,
-		seg : req.params.segment,
-		key : req.params.key,
-		val : req.params.val,
-	})).http_responses.push(res);
-	return next();
-});
+// GET will retrieve SHM values
+// PUT will update SHM values
+server.get('/shm/:shm/:seg/:key', rest_req);
+server.put('/shm/:shm/:seg/:key', rest_req);
 
-// Process GET on Body
-server.get('/body/time', function (req, res, next) {
-	rpc_skt.send(mp.pack({
-		body: 'get_time',
-	})).http_responses.push(res);
-	return next();
-});
-server.get('/body/:part/:component', function (req, res, next) {
-	rpc_skt.send(mp.pack({
-		body: 'get_' + req.params.part + '_' + req.params.component,
-	})).http_responses.push(res);
-	return next();
-});
+// GET will retrieve Body values
+// PUT will update Body values
+server.get('/body/:body/:comp', rest_req);
+server.put('/body/:body/:comp', rest_req);
 
 // Process Config request
 // TODO: Route elements as keys to go deep into the tree?
