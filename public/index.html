@@ -26,7 +26,6 @@
 			s.async = true;
 			if(typeof cb === 'function'){
 				s.onreadystatechange = s.onload = function () {
-					"use strict";
 					var state = s.readyState;
 					if (!state || /loaded|complete/.test(state)) { setTimeout(cb); }
 				};
@@ -46,7 +45,6 @@
 			link.href = url;
 			if(typeof cb === 'function'){
 				link.onreadystatechange = link.onload = function () {
-					"use strict";
 					var state = link.readyState;
 					if (!state || /loaded|complete/.test(state)) { setTimeout(cb); }
 				};
