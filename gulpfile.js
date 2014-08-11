@@ -10,6 +10,6 @@ gulp.task('concat_libs', function() {
 		.pipe(concat('ext.min.js'))
 		.pipe(uglify())
 		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest('external'));
+		.pipe(gulp.dest('public/js'));
 });
 gulp.task('default', ['concat_libs']);
