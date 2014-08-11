@@ -18,7 +18,9 @@ var restify = require('restify'),
 /* Is this Needed? Seems so, to get JSON data posted. TODO: See why */
 server.use(restify.acceptParser(server.acceptable));
 // The query parser *may* have t from the AJAX lib used. May be useful
-//server.use(restify.queryParser());
+server.use(restify.queryParser({
+	mapParams: false,
+}));
 server.use(restify.bodyParser({
 	mapParams: false,
 	maxBodySize: 1024, // Attempt to prevent overflow
@@ -28,7 +30,8 @@ server.use(restify.dateParser());
 
 // Load config from Lua
 var lua = new nodelua.LuaState('config');
-var Config = lua.doFileSync('UPennDev/include.lua');
+var UPENNDEV_PATH = '../UPennDev';
+var Config = lua.doFileSync(UPENNDEV_PATH + '/include.lua');
 
 /* Connect to the RPC server */
 var rpc = Config.net.rpc;

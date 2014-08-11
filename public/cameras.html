@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--HTML5 doctype-->
 <html>
-
+     
 <head>
-	<title>uSURp</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width,user-scalable=no">
+  <title>SUR Cameras</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no">
 	<script type="application/javascript">
 		// Globals
 		var HOSTNAME = window.location.hostname;
@@ -38,7 +38,6 @@
 		http://otaqui.com/blog/1263/simple-script-to-load-css-from-javascript/
 		*/
 		function lcss(url, cb) {
-			"use strict";
 			var head = document.getElementsByTagName('head')[0],
 				link = document.createElement('link');
 			link.type = 'text/css';
@@ -53,13 +52,54 @@
 			}
 			head.appendChild(link);
 		}
+		// Perform the loads of JS and CSS
 		ljs('/js/ext.min.js');
 		lcss('/css/gh-buttons.css');
+		lcss('/css/fb-buttons.css');
+		lcss('/css/cameras.css');
 	</script>
+
+  <!-- SUR data JS
+  <script src="/controllers/include.js"></script>
+  <script src="/controllers/transform.js"></script>
+  <script src="/models/camera.js"></script>
+  <script src="/controllers/cameras.js"></script>
+	-->
+	
 </head>
 
 <body>
-	Hi
+  
+  <!-- Camera Request Buttons -->
+  <div id="camera_buttons">
+    <button class="big bigger button icon arrowup" id="head_ahead">
+      Ahead</button><br/>
+    <button class="big bigger button icon arrowdown" id="head_down">
+      Down</button><br/>
+    <button class="big bigger button icon arrowleft" id="head_left">
+      Left</button><br/>
+    <button class="big bigger button icon arrowright" id="head_right">
+      Right</button><br/>
+    <button class="big bigger button" id="head_fast">
+      Fast</button><br/>
+    <button class="big bigger button" id="head_slow">
+      Slow</button><br/>
+    <button class="big bigger button" id="head_stop">
+      Stop</button><br/>
+    <button class="big bigger button" id="head_once">
+      Once</button><br/>
+    <button class="big bigger button" id="head_robotis">
+      Robotis</button><br/>
+  </div>
+  
+  <!-- Head Camera Image Stream -->
+  <div id="camera_container"></div>
+
+  <!-- Head Camera Image Stream -->
+  <div class="camera_overlay">
+    <span id="lag_seconds">1</span> sec lag
+  </div>
+
 </body>
 
 </html>
