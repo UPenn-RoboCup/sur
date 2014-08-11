@@ -1,28 +1,83 @@
+<!DOCTYPE html>
+<!--HTML5 doctype-->
 <html>
-	<head>
-		<script type="application/javascript">
-			// Connect to the websocket server
-    	var ws = new WebSocket('ws://' + 'localhost' + ':' + 9003);
-    	ws.binaryType = "blob";
-			ws.onmessage = function(e){
-				console.log(e);
+
+<head>
+	<title>uSURp</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,user-scalable=no">
+	<script type="application/javascript">
+		// Globals
+		var HOSTNAME = window.location.hostname;
+		if (!HOSTNAME) {
+			HOSTNAME = 'localhost';
+			ORIGIN = 'http://localhost:8080';
+		} else {
+			ORIGIN = window.location.origin;
+		}
+
+		function $(x) {
+			"use strict";
+			return document.querySelectorAll(x);
+		};
+		function make_promise(){
+			return {
+				fulfilled : true,
+				rejected : true,
+				then : function(onFulfilled, onRejected){
+					"use strict";
+					if (typeof onFulfilled === 'function') {
+						this.fulfill = onFulfilled;
+						this.fulfilled = false;
+					}
+					if (typeof onRejected === 'function') {
+						this.reject = onRejected;
+						this.rejected = false;
+					}
+					return make_promise();
+				}
 			};
-			ws.onopen = function(e){
-				console.log(ws);
-				console.log(e);
-				setInterval(function(){ws.send('hello');}, 1000);
-			}
-			ws.onclose = function(e){
-				console.log('CLOSE');
-				console.log(e);
-			}
-			ws.onerror = function(e){
-				console.log('ERROR');
-				console.log(e);
-			}
-		</script>
-	</head>
+		};
+		/*
+		Load JavaScript Asynchronously
+		https://stackoverflow.com/questions/8586446/dynamically-load-external-javascript-file-and-wait-for-it-to-load-without-usi#8586564
+		*/
+		function ljs(src) {
+			"use strict";
+			var s = document.createElement('script');
+			s.src = src;
+			s.async = true;
+			var promise = make_promise();
+			s.onreadystatechange = s.onload = function () {
+				"use strict";
+				var state = s.readyState;
+				if (!promise.fulfilled && (!state || /loaded|complete/.test(state))) {
+					promise.fulfilled = true;
+					setTimeout(promise.fulfill, 0, promise);
+				}
+			};
+			s.onerror = function () {
+				"use strict";
+				if (!promise.rejected){
+					promise.rejected = true;
+					setTimeout(promise.reject, 0, promise);
+				}
+			};
+			document.getElementsByTagName('head')[0].appendChild(s);
+			return promise;
+		}
+		// Load the JavaScript
+		document.addEventListener("DOMContentLoaded", function () {
+			ljs('/ext/ext.min.js').then(
+				function(){console.log('DONE LOADING!');},
+				function(){console.log('ERROR LOADING!');}
+			);
+		});
+	</script>
+</head>
+
 <body>
-Hi
+	Hi
 </body>
+
 </html>

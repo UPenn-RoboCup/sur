@@ -1,6 +1,6 @@
 {
   "name": "sur",
-  "version": "0.2.0",
+  "version": "0.0.0",
   "homepage": "https://github.com/smcgill3/sur",
   "authors": [
     "Stephen G. McGill <smcgill3@seas.upenn.edu>"
@@ -8,7 +8,7 @@
   "moduleType": [
     "globals"
   ],
-  "license": "MIT",
+  "license": "None",
   "private": true,
   "ignore": [
     "**/.*",
@@ -19,13 +19,12 @@
   ],
   "dependencies": {
     "Keypress": "~2.0.3",
-    "MathJax": "~2.4.0",
-    "bib2json": "mayanklahiri/bib2json",
     "d3": "~3.4.11",
     "js-yaml": "~3.1.0",
     "leapjs": "~0.6.2",
     "marked": "~0.3.2",
     "pako": "~0.2.5",
+    "qwest": "~0.5.5",
     "sprintfjs": "~1.1.4",
     "stats.js": "*",
     "threejs": "*"

@@ -4,7 +4,10 @@
 Next gen version for hosting
 */
 var restify = require('restify'),
-	server = restify.createServer(),
+	server = restify.createServer({
+		name: 'surely',
+		version: '0.1.0'
+	}),
 	nodelua = require('nodelua'),
 	WebSocketServer = require('ws').Server,
 	dgram = require('dgram'),
@@ -29,16 +32,17 @@ var Config = lua.doFileSync('UPennDev/include.lua');
 
 /* Connect to the RPC server */
 var rpc = Config.net.rpc;
+var rpc_skt = zmq.socket('req');
 var robot_ip;
-
 if(Config.net.use_wireless){
 	robot_ip = Config.net.robot.wireless;
 } else {
 	robot_ip = Config.net.robot.wired;
 }
-var rpc_skt = zmq.socket('req');
-//rpc_skt.connect('tcp://'+robot_ip+':'+rpc.tcp_reply);
-rpc_skt.connect('ipc:///tmp/'+rpc.uds);
+
+rpc_skt.connect('tcp://'+robot_ip+':'+rpc.tcp_reply);
+// For localhost, use this instead:
+//rpc_skt.connect('ipc:///tmp/'+rpc.uds);
 rpc_skt.http_responses = [];
 // Since a REP/REQ pattern, we can use a queue and know we are OK
 // This means one node.js per robot rpc server!
@@ -78,22 +82,19 @@ server.put('/body/:body/:comp', rest_req);
 
 // Process Config request
 // TODO: Route elements as keys to go deep into the tree?
+/*
 server.get(/\/config/, function (req, res, next) {
 	console.log('Config');
 	res.json(Config);
 	return next();
 });
+*/
 
 // Serve static items as catch-all
 server.get(/^\/.*/, restify.serveStatic({
   directory: './public',
   default: 'index.html'
 }));
-
-/* Listen for HTTP on port 8080 */
-server.listen(8080, function () {
-	console.log('%s listening at %s', server.name, server.url);
-});
 
 /* WebSocket Handling */
 function ws_error(e){
@@ -102,9 +103,7 @@ function ws_error(e){
 	}
 }
 
-/*
- * Send data to the websocket defined in sur_stream
-*/
+//Send data to the websocket defined in sur_stream
 function bridge_send_ws (sur_stream, meta, payload){
   var str = JSON.stringify(meta);
 	//console.log(meta, str);
@@ -169,10 +168,11 @@ function wss_error (ws) {
 
 /* Bridges for websockets streams */
 var streams = Config.net.streams
+console.log(streams);
 for(var w in streams) {
 	var b = streams[w];
 	if(b.ws === undefined) { continue; }
-	console.log('\n'+w+'\n\tWebsocket: '+b.ws);
+	//console.log('\n'+w+'\n\tWebsocket: '+b.ws);
 	var wss = new WebSocketServer({port: b.ws});
 	wss.on('connection', wss_connection);
 	wss.on('error', wss_error);
@@ -181,7 +181,7 @@ for(var w in streams) {
 	wss.sur_stream = b;
 	// Add UDP listening
 	if(b.udp !== undefined){
-    console.log('\tUDP Bridge',b.udp);
+    //console.log('\tUDP Bridge',b.udp);
 		var udp_recv_skt = dgram.createSocket("udp4");
 		udp_recv_skt.bind(b.udp);
 		udp_recv_skt.on("message", udp_message);
@@ -189,7 +189,7 @@ for(var w in streams) {
 	}
 	// Add PUB/SUB
 	if(b.sub !== undefined) {
-		console.log('\tSubscriber Bridge',b.sub);
+		//console.log('\tSubscriber Bridge',b.sub);
 		var zmq_recv_skt = zmq.socket('sub');
 		zmq_recv_skt.connect('ipc:///tmp/'+b.sub);
 		zmq_recv_skt.subscribe('');
@@ -197,6 +197,11 @@ for(var w in streams) {
 		zmq_recv_skt.sur_stream = b;
 	}
 }
+
+/* Listen for HTTP on port 8080 */
+server.listen(8080, function () {
+	console.log('%s listening at %s to %s', server.name, server.url, robot_ip);
+});
 
 /* PeerServer for WebRTC */
 var pserver = new PeerServer({ port: 9000 });
