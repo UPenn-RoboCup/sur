@@ -98,7 +98,7 @@ server.get(/\/config/, function (req, res, next) {
 // Serve static items as catch-all
 server.get(/^\/.*/, restify.serveStatic({
   directory: './public',
-  default: 'index.html'
+  "default": 'index.html'
 }));
 
 /* WebSocket Handling */
