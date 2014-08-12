@@ -24,7 +24,6 @@
     "leapjs": "~0.6.2",
     "marked": "~0.3.2",
     "pako": "~0.2.5",
-    "qwest": "~0.5.5",
     "sprintfjs": "~1.1.4",
     "stats.js": "*",
     "threejs": "*"

@@ -26,6 +26,9 @@
 	}
 
 	function lcss(url, cb) {
+		if (typeof url !== 'string') {
+			return;
+		}
 		var head = document.getElementsByTagName('head')[0],
 			link = document.createElement('link');
 		link.type = 'text/css';

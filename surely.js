@@ -32,6 +32,8 @@ server.use(restify.dateParser());
 var lua = new nodelua.LuaState('config');
 var UPENNDEV_PATH = '../UPennDev';
 var Config = lua.doFileSync(UPENNDEV_PATH + '/include.lua');
+var streams = Config.net.streams;
+console.log(streams);
 
 /* Connect to the RPC server */
 var rpc = Config.net.rpc;
@@ -85,15 +87,16 @@ server.put('/shm/:shm/:seg/:key', rest_req);
 server.get('/body/:body/:comp', rest_req);
 server.put('/body/:body/:comp', rest_req);
 
-// Process Config request
-// TODO: Route elements as keys to go deep into the tree?
-/*
-server.get(/\/config/, function (req, res, next) {
-	console.log('Config');
-	res.json(Config);
+// Grab streams
+server.get('/streams/:stream', function (req, res, next) {
+	var stream = streams[req.params.stream];
+	if (typeof stream === 'object' && stream.ws !== undefined) {
+		res.json(JSON.stringify(stream.ws));
+	} else {
+		res.send();
+	}
 	return next();
 });
-*/
 
 // Serve static items as catch-all
 server.get(/^\/.*/, restify.serveStatic({
@@ -169,7 +172,7 @@ function wss_connection(ws) {
 	});
   /* On close, remove this client */
   ws.on('close', function () {
-		console.log('CLOSE', this);
+		//console.log('CLOSE', this);
 	});
 }
 
@@ -179,9 +182,7 @@ function wss_error(ws) {
 }
 
 /* Bridges for websockets streams */
-var streams = Config.net.streams, w;
-console.log(streams);
-for (w in streams) {
+for (var w in streams) {
 	var b = streams[w];
 	if (b.ws === undefined) { continue; }
 	//console.log('\n'+w+'\n\tWebsocket: '+b.ws);
