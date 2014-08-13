@@ -4,11 +4,12 @@
 	var d3 = ctx.d3,
 		THREE = ctx.THREE,
 		Transform = ctx.Transform,
-		mesh_canvas = document.createElement("canvas"),
+		mesh_canvas = document.createElement('canvas'),
 		mesh_ctx = mesh_canvas.getContext('2d'),
 		mesh_feed,
 		mesh_worker,
 		USE_WEBWORKERS = false,
+		container,
 		renderer,
 		scene,
 		camera,
@@ -99,8 +100,7 @@
 	// Add the camera view and append
 	function setup() {
 		// Build the scene
-		var container = document.getElementById('world_container'),
-			dirLight = (new THREE.DirectionalLight(0xffffff)),
+		var dirLight = (new THREE.DirectionalLight(0xffffff)),
 			ground = new THREE.Mesh(new THREE.PlaneGeometry(100000, 100000), new THREE.MeshLambertMaterial({
 				ambient: 0x555555,
 				specular: 0x111111,
@@ -108,6 +108,7 @@
 				side: THREE.DoubleSide,
 				color: 0x7F5217
 			}));
+		container = document.getElementById('world_container');
 		CANVAS_WIDTH = container.clientWidth;
 		CANVAS_HEIGHT = container.clientHeight;
 		camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
@@ -147,6 +148,14 @@
 		d3.selectAll('button').on('click', function () {
 			// 'this' variable is the button node
 		});
+		// Handle resizing
+		window.addEventListener('resize', function () {
+			CANVAS_WIDTH = container.clientWidth;
+			CANVAS_HEIGHT = container.clientHeight;
+			camera.aspect = CANVAS_WIDTH / CANVAS_HEIGHT;
+			camera.updateProjectionMatrix();
+			renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+		}, false);
 		animate();
 	}
 	// Load the Styling
