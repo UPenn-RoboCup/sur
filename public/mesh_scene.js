@@ -1,9 +1,5 @@
 (function (ctx) {
 	'use strict';
-	// Load the Styling
-	ctx.util.lcss('/css/meshy.css');
-	ctx.util.lcss('/css/gh-buttons.css');
-	ctx.util.lcss('/css/fb-buttons.css');
 	// Private variables
 	var d3 = ctx.d3,
 		THREE = ctx.THREE,
@@ -13,11 +9,20 @@
 		mesh_feed,
 		mesh_worker,
 		USE_WEBWORKERS = false,
-		scene,
 		renderer,
+		scene,
 		camera,
-		stats,
-		controls;
+		controls,
+		CANVAS_WIDTH,
+		CANVAS_HEIGHT;
+	// Constantly animate the scene
+	function animate() {
+		if (controls) {
+			controls.update();
+		}
+		renderer.render(scene, camera);
+		window.requestAnimationFrame(animate);
+	}
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
 		var position = new window.Float32Array(mesh_obj.pos, 0, 3 * mesh_obj.n_el),
@@ -92,15 +97,10 @@
 		}
 	}
 	// Add the camera view and append
-	d3.html('/mesh_scene.html', function (error, view) {
-		// Remove landing page elements and add new content
-		d3.select("div#landing").remove();
-		document.body.appendChild(view);
+	function setup() {
 		// Build the scene
 		var container = document.getElementById('world_container'),
-			CANVAS_WIDTH = container.clientWidth,
-			CANVAS_HEIGHT = container.clientHeight,
-			skyLight = new THREE.PointLight(0xaaaaaa, 1, 100000),
+			dirLight = (new THREE.DirectionalLight(0xffffff)),
 			ground = new THREE.Mesh(new THREE.PlaneGeometry(100000, 100000), new THREE.MeshLambertMaterial({
 				ambient: 0x555555,
 				specular: 0x111111,
@@ -108,6 +108,8 @@
 				side: THREE.DoubleSide,
 				color: 0x7F5217
 			}));
+		CANVAS_WIDTH = container.clientWidth;
+		CANVAS_HEIGHT = container.clientHeight;
 		camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
 		scene = new THREE.Scene();
 		renderer = new THREE.WebGLRenderer({
@@ -116,25 +118,18 @@
 		renderer.setClearColor(0x80CCFF, 1);
 		renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		container.appendChild(renderer.domElement);
-		skyLight.position.set(0, 70000, 1000);
-		scene.add(skyLight);
 		camera.position.copy(new THREE.Vector3(500, 2000, -500));
 		// Load in the Orbit controls dynamically
 		ctx.util.ljs('/OrbitControls.js', function () {
 			controls = new THREE.OrbitControls(camera, container);
-			controls.target = new THREE.Vector3(0, 0, 500);
+			controls.target = new THREE.Vector3(0, 0, 5000);
 		});
 		// Load the ground
 		ground.rotation.x = -Math.PI / 2;
 		scene.add(ground);
-		// Begin animation loop
-		(function animloop() {
-			if (controls) {
-				controls.update();
-			}
-			renderer.render(scene, camera);
-			window.requestAnimationFrame(animloop);
-		}());
+		// add light to the scene, from the robot's point of view
+		dirLight.position.set(0, 1000, 0).normalize();
+		scene.add(dirLight);
 		// Begin the WebWorker
 		if (USE_WEBWORKERS) {
 			mesh_worker = new window.Worker("/controllers/mesh_worker.js");
@@ -151,6 +146,18 @@
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {
 			// 'this' variable is the button node
+		});
+		animate();
+	}
+	// Load the Styling
+	ctx.util.lcss('/css/gh-buttons.css');
+	ctx.util.lcss('/css/fb-buttons.css');
+	ctx.util.lcss('/css/mesh_scene.css', function () {
+		d3.html('/mesh_scene.html', function (error, view) {
+			// Remove landing page elements and add new content
+			d3.select("div#landing").remove();
+			document.body.appendChild(view);
+			setTimeout(setup, 0);
 		});
 	});
 }(this));

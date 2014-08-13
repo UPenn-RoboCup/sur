@@ -5,7 +5,6 @@ html, body {
   overflow: hidden;
 }
 #world_container {
-  background-color: black;/*#7F5217;*/
   height: 100%;
 }
 #proceed {
