@@ -27,6 +27,9 @@ server.use(restify.bodyParser({
 }));
 // Try this to find the clock skew... may be useful
 server.use(restify.dateParser());
+// Gzip hurts on super small stuff from hcm
+// Should only be used for static cases
+//server.use(restify.gzipResponse());
 
 // Load config from Lua
 var lua = new nodelua.LuaState('config');
@@ -45,9 +48,9 @@ if (Config.net.use_wireless) {
 	robot_ip = Config.net.robot.wired;
 }
 
-rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
+//rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
 // For localhost, use this instead:
-//rpc_skt.connect('ipc:///tmp/'+rpc.uds);
+rpc_skt.connect('ipc:///tmp/'+rpc.uds);
 rpc_skt.http_responses = [];
 // Since a REP/REQ pattern, we can use a queue and know we are OK
 // This means one node.js per robot rpc server!

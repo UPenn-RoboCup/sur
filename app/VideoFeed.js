@@ -1,6 +1,6 @@
 (function (ctx) {
 	'use strict';
-	function VideoFeed(port, cb) {
+	function VideoFeed(port, cb, non_img_cb) {
 		// Private variables
 		var ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
 			fr_img = new Image(),
@@ -25,7 +25,7 @@
 		ws.onmessage = function (e) {
 			if (typeof e.data === "string") {
 				fr_metadata = JSON.parse(e.data);
-				//var latency = (e.timeStamp / 1e3) - fr_metadata.t;
+				fr_metadata.latency = (e.timeStamp / 1e3) - fr_metadata.t;
 				return;
 			}
 			// Use the size as a checksum for metadata pairing with an incoming image
@@ -39,6 +39,11 @@
 					fr_img_src = fr_img.src = window.URL.createObjectURL(fr_raw);
 					fr_img.alt = fr_metadata.id;
 				});
+			} else {
+				// Got other stuff on the VideoFeed channel
+				if (typeof non_img_cb === 'function') {
+					setTimeout(non_img_cb, 0);
+				}
 			}
 		};
 		// Exports

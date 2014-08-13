@@ -2,17 +2,20 @@
 <!--HTML5 doctype-->
 <html>
 
-<head>
-	<title>uSURp</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width,user-scalable=no">
-	<script async type="application/javascript" src="js/ext.min.js"></script>
-	<script async type="application/javascript" src="js/app.min.js"></script>
-</head>
+	<head>
+		<title>uSURp</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,user-scalable=no">
+		<script async type="application/javascript" src="js/ext.min.js"></script>
+		<script async type="application/javascript" src="js/app.min.js"></script>
+	</head>
 
-<body>
-	<button	onclick="util.ljs('head_video.js')">Head Video Feed</button>
-	<button	onclick="util.ljs('hand_video.js')">Hand Video Feed</button>
-</body>
+	<body>
+		<div id='landing'>
+			<button	onclick="util.ljs('head_video.js')">Head Video Feed</button>
+			<button	onclick="util.ljs('hand_video.js')">Hand Video Feed</button>
+			<button	onclick="util.ljs('mesh_scene.js')">Mesh Scene</button>
+		</div>
+	</body>
 
 </html>

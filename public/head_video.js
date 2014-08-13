@@ -4,7 +4,10 @@
 		util = ctx.util;
 	// Add the camera view and append
 	d3.html('/head_video.html', function (error, view) {
+		// Remove landing page elements and add new content
+		d3.select("div#landing").remove();
 		document.body.appendChild(view);
+		// Add the video feed
 		d3.json('/streams/camera0', function (error, port) {
 			document.getElementById('camera_container').appendChild((new ctx.VideoFeed(port)).img);
 		});
