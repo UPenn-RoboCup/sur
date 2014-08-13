@@ -16,5 +16,4 @@
 	// Load the CSS that we need for our app
 	util.lcss('/css/cameras.css');
 	util.lcss('/css/gh-buttons.css');
-	console.log('Loading head...');
 }(this));

@@ -1,69 +1,48 @@
 (function (ctx) {
 	'use strict';
-	
-	function VideoFeed(port) {
-		var ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port), // Connect to the websocket server
-			fr_sz_checksum,
+	function VideoFeed(port, cb) {
+		// Private variables
+		var ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
+			fr_img = new Image(),
 			fr_metadata,
-			raw,
-			img_src,
-			camera_img = new Image(),
-			is_rendering = false,
-			anim = false;
-		// Exports
-		this.img = camera_img;
-
-		// Render the image
-		function frame2img() {
-			if (!raw || is_rendering) {
-				anim = false;
-				return;
+			fr_raw,
+			fr_img_src;
+		// Set the Image properties
+		fr_img.alt = 'No frame received';
+		fr_img.onload = function () {
+			// Revoke and remove last reference to the data
+			window.URL.revokeObjectURL(fr_img_src);
+			fr_raw = null;
+			// Save the data and run the callback
+			// TODO: Bind the image reference?
+			fr_img.metadata = fr_metadata;
+			if (typeof cb === 'function') {
+				setTimeout(cb, 0);
 			}
-			// Decompress image via browser
-			img_src = window.URL.createObjectURL(raw);
-			camera_img.src = img_src;
-			is_rendering = true;
-			// Trigger processing once the image is fully loaded
-			window.requestAnimationFrame(frame2img);
-		}
-
-		// Setup the WebSocket
+		};
+		// Setup the WebSocket connection
 		ws.binaryType = "blob";
 		ws.onmessage = function (e) {
 			if (typeof e.data === "string") {
 				fr_metadata = JSON.parse(e.data);
-				var latency = (e.timeStamp / 1e3) - fr_metadata.t;
-				fr_sz_checksum = fr_metadata.sz;
+				//var latency = (e.timeStamp / 1e3) - fr_metadata.t;
 				return;
 			}
 			// Use the size as a checksum for metadata pairing with an incoming image
-			if (e.data.size !== fr_sz_checksum) {
-				window.console.log('Camera Checksum fail!', fr_metadata.sz, fr_sz_checksum);
+			if (e.data.size !== fr_metadata.sz || fr_raw) {
 				return;
 			}
-			if (is_rendering) {
-				return;
-			}
-			// Save the last received image, for delayed rendering
-			raw = e.data;
-			// Perform a render
-			if (!anim) {
-				window.requestAnimationFrame(frame2img);
+			if (fr_metadata.c === "jpeg" || fr_metadata.c === "png") {
+				// Set the MIME type and make URL for image tag
+				fr_raw = e.data.slice(0, e.data.size, 'image/' + fr_metadata.c);
+				window.requestAnimationFrame(function () {
+					fr_img_src = fr_img.src = window.URL.createObjectURL(fr_raw);
+					fr_img.alt = fr_metadata.id;
+				});
 			}
 		};
-
-		// Set the camera properties
-		camera_img.alt = 'No image yet...';
-		camera_img.onload = function () {
-			// Revoke
-			window.URL.revokeObjectURL(img_src);
-			// Remove last reference to the data
-			raw = null;
-			is_rendering = false;
-			// Save the metadata
-			camera_img.metadata = fr_metadata;
-		};
-
+		// Exports
+		this.img = fr_img;
 	}
 	ctx.VideoFeed = VideoFeed;
 }(this));
