@@ -26,6 +26,7 @@
 	}
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
+		console.log('processing mesh', mesh_obj)
 		var position = new window.Float32Array(mesh_obj.pos, 0, 3 * mesh_obj.n_el),
 			color = new window.Float32Array(mesh_obj.col, 0, 3 * mesh_obj.n_el),
 			index = new window.Uint16Array(mesh_obj.idx, 0, 6 * mesh_obj.n_quad),
