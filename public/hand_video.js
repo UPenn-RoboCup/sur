@@ -2,7 +2,7 @@
 	'use strict';
 	var d3 = ctx.d3;
 	// Add the camera view and append
-	d3.html('/hand_video.html', function (error, view) {
+	d3.html('/view/hand_video.html', function (error, view) {
 		// Remove landing page elements and add new content
 		d3.select("div#landing").remove();
 		document.body.appendChild(view);

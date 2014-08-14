@@ -163,7 +163,7 @@
 	ctx.util.lcss('/css/gh-buttons.css');
 	ctx.util.lcss('/css/fb-buttons.css');
 	ctx.util.lcss('/css/mesh_scene.css', function () {
-		d3.html('/mesh_scene.html', function (error, view) {
+		d3.html('/view/mesh_scene.html', function (error, view) {
 			// Remove landing page elements and add new content
 			d3.select("div#landing").remove();
 			document.body.appendChild(view);
