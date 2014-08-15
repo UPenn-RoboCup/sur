@@ -26,7 +26,7 @@
 	}
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
-		console.log('processing mesh', mesh_obj)
+		//console.log('processing mesh', mesh_obj)
 		var position = new window.Float32Array(mesh_obj.pos, 0, 3 * mesh_obj.n_el),
 			color = new window.Float32Array(mesh_obj.col, 0, 3 * mesh_obj.n_el),
 			index = new window.Uint16Array(mesh_obj.idx, 0, 6 * mesh_obj.n_quad),
@@ -72,11 +72,15 @@
 		var fr_img = mesh_feed.img,
 			w = fr_img.width,
 			h = fr_img.height,
+			metadata = fr_img.metadata,
 			half_w = w / 2,
 			half_h = h / 2,
 			diff = (h - w) / 2,
 			buf,
 			mesh_obj;
+		//console.log('SETTING', w, h);
+		mesh_canvas.setAttribute('width', h);
+    mesh_canvas.setAttribute('height', w);
 		// Draw the image onto the canvas properly
 		mesh_ctx.save();
 		mesh_ctx.translate(half_w, half_h);
@@ -90,7 +94,12 @@
 		// Form the mesh
 		buf = mesh_ctx.getImageData(1, 1, h, w).data.buffer;
 		mesh_obj = {
-			buf: buf
+			buf: buf,
+			width: h,
+			height: w,
+			sfov: metadata.sfov,
+			rfov: metadata.rfov,
+			dynrange: metadata.dr
 		};
 		if (USE_WEBWORKERS) {
 			mesh_worker.postMessage(mesh_obj, [buf]);
@@ -132,19 +141,6 @@
 		// add light to the scene, from the robot's point of view
 		dirLight.position.set(0, 1000, 0).normalize();
 		scene.add(dirLight);
-		// Begin the WebWorker
-		if (USE_WEBWORKERS) {
-			mesh_worker = new window.Worker("/controllers/mesh_worker.js");
-			mesh_worker.onmessage = function (e) {
-				process_mesh(e.data);
-			};
-		}
-		// Begin listening to the feed
-		d3.json('/streams/mesh', function (error, port) {
-			mesh_feed = new ctx.VideoFeed(port, process_frame);
-			// Associate the canvas 2D context with the image
-			mesh_feed.ctx = mesh_ctx;
-		});
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {
 			// 'this' variable is the button node
@@ -166,8 +162,24 @@
 		d3.html('/view/mesh_scene.html', function (error, view) {
 			// Remove landing page elements and add new content
 			d3.select("div#landing").remove();
+			// Just see the scene
 			document.body.appendChild(view);
 			setTimeout(setup, 0);
+			// Just see the canvas:
+			//document.body.appendChild(mesh_canvas);
 		});
+	});
+	// Begin the WebWorker
+	if (USE_WEBWORKERS) {
+		mesh_worker = new window.Worker("/controllers/mesh_worker.js");
+		mesh_worker.onmessage = function (e) {
+			process_mesh(e.data);
+		};
+	}
+	// Begin listening to the feed
+	d3.json('/streams/mesh', function (error, port) {
+		mesh_feed = new ctx.VideoFeed(port, process_frame);
+		// Associate the canvas 2D context with the image
+		mesh_feed.ctx = mesh_ctx;
 	});
 }(this));

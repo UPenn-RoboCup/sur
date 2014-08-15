@@ -12,6 +12,8 @@
 		chest_off_axis = 0.02,
 		neck_height = 0.30,
 		neck_off_axis = 0.12;
+		//cos = Math.cos,
+		//sin = Math.sin;
 
 	function jet(val) {
 		//val = Math.min(Math.max(val,0),255);
@@ -31,7 +33,7 @@
 			z = Math.tan(vFOV / 2) * 2 * (0.5 - v / height) * x;
 		return [x, y, z, 0];
 	}
-
+/*
 	function get_hokuyo_head_xyz(u, v, w, width, height, near, far, hFOV, vFOV, pitch) {
 		// do not use saturated pixels
 		if (w === 0 || w === 255) {
@@ -61,35 +63,38 @@
 		// return the global point vector
 		return [xx, y, zz, r];
 	}
+	*/
 
 	// Returns a point in xyz of the torso frame
 	function get_hokuyo_chest_xyz(u, v, w, mesh) {
 		// do not use saturated pixels
-		if (w <= 1 || w >= 254) {
+		if (w == 0 || w == 255) {
 			return null;
 		}
 		// Convert w of 0-255 to actual meters value
-		var near = mesh.depths[0],
-			far = mesh.depths[1],
+		var near = mesh.dynrange[0],
+			far = mesh.dynrange[1],
 			factor = (far - near) / 255,
-			// Rotates a *bit* off axis
-			r = factor * w + near + chest_off_axis,
-			// Field of View fixing
-			fov = mesh.fov,
+			// Field of View for ranges
 			// radians per pixel
+			rfov = mesh.rfov,
 			width = mesh.width,
-			hFOV = fov[1] - fov[0],
+			hFOV = rfov[1] - rfov[0],
 			h_rpp = hFOV / width,
-			h_angle = fov[1] - h_rpp * u,
+			h_angle = rfov[1] - h_rpp * u,
 			ch = Math.cos(h_angle),
 			sh = Math.sin(h_angle),
+			// Field of View for sweep
 			// radians per pixel
+			sfov = mesh.sfov,
 			height = mesh.height,
-			vFOV = fov[3] - fov[2],
+			vFOV = sfov[1] - sfov[0],
 			v_rpp = vFOV / height,
-			v_angle = -1 * (v_rpp * v + fov[2]),
+			v_angle = -1 * (v_rpp * v + sfov[0]),
 			cv = Math.cos(v_angle),
 			sv = Math.sin(v_angle),
+			// Rotates a *bit* off axis
+			r = factor * w + near + chest_off_axis,
 			// Place in the frame of the torso
 			//x = (r * cv + chest_offset_x) * ch + chest_joint_x,
 			x = r * cv * ch + chest_joint_x,
@@ -126,12 +131,12 @@
 	// robot: pose (px,py,pa element) and bodyTilt elements
 	function lidar_to_three(x, y, z, robot) {
 		// Apply bodyTilt
-		var bodyTilt = robot.bodyTilt,
+		var bodyTilt = robot.bodyTilt || 0,
 			cp = Math.cos(bodyTilt),
 			sp = Math.sin(bodyTilt),
 			// Also add supportX and bodyHeight parameters
 			xx = cp * x + sp * z, // + robot.supportX
-			zz = -sp * x + cp * z + robot.bodyHeight,
+			zz = -sp * x + cp * z + robot.bodyHeight || 1,
 			// Place into global pose
 			pa = robot.pa,
 			ca = Math.cos(pa),
@@ -175,7 +180,6 @@
 	}
 
 	function make_quads(mesh) {
-
 		// Format our data
 		var pixels = new window.Uint8Array(mesh.buf),
 			pixdex = new window.Uint32Array(mesh.buf),
@@ -242,9 +246,9 @@
 		n_el = 0;
 		pixdex_idx = -1;
 		pixel_idx = -4;
+		//console.log('Mesh', mesh);
 		for (j = 0; j < height; j += 1) {
 			for (i = 0; i < width; i += 1) {
-
 				// next float32 in the image
 				pixdex_idx += 1;
 				// move on to the next pixel (RGBA) for next time
@@ -264,10 +268,14 @@
 				}
 
 				// Compute the position from the lidar
+				// TODO: Add back
+				/*
 				tmp_robot.px = mesh.posex[i];
 				tmp_robot.py = mesh.posey[i];
 				tmp_robot.pa = mesh.posez[i];
+				*/
 				threep = lidar_to_three(p[0], p[1], p[2], tmp_robot);
+				//console.log(position_idx, threep);
 
 				// Save the pixel particle, since it is valid
 				n_el += 1;
@@ -400,7 +408,7 @@
           console.log(i,j,a,b,c,d,'position');
         }
         */
-
+/*
 				// Too high in the air (2m)
 				if (a[1] > max_ceiling || b[1] > max_ceiling || c[1] > max_ceiling || d[1] > max_ceiling) {
 					continue;
@@ -413,7 +421,7 @@
 				if (Math.abs(a[2] - b[2]) > 50 || Math.abs(a[2] - c[2]) > 50 || Math.abs(a[2] - d[2]) > 50) {
 					continue;
 				}
-
+*/
 				// We have a valid quad!
 				n_quad += 1;
 
