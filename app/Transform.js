@@ -11,9 +11,9 @@
 		chest_joint_x = 0.06,
 		chest_off_axis = 0.02,
 		neck_height = 0.30,
-		neck_off_axis = 0.12;
-		//cos = Math.cos,
-		//sin = Math.sin;
+		neck_off_axis = 0.12,
+		cos = Math.cos,
+		sin = Math.sin;
 
 	function jet(val) {
 		//val = Math.min(Math.max(val,0),255);
@@ -24,77 +24,30 @@
              255 * Math.min(fourValue + 0.5, -fourValue + 2.5)];
 	}
 
-	// convert location
-	function get_kinect_xyz(u, v, w, width, height, near, far, hFOV, vFOV) {
-		// Convert w of 0-255 to actual meters value
-		var factor = (far - near) / 255,
-			x = factor * w + near,
-			y = Math.tan(hFOV / 2) * 2 * (u / width - 0.5) * x,
-			z = Math.tan(vFOV / 2) * 2 * (0.5 - v / height) * x;
-		return [x, y, z, 0];
-	}
-/*
-	function get_hokuyo_head_xyz(u, v, w, width, height, near, far, hFOV, vFOV, pitch) {
-		// do not use saturated pixels
-		if (w === 0 || w === 255) {
-			return;
-		}
-		//console.log(u,v,w,width,height,near,far,hFOV,vFOV);
-		// radians per pixel
-		var h_rpp = hFOV / width,
-			v_rpp = vFOV / height,
-			// angle in radians of the selected pixel
-			h_angle = h_rpp * (width / 2 - u),
-			v_angle = v_rpp * (v - height / 2),
-			// Convert w of 0-255 to actual meters value
-			factor = (far - near) / 255,
-			r = factor * w + near,
-			dx = r * Math.cos(h_angle),
-			//
-			x = dx * Math.cos(h_angle) + Math.sin(v_angle) * neck_off_axis,
-			y = r * Math.sin(h_angle),
-			z = -dx * Math.sin(h_angle) + Math.cos(v_angle) * neck_off_axis + neck_height,
-			// rotate for pitch compensation
-			cp = Math.cos(pitch),
-			sp = Math.sin(pitch),
-			xx = cp * x + sp * z,
-			zz = -sp * x + cp * z;
-
-		// return the global point vector
-		return [xx, y, zz, r];
-	}
-	*/
-
 	// Returns a point in xyz of the torso frame
 	function get_hokuyo_chest_xyz(u, v, w, mesh) {
 		// do not use saturated pixels
-		if (w == 0 || w == 255) {
+		if (w === 0 || w === 255) {
 			return null;
 		}
 		// Convert w of 0-255 to actual meters value
 		var near = mesh.dynrange[0],
 			far = mesh.dynrange[1],
-			factor = (far - near) / 255,
 			// Field of View for ranges
 			// radians per pixel
-			rfov = mesh.rfov,
 			width = mesh.width,
-			hFOV = rfov[1] - rfov[0],
-			h_rpp = hFOV / width,
-			h_angle = rfov[1] - h_rpp * u,
-			ch = Math.cos(h_angle),
-			sh = Math.sin(h_angle),
-			// Field of View for sweep
-			// radians per pixel
-			sfov = mesh.sfov,
 			height = mesh.height,
-			vFOV = sfov[1] - sfov[0],
-			v_rpp = vFOV / height,
-			v_angle = -1 * (v_rpp * v + sfov[0]),
-			cv = Math.cos(v_angle),
-			sv = Math.sin(v_angle),
+			hfov = mesh.hfov, // width (horizontal) FOV
+			vfov = mesh.vfov, // height (vertical) FOV
+			// Find the appropriate angles
+			h_angle = hfov[1] - u * (hfov[1] - hfov[0]) / width,
+			v_angle = -1 * (v * (vfov[1] - vfov[0]) / height + vfov[0]),
+			ch = cos(h_angle),
+			sh = sin(h_angle),
+			cv = cos(v_angle),
+			sv = sin(v_angle),
 			// Rotates a *bit* off axis
-			r = factor * w + near + chest_off_axis,
+			r = w * (far - near) / 255 + near + chest_off_axis,
 			// Place in the frame of the torso
 			//x = (r * cv + chest_offset_x) * ch + chest_joint_x,
 			x = r * cv * ch + chest_joint_x,
@@ -104,43 +57,27 @@
 		return [x, y, z];
 	}
 
-	function mod_angle(a) {
-		// Reduce angle to [-pi, pi)
-		var b = a % (2 * Math.PI);
-		return (b >= Math.PI) ? (b - 2 * Math.PI) : b;
-	}
-
-	// x, y, z in the torso (upper body) frame
-	// robot: pose (px,py,pa element) and bodyTilt elements
-	function torso_to_three(x, y, z, robot) {
-		// Place into global pose
-		var pa = robot.pa,
-			ca = Math.cos(pa),
-			sa = Math.sin(pa),
-			// THREE coords
-			tx = robot.px + ca * x - sa * y,
-			ty = robot.py + sa * x + ca * y,
-			tz = z + robot.bodyHeight;
-		//var ta = mod_angle(a-pa);
-		// Return in mm, since THREEjs uses that
-		// Also, swap the coordinates
-		return [ty * 1000, tz * 1000, tx * 1000];
-	}
-
 	// x, y, z in the torso (upper body) frame
 	// robot: pose (px,py,pa element) and bodyTilt elements
 	function lidar_to_three(x, y, z, robot) {
+		robot = robot || {
+			bodyTilt: 3 * Math.PI / 180,
+			bodyHeight: 0.93,
+			px: 0,
+			py: 0,
+			pa: 0
+		};
 		// Apply bodyTilt
-		var bodyTilt = robot.bodyTilt || 0,
-			cp = Math.cos(bodyTilt),
-			sp = Math.sin(bodyTilt),
+		var bodyTilt = robot.bodyTilt,
+			cp = cos(bodyTilt),
+			sp = sin(bodyTilt),
 			// Also add supportX and bodyHeight parameters
 			xx = cp * x + sp * z, // + robot.supportX
-			zz = -sp * x + cp * z + robot.bodyHeight || 1,
+			zz = -sp * x + cp * z + robot.bodyHeight,
 			// Place into global pose
 			pa = robot.pa,
-			ca = Math.cos(pa),
-			sa = Math.sin(pa),
+			ca = cos(pa),
+			sa = sin(pa),
 			// THREE coords
 			tx = robot.px + ca * xx - sa * y,
 			ty = robot.py + sa * xx + ca * y,
@@ -150,36 +87,7 @@
 		return [ty * 1000, tz * 1000, tx * 1000];
 	}
 
-	// get a global (THREEjs) point, and put it in the torso reference frame
-	function three_to_torso(p, robot) {
-		// Scale the point
-		var x = p.z / 1000,
-			y = p.x / 1000,
-			z = p.y / 1000,
-			// Make a relative pose
-			pa = robot.pa,
-			ca = Math.cos(pa),
-			sa = Math.sin(pa),
-			px = x - robot.px,
-			py = y - robot.py;
-		x = ca * px + sa * py;
-		y = -sa * px + ca * py;
-		// kill off some body transformations
-		//x -= robot.supportX;
-		z -= robot.bodyHeight;
-		/*
-    // Invert bodyTilt
-    var bodyTilt = -1*robot.bodyTilt;
-    var cp = Math.cos(bodyTilt);
-    var sp = Math.sin(bodyTilt);
-    var xx =  cp*x + sp*z;
-    var zz = -sp*x + cp*z;
-    // Yield the torso coordinates
-    */
-		return [x, y, z];
-	}
-
-	function make_quads(mesh) {
+	Transform.make_quads = function (mesh) {
 		// Format our data
 		var pixels = new window.Uint8Array(mesh.buf),
 			pixdex = new window.Uint32Array(mesh.buf),
@@ -198,16 +106,6 @@
 			n_last_chunk_el = 0,
 			// Save the particle with 1 indexed in pixdex
 			idx_idx = 1,
-			// Temp robot
-			tmp_robot = {
-				px: 0,
-				py: 0,
-				pa: 0, // actually correct name for now; mesh_wizard
-				bodyTilt: mesh.pitch,
-				// TODO: This is hard coded! Should come from mesh!
-				supportX: 0.0515184,
-				bodyHeight: 0.9285318
-			},
 			a,
 			b,
 			c,
@@ -274,7 +172,7 @@
 				tmp_robot.py = mesh.posey[i];
 				tmp_robot.pa = mesh.posez[i];
 				*/
-				threep = lidar_to_three(p[0], p[1], p[2], tmp_robot);
+				threep = lidar_to_three(p[0], p[1], p[2]);
 				//console.log(position_idx, threep);
 
 				// Save the pixel particle, since it is valid
@@ -408,17 +306,18 @@
           console.log(i,j,a,b,c,d,'position');
         }
         */
-/*
+				// Ensure that quads are smoothly connected; restrict the derivatives on the durface here
+				if (Math.abs(a[2] - b[2]) > 50 || Math.abs(a[2] - c[2]) > 50 || Math.abs(a[2] - d[2]) > 50) {
+					continue;
+				}
+				
 				// Too high in the air (2m)
 				if (a[1] > max_ceiling || b[1] > max_ceiling || c[1] > max_ceiling || d[1] > max_ceiling) {
 					continue;
 				}
+/*
 				// Ground (5cm)
 				if (a[1] < 50 || b[1] < 50 || c[1] < 50 || d[1] < 50) {
-					continue;
-				}
-				// ugliness with too far away (5cm break)
-				if (Math.abs(a[2] - b[2]) > 50 || Math.abs(a[2] - c[2]) > 50 || Math.abs(a[2] - d[2]) > 50) {
 					continue;
 				}
 */
@@ -473,7 +372,7 @@
 			n_quad: n_quad,
 			quad_offsets: quad_offsets
 		};
-	}
+	};
 
 	/*
 	// Camera clicking
@@ -512,11 +411,117 @@
 	}
 	*/
 
+		// x, y, z in the torso (upper body) frame
+	// robot: pose (px,py,pa element) and bodyTilt elements
+	/*
+	Transform.torso_to_three = function(x, y, z, robot) {
+		robot = robot || {
+			bodyTilt: 3 * Math.PI / 180,
+			bodyHeight: 0.93
+		};
+		// Place into global pose
+		var pa = robot.pa,
+			ca = cos(pa),
+			sa = sin(pa),
+			// THREE coords
+			tx = robot.px + ca * x - sa * y,
+			ty = robot.py + sa * x + ca * y,
+			tz = z + robot.bodyHeight;
+		//var ta = mod_angle(a-pa);
+		// Return in mm, since THREEjs uses that
+		// Also, swap the coordinates
+		return [ty * 1000, tz * 1000, tx * 1000];
+	}
+	*/
+	
+	/*
+	// get a global (THREEjs) point, and put it in the torso reference frame
+	Transform.three_to_torso = function(p, robot) {
+		robot = robot || {
+			bodyTilt: 3 * Math.PI / 180,
+			bodyHeight: 0.93
+		};
+		// Scale the point
+		var x = p.z / 1000,
+			y = p.x / 1000,
+			z = p.y / 1000,
+			// Make a relative pose
+			pa = robot.pa,
+			ca = cos(pa),
+			sa = sin(pa),
+			px = x - robot.px,
+			py = y - robot.py;
+		x = ca * px + sa * py;
+		y = -sa * px + ca * py;
+		// kill off some body transformations
+		//x -= robot.supportX;
+		z -= robot.bodyHeight;
+
+    // Invert bodyTilt
+    //var bodyTilt = -1*robot.bodyTilt;
+    //var cp = cos(bodyTilt);
+    //var sp = sin(bodyTilt);
+    //var xx =  cp*x + sp*z;
+    //var zz = -sp*x + cp*z;
+    // Yield the torso coordinates
+
+		return [x, y, z];
+	}
+	*/
+ 
+	/*
+	Transform.mod_angle = function(a) {
+		// Reduce angle to [-pi, pi)
+		var b = a % (2 * Math.PI);
+		return (b >= Math.PI) ? (b - 2 * Math.PI) : b;
+	}
+	*/
+	
+	/*
+	function get_hokuyo_head_xyz(u, v, w, width, height, near, far, hFOV, vFOV, pitch) {
+		// do not use saturated pixels
+		if (w === 0 || w === 255) {
+			return;
+		}
+		//console.log(u,v,w,width,height,near,far,hFOV,vFOV);
+		// radians per pixel
+		var h_rpp = hFOV / width,
+			v_rpp = vFOV / height,
+			// angle in radians of the selected pixel
+			h_angle = h_rpp * (width / 2 - u),
+			v_angle = v_rpp * (v - height / 2),
+			// Convert w of 0-255 to actual meters value
+			factor = (far - near) / 255,
+			r = factor * w + near,
+			dx = r * cos(h_angle),
+			//
+			x = dx * cos(h_angle) + sin(v_angle) * neck_off_axis,
+			y = r * sin(h_angle),
+			z = -dx * sin(h_angle) + cos(v_angle) * neck_off_axis + neck_height,
+			// rotate for pitch compensation
+			cp = cos(pitch),
+			sp = sin(pitch),
+			xx = cp * x + sp * z,
+			zz = -sp * x + cp * z;
+
+		// return the global point vector
+		return [xx, y, zz, r];
+	}
+	*/
+	
+	/*
+	// convert location
+	function get_kinect_xyz(u, v, w, width, height, near, far, hFOV, vFOV) {
+		// Convert w of 0-255 to actual meters value
+		var factor = (far - near) / 255,
+			x = factor * w + near,
+			y = Math.tan(hFOV / 2) * 2 * (u / width - 0.5) * x,
+			z = Math.tan(vFOV / 2) * 2 * (0.5 - v / height) * x;
+		return [x, y, z, 0];
+	}
+	*/
+	
 	// export
-	Transform.three_to_torso = three_to_torso;
-	Transform.torso_to_three = torso_to_three;
-	Transform.mod_angle = mod_angle;
-	Transform.make_quads = make_quads;
 	ctx.Transform = Transform;
 
 }(this));

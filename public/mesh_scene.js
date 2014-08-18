@@ -4,8 +4,6 @@
 	var d3 = ctx.d3,
 		THREE = ctx.THREE,
 		Transform = ctx.Transform,
-		mesh_canvas = document.createElement('canvas'),
-		mesh_ctx = mesh_canvas.getContext('2d'),
 		mesh_feed,
 		mesh_worker,
 		USE_WEBWORKERS = false,
@@ -41,6 +39,7 @@
 				//vertexColors: THREE.VertexColors, // if not phong...
 			}),
 			mesh;
+		//console.log(mesh_obj, geometry);
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
 		geometry.offsets = offsets;
@@ -69,37 +68,23 @@
 
 	// Process the frame, which is always the chest lidar
 	function process_frame() {
-		var fr_img = mesh_feed.img,
-			w = fr_img.width,
-			h = fr_img.height,
-			metadata = fr_img.metadata,
-			half_w = w / 2,
-			half_h = h / 2,
-			diff = (h - w) / 2,
+		var canvas = mesh_feed.canvas,
+			metadata = canvas.metadata,
+			w = canvas.width,
+			h = canvas.height,
 			buf,
 			mesh_obj;
-		mesh_canvas.setAttribute('width', h);
-    mesh_canvas.setAttribute('height', w);
-		// Draw the image onto the canvas properly
-		mesh_ctx.save();
-		mesh_ctx.translate(half_w, half_h);
-		// NOTE: Height and width are swapped, so rotate the canvas
-		mesh_ctx.rotate(Math.PI / 2);
-		// if the image is not square, add half the difference of the smaller to the larger one
-		half_h += diff;
-		half_w += diff;
-		mesh_ctx.drawImage(fr_img, -half_w, -half_h);
-		mesh_ctx.restore();
 		// Form the mesh
-		buf = mesh_ctx.getImageData(1, 1, h, w).data.buffer;
+		buf = mesh_feed.context2d.getImageData(1, 1, w, h).data.buffer;
 		mesh_obj = {
 			buf: buf,
-			width: h,
-			height: w,
-			sfov: metadata.sfov,
-			rfov: metadata.rfov,
+			width: w,
+			height: h,
+			hfov: metadata.sfov,
+			vfov: metadata.rfov,
 			dynrange: metadata.dr
 		};
+		//console.log(mesh_obj);
 		if (USE_WEBWORKERS) {
 			mesh_worker.postMessage(mesh_obj, [buf]);
 		} else {
@@ -177,8 +162,6 @@
 	}
 	// Begin listening to the feed
 	d3.json('/streams/mesh', function (error, port) {
-		mesh_feed = new ctx.VideoFeed(port, process_frame);
-		// Associate the canvas 2D context with the image
-		mesh_feed.ctx = mesh_ctx;
+		mesh_feed = new ctx.VideoFeed(port, process_frame, {cw90: true});
 	});
 }(this));

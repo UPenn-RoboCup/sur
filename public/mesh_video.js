@@ -10,11 +10,7 @@
 		document.body.appendChild(view);
 		// Add the video feed
 		d3.json('/streams/mesh', function (error, port) {
-			/*
-			feed = new ctx.VideoFeed(port);
-			document.getElementById('camera_container').appendChild(feed.img);
-			*/
-			feed = new ctx.VideoFeed(port, null, {canvas: true, cw90: true});
+			feed = new ctx.VideoFeed(port, null, {cw90: true});
 			document.getElementById('camera_container').appendChild(feed.canvas);
 		});
 		// Animate the buttons
