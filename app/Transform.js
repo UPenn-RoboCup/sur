@@ -19,7 +19,6 @@
 		abs = Math.abs;
 
 	function jet(val) {
-		//val = Math.min(Math.max(val,0),255);
 		// http://www.metastine.com/?p=7
 		var fourValue = 4 - (4 * val) / 255;
 		return [255 * min(fourValue - 1.5, 4.5 - fourValue),
