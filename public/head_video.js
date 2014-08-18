@@ -10,10 +10,6 @@
 		document.body.appendChild(view);
 		// Add the video feed
 		d3.json('/streams/camera0', function (error, port) {
-			/*
-			feed = new ctx.VideoFeed(port);
-			document.getElementById('camera_container').appendChild(feed.img);
-			*/
 			feed = new ctx.VideoFeed(port, null, {canvas: true});
 			document.getElementById('camera_container').appendChild(feed.canvas);
 		});

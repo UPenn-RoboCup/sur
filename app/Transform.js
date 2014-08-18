@@ -14,15 +14,17 @@
 		neck_off_axis = 0.12,
 		bH_to_chest = 0.075,
 		cos = Math.cos,
-		sin = Math.sin;
+		sin = Math.sin,
+		min = Math.min,
+		abs = Math.abs;
 
 	function jet(val) {
 		//val = Math.min(Math.max(val,0),255);
 		// http://www.metastine.com/?p=7
 		var fourValue = 4 - (4 * val) / 255;
-		return [255 * Math.min(fourValue - 1.5, -fourValue + 4.5),
-             255 * Math.min(fourValue - 0.5, -fourValue + 3.5),
-             255 * Math.min(fourValue + 0.5, -fourValue + 2.5)];
+		return [255 * min(fourValue - 1.5, 4.5 - fourValue),
+             255 * min(fourValue - 0.5, 3.5 - fourValue),
+             255 * min(fourValue + 0.5, 2.5 - fourValue)];
 	}
 
 	// Returns a point in xyz of the torso frame
@@ -308,7 +310,7 @@
         }
         */
 				// Ensure that quads are smoothly connected; restrict the derivatives on the durface here
-				if (Math.abs(a[2] - b[2]) > 50 || Math.abs(a[2] - c[2]) > 50 || Math.abs(a[2] - d[2]) > 50) {
+				if (abs(a[2] - b[2]) > 50 || abs(a[2] - c[2]) > 50 || abs(a[2] - d[2]) > 50) {
 					continue;
 				}
 				

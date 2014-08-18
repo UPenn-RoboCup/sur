@@ -1,6 +1,7 @@
 (function (ctx) {
 	'use strict';
-	var d3 = ctx.d3;
+	var d3 = ctx.d3,
+		feed;
 	// Add the camera view and append
 	d3.html('/view/hand_video.html', function (error, view) {
 		// Remove landing page elements and add new content
@@ -8,7 +9,8 @@
 		document.body.appendChild(view);
 		// Add the video feed
 		d3.json('/streams/camera1', function (error, port) {
-			document.getElementById('camera_container').appendChild((new ctx.VideoFeed(port)).img);
+			feed = new ctx.VideoFeed(port);
+			document.getElementById('camera_container').appendChild(feed.canvas);
 		});
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {
