@@ -12,6 +12,7 @@
 		chest_off_axis = 0.02,
 		neck_height = 0.30,
 		neck_off_axis = 0.12,
+		bH_to_chest = 0.075,
 		cos = Math.cos,
 		sin = Math.sin;
 
@@ -73,7 +74,7 @@
 			sp = sin(bodyTilt),
 			// Also add supportX and bodyHeight parameters
 			xx = cp * x + sp * z, // + robot.supportX
-			zz = -sp * x + cp * z + robot.bodyHeight,
+			zz = -sp * x + cp * z + robot.bodyHeight + bH_to_chest,
 			// Place into global pose
 			pa = robot.pa,
 			ca = cos(pa),
@@ -315,12 +316,10 @@
 				if (a[1] > max_ceiling || b[1] > max_ceiling || c[1] > max_ceiling || d[1] > max_ceiling) {
 					continue;
 				}
-/*
-				// Ground (5cm)
-				if (a[1] < 50 || b[1] < 50 || c[1] < 50 || d[1] < 50) {
+				// Ground (2cm)
+				if (a[1] < 20 || b[1] < 50 || c[1] < 20 || d[1] < 20) {
 					continue;
 				}
-*/
 				// We have a valid quad!
 				n_quad += 1;
 
