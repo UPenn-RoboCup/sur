@@ -1,47 +1,6 @@
-/*
- * Establish main layout where the 3d scene is and where the buttons are
- */
 html, body {
   font-family: helvetica;
-  height: 98%;
-}
-#world_container {
-  margin-left: 640px;
-  margin-right: 10px;
-  background-color: #080;
-  height: 98%;
-}
-#left_side {
-  width: 640px;
-  float: left;
-  position: absolute;
-  left: 4px;
-  top: 8px;
-}
-
-/* Camera size definition */
-#camera_container img {
-  width:  640px;
-  height: 360px;
-}
-/* Camera size definition */
-#camera2_container img {
-  width:  320px;
-  height: 240px;
-}
-
-/* Object name has same width, so lots of cycling has predictable button */
-#menu_obj {
-  width: 64pt;
-  float: left;
-  margin-right: 2px;
-}
-/* Center these buttons */
-#proceed, #world {
-  margin-left: 20%;
-}
-/* There is a slight offset with the slider, make things seem centered */
-#vision div {
-  position: relative;
-  top: -5px;
+  height: 100%;
+  margin: 0px;
+  overflow: hidden;
 }

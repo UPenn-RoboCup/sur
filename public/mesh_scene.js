@@ -78,7 +78,6 @@
 			diff = (h - w) / 2,
 			buf,
 			mesh_obj;
-		//console.log('SETTING', w, h);
 		mesh_canvas.setAttribute('width', h);
     mesh_canvas.setAttribute('height', w);
 		// Draw the image onto the canvas properly
