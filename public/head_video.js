@@ -4,18 +4,14 @@
 		util = ctx.util,
 		lA_canvas = document.createElement('canvas'),
 		lA_ctx = lA_canvas.getContext('2d'),
+		container,
 		feed;
+	
+	function toggle() {
+		feed.canvas.classList.toggle('nodisplay');
+		lA_canvas.classList.toggle('nodisplay');
+	}
 
-	/*
-	colors = {
-		orange = 1,
-		yellow = 2,
-		cyan = 4,
-		field = 8,
-		white = 16,
-		black = 0,
-	},
-*/
 	function form_labelA(meta, payload) {
 		lA_canvas.width = meta.w;
 		lA_canvas.height = meta.h;
@@ -53,6 +49,7 @@
 				data[j + 1] = 255;
 				data[j + 2] = 255;
 			} else {
+				// Unknown
 				data[j] = 0;
 				data[j + 1] = 0;
 				data[j + 2] = 0;
@@ -75,13 +72,19 @@
 					}
 				}
 			});
-			//document.getElementById('camera_container').appendChild(feed.canvas);
-			document.getElementById('camera_container').appendChild(lA_canvas);
+			container = document.getElementById('camera_container');
+			container.appendChild(feed.canvas);
+			container.appendChild(lA_canvas);
+			lA_canvas.classList.toggle('nodisplay');
 		});
+		
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {
 			// 'this' variable is the button node
+			//console.log('clicked', this);
+			toggle();
 		});
+		
 	});
 	// Load the CSS that we need for our app
 	util.lcss('/css/cameras.css');

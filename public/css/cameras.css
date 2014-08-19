@@ -1,6 +1,13 @@
 #camera_container{
   height: 100%;
-  margin-left: 10%;
+	margin-left: 100pt;
+}
+#camera_buttons {
+	width: 100pt;
+  position: absolute;
+}
+#camera_buttons button {
+  width: 100%;
 }
 #camera_container canvas {
 	max-width: 100%;
@@ -8,11 +15,6 @@
   width: 100%;
   height: 100%;
 }
-/* Buttons */
-#camera_buttons {
-  width: 10%;
-  position: absolute;
-}
-#camera_buttons button {
-  width: 100%;
+.nodisplay {
+	display: none;
 }
