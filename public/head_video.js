@@ -87,6 +87,6 @@
 		
 	});
 	// Load the CSS that we need for our app
-	util.lcss('/css/cameras.css');
+	util.lcss('/css/video.css');
 	util.lcss('/css/gh-buttons.css');
 }(this));

@@ -23,7 +23,7 @@
 	}
 
 	// Add the camera view and append
-	d3.html('/view/head_video.html', function (error, view) {
+	d3.html('/view/mesh_video.html', function (error, view) {
 		// Remove landing page elements and add new content
 		d3.select("div#landing").remove();
 		document.body.appendChild(view);
@@ -41,5 +41,5 @@
 	});
 	// Load the CSS that we need for our app
 	util.lcss('/css/gh-buttons.css');
-	util.lcss('/css/cameras.css');
+	util.lcss('/css/video.css');
 }(this));

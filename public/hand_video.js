@@ -18,6 +18,6 @@
 		});
 	});
 	// Load the CSS that we need for our app
-	ctx.util.lcss('/css/cameras.css');
+	ctx.util.lcss('/css/video.css');
 	ctx.util.lcss('/css/gh-buttons.css');
 }(this));

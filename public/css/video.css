@@ -1,10 +1,10 @@
+#camera_buttons {
+	width: 96pt;
+  position: absolute;
+}
 #camera_container{
   height: 100%;
-	margin-left: 100pt;
-}
-#camera_buttons {
-	width: 100pt;
-  position: absolute;
+	margin-left: 96pt;
 }
 #camera_buttons button {
   width: 100%;
