@@ -13,8 +13,10 @@
 			zData,
 			fr_metadata,
 			fr_raw,
-			fr_img_src;
+			fr_img_src,
+			extra_cb;
 		options = options || {};
+		extra_cb = options.extra_cb;
 
 		// Set the Image properties
 		fr_img.alt = 'VideoFeed WS: ' + port;
@@ -61,12 +63,13 @@
 				} else {
 					ws.binaryType = 'arraybuffer';
 				}
-				fr_metadata.latency = (e.timeStamp / 1e3) - fr_metadata.t;
+				if (fr_metadata.t !== undefined) {
+					fr_metadata.latency = (e.timeStamp / 1e3) - fr_metadata.t;
+				}
 				return;
 			}
 			if (fr_metadata.c === "jpeg" || fr_metadata.c === "png") {
 				if (e.data.size !== fr_metadata.sz || fr_raw) {
-					// Chesksum
 					return;
 				}
 				// Set the MIME type and make URL for image tag
@@ -77,7 +80,13 @@
 					fr_canvas.metadata = fr_meta_tmp;
 				});
 			} else if (fr_metadata.c === 'zlib') {
-				zData = zInflate(new window.Uint8Array(e.data));
+				// Run the callback on the next JS loop
+				if (typeof extra_cb === 'function') {
+					var fr_meta_extra = fr_metadata;
+					setTimeout(function () {
+						extra_cb(fr_meta_extra, zInflate(new window.Uint8Array(e.data)));
+					}, 0);
+				}
 			}
 		};
 		// Exports

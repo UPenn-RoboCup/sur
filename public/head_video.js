@@ -2,7 +2,64 @@
 	'use strict';
 	var d3 = ctx.d3,
 		util = ctx.util,
+		lA_canvas = document.createElement('canvas'),
+		lA_ctx = lA_canvas.getContext('2d'),
 		feed;
+
+	/*
+	colors = {
+		orange = 1,
+		yellow = 2,
+		cyan = 4,
+		field = 8,
+		white = 16,
+		black = 0,
+	},
+*/
+	function form_labelA(meta, payload) {
+		lA_canvas.width = meta.w;
+		lA_canvas.height = meta.h;
+		var i,
+			j,
+			d = 0,
+			lA_data = lA_ctx.getImageData(0, 0, lA_canvas.width, lA_canvas.height),
+			data = lA_data.data,
+			len = payload.length;
+		for (i = 0, j = 0; i < len; i += 1, j += 4) {
+			data[j + 3] = 255;
+			if (payload[i] & 0x01) {
+				// Ball
+				data[j] = 255;
+				data[j + 1] = 0;
+				data[j + 2] = 0;
+			} else if (payload[i] & 0x02) {
+				// Yellow goalpost
+				data[j] = 255;
+				data[j + 1] = 255;
+				data[j + 2] = 0;
+			} else if (payload[i] & 0x04) {
+				// Cyan
+				data[j] = 0;
+				data[j + 1] = 0;
+				data[j + 2] = 255;
+			} else if (payload[i] & 0x08) {
+				// Field
+				data[j] = 0;
+				data[j + 1] = 255;
+				data[j + 2] = 0;
+			} else if (payload[i] & 0x10) {
+				// Lines
+				data[j] = 255;
+				data[j + 1] = 255;
+				data[j + 2] = 255;
+			} else {
+				data[j] = 0;
+				data[j + 1] = 0;
+				data[j + 2] = 0;
+			}
+		}
+		lA_ctx.putImageData(lA_data, 0, 0);
+	}
 	// Add the camera view and append
 	d3.html('/view/head_video.html', function (error, view) {
 		// Remove landing page elements and add new content
@@ -10,8 +67,16 @@
 		document.body.appendChild(view);
 		// Add the video feed
 		d3.json('/streams/camera0', function (error, port) {
-			feed = new ctx.VideoFeed(port, null, {canvas: true});
-			document.getElementById('camera_container').appendChild(feed.canvas);
+			feed = new ctx.VideoFeed(port, null, {
+				canvas: true,
+				extra_cb: function (meta, payload) {
+					if (meta.id === 'labelA') {
+						form_labelA(meta, payload);
+					}
+				}
+			});
+			//document.getElementById('camera_container').appendChild(feed.canvas);
+			document.getElementById('camera_container').appendChild(lA_canvas);
 		});
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {
