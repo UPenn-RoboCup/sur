@@ -4,59 +4,36 @@
 		util = ctx.util,
 		lA_canvas = document.createElement('canvas'),
 		lA_ctx = lA_canvas.getContext('2d'),
+		img_data = lA_ctx.getImageData(0, 0, lA_canvas.width, lA_canvas.height),
 		container,
-		feed;
-	
+		feed,
+		label_worker;
+
 	function toggle() {
 		feed.canvas.classList.toggle('nodisplay');
 		lA_canvas.classList.toggle('nodisplay');
 	}
 
-	function form_labelA(meta, payload) {
-		lA_canvas.width = meta.w;
-		lA_canvas.height = meta.h;
-		var i,
-			j,
-			d = 0,
-			lA_data = lA_ctx.getImageData(0, 0, lA_canvas.width, lA_canvas.height),
-			data = lA_data.data,
-			len = payload.length;
-		for (i = 0, j = 0; i < len; i += 1, j += 4) {
-			data[j + 3] = 255;
-			if (payload[i] & 0x01) {
-				// Ball
-				data[j] = 255;
-				data[j + 1] = 0;
-				data[j + 2] = 0;
-			} else if (payload[i] & 0x02) {
-				// Yellow goalpost
-				data[j] = 255;
-				data[j + 1] = 255;
-				data[j + 2] = 0;
-			} else if (payload[i] & 0x04) {
-				// Cyan
-				data[j] = 0;
-				data[j + 1] = 0;
-				data[j + 2] = 255;
-			} else if (payload[i] & 0x08) {
-				// Field
-				data[j] = 0;
-				data[j + 1] = 255;
-				data[j + 2] = 0;
-			} else if (payload[i] & 0x10) {
-				// Lines
-				data[j] = 255;
-				data[j + 1] = 255;
-				data[j + 2] = 255;
-			} else {
-				// Unknown
-				data[j] = 0;
-				data[j + 1] = 0;
-				data[j + 2] = 0;
-			}
+	function ask_labelA(obj) {
+		if (lA_canvas.width !== obj.w || lA_canvas.height !== obj.h) {
+			// Only work with the canvas image data when necessary
+			lA_canvas.width = obj.w;
+			lA_canvas.height = obj.h;
+			img_data = lA_ctx.getImageData(0, 0, lA_canvas.width, lA_canvas.height);
 		}
-		lA_ctx.putImageData(lA_data, 0, 0);
+		// Ask the WebWorker for labelA
+		obj.data = new window.Uint8Array(obj.data);
+		obj.lA_data = img_data;
+		label_worker.postMessage(obj, [obj.data.buffer, obj.lA_data.data.buffer]);
 	}
+
+	function recv_labelA(e) {
+		// Save the transferrable object
+		img_data = e.data.lA_data;
+		// Paint the image back
+		lA_ctx.putImageData(img_data, 0, 0);
+	}
+
 	// Add the camera view and append
 	d3.html('/view/head_video.html', function (error, view) {
 		// Remove landing page elements and add new content
@@ -66,25 +43,30 @@
 		d3.json('/streams/camera0', function (error, port) {
 			feed = new ctx.VideoFeed(port, null, {
 				canvas: true,
-				extra_cb: function (meta, payload) {
-					if (meta.id === 'labelA') {
-						form_labelA(meta, payload);
+				extra_cb: function (obj) {
+					if (obj.id === 'labelA') {
+						ask_labelA(obj);
 					}
 				}
 			});
+			// Show the images on the page
 			container = document.getElementById('camera_container');
 			container.appendChild(feed.canvas);
 			container.appendChild(lA_canvas);
 			lA_canvas.classList.toggle('nodisplay');
 		});
-		
+
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {
 			// 'this' variable is the button node
 			//console.log('clicked', this);
 			toggle();
 		});
-		
+
+		// LabelA WebWorker
+		label_worker = new window.Worker("/label_worker.js");
+		label_worker.onmessage = recv_labelA;
+
 	});
 	// Load the CSS that we need for our app
 	util.lcss('/css/video.css');

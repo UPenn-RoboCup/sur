@@ -9,14 +9,22 @@
 			fr_ctx = fr_canvas.getContext('2d'),
 			createObjectURL = window.URL.createObjectURL,
 			revokeObjectURL = window.URL.revokeObjectURL,
-			zInflate = ctx.pako.inflate,
-			zData,
+			frames = [],
 			fr_metadata,
 			fr_raw,
 			fr_img_src,
 			extra_cb;
 		options = options || {};
 		extra_cb = options.extra_cb;
+
+		function animate() {
+			var fr = frames.shift();
+			fr_img.src = fr_img_src = createObjectURL(fr.data);
+			fr_canvas.metadata = fr;
+			if (frames.length > 0) {
+				window.console.log('VideoFeed: Too many frames!', frames);
+			}
+		}
 
 		// Set the Image properties
 		fr_img.alt = 'VideoFeed WS: ' + port;
@@ -52,41 +60,43 @@
 			if (typeof cb === 'function') {
 				setTimeout(cb, 0);
 			}
+			// Keep de-queueing if necessary, even if not just animation frames
+			if (frames.length > 0) {
+				animate();
+			}
 		};
 		// Setup the WebSocket connection
 		ws.onmessage = function (e) {
 			if (typeof e.data === "string") {
+				// Process metadata
 				fr_metadata = JSON.parse(e.data);
-				// Set binary type for next raw data
-				if (fr_metadata.c === "jpeg" || fr_metadata.c === "png") {
-					ws.binaryType = 'blob';
-				} else {
-					ws.binaryType = 'arraybuffer';
-				}
 				if (fr_metadata.t !== undefined) {
+					// Add latency measure if possible
 					fr_metadata.latency = (e.timeStamp / 1e3) - fr_metadata.t;
 				}
-				return;
-			}
-			if (fr_metadata.c === "jpeg" || fr_metadata.c === "png") {
+				if (fr_metadata.c === "jpeg" || fr_metadata.c === "png") {
+					// Image raw data is rendered as image via Blob
+					ws.binaryType = 'blob';
+				} else if (fr_metadata.sz) {
+					// Non-image raw data is arraybuffer
+					ws.binaryType = 'arraybuffer';
+				} else if (typeof extra_cb === 'function') {
+					// Run callback if no raw data coming
+					extra_cb(fr_metadata);
+				}
+			} else if (fr_metadata.c === "jpeg" || fr_metadata.c === "png") {
+				// Process the Blob of the VideoFeed data
 				if (e.data.size !== fr_metadata.sz || fr_raw) {
 					return;
 				}
 				// Set the MIME type and make URL for image tag
-				fr_raw = e.data.slice(0, e.data.size, 'image/' + fr_metadata.c);
-				var fr_meta_tmp = fr_metadata;
-				window.requestAnimationFrame(function () {
-					fr_img.src = fr_img_src = createObjectURL(fr_raw);
-					fr_canvas.metadata = fr_meta_tmp;
-				});
-			} else if (fr_metadata.c === 'zlib') {
-				// Run the callback on the next JS loop
-				if (typeof extra_cb === 'function') {
-					var fr_meta_extra = fr_metadata;
-					setTimeout(function () {
-						extra_cb(fr_meta_extra, zInflate(new window.Uint8Array(e.data)));
-					}, 0);
-				}
+				fr_metadata.data = e.data.slice(0, e.data.size, 'image/' + fr_metadata.c);
+				frames.push(fr_metadata);
+				window.requestAnimationFrame(animate);
+			} else if (typeof extra_cb === 'function') {
+				// Run the callback on non video data
+				fr_metadata.data = e.data;
+				extra_cb(fr_metadata);
 			}
 		};
 		// Exports
