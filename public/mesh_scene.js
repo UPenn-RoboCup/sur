@@ -135,6 +135,23 @@
 			renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		}, false);
 		animate();
+		// Load the robot dynamically
+		ctx.util.ljs('/STLLoader.js', function () {
+			var loader = new THREE.STLLoader(),
+				material = new THREE.MeshPhongMaterial({
+					// Black knight! http://encycolorpedia.com/313637
+					ambient: 0xFDEEF4,
+					color: 0x313637,
+					specular: 0x111111,
+					shininess: 200
+				});
+			loader.addEventListener('load', function (event) {
+				var geometry = event.content,
+					mesh = new THREE.Mesh(geometry, material);
+				scene.add(mesh);
+			});
+			loader.load('/stl/CHEST.stl');
+		});
 	}
 	// Load the Styling
 	ctx.util.lcss('/css/gh-buttons.css');
