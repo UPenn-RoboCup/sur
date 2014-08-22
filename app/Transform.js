@@ -91,13 +91,14 @@
 
 	Transform.make_quads = function (mesh) {
 		// Format our data
-		var pixels = new window.Uint8Array(mesh.buf),
-			pixdex = new window.Uint32Array(mesh.buf),
+		var pixels = mesh.pixels,
+			pixdex = mesh.pixdex,
 			width = mesh.width,
 			height = mesh.height,
 			// TypedArrays to be put into the WebGL buffer
-			positions = new window.Float32Array(width * height * 3),
-			colors = new window.Float32Array(width * height * 3),
+			positions = mesh.positions,
+			colors = mesh.colors,
+			index = mesh.index,
 			// Quads will cite indexed pixels
 			quad_offsets = [],
 			// Access pixel array elements and particle elements
@@ -123,7 +124,6 @@
 			threep,
 			n_plausible_quads,
 			n_plausible_index,
-			index,
 			offset_num,
 			cur_offset,
 			face_count,
@@ -231,7 +231,8 @@
 
 		// Allow for maximum number of quads
 		// 2 triangles per mesh. 3 indices per triangle
-		index = new window.Uint16Array(n_el * 6);
+		// We allocate before
+		//index = new window.Uint16Array(n_el * 6);
 
 		n_quad = 0;
 		quad_idx = 0;
@@ -312,7 +313,7 @@
 				if (abs(a[2] - b[2]) > 50 || abs(a[2] - c[2]) > 50 || abs(a[2] - d[2]) > 50) {
 					continue;
 				}
-				
+
 				// Too high in the air (2m)
 				if (a[1] > max_ceiling || b[1] > max_ceiling || c[1] > max_ceiling || d[1] > max_ceiling) {
 					continue;
@@ -365,9 +366,9 @@
 		// post a message of the elements
 		// 4 bytes, 3 vertices
 		return {
-			idx: index.buffer,
-			pos: positions.buffer,
-			col: colors.buffer,
+			idx: index.subarray(0, 6 * n_quad),
+			pos: positions.subarray(0, 3 * n_el),
+			col: colors.subarray(0, 3 * n_el),
 			n_el: n_el,
 			n_quad: n_quad,
 			quad_offsets: quad_offsets
@@ -411,7 +412,7 @@
 	}
 	*/
 
-		// x, y, z in the torso (upper body) frame
+	// x, y, z in the torso (upper body) frame
 	// robot: pose (px,py,pa element) and bodyTilt elements
 	/*
 	Transform.torso_to_three = function(x, y, z, robot) {
@@ -433,7 +434,7 @@
 		return [ty * 1000, tz * 1000, tx * 1000];
 	}
 	*/
-	
+
 	/*
 	// get a global (THREEjs) point, and put it in the torso reference frame
 	Transform.three_to_torso = function(p, robot) {
@@ -468,7 +469,7 @@
 		return [x, y, z];
 	}
 	*/
- 
+
 	/*
 	Transform.mod_angle = function(a) {
 		// Reduce angle to [-pi, pi)
@@ -476,7 +477,7 @@
 		return (b >= Math.PI) ? (b - 2 * Math.PI) : b;
 	}
 	*/
-	
+
 	/*
 	function get_hokuyo_head_xyz(u, v, w, width, height, near, far, hFOV, vFOV, pitch) {
 		// do not use saturated pixels
@@ -508,7 +509,7 @@
 		return [xx, y, zz, r];
 	}
 	*/
-	
+
 	/*
 	// convert location
 	function get_kinect_xyz(u, v, w, width, height, near, far, hFOV, vFOV) {
@@ -520,7 +521,7 @@
 		return [x, y, z, 0];
 	}
 	*/
-	
+
 	// export
 	ctx.Transform = Transform;
 

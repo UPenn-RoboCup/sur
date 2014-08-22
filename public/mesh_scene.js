@@ -1,12 +1,12 @@
 (function (ctx) {
 	'use strict';
 	// Private variables
-	var d3 = ctx.d3,
+	var USE_WEBWORKERS = true,
+		d3 = ctx.d3,
 		THREE = ctx.THREE,
 		Transform = ctx.Transform,
 		mesh_feed,
 		mesh_worker,
-		USE_WEBWORKERS = false,
 		container,
 		renderer,
 		scene,
@@ -24,12 +24,7 @@
 	}
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
-		//console.log('processing mesh', mesh_obj)
-		var position = new window.Float32Array(mesh_obj.pos, 0, 3 * mesh_obj.n_el),
-			color = new window.Float32Array(mesh_obj.col, 0, 3 * mesh_obj.n_el),
-			index = new window.Uint16Array(mesh_obj.idx, 0, 6 * mesh_obj.n_quad),
-			offsets = mesh_obj.quad_offsets,
-			geometry = new THREE.BufferGeometry(),
+		var geometry = new THREE.BufferGeometry(),
 			material = new THREE.MeshPhongMaterial({
 				ambient: 0x555555,
 				specular: 0x111111,
@@ -39,24 +34,23 @@
 				//vertexColors: THREE.VertexColors, // if not phong...
 			}),
 			mesh;
-		//console.log(mesh_obj, geometry);
-		// Dynamic, because we will do raycasting
-		geometry.dynamic = true;
-		geometry.offsets = offsets;
 		geometry.attributes = {
 			index: {
 				itemSize: 1,
-				array: index
+				array: mesh_obj.idx
 			},
 			position: {
 				itemSize: 3,
-				array: position
+				array: mesh_obj.pos
 			},
 			color: {
 				itemSize: 3,
-				array: color
+				array: mesh_obj.col
 			}
 		};
+		geometry.offsets = mesh_obj.quad_offsets;
+		// Dynamic, because we will do raycasting
+		geometry.dynamic = true;
 		// for picking via raycasting
 		geometry.computeBoundingSphere();
 		// Phong Material requires normals for reflectivity
@@ -70,23 +64,26 @@
 	function process_frame() {
 		var canvas = mesh_feed.canvas,
 			metadata = canvas.metadata,
-			w = canvas.width,
-			h = canvas.height,
-			buf,
-			mesh_obj;
-		// Form the mesh
-		buf = mesh_feed.context2d.getImageData(1, 1, w, h).data.buffer;
-		mesh_obj = {
-			buf: buf,
-			width: w,
-			height: h,
-			hfov: metadata.sfov,
-			vfov: metadata.rfov,
-			dynrange: metadata.dr
-		};
-		//console.log(mesh_obj);
+			width = canvas.width,
+			height = canvas.height,
+			npix = width * height,
+			pixels = mesh_feed.context2d.getImageData(1, 1, width, height).data,
+			mesh_obj = {
+				width: width,
+				height: height,
+				hfov: metadata.sfov,
+				vfov: metadata.rfov,
+				dynrange: metadata.dr,
+				pixels: pixels,
+				// Make the max allocations
+				// TODO: Can we reuse these?
+				pixdex: new window.Uint32Array(pixels.buffer),
+				positions: new window.Float32Array(npix * 3),
+				colors: new window.Float32Array(npix * 3),
+				index: new window.Uint16Array(npix * 6)
+			};
 		if (USE_WEBWORKERS) {
-			mesh_worker.postMessage(mesh_obj, [buf]);
+			mesh_worker.postMessage(mesh_obj, [mesh_obj.pixels.buffer]);
 		} else {
 			process_mesh(Transform.make_quads(mesh_obj));
 		}
@@ -155,13 +152,15 @@
 	});
 	// Begin the WebWorker
 	if (USE_WEBWORKERS) {
-		mesh_worker = new window.Worker("/controllers/mesh_worker.js");
+		mesh_worker = new window.Worker("/mesh_worker.js");
 		mesh_worker.onmessage = function (e) {
 			process_mesh(e.data);
 		};
 	}
 	// Begin listening to the feed
 	d3.json('/streams/mesh', function (error, port) {
-		mesh_feed = new ctx.VideoFeed(port, process_frame, {cw90: true});
+		mesh_feed = new ctx.VideoFeed(port, process_frame, {
+			cw90: true
+		});
 	});
 }(this));

@@ -8,8 +8,8 @@
 	/* The Mesh Video feed should display in the JET colormap */
 	function to_jet() {
 		var ctx = feed.context2d,
-			imageData = ctx.getImageData(0, 0, feed.canvas.width, feed.canvas.height),
-			data = imageData.data,
+			img_data = ctx.getImageData(0, 0, feed.canvas.width, feed.canvas.height),
+			data = img_data.data,
 			len = data.length,
 			fourValue,
 			i;
@@ -19,7 +19,7 @@
 			data[i + 1] = 255 * min(fourValue - 0.5, 3.5 - fourValue);
 			data[i + 2] = 255 * min(fourValue + 0.5, 2.5 - fourValue);
 		}
-		ctx.putImageData(imageData, 0, 0);
+		ctx.putImageData(img_data, 0, 0);
 	}
 
 	// Add the camera view and append
