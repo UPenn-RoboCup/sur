@@ -5,6 +5,7 @@
 		d3 = ctx.d3,
 		THREE = ctx.THREE,
 		Transform = ctx.Transform,
+		meshes = [],
 		mesh_feed,
 		mesh_worker,
 		container,
@@ -25,29 +26,14 @@
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
 		var geometry = new THREE.BufferGeometry(),
-			material = new THREE.MeshPhongMaterial({
-				ambient: 0x555555,
-				specular: 0x111111,
-				shininess: 200,
+			material = new THREE.MeshLambertMaterial({
 				side: THREE.DoubleSide,
 				color: 0x00CC00
-				//vertexColors: THREE.VertexColors, // if not phong...
 			}),
 			mesh;
-		geometry.attributes = {
-			index: {
-				itemSize: 1,
-				array: mesh_obj.idx
-			},
-			position: {
-				itemSize: 3,
-				array: mesh_obj.pos
-			},
-			color: {
-				itemSize: 3,
-				array: mesh_obj.col
-			}
-		};
+		geometry.addAttribute('position', new THREE.BufferAttribute(mesh_obj.pos, 3));
+		geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
+		//geometry.addAttribute('color', new THREE.BufferAttribute(mesh_obj.col, 3));
 		geometry.offsets = mesh_obj.quad_offsets;
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
@@ -58,6 +44,9 @@
 		// Make the new mesh, and return to the user
 		mesh = new THREE.Mesh(geometry, material);
 		scene.add(mesh);
+		// Accounting
+		scene.remove(meshes.shift());
+		meshes.push(mesh);
 	}
 
 	// Process the frame, which is always the chest lidar
@@ -91,14 +80,14 @@
 	// Add the camera view and append
 	function setup() {
 		// Build the scene
-		var dirLight = (new THREE.DirectionalLight(0xffffff)),
-			ground = new THREE.Mesh(new THREE.PlaneGeometry(100000, 100000), new THREE.MeshLambertMaterial({
-				ambient: 0x555555,
-				specular: 0x111111,
-				shininess: 200,
-				side: THREE.DoubleSide,
-				color: 0x7F5217
-			}));
+		var spotLight,
+			ground = new THREE.Mesh(
+				new THREE.PlaneGeometry(100000, 100000),
+				new THREE.MeshBasicMaterial({
+					side: THREE.DoubleSide,
+					color: 0x7F5217
+				})
+			);
 		container = document.getElementById('world_container');
 		CANVAS_WIDTH = container.clientWidth;
 		CANVAS_HEIGHT = container.clientHeight;
@@ -119,9 +108,11 @@
 		// Load the ground
 		ground.rotation.x = -Math.PI / 2;
 		scene.add(ground);
-		// add light to the scene, from the robot's point of view
-		dirLight.position.set(0, 1000, 0).normalize();
-		scene.add(dirLight);
+		// Add light from robot
+		spotLight = new THREE.PointLight(0xffffff, 1, 0);
+		spotLight.position.set(0, 1000, 0);
+		spotLight.castShadow = true;
+		scene.add(spotLight);
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {
 			// 'this' variable is the button node
@@ -144,13 +135,45 @@
 					color: 0x313637,
 					specular: 0x111111,
 					shininess: 200
-				});
+				}),
+				parts = [
+					"CAM",
+					"CHEST",
+					"FOOT",
+					"LEFT_ANKLE",
+					"LEFT_ARM",
+					"LEFT_ELBOW",
+					"LEFT_GRIPPER",
+					"LEFT_HIP_YAW",
+					"LEFT_SHOULDER_PITCH",
+					"L_LEG",
+					"L_THIGH",
+					"NECK",
+					"PELVIS",
+					"RIGHT_ARM",
+					"RIGHT_ELBOW",
+					"RIGHT_GRIPPER",
+					"RIGHT_HIP_ROLL",
+					"RIGHT_KNEE_PITCH",
+					"RIGHT_SHOULDER_PITCH",
+					"RIGHT_SHOULDER_ROLL",
+					"RIGHT_WRIST",
+					"R_LEG",
+					"R_THIGH",
+					"TORSO_PITCH_SERVO"
+				];
 			loader.addEventListener('load', function (event) {
 				var geometry = event.content,
+					matcher = new RegExp("/stl/(\\S+)\\.stl"),
+					part = event.url.match(matcher)[1],
 					mesh = new THREE.Mesh(geometry, material);
-				scene.add(mesh);
+				if (part !== undefined) {
+					scene.add(mesh);
+				}
 			});
-			loader.load('/stl/CHEST.stl');
+			parts.forEach(function (part) {
+				loader.load('/stl/' + part + '.stl');
+			});
 		});
 	}
 	// Load the Styling
@@ -163,8 +186,6 @@
 			// Just see the scene
 			document.body.appendChild(view);
 			setTimeout(setup, 0);
-			// Just see the canvas:
-			//document.body.appendChild(mesh_canvas);
 		});
 	});
 	// Begin the WebWorker

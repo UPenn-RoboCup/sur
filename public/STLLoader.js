@@ -32,77 +32,90 @@ THREE.STLLoader.prototype = {
 
 };
 
-THREE.STLLoader.prototype.load = function ( url, callback ) {
+THREE.STLLoader.prototype.load = function (url, callback) {
 
 	var scope = this;
 
 	var xhr = new XMLHttpRequest();
 
-	function onloaded( event ) {
+	function onloaded(event) {
 
-		if ( event.target.status === 200 || event.target.status === 0 ) {
+		if (event.target.status === 200 || event.target.status === 0) {
 
-			var geometry = scope.parse( event.target.response || event.target.responseText );
+			var geometry = scope.parse(event.target.response || event.target.responseText);
 
-			scope.dispatchEvent( { type: 'load', content: geometry } );
+			scope.dispatchEvent({
+				type: 'load',
+				content: geometry,
+				url: url
+			});
 
-			if ( callback ) callback( geometry );
+			if (callback) callback(geometry);
 
 		} else {
 
-			scope.dispatchEvent( { type: 'error', message: 'Couldn\'t load URL [' + url + ']', response: event.target.statusText } );
+			scope.dispatchEvent({
+				type: 'error',
+				message: 'Couldn\'t load URL [' + url + ']',
+				response: event.target.statusText
+			});
 
 		}
 
 	}
 
-	xhr.addEventListener( 'load', onloaded, false );
+	xhr.addEventListener('load', onloaded, false);
 
-	xhr.addEventListener( 'progress', function ( event ) {
+	xhr.addEventListener('progress', function (event) {
 
-		scope.dispatchEvent( { type: 'progress', loaded: event.loaded, total: event.total } );
+		scope.dispatchEvent({
+			type: 'progress',
+			loaded: event.loaded,
+			total: event.total
+		});
 
-	}, false );
+	}, false);
 
-	xhr.addEventListener( 'error', function () {
+	xhr.addEventListener('error', function () {
 
-		scope.dispatchEvent( { type: 'error', message: 'Couldn\'t load URL [' + url + ']' } );
+		scope.dispatchEvent({
+			type: 'error',
+			message: 'Couldn\'t load URL [' + url + ']'
+		});
 
-	}, false );
+	}, false);
 
-	if ( xhr.overrideMimeType ) xhr.overrideMimeType( 'text/plain; charset=x-user-defined' );
-	xhr.open( 'GET', url, true );
+	if (xhr.overrideMimeType) xhr.overrideMimeType('text/plain; charset=x-user-defined');
+	xhr.open('GET', url, true);
 	xhr.responseType = 'arraybuffer';
-	xhr.send( null );
+	xhr.send(null);
 
 };
 
-THREE.STLLoader.prototype.parse = function ( data ) {
+THREE.STLLoader.prototype.parse = function (data) {
 
 
 	var isBinary = function () {
 
 		var expect, face_size, n_faces, reader;
-		reader = new DataView( binData );
+		reader = new DataView(binData);
 		face_size = (32 / 8 * 3) + ((32 / 8 * 3) * 3) + (16 / 8);
-		n_faces = reader.getUint32(80,true);
+		n_faces = reader.getUint32(80, true);
 		expect = 80 + (32 / 8) + (n_faces * face_size);
 		return expect === reader.byteLength;
 
 	};
 
-	var binData = this.ensureBinary( data );
+	var binData = this.ensureBinary(data);
 
-	return isBinary()
-		? this.parseBinary( binData )
-		: this.parseASCII( this.ensureString( data ) );
+	return isBinary() ? this.parseBinary(binData) : this.parseASCII(this.ensureString(data));
 
 };
 
-THREE.STLLoader.prototype.parseBinary = function ( data ) {
+THREE.STLLoader.prototype.parseBinary = function (data) {
 
-	var reader = new DataView( data );
-	var faces = reader.getUint32( 80, true );
+	var reader = new DataView(data);
+	var faces = reader.getUint32(80, true);
 	var dataOffset = 84;
 	var faceLength = 12 * 4 + 2;
 
@@ -110,24 +123,24 @@ THREE.STLLoader.prototype.parseBinary = function ( data ) {
 
 	var geometry = new THREE.BufferGeometry();
 
-	var vertices = new Float32Array( faces * 3 * 3 );
-	var normals = new Float32Array( faces * 3 * 3 );
+	var vertices = new Float32Array(faces * 3 * 3);
+	var normals = new Float32Array(faces * 3 * 3);
 
-	for ( var face = 0; face < faces; face ++ ) {
+	for (var face = 0; face < faces; face++) {
 
 		var start = dataOffset + face * faceLength;
 
-		for ( var i = 1; i <= 3; i ++ ) {
+		for (var i = 1; i <= 3; i++) {
 
 			var vertexstart = start + i * 12;
 
-			vertices[ offset     ] = reader.getFloat32( vertexstart, true );
-			vertices[ offset + 1 ] = reader.getFloat32( vertexstart + 4, true );
-			vertices[ offset + 2 ] = reader.getFloat32( vertexstart + 8, true );
+			vertices[offset] = reader.getFloat32(vertexstart, true);
+			vertices[offset + 1] = reader.getFloat32(vertexstart + 4, true);
+			vertices[offset + 2] = reader.getFloat32(vertexstart + 8, true);
 
-			normals[ offset     ] = reader.getFloat32( start    , true );
-			normals[ offset + 1 ] = reader.getFloat32( start + 4, true );
-			normals[ offset + 2 ] = reader.getFloat32( start + 8, true );
+			normals[offset] = reader.getFloat32(start, true);
+			normals[offset + 1] = reader.getFloat32(start + 4, true);
+			normals[offset + 2] = reader.getFloat32(start + 8, true);
 
 			offset += 3;
 
@@ -135,8 +148,8 @@ THREE.STLLoader.prototype.parseBinary = function ( data ) {
 
 	}
 
-	geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-	geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
+	geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+	geometry.addAttribute('normal', new THREE.BufferAttribute(normals, 3));
 
 	return geometry;
 
@@ -148,28 +161,28 @@ THREE.STLLoader.prototype.parseASCII = function (data) {
 	geometry = new THREE.Geometry();
 	patternFace = /facet([\s\S]*?)endfacet/g;
 
-	while ( ( result = patternFace.exec( data ) ) !== null ) {
+	while ((result = patternFace.exec(data)) !== null) {
 
 		text = result[0];
 		patternNormal = /normal[\s]+([\-+]?[0-9]+\.?[0-9]*([eE][\-+]?[0-9]+)?)+[\s]+([\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?)+[\s]+([\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?)+/g;
 
-		while ( ( result = patternNormal.exec( text ) ) !== null ) {
+		while ((result = patternNormal.exec(text)) !== null) {
 
-			normal = new THREE.Vector3( parseFloat( result[ 1 ] ), parseFloat( result[ 3 ] ), parseFloat( result[ 5 ] ) );
+			normal = new THREE.Vector3(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));
 
 		}
 
 		patternVertex = /vertex[\s]+([\-+]?[0-9]+\.?[0-9]*([eE][\-+]?[0-9]+)?)+[\s]+([\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?)+[\s]+([\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?)+/g;
 
-		while ( ( result = patternVertex.exec( text ) ) !== null ) {
+		while ((result = patternVertex.exec(text)) !== null) {
 
-			geometry.vertices.push( new THREE.Vector3( parseFloat( result[ 1 ] ), parseFloat( result[ 3 ] ), parseFloat( result[ 5 ] ) ) );
+			geometry.vertices.push(new THREE.Vector3(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5])));
 
 		}
 
 		length = geometry.vertices.length;
 
-		geometry.faces.push( new THREE.Face3( length - 3, length - 2, length - 1, normal ) );
+		geometry.faces.push(new THREE.Face3(length - 3, length - 2, length - 1, normal));
 
 	}
 
@@ -182,10 +195,10 @@ THREE.STLLoader.prototype.parseASCII = function (data) {
 
 THREE.STLLoader.prototype.ensureString = function (buf) {
 
-	if (typeof buf !== "string"){
+	if (typeof buf !== "string") {
 		var array_buffer = new Uint8Array(buf);
 		var str = '';
-		for(var i = 0; i < buf.byteLength; i++) {
+		for (var i = 0; i < buf.byteLength; i++) {
 			str += String.fromCharCode(array_buffer[i]); // implicitly assumes little-endian
 		}
 		return str;
@@ -197,9 +210,9 @@ THREE.STLLoader.prototype.ensureString = function (buf) {
 
 THREE.STLLoader.prototype.ensureBinary = function (buf) {
 
-	if (typeof buf === "string"){
+	if (typeof buf === "string") {
 		var array_buffer = new Uint8Array(buf.length);
-		for(var i = 0; i < buf.length; i++) {
+		for (var i = 0; i < buf.length; i++) {
 			array_buffer[i] = buf.charCodeAt(i) & 0xff; // implicitly assumes little-endian
 		}
 		return array_buffer.buffer || array_buffer;
@@ -209,11 +222,11 @@ THREE.STLLoader.prototype.ensureBinary = function (buf) {
 
 };
 
-THREE.EventDispatcher.prototype.apply( THREE.STLLoader.prototype );
+THREE.EventDispatcher.prototype.apply(THREE.STLLoader.prototype);
 
-if ( typeof DataView === 'undefined'){
+if (typeof DataView === 'undefined') {
 
-	DataView = function(buffer, byteOffset, byteLength){
+	DataView = function (buffer, byteOffset, byteLength) {
 
 		this.buffer = buffer;
 		this.byteOffset = byteOffset || 0;
@@ -224,7 +237,7 @@ if ( typeof DataView === 'undefined'){
 
 	DataView.prototype = {
 
-		_getCharCodes:function(buffer,start,length){
+		_getCharCodes: function (buffer, start, length) {
 			start = start || 0;
 			length = length || buffer.length;
 			var end = start + length;
@@ -276,7 +289,7 @@ if ( typeof DataView === 'undefined'){
 
 			}
 
-			if (this.isString){
+			if (this.isString) {
 
 				result = this._getCharCodes(this.buffer, byteOffset, byteOffset + length);
 
@@ -310,9 +323,9 @@ if ( typeof DataView === 'undefined'){
 				sign = 1 - (2 * (b[7] >> 7)),
 				exponent = ((((b[7] << 1) & 0xff) << 3) | (b[6] >> 4)) - ((1 << 10) - 1),
 
-			// Binary operators such as | and << operate on 32 bit values, using + and Math.pow(2) instead
+				// Binary operators such as | and << operate on 32 bit values, using + and Math.pow(2) instead
 				mantissa = ((b[6] & 0x0f) * Math.pow(2, 48)) + (b[5] * Math.pow(2, 40)) + (b[4] * Math.pow(2, 32)) +
-							(b[3] * Math.pow(2, 24)) + (b[2] * Math.pow(2, 16)) + (b[1] * Math.pow(2, 8)) + b[0];
+				(b[3] * Math.pow(2, 24)) + (b[2] * Math.pow(2, 16)) + (b[1] * Math.pow(2, 8)) + b[0];
 
 			if (exponent === 1024) {
 				if (mantissa !== 0) {
@@ -379,6 +392,6 @@ if ( typeof DataView === 'undefined'){
 			return this._getBytes(1, byteOffset)[0];
 		}
 
-	 };
+	};
 
 }

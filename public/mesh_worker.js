@@ -168,6 +168,7 @@ this.addEventListener('message', function (e) {
 			colors[position_idx] = 255 * min(fourValue - 1.5, 4.5 - fourValue);
 			colors[position_idx + 1] = 255 * min(fourValue - 0.5, 3.5 - fourValue);
 			colors[position_idx + 2] = 255 * min(fourValue + 0.5, 2.5 - fourValue);
+			colors[position_idx] = colors[position_idx+1] = colors[position_idx+2] = 127;
 
 			// index of 3 for the positions (mesh knows to use TRIANGLE of 3)
 			pixdex[pixdex_idx] = idx_idx;
