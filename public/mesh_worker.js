@@ -64,8 +64,8 @@ var chest_height = 0.09,
 	py = mesh.posey[i];
 	pa = mesh.posez[i];
 	*/
-	// x, y, z in the torso (upper body) frame
-	// robot: pose (px,py,pa element) and bodyTilt elements
+// x, y, z in the torso (upper body) frame
+// robot: pose (px,py,pa element) and bodyTilt elements
 function get_hokuyo_chest_xyz(u, v, w) {
 	'use strict';
 	var h_angle = hfov[1] - u * (hfov[1] - hfov[0]) / width,
@@ -164,11 +164,10 @@ this.addEventListener('message', function (e) {
 			positions[position_idx + 2] = three_and_local_pos[2];
 
 			// jet colors
-			fourValue = 4 - (4 * three_and_local_pos[3] / mesh.far);
+			fourValue = 4 - (4 * three_and_local_pos[3] / far);
 			colors[position_idx] = 255 * min(fourValue - 1.5, 4.5 - fourValue);
 			colors[position_idx + 1] = 255 * min(fourValue - 0.5, 3.5 - fourValue);
 			colors[position_idx + 2] = 255 * min(fourValue + 0.5, 2.5 - fourValue);
-			colors[position_idx] = colors[position_idx+1] = colors[position_idx+2] = 127;
 
 			// index of 3 for the positions (mesh knows to use TRIANGLE of 3)
 			pixdex[pixdex_idx] = idx_idx;
@@ -326,3 +325,47 @@ this.addEventListener('message', function (e) {
 		quad_offsets: quad_offsets
 	}, [index.buffer, positions.buffer, colors.buffer]);
 }, false);
+
+	/*
+	function get_hokuyo_head_xyz(u, v, w, width, height, near, far, hFOV, vFOV, pitch) {
+		// do not use saturated pixels
+		if (w === 0 || w === 255) {
+			return;
+		}
+		//console.log(u,v,w,width,height,near,far,hFOV,vFOV);
+		// radians per pixel
+		var h_rpp = hFOV / width,
+			v_rpp = vFOV / height,
+			// angle in radians of the selected pixel
+			h_angle = h_rpp * (width / 2 - u),
+			v_angle = v_rpp * (v - height / 2),
+			// Convert w of 0-255 to actual meters value
+			factor = (far - near) / 255,
+			r = factor * w + near,
+			dx = r * cos(h_angle),
+			//
+			x = dx * cos(h_angle) + sin(v_angle) * neck_off_axis,
+			y = r * sin(h_angle),
+			z = -dx * sin(h_angle) + cos(v_angle) * neck_off_axis + neck_height,
+			// rotate for pitch compensation
+			cp = cos(pitch),
+			sp = sin(pitch),
+			xx = cp * x + sp * z,
+			zz = -sp * x + cp * z;
+
+		// return the global point vector
+		return [xx, y, zz, r];
+	}
+	*/
+
+	/*
+	// convert location
+	function get_kinect_xyz(u, v, w, width, height, near, far, hFOV, vFOV) {
+		// Convert w of 0-255 to actual meters value
+		var factor = (far - near) / 255,
+			x = factor * w + near,
+			y = Math.tan(hFOV / 2) * 2 * (u / width - 0.5) * x,
+			z = Math.tan(vFOV / 2) * 2 * (0.5 - v / height) * x;
+		return [x, y, z, 0];
+	}
+	*/

@@ -197,7 +197,6 @@ for (var w in streams) {
 	wss.sur_stream = b;
 	// Add UDP listening
 	if (b.udp !== undefined) {
-    //console.log('\tUDP Bridge',b.udp);
 		var udp_recv_skt = dgram.createSocket("udp4");
 		udp_recv_skt.bind(b.udp);
 		udp_recv_skt.on("message", udp_message);
@@ -205,9 +204,16 @@ for (var w in streams) {
 	}
 	// Add PUB/SUB
 	if (b.sub !== undefined) {
-		//console.log('\tSubscriber Bridge',b.sub);
 		var zmq_recv_skt = zmq.socket('sub');
 		zmq_recv_skt.connect('ipc:///tmp/' + b.sub);
+		zmq_recv_skt.subscribe('');
+		zmq_recv_skt.on('message', zmq_message);
+		zmq_recv_skt.sur_stream = b;
+	}
+	// Add TCP
+	if (b.tcp !== undefined) {
+		var zmq_recv_skt = zmq.socket('sub');
+		zmq_recv_skt.connect('tcp://'+robot_ip+':'+b.tcp);
 		zmq_recv_skt.subscribe('');
 		zmq_recv_skt.on('message', zmq_message);
 		zmq_recv_skt.sur_stream = b;
