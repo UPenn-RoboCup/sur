@@ -66,10 +66,11 @@ var chest_height = 0.09,
 	*/
 // x, y, z in the torso (upper body) frame
 // robot: pose (px,py,pa element) and bodyTilt elements
-function get_hokuyo_chest_xyz(u, v, w) {
+function get_hokuyo_chest_xyz(u, v, w, a) {
 	'use strict';
-	var h_angle = hfov[1] - u * (hfov[1] - hfov[0]) / width,
+	var h_angle0 = hfov[1] - u * (hfov[1] - hfov[0]) / width,
 		v_angle = -1 * (v * (vfov[1] - vfov[0]) / height + vfov[0]),
+		h_angle = -a,
 		ch = cos(h_angle),
 		sh = sin(h_angle),
 		cv = cos(v_angle),
@@ -156,7 +157,7 @@ this.addEventListener('message', function (e) {
 			}
 
 			// Compute the xyz positions from the LIDAR
-			three_and_local_pos = get_hokuyo_chest_xyz(i, j, w);
+			three_and_local_pos = get_hokuyo_chest_xyz(i, j, w, mesh.a[i]);
 
 			// Could make this faster?
 			positions[position_idx] = three_and_local_pos[0];

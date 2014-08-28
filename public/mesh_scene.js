@@ -63,6 +63,7 @@
 				hfov: metadata.sfov,
 				vfov: metadata.rfov,
 				dynrange: metadata.dr,
+				a: metadata.a,
 				pixels: pixels,
 				// Make the max allocations
 				// TODO: Can we reuse these?
