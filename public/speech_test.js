@@ -5,7 +5,8 @@
 		recognizer = new window.Worker("/js/recognizer.js"),
 		recognizer_init = false,
 		// Try the default pocketsphinx live.html demo
-		wordList = [["ONE", "W AH N"], ["TWO", "T UW"], ["THREE", "TH R IY"], ["FOUR", "F AO R"], ["FIVE", "F AY V"], ["SIX", "S IH K S"], ["SEVEN", "S EH V AH N"], ["EIGHT", "EY T"], ["NINE", "N AY N"], ["ZERO", "Z IH R OW"]],
+			/*
+		wordList = [["ONE", "W AH N"], ["TWO", "T UW"], ["THREE", "TH R IY"], ["FOUR", "F AO R"], ["FIVE", "F AY V"], ["SIX", "S IH K S"], ["SEVEN", "S EH V AH N"], ["EIGHT", "EY T"], ["NINE", "N AY N"], ["ZERO", "Z IH R OW"]],			
 		grammarDigits = {
 			numStates: 1,
 			start: 0,
@@ -52,6 +53,26 @@
 				word: "ZERO"
 		}]
 		},
+			*/
+		wordList = [["ARMS",	"AA R M Z"],
+		["BACKWARD",	"B AE K W ER D"],
+		["FORWARD",	"F AO R W ER D"],
+		["INITIALIZE",	"IH N IH SH AH L AY Z"],
+		["WALK",	"W AO K"],
+		["WALK(2)",	"W AA K"]],
+		grammarDigits = {
+			numStates: 1,
+			start: 0,
+			end: 0,
+			transitions: [{
+				from: 0,
+				to: 0,
+				word: "ARMS"
+		}, {
+				from: 0,
+				to: 0,
+				word: "WALK"
+		}]},
 		audioContext,
 		container,
 		recorder;
