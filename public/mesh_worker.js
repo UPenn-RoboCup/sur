@@ -5,6 +5,7 @@ var chest_height = 0.09,
 	neck_off_axis = 0.12,
 	bH_to_chest = 0.075,
 	max_ceiling = 2000,
+	CONNECTIVITY = 75,
 	robot = {
 		px: 0,
 		py: 0,
@@ -262,7 +263,7 @@ this.addEventListener('message', function (e) {
 			d = positions.subarray(3 * d_position_idx, 3 * d_position_idx + 3);
 
 			// Ensure that quads are smoothly connected; restrict the derivatives on the durface here
-			if (abs(a[2] - b[2]) > 50 || abs(a[2] - c[2]) > 50 || abs(a[2] - d[2]) > 50) {
+			if (abs(a[2] - b[2]) > CONNECTIVITY || abs(a[2] - c[2]) > CONNECTIVITY || abs(a[2] - d[2]) > CONNECTIVITY) {
 				continue;
 			}
 
@@ -271,7 +272,7 @@ this.addEventListener('message', function (e) {
 				continue;
 			}
 			// Ground (2cm)
-			if (a[1] < 20 || b[1] < 50 || c[1] < 20 || d[1] < 20) {
+			if (a[1] < 20 || b[1] < 20 || c[1] < 20 || d[1] < 20) {
 				continue;
 			}
 

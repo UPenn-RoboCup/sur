@@ -14,7 +14,8 @@
 		camera,
 		controls,
 		CANVAS_WIDTH,
-		CANVAS_HEIGHT;
+		CANVAS_HEIGHT,
+		stl_matcher = new RegExp("/stl/(\\S+)\\.stl");
 	// Constantly animate the scene
 	function animate() {
 		if (controls) {
@@ -130,12 +131,11 @@
 		// Load the robot dynamically
 		ctx.util.ljs('/STLLoader.js', function () {
 			var loader = new THREE.STLLoader(),
-				material = new THREE.MeshPhongMaterial({
+				robot_material = new THREE.MeshLambertMaterial({
 					// Black knight! http://encycolorpedia.com/313637
 					ambient: 0xFDEEF4,
 					color: 0x313637,
-					specular: 0x111111,
-					shininess: 200
+					specular: 0x111111
 				}),
 				parts = [
 					"CAM",
@@ -165,10 +165,10 @@
 				];
 			loader.addEventListener('load', function (event) {
 				var geometry = event.content,
-					matcher = new RegExp("/stl/(\\S+)\\.stl"),
-					part = event.url.match(matcher)[1],
-					mesh = new THREE.Mesh(geometry, material);
+					part = event.url.match(stl_matcher)[1],
+					mesh;
 				if (part !== undefined) {
+					mesh = new THREE.Mesh(geometry, robot_material);
 					scene.add(mesh);
 				}
 			});
