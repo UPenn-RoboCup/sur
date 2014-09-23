@@ -190,63 +190,87 @@
 	parts.RIGHT_HIP_YAW = {
 		parent: 'PELVIS',
 		tr: new THREE.Vector3(-72, -16 - 64, 0),
-		rot: new THREE.Quaternion()
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(0, 1, 0)
 	};
 	parts.RIGHT_HIP_ROLL = {
 		parent: 'RIGHT_HIP_YAW',
 		tr: new THREE.Vector3(0, -64, 0),
-		rot: new THREE.Quaternion()
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(0, 0, 1)
 	};
 	parts.R_THIGH = {
 		parent: 'RIGHT_HIP_ROLL',
 		tr: new THREE.Vector3(),
-		rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI)
+		rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI),
+		axel: new THREE.Vector3(1, 0, 0)
+	};
+	parts.INTER_RIGHT_KNEE = {
+		parent: 'R_THIGH',
+		mesh: new THREE.Object3D(),
+		tr: new THREE.Vector3(0, -300, STL_MOTOR_WIDTH / 2),
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(-1, 0, 0)
 	};
 	parts.R_LEG = {
-		parent: 'R_THIGH',
-		tr: new THREE.Vector3(0, -300, 0),
+		parent: 'INTER_RIGHT_KNEE',
+		tr: new THREE.Vector3(0, 0, -STL_MOTOR_WIDTH / 2),
 		rot: new THREE.Quaternion()
 	};
 	parts.RIGHT_ANKLE = {
 		parent: 'R_LEG',
 		tr: new THREE.Vector3(0, -300, 0),
-		rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI)
+		rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI),
+		axel: new THREE.Vector3(-1, 0, 0)
 	};
 	parts.RIGHT_FOOT = {
 		parent: 'RIGHT_ANKLE',
 		tr: new THREE.Vector3(),
-		rot: new THREE.Quaternion()
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(0, 0, 1)
 	};
 	// LLeg
 	parts.LEFT_HIP_YAW = {
 		parent: 'PELVIS',
 		tr: new THREE.Vector3(72, -16 - 64, 0),
-		rot: new THREE.Quaternion()
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(0, 1, 0)
 	};
 	parts.LEFT_HIP_ROLL = {
 		parent: 'LEFT_HIP_YAW',
 		tr: new THREE.Vector3(0, -64, 0),
-		rot: new THREE.Quaternion()
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(0, 0, 1)
 	};
 	parts.L_THIGH = {
 		parent: 'LEFT_HIP_ROLL',
 		tr: new THREE.Vector3(),
-		rot: new THREE.Quaternion()
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(1, 0, 0)
+	};
+	parts.INTER_LEFT_KNEE = {
+		parent: 'L_THIGH',
+		mesh: new THREE.Object3D(),
+		tr: new THREE.Vector3(0, -300, STL_MOTOR_WIDTH / 2),
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(1, 0, 0)
 	};
 	parts.L_LEG = {
-		parent: 'L_THIGH',
-		tr: new THREE.Vector3(0, -300, 0),
+		parent: 'INTER_LEFT_KNEE',
+		tr: new THREE.Vector3(0, 0, -STL_MOTOR_WIDTH / 2),
 		rot: new THREE.Quaternion()
 	};
 	parts.LEFT_ANKLE = {
 		parent: 'L_LEG',
 		tr: new THREE.Vector3(0, -300, 0),
-		rot: new THREE.Quaternion()
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(1, 0, 0)
 	};
 	parts.LEFT_FOOT = {
 		parent: 'LEFT_ANKLE',
 		tr: new THREE.Vector3(),
-		rot: new THREE.Quaternion()
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(0, 0, 1)
 	};
 	// Save the keys
 	part_keys = Object.keys(parts);
@@ -262,19 +286,19 @@
 	servos.push(null);
 	servos.push(null);
 	// left leg
-	servos.push(null); // placeholder
-	servos.push(null);
-	servos.push(null);
-	servos.push(null);
-	servos.push(null);
-	servos.push(null);
+	servos.push(parts.LEFT_HIP_YAW);
+	servos.push(parts.LEFT_HIP_ROLL);
+	servos.push(parts.L_THIGH);
+	servos.push(parts.INTER_LEFT_KNEE);
+	servos.push(parts.LEFT_ANKLE);
+	servos.push(parts.LEFT_FOOT);
 	// right leg
-	servos.push(null); // placeholder
-	servos.push(null);
-	servos.push(null);
-	servos.push(null);
-	servos.push(null);
-	servos.push(null);
+	servos.push(parts.RIGHT_HIP_YAW);
+	servos.push(parts.RIGHT_HIP_ROLL);
+	servos.push(parts.R_THIGH);
+	servos.push(parts.INTER_RIGHT_KNEE);
+	servos.push(parts.RIGHT_ANKLE);
+	servos.push(parts.RIGHT_FOOT);
 	// right arm
 	servos.push(parts.RIGHT_SHOULDER_PITCH);
 	servos.push(parts.RIGHT_SHOULDER_ROLL);
