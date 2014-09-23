@@ -76,16 +76,22 @@
 		}
 		var feedback = JSON.parse(e.data),
 			joints = feedback.joints,
+			rpy = feedback.rpy,
 			i;
 		for (i = 0; i < servos.length; i += 1) {
 			rotateServo(servos[i], joints[i]);
 		}
+		tmp_quat.setFromEuler(new THREE.Euler(rpy[1], feedback.pose[2], rpy[0]));
+		robot.setRotationFromQuaternion(tmp_quat);
+		robot.position.y = feedback.height * 1e3;
+		robot.position.z = feedback.pose[0] * 1e3;
+		robot.position.x = feedback.pose[1] * 1e3;
 		//window.console.log(feedback);
 	};
 	
 	/* RUN THE SETUP CODE*/
 	// Starting position
-	robot.translateY(1000);
+	robot.position.y = 1000;
 	// root
 	parts.TORSO_PITCH_SERVO = {
 		tr: new THREE.Vector3(0, -40, 0),
@@ -135,13 +141,13 @@
 	parts.INTER_RIGHT_ELBOW = {
 		parent: 'RIGHT_ARM',
 		mesh: new THREE.Object3D(),
-		tr: new THREE.Vector3(0, -246 + STL_MOTOR_WIDTH / 2, STL_MOTOR_WIDTH / 2),
+		tr: new THREE.Vector3(0, -246 + STL_MOTOR_WIDTH / 2, -STL_MOTOR_WIDTH / 2),
 		rot: new THREE.Quaternion(),
 		axel: new THREE.Vector3(-1, 0, 0)
 	};
 	parts.RIGHT_ELBOW = {
 		parent: 'INTER_RIGHT_ELBOW',
-		tr: new THREE.Vector3(0, 0, -STL_MOTOR_WIDTH / 2),
+		tr: new THREE.Vector3(0, 0, STL_MOTOR_WIDTH / 2),
 		rot: new THREE.Quaternion()
 	};
 	parts.RIGHT_WRIST = {
@@ -251,13 +257,13 @@
 	parts.INTER_LEFT_KNEE = {
 		parent: 'L_THIGH',
 		mesh: new THREE.Object3D(),
-		tr: new THREE.Vector3(0, -300, STL_MOTOR_WIDTH / 2),
+		tr: new THREE.Vector3(0, -300, -STL_MOTOR_WIDTH / 2),
 		rot: new THREE.Quaternion(),
 		axel: new THREE.Vector3(1, 0, 0)
 	};
 	parts.L_LEG = {
 		parent: 'INTER_LEFT_KNEE',
-		tr: new THREE.Vector3(0, 0, -STL_MOTOR_WIDTH / 2),
+		tr: new THREE.Vector3(0, 0, STL_MOTOR_WIDTH / 2),
 		rot: new THREE.Quaternion()
 	};
 	parts.LEFT_ANKLE = {
