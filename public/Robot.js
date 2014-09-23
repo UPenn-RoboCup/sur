@@ -62,11 +62,10 @@
 		}
 	});
 	function rotateServo(s, v) {
-		var mesh = s.mesh;
-		if (mesh === undefined || s.axel === undefined) {
-			//window.console.log(s, 'BAD');
+		if (!s || !s.mesh || !s.axel) {
 			return;
 		}
+		var mesh = s.mesh;
 		mesh.matrixWorldNeedsUpdate = true;
 		tmp_quat.setFromAxisAngle(s.axel, v + (s.offset || 0)).multiply(s.rot);
 		mesh.setRotationFromQuaternion(tmp_quat);
@@ -125,7 +124,7 @@
 		parent: 'RIGHT_SHOULDER_PITCH',
 		tr: new THREE.Vector3(0, -STL_MOTOR_WIDTH, STL_MOTOR_WIDTH / 2),
 		rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 0, 1)), Math.PI / 2),
-		axel: new THREE.Vector3(0, 0, -1)
+		axel: new THREE.Vector3(0, 0, 1)
 	};
 	parts.RIGHT_ARM = {
 		parent: 'RIGHT_SHOULDER_ROLL',
@@ -133,9 +132,16 @@
 		rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI),
 		axel: new THREE.Vector3(0, 1, 0)
 	};
-	parts.RIGHT_ELBOW = {
+	parts.INTER_RIGHT_ELBOW = {
 		parent: 'RIGHT_ARM',
-		tr: new THREE.Vector3(0, -246 + STL_MOTOR_WIDTH / 2, 0),
+		mesh: new THREE.Object3D(),
+		tr: new THREE.Vector3(0, -246 + STL_MOTOR_WIDTH / 2, STL_MOTOR_WIDTH / 2),
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(-1, 0, 0)
+	};
+	parts.RIGHT_ELBOW = {
+		parent: 'INTER_RIGHT_ELBOW',
+		tr: new THREE.Vector3(0, 0, -STL_MOTOR_WIDTH / 2),
 		rot: new THREE.Quaternion()
 	};
 	parts.RIGHT_WRIST = {
@@ -163,9 +169,16 @@
 		rot: new THREE.Quaternion(),
 		axel: new THREE.Vector3(0, 1, 0)
 	};
-	parts.LEFT_ELBOW = {
+	parts.INTER_LEFT_ELBOW = {
 		parent: 'LEFT_ARM',
-		tr: new THREE.Vector3(0, -246 + STL_MOTOR_WIDTH / 2, 0),
+		mesh: new THREE.Object3D(),
+		tr: new THREE.Vector3(0, -246 + STL_MOTOR_WIDTH / 2, STL_MOTOR_WIDTH / 2),
+		rot: new THREE.Quaternion(),
+		axel: new THREE.Vector3(1, 0, 0)
+	};
+	parts.LEFT_ELBOW = {
+		parent: 'INTER_LEFT_ELBOW',
+		tr: new THREE.Vector3(0, 0, -STL_MOTOR_WIDTH / 2),
 		rot: new THREE.Quaternion()
 	};
 	parts.LEFT_WRIST = {
@@ -240,17 +253,41 @@
 	// Servo configuration
 	servos.push(parts.NECK);
 	servos.push(parts.CAM);
+	// left arm
 	servos.push(parts.LEFT_SHOULDER_PITCH);
 	servos.push(parts.LEFT_SHOULDER_ROLL);
 	servos.push(parts.LEFT_ARM);
-	/*
+	servos.push(parts.INTER_LEFT_ELBOW);
+	servos.push(null); // placeholder
+	servos.push(null);
+	servos.push(null);
+	// left leg
+	servos.push(null); // placeholder
+	servos.push(null);
+	servos.push(null);
+	servos.push(null);
+	servos.push(null);
+	servos.push(null);
+	// right leg
+	servos.push(null); // placeholder
+	servos.push(null);
+	servos.push(null);
+	servos.push(null);
+	servos.push(null);
+	servos.push(null);
+	// right arm
 	servos.push(parts.RIGHT_SHOULDER_PITCH);
 	servos.push(parts.RIGHT_SHOULDER_ROLL);
 	servos.push(parts.RIGHT_ARM);
-	*/
+	servos.push(parts.INTER_RIGHT_ELBOW);
+	servos.push(null); // placeholder
+	servos.push(null);
+	servos.push(null);
 
 	// Load each chain
 	part_keys.forEach(function (part) {
-		loader.load('/stl/' + part + '.stl');
+		if (parts[part].mesh === undefined) {
+			loader.load('/stl/' + part + '.stl');
+		}
 	});
 }(this));
