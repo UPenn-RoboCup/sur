@@ -40,7 +40,7 @@
 
 	// root
 	parts.TORSO_PITCH_SERVO = {
-
+		tr: (new THREE.Matrix4()).compose(new THREE.Vector3(0, -40, 0), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1))
 	};
 	parts.PELVIS = {
 		id: 29,
@@ -182,7 +182,90 @@
 			new THREE.Vector3(1, 1, 1)
 		)
 	};
-	
+	parts.R_LEG = {
+		id: 7,
+		parent: 'R_THIGH',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(0, -300, 0),
+			new THREE.Quaternion(),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
+	parts.RIGHT_ANKLE = {
+		id: 7,
+		parent: 'R_LEG',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(0, -300, 0),
+			(new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
+	parts.RIGHT_FOOT = {
+		id: 7,
+		parent: 'RIGHT_ANKLE',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(),
+			new THREE.Quaternion(),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
+	// LLeg
+	parts.LEFT_HIP_YAW = {
+		id: 7,
+		parent: 'PELVIS',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(72, -16 - 64, 0),
+			new THREE.Quaternion(),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
+	parts.LEFT_HIP_ROLL = {
+		id: 7,
+		parent: 'LEFT_HIP_YAW',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(0, -64, 0),
+			new THREE.Quaternion(),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
+	parts.L_THIGH = {
+		id: 7,
+		parent: 'LEFT_HIP_ROLL',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(),
+			new THREE.Quaternion(),
+			//(new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
+	parts.L_LEG = {
+		id: 7,
+		parent: 'L_THIGH',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(0, -300, 0),
+			new THREE.Quaternion(),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
+	parts.LEFT_ANKLE = {
+		id: 7,
+		parent: 'L_LEG',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(0, -300, 0),
+			new THREE.Quaternion(),
+			//(new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
+	parts.LEFT_FOOT = {
+		id: 7,
+		parent: 'LEFT_ANKLE',
+		tr: (new THREE.Matrix4()).compose(
+			new THREE.Vector3(),
+			new THREE.Quaternion(),
+			new THREE.Vector3(1, 1, 1)
+		)
+	};
 	
 
 	part_keys = Object.keys(parts);
