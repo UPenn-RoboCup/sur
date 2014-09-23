@@ -2,20 +2,19 @@
 	'use strict';
 	// Private variables
 	var USE_WEBWORKERS = true,
+		Transform = ctx.Transform,
 		d3 = ctx.d3,
 		THREE = ctx.THREE,
-		Transform = ctx.Transform,
+		scene = new THREE.Scene(),
 		meshes = [],
 		mesh_feed,
 		mesh_worker,
 		container,
 		renderer,
-		scene,
 		camera,
 		controls,
 		CANVAS_WIDTH,
-		CANVAS_HEIGHT,
-		stl_matcher = new RegExp("/stl/(\\S+)\\.stl");
+		CANVAS_HEIGHT;
 	// Constantly animate the scene
 	function animate() {
 		if (controls) {
@@ -65,6 +64,8 @@
 				vfov: metadata.rfov,
 				dynrange: metadata.dr,
 				a: metadata.a,
+				pitch: metadata.pitch,
+				roll: metadata.roll,
 				pixels: pixels,
 				// Make the max allocations
 				// TODO: Can we reuse these?
@@ -94,7 +95,6 @@
 		CANVAS_WIDTH = container.clientWidth;
 		CANVAS_HEIGHT = container.clientHeight;
 		camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
-		scene = new THREE.Scene();
 		renderer = new THREE.WebGLRenderer({
 			antialias: false
 		});
@@ -112,7 +112,7 @@
 		scene.add(ground);
 		// Add light from robot
 		spotLight = new THREE.PointLight(0xffffff, 1, 0);
-		spotLight.position.set(0, 1000, 0);
+		spotLight.position.set(0, 2000, -100);
 		spotLight.castShadow = true;
 		scene.add(spotLight);
 		// Animate the buttons
@@ -130,51 +130,7 @@
 		animate();
 		// Load the robot dynamically
 		ctx.util.ljs('/STLLoader.js', function () {
-			var loader = new THREE.STLLoader(),
-				robot_material = new THREE.MeshLambertMaterial({
-					// Black knight! http://encycolorpedia.com/313637
-					ambient: 0xFDEEF4,
-					color: 0x313637,
-					specular: 0x111111
-				}),
-				parts = [
-					"CAM",
-					"CHEST",
-					"FOOT",
-					"LEFT_ANKLE",
-					"LEFT_ARM",
-					"LEFT_ELBOW",
-					"LEFT_GRIPPER",
-					"LEFT_HIP_YAW",
-					"LEFT_SHOULDER_PITCH",
-					"L_LEG",
-					"L_THIGH",
-					"NECK",
-					"PELVIS",
-					"RIGHT_ARM",
-					"RIGHT_ELBOW",
-					"RIGHT_GRIPPER",
-					"RIGHT_HIP_ROLL",
-					"RIGHT_KNEE_PITCH",
-					"RIGHT_SHOULDER_PITCH",
-					"RIGHT_SHOULDER_ROLL",
-					"RIGHT_WRIST",
-					"R_LEG",
-					"R_THIGH",
-					"TORSO_PITCH_SERVO"
-				];
-			loader.addEventListener('load', function (event) {
-				var geometry = event.content,
-					part = event.url.match(stl_matcher)[1],
-					mesh;
-				if (part !== undefined) {
-					mesh = new THREE.Mesh(geometry, robot_material);
-					scene.add(mesh);
-				}
-			});
-			parts.forEach(function (part) {
-				loader.load('/stl/' + part + '.stl');
-			});
+			ctx.util.ljs('/Robot.js');
 		});
 	}
 	// Load the Styling
@@ -202,4 +158,7 @@
 			cw90: true
 		});
 	});
+	
+	// EXPORTS
+	ctx.SCENE = scene;
 }(this));

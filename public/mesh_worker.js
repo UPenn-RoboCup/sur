@@ -3,7 +3,7 @@ var chest_height = 0.09,
 	chest_off_axis = 0.02,
 	neck_height = 0.30,
 	neck_off_axis = 0.12,
-	bH_to_chest = 0.075,
+	bH_to_chest = 0.05,//0.075,
 	max_ceiling = 2000,
 	CONNECTIVITY = 75,
 	robot = {
@@ -12,7 +12,6 @@ var chest_height = 0.09,
 		pa: 0
 	},
 	bodyHeight = 0.93,
-	bodyTilt = 3 * Math.PI / 180,
 	cos = Math.cos,
 	sin = Math.sin,
 	min = Math.min,
@@ -67,8 +66,9 @@ var chest_height = 0.09,
 	*/
 // x, y, z in the torso (upper body) frame
 // robot: pose (px,py,pa element) and bodyTilt elements
-function get_hokuyo_chest_xyz(u, v, w, a) {
+function get_hokuyo_chest_xyz(u, v, w, a, bodyTilt, bodyRoll) {
 	'use strict';
+	bodyRoll = bodyRoll || 0;
 	var h_angle0 = hfov[1] - u * (hfov[1] - hfov[0]) / width,
 		v_angle = -1 * (v * (vfov[1] - vfov[0]) / height + vfov[0]),
 		h_angle = -a,
@@ -86,20 +86,26 @@ function get_hokuyo_chest_xyz(u, v, w, a) {
 		z = r * sv + chest_height,
 		cp = cos(bodyTilt),
 		sp = sin(bodyTilt),
-		// Also add supportX and bodyHeight parameters
-		xx = cp * x + sp * z, // + robot.supportX
-		zz = -sp * x + cp * z + bodyHeight + bH_to_chest,
+		cr = cos(bodyRoll),
+		sr = sin(bodyRoll),
+		// Update with pitch/roll
+		xx = (cp * x) + (sr * sp * y) + (sp * cr * z),
+		yy = (cr * y) - (sr * z),
+		zz = (-sp * x) + (cp * sr * y) + (cp * cr * z),
+			
+		// TODO: supportX?
+		
 		// Place into global pose THREE coords
 		pa = robot.pa,
 		ca = cos(pa),
 		sa = sin(pa),
-		tx = robot.px + ca * xx - sa * y,
-		ty = robot.py + sa * xx + ca * y,
-		tz = zz; // + robot.bodyHeight
+		tx = robot.px + ca * xx - sa * yy,
+		ty = robot.py + sa * xx + ca * yy,
+		tz = zz + bodyHeight + bH_to_chest;
 	// Return in mm, since THREEjs uses that
 	// Return also the position
 	// Also, swap the coordinates
-	return [ty * 1000, tz * 1000, tx * 1000, xx, y, zz];
+	return [ty * 1000, tz * 1000, tx * 1000, xx, yy, zz];
 }
 
 this.addEventListener('message', function (e) {
@@ -158,7 +164,7 @@ this.addEventListener('message', function (e) {
 			}
 
 			// Compute the xyz positions from the LIDAR
-			three_and_local_pos = get_hokuyo_chest_xyz(i, j, w, mesh.a[i]);
+			three_and_local_pos = get_hokuyo_chest_xyz(i, j, w, mesh.a[i], mesh.pitch[i], mesh.roll[i]);
 
 			// Could make this faster?
 			positions[position_idx] = three_and_local_pos[0];
