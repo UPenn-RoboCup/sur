@@ -81,12 +81,11 @@
 		for (i = 0; i < servos.length; i += 1) {
 			rotateServo(servos[i], joints[i]);
 		}
-		tmp_quat.setFromEuler(new THREE.Euler(rpy[1], feedback.pose[2], rpy[0]));
+		tmp_quat.setFromEuler(new THREE.Euler(rpy[1], feedback.pose[2], rpy[0], 'ZXY'));
 		robot.setRotationFromQuaternion(tmp_quat);
 		robot.position.y = feedback.height * 1e3;
 		robot.position.z = feedback.pose[0] * 1e3;
 		robot.position.x = feedback.pose[1] * 1e3;
-		//window.console.log(feedback);
 	};
 	
 	/* RUN THE SETUP CODE*/
@@ -320,4 +319,6 @@
 			loader.load('/stl/' + part + '.stl');
 		}
 	});
+	// Export
+	ctx.ROBOT = robot;
 }(this));
