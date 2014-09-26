@@ -29,9 +29,11 @@
 		document.body.appendChild(view);
 		// Add the video feed. There is a 90 degree offset for the chest mesh
 		d3.json('/streams/mesh', function (error, port) {
-			feed = new ctx.VideoFeed(port, to_jet, {
-				cw90: true
-			});
+  		feed = new ctx.VideoFeed({
+        port: port,
+        fr_callback: to_jet,
+  			cw90: true
+  		});
 			document.getElementById('camera_container').appendChild(feed.canvas);
 		});
 		// Animate the buttons

@@ -41,14 +41,15 @@
 		document.body.appendChild(view);
 		// Add the video feed
 		d3.json('/streams/camera0', function (error, port) {
-			feed = new ctx.VideoFeed(port, null, {
-				canvas: true,
+  		feed = new ctx.VideoFeed({
+        port: port,
+        canvas: true,
 				extra_cb: function (obj) {
 					if (obj.id === 'labelA') {
 						ask_labelA(obj);
 					}
 				}
-			});
+  		});
 			// Show the images on the page
 			container = document.getElementById('camera_container');
 			container.appendChild(feed.canvas);

@@ -1,9 +1,13 @@
 (function (ctx) {
 	'use strict';
 
-	function VideoFeed(port, cb, options) {
+	function VideoFeed(options) {
+    options = options || {};
 		// Private variables
-		var ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
+		var port = options.port,
+      ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
+      cb = options.fr_callback,
+      extra_cb = options.extra_cb,
 			fr_img = new Image(),
 			fr_canvas = document.createElement('canvas'),
 			fr_ctx = fr_canvas.getContext('2d'),
@@ -12,10 +16,7 @@
 			frames = [],
 			fr_metadata,
 			fr_raw,
-			fr_img_src,
-			extra_cb;
-		options = options || {};
-		extra_cb = options.extra_cb;
+			fr_img_src;
 
 		function animate() {
 			var fr = frames.shift();

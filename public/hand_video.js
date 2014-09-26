@@ -9,7 +9,9 @@
 		document.body.appendChild(view);
 		// Add the video feed
 		d3.json('/streams/camera1', function (error, port) {
-			feed = new ctx.VideoFeed(port);
+  		feed = new ctx.VideoFeed({
+        port: port,
+  		});
 			document.getElementById('camera_container').appendChild(feed.canvas);
 		});
 		// Animate the buttons

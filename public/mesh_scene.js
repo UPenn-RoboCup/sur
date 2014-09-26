@@ -7,14 +7,62 @@
 		THREE = ctx.THREE,
 		scene = new THREE.Scene(),
 		meshes = [],
+    items = [],
 		mesh_feed,
 		mesh_worker,
 		container,
 		renderer,
 		camera,
 		controls,
+    robot,
 		CANVAS_WIDTH,
 		CANVAS_HEIGHT;
+  
+  // Select an object to rotate around, or general selection for other stuff
+  // TODO: Should work for right or left click...?  
+  function select_object(e){   
+    // find the mouse position (use NDC coordinates, per documentation)
+    var mouse_vector = new THREE.Vector3(
+      ( e.offsetX / CANVAS_WIDTH ) * 2 - 1,
+      -( e.offsetY / CANVAS_HEIGHT ) * 2 + 1),
+      projector = new THREE.Projector(),
+      raycaster = projector.pickingRay(mouse_vector, camera),
+      intersections = raycaster.intersectObjects(items.concat(meshes).concat(robot.meshes));
+    //console.log('Mouse',mouse_vector); // need Vector3, not vector2
+    //console.log('projector',projector)
+    //console.log('picking raycaster',raycaster)
+    // intersect the plane
+    // if no intersection
+    //console.log(intersection)
+    if(intersections.length==0){ return; }
+    // only give the first intersection point
+    var obj0 = intersections[0],
+      p0 = obj0.point;
+//      r = Transform.three_to_torso(p, Robot); // get the robot point
+  
+    // debugging
+    window.console.log(e, 'Intersection:', obj0, p0);
+    
+    /*
+    T_? * T_Robot = T_point
+    T_? = T_point * T_Robot ^ -1
+    */
+    var T_point = new THREE.Matrix4();
+    var T_inv = new THREE.Matrix4()
+    var T_offset = new THREE.Matrix4();
+    T_point.makeTranslation(p0.x, p0.y, p0.z);
+    T_inv.getInverse(robot.object.matrix)
+    T_offset.multiplyMatrices(
+      T_point,
+      T_inv
+    );
+    
+    var offset = window.console.log('Relative:', T_point, T_offset);
+    // Update the orbit target
+    controls.target = p0;
+    //window.console.log('Intersections:', intersections);
+  }
+    
 	// Constantly animate the scene
 	function animate() {
 		if (controls) {
@@ -94,13 +142,15 @@
 		container = document.getElementById('world_container');
 		CANVAS_WIDTH = container.clientWidth;
 		CANVAS_HEIGHT = container.clientHeight;
-		camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
 		renderer = new THREE.WebGLRenderer({
 			antialias: false
 		});
 		renderer.setClearColor(0x80CCFF, 1);
 		renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		container.appendChild(renderer.domElement);
+    // Object selection
+    container.addEventListener( 'mousedown', select_object, false );
+    camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
 		camera.position.copy(new THREE.Vector3(500, 2000, -500));
 		// Load in the Orbit controls dynamically
 		ctx.util.ljs('/OrbitControls.js', function () {
@@ -109,7 +159,9 @@
 		});
 		// Load the ground
 		ground.rotation.x = -Math.PI / 2;
+    ground.name = 'GROUND';
 		scene.add(ground);
+    items.push(ground);
 		// Add light from robot
 		spotLight = new THREE.PointLight(0xffffff, 1, 0);
 		spotLight.position.set(0, 2000, -100);
@@ -128,10 +180,10 @@
 			renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		}, false);
 		animate();
-		// Load the robot dynamically
-		ctx.util.ljs('/STLLoader.js', function () {
-			ctx.util.ljs('/Robot.js');
-		});
+		// Load the robot
+    robot = new ctx.Robot({
+      scene: scene
+    });
 	}
 	// Load the Styling
 	ctx.util.lcss('/css/gh-buttons.css');
@@ -154,11 +206,12 @@
 	}
 	// Begin listening to the feed
 	d3.json('/streams/mesh', function (error, port) {
-		mesh_feed = new ctx.VideoFeed(port, process_frame, {
+		mesh_feed = new ctx.VideoFeed({
+      port: port,
+      fr_callback: process_frame,
 			cw90: true
 		});
 	});
+  
 	
-	// EXPORTS
-	ctx.SCENE = scene;
 }(this));
