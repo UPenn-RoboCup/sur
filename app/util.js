@@ -13,13 +13,14 @@
 		}
 		var scripts = document.getElementsByTagName('script'),
 			len = scripts.length,
-			i;
+			i,
+			s;
 		for (i = 0; i < len; i = i + 1) {
 			if (scripts[i].src.indexOf(src) !== -1) {
 				return;
 			}
 		}
-		var s = document.createElement('script');
+		s = document.createElement('script');
 		s.src = src;
 		s.async = true;
 		s.type = "application/javascript";
@@ -40,14 +41,16 @@
 		}
 		var links = document.getElementsByTagName('link'),
 			len = links.length,
-			i;
+			i,
+			head,
+			link;
 		for (i = 0; i < len; i = i + 1) {
 			if (links[i].href.indexOf(url) !== -1) {
 				return;
 			}
 		}
-		var head = document.getElementsByTagName('head')[0],
-			link = document.createElement('link');
+		head = document.getElementsByTagName('head')[0];
+		link = document.createElement('link');
 		link.type = 'text/css';
 		link.rel = 'stylesheet';
 		link.href = url;

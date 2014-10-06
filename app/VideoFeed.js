@@ -2,12 +2,13 @@
 	'use strict';
 
 	function VideoFeed(options) {
-    options = options || {};
+		options = options || {};
 		// Private variables
 		var port = options.port,
-      ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
-      cb = options.fr_callback,
-      extra_cb = options.extra_cb,
+			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
+			id = options.id || port,
+			cb = options.fr_callback,
+			extra_cb = options.extra_cb,
 			fr_img = new Image(),
 			fr_canvas = document.createElement('canvas'),
 			fr_ctx = fr_canvas.getContext('2d'),
@@ -17,6 +18,8 @@
 			fr_metadata,
 			fr_raw,
 			fr_img_src;
+
+		fr_canvas.id = id;
 
 		function animate() {
 			var fr = frames.shift();
@@ -38,8 +41,12 @@
 			// Draw to canvas
 			if (options.cw90) {
 				// Clockwise 90 degree rotation
-				fr_canvas.width = h;
-				fr_canvas.height = w;
+				if (fr_canvas.width !== h) {
+					fr_canvas.width = h;
+				}
+				if (fr_canvas.height !== w) {
+					fr_canvas.height = w;
+				}
 				fr_ctx.save();
 				fr_ctx.translate(half_w, half_h);
 				fr_ctx.rotate(Math.PI / 2);
@@ -49,8 +56,12 @@
 				fr_ctx.restore();
 			} else {
 				// Standard render
-				fr_canvas.width = w;
-				fr_canvas.height = h;
+				if (fr_canvas.width !== w) {
+					fr_canvas.width = w;
+				}
+				if (fr_canvas.height !== h) {
+					fr_canvas.height = h;
+				}
 				fr_ctx.drawImage(fr_img, 0, 0, w, h);
 			}
 			// Remove data references
