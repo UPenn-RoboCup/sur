@@ -1,7 +1,7 @@
 (function (ctx) {
 	'use strict';
 
-	var THREE = ctx.THREE;
+	var THREE;
 
 	function rotateServo(s, v) {
 		if (!s || !s.mesh || !s.axel) {
@@ -35,29 +35,28 @@
 		return object;
 	}
 
-	function update(object, feedback) {
+	function update(obj, feedback) {
 		var i,
 			tmp_quat = new THREE.Quaternion(),
 			joints = feedback.joints,
 			rpy = feedback.rpy,
 			pose = feedback.pose,
-			servos = object.servos;
+			servos = obj.servos;
 		for (i = 0; i < servos.length; i += 1) {
 			rotateServo(servos[i], joints[i]);
 		}
 		tmp_quat.setFromEuler(new THREE.Euler(rpy[1], feedback.pose[2], rpy[0], 'ZXY'));
-		object.setRotationFromQuaternion(tmp_quat);
-		object.position.y = feedback.height * 1e3;
-		object.position.z = pose[0] * 1e3;
-		object.position.x = pose[1] * 1e3;
+		obj.setRotationFromQuaternion(tmp_quat);
+		obj.position.y = feedback.height * 1e3;
+		obj.position.z = pose[0] * 1e3;
+		obj.position.x = pose[1] * 1e3;
 	}
 
 	function Robot(options) {
 		options = options || {};
-
-		var THREE = ctx.THREE, // TODO: Best check for THREE.js? Allow 2D option?
+		THREE = THREE || ctx.THREE; // TODO: Best check for THREE.js? Allow 2D option?
 			// The 3D THREE.js scene for the robot
-			scene = options.scene || new THREE.Scene(),
+		var scene = options.scene || new THREE.Scene(),
 			// Feedback data. TODO: Should not need
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + (options.port || 9013)),
 			// Match the loaded file URL
@@ -107,8 +106,7 @@
 			if (typeof e.data !== "string") {
 				return;
 			}
-			var feedback = JSON.parse(e.data);
-			update(object, feedback.joints, feedback.rpy);
+			update(object, JSON.parse(e.data));
 		};
 		// END FUNCTIONS
 

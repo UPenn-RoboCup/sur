@@ -57,10 +57,16 @@
 			T_point,
 			T_inv
 		);
-		window.console.log('Relative:', T_point, T_offset);
+		window.console.log(e, T_point, T_offset);
 
-		// GUI: Update the orbit target. TODO: make smooth transition
-		controls.target = p0;
+		if (e.button === 2) {
+			// Right click
+			return;
+		} else {
+			// Left click: Update the orbit target
+			// TODO: make smooth transition
+			controls.target = p0;
+		}
 	}
 
 	// Constantly animate the scene
@@ -180,9 +186,13 @@
 			renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		}, false);
 		animate();
-		// Load the robot
-		robot = new ctx.Robot({
-			scene: scene
+		// Begin listening to the feed
+		d3.json('/streams/feedback', function (error, port) {
+			// Load the robot
+			robot = new ctx.Robot({
+				scene: scene,
+				port: port
+			});
 		});
 	}
 	// Load the Styling
