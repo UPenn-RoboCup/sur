@@ -1,7 +1,7 @@
 (function (ctx) {
 	'use strict';
 
-	var THREE;
+	var THREE = ctx.THREE;
 
 	function rotateServo(s, v) {
 		if (!s || !s.mesh || !s.axel) {
