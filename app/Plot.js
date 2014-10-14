@@ -12,7 +12,7 @@
 			n = options.n || 100,
 			data = d3.range(n),
 			x = d3.scale.linear().domain([0, n - 1]).range([0, width]),
-			y = d3.scale.linear().domain([-20, 20]).range([0, height]),
+			y = d3.scale.linear().domain([20, -20]).range([0, height]),
 			line = d3.svg.line().x(function (d, i) {
 				return x(i);
 			}).y(function (d, i) {
@@ -22,7 +22,8 @@
 			plot_group,
 			clip,
 			path,
-			y_axis;
+			y_axis,
+			needs_show = true;
 		if (svg.select('g').size() === 0) {
 			plot_group = svg.append("g").attr('class', 'plot_group').attr("transform", "translate(80, 0)");
 			clip = plot_group.append("defs")
@@ -45,12 +46,20 @@
 			.attr("d", line)
 			.style("stroke", color);
 
+		this.show = function () {
+			path.attr("d", line);
+			needs_show = true;
+		};
+
 		this.update = function (datapoint) {
 			// https://gist.github.com/mbostock/1642874
 			// push a new data point onto the back
 			data.push(datapoint);
-			path.attr("d", line);
 			data.shift();
+			if (needs_show) {
+				window.requestAnimationFrame(this.show);
+				needs_show = false;
+			}
 		};
 		this.resize = function (width, height) {
 			svg.attr('width', width).attr('height', height);
