@@ -4,75 +4,102 @@
 		util = ctx.util,
 		recognizer = new window.Worker("/js/recognizer.js"),
 		recognizer_init = false,
-		// Try the default pocketsphinx live.html demo
-			/*
-		wordList = [["ONE", "W AH N"], ["TWO", "T UW"], ["THREE", "TH R IY"], ["FOUR", "F AO R"], ["FIVE", "F AY V"], ["SIX", "S IH K S"], ["SEVEN", "S EH V AH N"], ["EIGHT", "EY T"], ["NINE", "N AY N"], ["ZERO", "Z IH R OW"]],			
-		grammarDigits = {
-			numStates: 1,
+		/* http://www.speech.cs.cmu.edu/tools/lmtool-new.html */
+		wordList = [
+			["ROBOT", "R OW B AA T"],
+			["ROBOT(2)", "R OW B AH T"],
+			["INITIALIZE", "IH N IH SH AH L AY Z"],
+			['MOTION', 'M OW SH AH N'],
+			['BODY', 'B AA D IY'],
+			['ARMS', 'AA R M Z'],
+			//
+			["WALK", "W AO K"],
+			["WALK(2)", "W AA K"],
+			["BACKWARD", "B AE K W ER D"],
+			["FORWARD", "F AO R W ER D"],
+			["ZERO", "Z IH R OW"],
+			["STOP", 'S T AA P']
+		],
+		grammar_base = {
 			start: 0,
-			end: 0,
-			transitions: [{
-				from: 0,
-				to: 0,
-				word: "ONE"
-		}, {
-				from: 0,
-				to: 0,
-				word: "TWO"
-		}, {
-				from: 0,
-				to: 0,
-				word: "THREE"
-		}, {
-				from: 0,
-				to: 0,
-				word: "FOUR"
-		}, {
-				from: 0,
-				to: 0,
-				word: "FIVE"
-		}, {
-				from: 0,
-				to: 0,
-				word: "SIX"
-		}, {
-				from: 0,
-				to: 0,
-				word: "SEVEN"
-		}, {
-				from: 0,
-				to: 0,
-				word: "EIGHT"
-		}, {
-				from: 0,
-				to: 0,
-				word: "NINE"
-		}, {
-				from: 0,
-				to: 0,
-				word: "ZERO"
-		}]
+			end: 2,
+			numStates: 4,
+			transitions: [
+				{
+					from: 0,
+					to: 1,
+					logp: 0,
+					word: "WALK"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: -1.1,
+					word: "FORWARD"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: -1.1,
+					word: "BACKWARD"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: -1.1,
+					word: "ZERO"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: 0,
+					word: ""
+				}
+			]
 		},
-			*/
-		wordList = [["ARMS",	"AA R M Z"],
-		["BACKWARD",	"B AE K W ER D"],
-		["FORWARD",	"F AO R W ER D"],
-		["INITIALIZE",	"IH N IH SH AH L AY Z"],
-		["WALK",	"W AO K"],
-		["WALK(2)",	"W AA K"]],
-		grammarDigits = {
-			numStates: 1,
+		grammar_walk = {
 			start: 0,
-			end: 0,
-			transitions: [{
-				from: 0,
-				to: 0,
-				word: "ARMS"
-		}, {
-				from: 0,
-				to: 0,
-				word: "WALK"
-		}]},
+			end: 2,
+			numStates: 5,
+			transitions: [
+				{
+					from: 0,
+					to: 1,
+					logp: 0,
+					word: "WALK"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: -1.1,
+					word: "FORWARD"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: -1.1,
+					word: "BACKWARD"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: -1.1,
+					word: "ZERO"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: -2,
+					word: "STOP"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: 0,
+					word: ""
+				}
+			]
+		},
 		audioContext,
 		container,
 		recorder;
@@ -104,26 +131,26 @@
 	recognizer.onmessage = function (e) {
 		var resp = e.data;
 		window.console.log(resp);
-		if (!recognizer_init){
+		if (!recognizer_init) {
 			recognizer_init = true;
-			window.console.log('INITIALIZE');
+			//window.console.log('INITIALIZE');
 			// Initialize the recognizer
 			recognizer.postMessage({
 				command: 'initialize',
 				callbackId: 0
 			});
 		} else if (resp.command === 'initialize') {
-			window.console.log('ADD WORDS');
+			//window.console.log('ADD WORDS');
 			recognizer.postMessage({
 				command: 'addWords',
 				data: wordList,
 				callbackId: 1
 			});
 		} else if (resp.id === 1) {
-			window.console.log('ADD GRAMMAR');
+			//window.console.log('ADD GRAMMAR');
 			recognizer.postMessage({
 				command: 'addGrammar',
-				data: grammarDigits,
+				data: grammar_walk,
 				callbackId: 2
 			});
 		}
@@ -150,16 +177,21 @@
 			});
 			// We can, for instance, add a recognizer as consumer
 			window.console.log('Add the recognizer to the microphone');
-			if (recognizer) { recorder.consumers.push(recognizer); }
+			if (recognizer) {
+				recorder.consumers.push(recognizer);
+			}
 		}
 		// Actually call getUserMedia
 		if (navigator.getUserMedia) {
-			navigator.getUserMedia({
+			navigator.getUserMedia(
+				{
 					audio: true
-				}, startUserMedia,
+				},
+				startUserMedia,
 				function (e) {
 					window.console.log("No live audio input in this browser");
-				});
+				}
+			);
 		} else {
 			window.console.log("No web audio support in this browser");
 		}

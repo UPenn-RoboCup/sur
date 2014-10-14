@@ -1,0 +1,4 @@
+Robot initialize arms.
+Robot initialize body.
+Robot initialize motion.
+Robot walk stop.

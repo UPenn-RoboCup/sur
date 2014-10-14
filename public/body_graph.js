@@ -3,23 +3,36 @@
 	var d3 = ctx.d3,
 		util = ctx.util,
 		ws,
-		plot;
+		gyro_container_el,
+		rpy_container_el,
+		plot_gyro = [],
+		plot_rpy = [];
 
 	function ws_update(e) {
 		var feedback = JSON.parse(e.data);
-		// TODO: Request animation frame
-		plot.update(feedback.gyro[0] * 180 / Math.PI);
 		//window.console.log(feedback);
+		// TODO: Request animation frame?
+		plot_gyro[0].update(feedback.gyro[0] * 180 / Math.PI);
+		plot_gyro[1].update(feedback.gyro[1] * 180 / Math.PI);
+		plot_gyro[2].update(feedback.gyro[2] * 180 / Math.PI);
+		//
+		plot_rpy[0].update(feedback.rpy[0] * 180 / Math.PI);
+		plot_rpy[1].update(feedback.rpy[1] * 180 / Math.PI);
+		plot_rpy[2].update(feedback.rpy[2] * 180 / Math.PI);
+	}
+
+	function resize() {
+		var i;
+		for (i = 0; i < plot_gyro.length; i += 1) {
+			plot_gyro[i].resize(gyro_container_el.clientWidth, gyro_container_el.clientHeight);
+		}
+		for (i = 0; i < plot_rpy.length; i += 1) {
+			plot_rpy[i].resize(rpy_container_el.clientWidth, rpy_container_el.clientHeight);
+		}
 	}
 
 	// Handle resizing
-	window.addEventListener('resize', function () {
-		var s = d3.select('svg#gyro_roll'),
-			s0 = s[0][0],
-			SVG_WIDTH = s0.clientWidth,
-			SVG_HEIGHT = s0.clientHeight;
-		plot.resize(SVG_WIDTH, SVG_HEIGHT);
-	}, false);
+	window.addEventListener('resize', resize, false);
 
 	d3.html('/view/body_graph.html', function (error, view) {
 		d3.select("div#landing").remove();
@@ -28,15 +41,41 @@
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
 			ws.onmessage = ws_update;
 		});
-		var svg_gyro = d3.select('body').append('svg')
-			.attr('id', 'gyro_roll')
-			.attr('width', 720).attr('height', 480);
-		plot = new ctx.Plot({
-			svg: svg_gyro[0][0],
-			id: 'gyro_roll'
-		});
+		var gyro_container = d3.select('#gyro'),
+			rpy_container = d3.select('#rpy');
+		// Gyro Stream
+		gyro_container_el = gyro_container.node();
+		plot_gyro.push(new ctx.Plot({
+			svg: gyro_container.select('svg'),
+			color: 'red'
+		}));
+		plot_gyro.push(new ctx.Plot({
+			svg: gyro_container.select('svg'),
+			color: 'blue'
+		}));
+		plot_gyro.push(new ctx.Plot({
+			svg: gyro_container.select('svg'),
+			color: 'green'
+		}));
+		// Angle Stream
+		rpy_container_el = rpy_container.node();
+		plot_rpy.push(new ctx.Plot({
+			svg: rpy_container.select('svg'),
+			color: 'red'
+		}));
+		plot_rpy.push(new ctx.Plot({
+			svg: rpy_container.select('svg'),
+			color: 'blue'
+		}));
+		plot_rpy.push(new ctx.Plot({
+			svg: rpy_container.select('svg'),
+			color: 'green'
+		}));
+		// Resize calculation
+		setTimeout(resize);
 	});
 	// Load the CSS that we need for our app
 	util.lcss('/css/gh-buttons.css');
 	util.lcss('/css/graph.css');
+	util.lcss('/css/body_graph.css');
 }(this));
