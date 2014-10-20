@@ -68,6 +68,21 @@
 	// TODO: Pollute global namespace, or call these utils?
 	ctx.util = {
 		ljs: ljs,
-		lcss: lcss
+		lcss: lcss,
+		DEG_TO_RAD: Math.PI / 180,
+		RAD_TO_DEG: 180 / Math.PI,
+		jointNames: [
+			"Neck", "Head",
+			"ShoulderL", "ArmUpperL", "LeftShoulderYaw",
+			"ArmLowerL", "LeftWristYaw", "LeftWristRoll", "LeftWristYaw2",
+			"PelvYL", "PelvL", "LegUpperL", "LegLowerL", "AnkleL", "FootL",
+			"PelvYR", "PelvR", "LegUpperR", "LegLowerR", "AnkleR", "FootR",
+			"ShoulderR", "ArmUpperR", "RightShoulderYaw", "ArmLowerR",
+			"RightWristYaw", "RightWristRoll", "RightWristYaw2",
+			"TorsoYaw", "TorsoPitch",
+			"l_grip", "l_trigger",
+			"r_grip", "r_trigger",
+			"ChestLidarPan"
+		]
 	};
 }(this));

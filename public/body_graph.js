@@ -2,33 +2,29 @@
 	'use strict';
 	var d3 = ctx.d3,
 		util = ctx.util,
+		RAD_TO_DEG = util.RAD_TO_DEG,
 		ws,
-		gyro_container_el,
-		rpy_container_el,
-		plot_gyro = [],
-		plot_rpy = [];
+		position_container_el,
+		current_container_el,
+		plot_p,
+		plot_cp,
+		plot_i,
+		jointNames = util.jointNames,
+		joint_id = jointNames.indexOf('LegLowerL');
 
 	function ws_update(e) {
-		var feedback = JSON.parse(e.data);
-		//window.console.log(feedback);
-		// TODO: Request animation frame?
-		plot_gyro[0].update(feedback.gyro[0] * 180 / Math.PI);
-		plot_gyro[1].update(feedback.gyro[1] * 180 / Math.PI);
-		plot_gyro[2].update(feedback.gyro[2] * 180 / Math.PI);
-		//
-		plot_rpy[0].update(feedback.rpy[0] * 180 / Math.PI);
-		plot_rpy[1].update(feedback.rpy[1] * 180 / Math.PI);
-		plot_rpy[2].update(feedback.rpy[2] * 180 / Math.PI);
+		var feedback = JSON.parse(e.data),
+			t = feedback.t;
+		//window.console.log(feedback.i, joint_id, feedback.i[joint_id]);
+		plot_p.update(t, feedback.p[joint_id] * RAD_TO_DEG);
+		plot_cp.update(t, feedback.cp[joint_id] * RAD_TO_DEG);
+		plot_i.update(t, feedback.i[joint_id]);
 	}
 
 	function resize() {
-		var i;
-		for (i = 0; i < plot_gyro.length; i += 1) {
-			plot_gyro[i].resize(gyro_container_el.clientWidth, gyro_container_el.clientHeight);
-		}
-		for (i = 0; i < plot_rpy.length; i += 1) {
-			plot_rpy[i].resize(rpy_container_el.clientWidth, rpy_container_el.clientHeight);
-		}
+		plot_p.resize(position_container_el.clientWidth, position_container_el.clientHeight);
+		plot_cp.resize(position_container_el.clientWidth, position_container_el.clientHeight);
+		plot_i.resize(current_container_el.clientWidth, current_container_el.clientHeight);
 	}
 
 	// Handle resizing
@@ -41,36 +37,28 @@
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
 			ws.onmessage = ws_update;
 		});
-		var gyro_container = d3.select('#gyro'),
-			rpy_container = d3.select('#rpy');
+		var position_container = d3.select('#position'),
+			current_container = d3.select('#current');
 		// Gyro Stream
-		gyro_container_el = gyro_container.node();
-		plot_gyro.push(new ctx.Plot({
-			svg: gyro_container.select('svg'),
+		position_container_el = position_container.node();
+		plot_p = new ctx.Plot({
+			svg: position_container.select('svg'),
 			color: 'red'
-		}));
-		plot_gyro.push(new ctx.Plot({
-			svg: gyro_container.select('svg'),
+			//min: -90,
+			//max: 90
+		});
+		plot_cp = new ctx.Plot({
+			svg: position_container.select('svg'),
 			color: 'blue'
-		}));
-		plot_gyro.push(new ctx.Plot({
-			svg: gyro_container.select('svg'),
-			color: 'green'
-		}));
+		});
 		// Angle Stream
-		rpy_container_el = rpy_container.node();
-		plot_rpy.push(new ctx.Plot({
-			svg: rpy_container.select('svg'),
-			color: 'red'
-		}));
-		plot_rpy.push(new ctx.Plot({
-			svg: rpy_container.select('svg'),
-			color: 'blue'
-		}));
-		plot_rpy.push(new ctx.Plot({
-			svg: rpy_container.select('svg'),
-			color: 'green'
-		}));
+		current_container_el = current_container.node();
+		plot_i = new ctx.Plot({
+			svg: current_container.select('svg'),
+			color: 'red',
+			lower: -50,
+			upper: 50
+		});
 		// Resize calculation
 		setTimeout(resize);
 	});

@@ -15,6 +15,7 @@
 		camera,
 		controls,
 		robot,
+		robot_preview,
 		CANVAS_WIDTH,
 		CANVAS_HEIGHT;
 
@@ -22,10 +23,7 @@
 	// TODO: Should work for right or left click...?
 	function select_object(e) {
 		// find the mouse position (use NDC coordinates, per documentation)
-		var mouse_vector = new THREE.Vector3(
-				(e.offsetX / CANVAS_WIDTH) * 2 - 1,
-				-(e.offsetY / CANVAS_HEIGHT) * 2 + 1
-			),
+		var mouse_vector = new THREE.Vector3((e.offsetX / CANVAS_WIDTH) * 2 - 1, -(e.offsetY / CANVAS_HEIGHT) * 2 + 1),
 			projector = new THREE.Projector(),
 			raycaster = projector.pickingRay(mouse_vector, camera),
 			intersections = raycaster.intersectObjects(items.concat(meshes).concat(robot.meshes)),
@@ -193,6 +191,20 @@
 				scene: scene,
 				port: port
 			});
+			/*
+			robot_preview = new ctx.Robot({
+				scene: scene,
+				port: port,
+				material: new THREE.MeshPhongMaterial({
+					// Black knight! http://encycolorpedia.com/313637
+					ambient: 0x87EE81,
+					color: 0x313637,
+					specular: 0x111111,
+					transparent: true,
+					opacity: 0.5
+				})
+			});
+			*/
 		});
 	}
 	// Load the Styling

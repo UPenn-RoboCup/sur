@@ -39,8 +39,8 @@
 		var i,
 			tmp_quat = new THREE.Quaternion(),
 			joints = feedback.joints,
-			rpy = feedback.rpy,
-			pose = feedback.pose,
+			rpy = feedback.rpy || [0, 0, 0],
+			pose = feedback.pose || [0, 0, 0],
 			servos = obj.servos;
 		for (i = 0; i < servos.length; i += 1) {
 			rotateServo(servos[i], joints[i]);
@@ -55,7 +55,7 @@
 	function Robot(options) {
 		options = options || {};
 		THREE = THREE || ctx.THREE; // TODO: Best check for THREE.js? Allow 2D option?
-			// The 3D THREE.js scene for the robot
+		// The 3D THREE.js scene for the robot
 		var scene = options.scene || new THREE.Scene(),
 			// Feedback data. TODO: Should not need
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + (options.port || 9013)),
