@@ -6,25 +6,32 @@
 		ws,
 		position_container_el,
 		current_container_el,
+		jointNames = util.jointNames,
+		joint_id = jointNames.indexOf('ShoulderR'),
 		plot_p,
 		plot_cp,
-		plot_i,
-		jointNames = util.jointNames,
-		joint_id = jointNames.indexOf('LegLowerL');
+		plot_i = [];
+
 
 	function ws_update(e) {
 		var feedback = JSON.parse(e.data),
-			t = feedback.t;
-		//window.console.log(feedback.i, joint_id, feedback.i[joint_id]);
+			t = feedback.t,
+			i;
 		plot_p.update(t, feedback.p[joint_id] * RAD_TO_DEG);
 		plot_cp.update(t, feedback.cp[joint_id] * RAD_TO_DEG);
-		plot_i.update(t, feedback.i[joint_id]);
+		for (i = 0; i < 7; i += 1) {
+			plot_i[i].update(t, feedback.i[joint_id + i]);
+		}
+
 	}
 
 	function resize() {
+		var i;
 		plot_p.resize(position_container_el.clientWidth, position_container_el.clientHeight);
 		plot_cp.resize(position_container_el.clientWidth, position_container_el.clientHeight);
-		plot_i.resize(current_container_el.clientWidth, current_container_el.clientHeight);
+		for (i = 0; i < 7; i += 1) {
+			plot_i[i].resize(current_container_el.clientWidth, current_container_el.clientHeight);
+		}
 	}
 
 	// Handle resizing
@@ -38,29 +45,34 @@
 			ws.onmessage = ws_update;
 		});
 		var position_container = d3.select('#position'),
-			current_container = d3.select('#current');
+			current_container = d3.select('#current'),
+			i;
 		// Gyro Stream
 		position_container_el = position_container.node();
 		plot_p = new ctx.Plot({
 			svg: position_container.select('svg'),
-			color: 'red'
-			//min: -90,
-			//max: 90
+			color: 'red',
+			lower: -45,
+			upper: 135
 		});
 		plot_cp = new ctx.Plot({
 			svg: position_container.select('svg'),
-			color: 'blue'
+			color: 'blue',
+			lower: -45,
+			upper: 135
 		});
 		// Angle Stream
 		current_container_el = current_container.node();
-		plot_i = new ctx.Plot({
-			svg: current_container.select('svg'),
-			color: 'red',
-			lower: -50,
-			upper: 50
-		});
+		for (i = 0; i < 7; i += 1) {
+			plot_i.push(new ctx.Plot({
+				svg: current_container.select('svg'),
+				color: 'burlywood',
+				lower: -50,
+				upper: 50
+			}));
+		}
 		// Resize calculation
-		setTimeout(resize);
+		setTimeout(resize, 10);
 	});
 	// Load the CSS that we need for our app
 	util.lcss('/css/gh-buttons.css');

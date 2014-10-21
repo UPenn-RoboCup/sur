@@ -1,7 +1,8 @@
 (function (ctx) {
 	'use strict';
 	var d3 = ctx.d3,
-		util = ctx.util;
+		util = ctx.util,
+		sprintf = ctx.sprintf;
 
 	function Plot(options) {
 		options = options || {};
@@ -23,6 +24,7 @@
 			}),
 			color = options.color || 'black',
 			plot_group = svg.select('.plot_group'),
+			focus_group = svg.select('.focus_group'),
 			focus,
 			clip,
 			path,
@@ -30,6 +32,9 @@
 			needs_show = true;
 
 		if (plot_group.size() === 0) {
+			y_axis = svg.append("g")
+				.attr("class", "y axis")
+				.call(d3.svg.axis().scale(y).orient("right"));
 			plot_group = svg.append("g").attr('class', 'plot_group');
 			clip = plot_group.append("defs")
 				.append("clipPath")
@@ -37,31 +42,35 @@
 				.append("rect")
 				.attr("width", width)
 				.attr("height", height);
-			y_axis = plot_group.append("g")
-				.attr("class", "y axis")
-				.call(d3.svg.axis().scale(y).orient("right"));
+			focus_group = svg.append("g").attr('class', 'focus_group');
 			svg.on("mouseover", function (d, i) {
-				//window.console.log(d, i, d3.event, this);
 				var xi = Math.round(x.invert(d3.mouse(this)[0])),
-					val = data[xi],
+					val,
+					t;
+				focus_group.selectAll('g').each(function (data, i) {
+					val = data[xi];
 					t = ts[xi];
-				focus.attr("transform", "translate(" + x(xi) + "," + y(val) + ")").attr("class", "");
-				focus.select("text").text(sprintf('%.2f: %.2f', t, val)).attr("x", xi > n / 2 ? -96 : 9);
-			}).on("mouseout", function (d, i) {
-				//window.console.log(d, i, d3.event, this);
-				//d3.select(this).style("stroke", color);
-				focus.attr("class", "nodisplay");
+					//console.log(t, val, this);
+					d3.select(this).attr("transform", "translate(" + x(xi) + "," + y(val) + ")").attr("class", "");
+					d3.select(this).select("text").text(sprintf('%.2f: %.2f', t, val)).attr("x", xi > data.length / 2 ? -96 : 9);
+				});
 			}).on("mousemove", function (d, i) {
-				//window.console.log(d, i, d3.event, this);
 				var xi = Math.round(x.invert(d3.mouse(this)[0])),
-					val = data[xi],
+					val,
+					t;
+				focus_group.selectAll('g').each(function (data, i) {
+					val = data[xi];
 					t = ts[xi];
-				//window.console.log(xi, n);
-				focus.attr("transform", "translate(" + x(xi) + "," + y(val) + ")");
-				focus.select("text").text(sprintf('%.2f: %.2f', t, val)).attr("x", xi > n / 2 ? -96 : 9);
+					//console.log(t, val, this);
+					d3.select(this).attr("transform", "translate(" + x(xi) + "," + y(val) + ")");
+					d3.select(this).select("text").text(sprintf('%.2f: %.2f', t, val)).attr("x", xi > data.length / 2 ? -96 : 9);
+				});
+				//}).on("mouseout", function (d, i) {focus.attr("class", "nodisplay");
+				//window.console.log(t, val);
+				
 			});
 		}
-		focus = svg.append("g").attr("class", "nodisplay");
+		focus = focus_group.append("g").attr("class", "nodisplay").datum(data);
 		focus.append("circle")
 			.attr("r", 4.5);
 		focus.append("text")
