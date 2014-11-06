@@ -18,12 +18,11 @@ this.addEventListener('message', function (e) {
 			img[j + 1] = 0;
 			img[j + 2] = 255;
     } else {
-      var g = 255 - 255 * (zCm - 200) / (8000 - 200);
 			img[j] = 0;
-			img[j + 1] = g;
+			img[j + 1] = 255 - 255 * (zCm - 200) / (8000 - 200);
 			img[j + 2] = 0;
     }
 	}
 	obj.data = zCentimeters;
-	this.postMessage(obj, [obj.data.buffer, obj.depth_data.data.buffer]);
+	postMessage(obj, [obj.data.buffer, obj.depth_data.data.buffer]);
 }, false);

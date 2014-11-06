@@ -52,14 +52,14 @@
 		plot_p = new ctx.Plot({
 			svg: position_container.select('svg'),
 			color: 'red',
-			lower: -45,
-			upper: 135
+			lower: -10,
+			upper: 50
 		});
 		plot_cp = new ctx.Plot({
 			svg: position_container.select('svg'),
 			color: 'blue',
-			lower: -45,
-			upper: 135
+			lower: -10,
+			upper: 50
 		});
 		// Angle Stream
 		current_container_el = current_container.node();
@@ -67,8 +67,8 @@
 			plot_i.push(new ctx.Plot({
 				svg: current_container.select('svg'),
 				color: 'burlywood',
-				lower: -50,
-				upper: 50
+				lower: -200,
+				upper: 200
 			}));
 		}
 		// Resize calculation

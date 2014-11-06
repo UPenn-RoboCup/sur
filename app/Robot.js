@@ -38,16 +38,16 @@
 	function update(obj, feedback) {
 		var i,
 			tmp_quat = new THREE.Quaternion(),
-			joints = feedback.joints,
+			joints = feedback.p,
 			rpy = feedback.rpy || [0, 0, 0],
 			pose = feedback.pose || [0, 0, 0],
 			servos = obj.servos;
 		for (i = 0; i < servos.length; i += 1) {
 			rotateServo(servos[i], joints[i]);
 		}
-		tmp_quat.setFromEuler(new THREE.Euler(rpy[1], feedback.pose[2], rpy[0], 'ZXY'));
+		tmp_quat.setFromEuler(new THREE.Euler(rpy[1], pose[2], rpy[0], 'ZXY'));
 		obj.setRotationFromQuaternion(tmp_quat);
-		obj.position.y = feedback.height * 1e3;
+		obj.position.y = (feedback.height || 1) * 1e3;
 		obj.position.z = pose[0] * 1e3;
 		obj.position.x = pose[1] * 1e3;
 	}
@@ -158,7 +158,7 @@
 			parent: 'RIGHT_SHOULDER_ROLL',
 			tr: new THREE.Vector3(0, -STL_MOTOR_WIDTH / 2, -STL_MOTOR_WIDTH / 2),
 			rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI),
-			axel: new THREE.Vector3(0, 1, 0)
+			axel: new THREE.Vector3(0, -1, 0)
 		};
 		parts.INTER_RIGHT_ELBOW = {
 			parent: 'RIGHT_ARM',

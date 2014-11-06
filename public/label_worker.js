@@ -22,7 +22,7 @@ this.addEventListener('message', function (e) {
 			img[j + 1] = 255;
 			img[j + 2] = 0;
 		} else if (label[i] & 0x04) {
-			// Cyan
+			// Blue goalpost
 			img[j] = 0;
 			img[j + 1] = 0;
 			img[j + 2] = 255;
@@ -36,6 +36,16 @@ this.addEventListener('message', function (e) {
 			img[j] = 255;
 			img[j + 1] = 255;
 			img[j + 2] = 255;
+		} else if (label[i] & 0x20) {
+			// Robot Cyan
+			img[j] = 0;
+			img[j + 1] = 200;
+			img[j + 2] = 255;
+		} else if (label[i] & 0x40) {
+			// Robot Magenta
+			img[j] = 255;
+			img[j + 1] = 10;
+			img[j + 2] = 50;
 		} else {
 			// Unknown
 			img[j] = 0;
@@ -44,5 +54,5 @@ this.addEventListener('message', function (e) {
 		}
 	}
 	obj.data = label;
-	this.postMessage(obj, [obj.data.buffer, obj.lA_data.data.buffer]);
+	postMessage(obj, [obj.data.buffer, obj.lA_data.data.buffer]);
 }, false);
