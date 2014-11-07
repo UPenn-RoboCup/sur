@@ -15,13 +15,13 @@
 		processing = false;
 
 	// Constant for the Kinect2
-	/*
 	depth_canvas.width = 512;
 	depth_canvas.height = 424;
-	*/
 	// Webots
+	/*
 	depth_canvas.width = 256;
 	depth_canvas.height = 212;
+	*/
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
 	function toggle() {
@@ -70,6 +70,7 @@
 		// Paint the image back
 		depth_ctx.putImageData(depth_img_data, 0, 0);
 		processing = false;
+		//window.console.log(e.data.data);
 	}
 
 	// Add the camera view and append
