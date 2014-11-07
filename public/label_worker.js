@@ -1,6 +1,6 @@
 this.importScripts('/js/pako_inflate.min.js');
-var zInflate = this.pako.inflate;
-
+var zInflate = this.pako.inflate,
+	postMessage = this.postMessage;
 this.addEventListener('message', function (e) {
 	'use strict';
 	var obj = e.data,
@@ -44,8 +44,8 @@ this.addEventListener('message', function (e) {
 		} else if (label[i] & 0x40) {
 			// Robot Magenta
 			img[j] = 255;
-			img[j + 1] = 10;
-			img[j + 2] = 50;
+			img[j + 1] = 0;
+			img[j + 2] = 255;
 		} else {
 			// Unknown
 			img[j] = 0;
@@ -53,6 +53,7 @@ this.addEventListener('message', function (e) {
 			img[j + 2] = 0;
 		}
 	}
+	// Give the uncompressed data
 	obj.data = label;
-	postMessage(obj, [obj.data.buffer, obj.lA_data.data.buffer]);
+	(postMessage || this.postMessage)(obj, [obj.data.buffer, obj.lA_data.data.buffer]);
 }, false);
