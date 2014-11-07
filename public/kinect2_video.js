@@ -4,10 +4,14 @@
 		util = ctx.util,
 		depth_canvas = document.createElement('canvas'),
 		depth_ctx = depth_canvas.getContext('2d'),
-		img_data,
+		depth_img_data,
+		lA_canvas = document.createElement('canvas'),
+		lA_ctx = lA_canvas.getContext('2d'),
+		lA_img_data,
 		feed,
 		fr_metadata,
 		depth_worker,
+		label_worker,
 		processing = false;
 
 	// Constant for the Kinect2
@@ -16,21 +20,33 @@
 	depth_canvas.height = 424;
 	*/
 	// Webots
-	depth_canvas.width = 320;
-	depth_canvas.height = 190;
-	img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
+	depth_canvas.width = 256;
+	depth_canvas.height = 212;
+	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
 	function toggle() {
 		feed.canvas.classList.toggle('nodisplay');
 		depth_canvas.classList.toggle('nodisplay');
 	}
+	
+	function ask_labelA(obj) {
+		if (lA_canvas.width !== obj.w || lA_canvas.height !== obj.h) {
+			// Only work with the canvas image data when necessary
+			lA_canvas.width = obj.w;
+			lA_canvas.height = obj.h;
+			lA_img_data = lA_ctx.getImageData(0, 0, lA_canvas.width, lA_canvas.height);
+		}
+		// Ask the WebWorker for labelA
+		obj.data = new window.Uint8Array(obj.data);
+		obj.lA_data = lA_img_data;
+		label_worker.postMessage(obj, [obj.data.buffer, obj.lA_data.data.buffer]);
+	}
 
-	function recv_depth(e) {
+	function recv_labelA(e) {
 		// Save the transferrable object
-		img_data = e.data.depth_data;
+		lA_img_data = e.data.lA_data;
 		// Paint the image back
-		depth_ctx.putImageData(img_data, 0, 0);
-		processing = false;
+		lA_ctx.putImageData(lA_img_data, 0, 0);
 	}
 
 	function procDepth(e) {
@@ -40,14 +56,20 @@
 				// Add latency measure if possible
 				fr_metadata.latency = (e.timeStamp / 1e3) - fr_metadata.t;
 			}
-		} else {
-			if (!processing) {
-				fr_metadata.data = new window.Float32Array(e.data);
-				fr_metadata.depth_data = img_data;
-				processing = true;
-				depth_worker.postMessage(fr_metadata, [fr_metadata.data.buffer, fr_metadata.depth_data.data.buffer]);
-			}
+		} else if (!processing) {
+			fr_metadata.data = new window.Float32Array(e.data);
+			fr_metadata.depth_data = depth_img_data;
+			processing = true;
+			depth_worker.postMessage(fr_metadata, [fr_metadata.data.buffer, fr_metadata.depth_data.data.buffer]);
 		}
+	}
+	
+	function recv_depth(e) {
+		// Save the transferrable object
+		depth_img_data = e.data.depth_data;
+		// Paint the image back
+		depth_ctx.putImageData(depth_img_data, 0, 0);
+		processing = false;
 	}
 
 	// Add the camera view and append
@@ -58,11 +80,19 @@
 		// Depth
 		depth_worker = new window.Worker("/depth_worker.js");
 		depth_worker.onmessage = recv_depth;
+		// LabelA WebWorker
+		label_worker = new window.Worker("/label_worker.js");
+		label_worker.onmessage = recv_labelA;
 		// Add the video feed
 		d3.json('/streams/kinect2_color', function (error, port) {
 			feed = new ctx.VideoFeed({
 				id: 'kinect2_color',
-				port: port
+				port: port,
+				extra_cb: function (obj) {
+					if (obj.id === 'labelA') {
+						ask_labelA(obj);
+					}
+				}
 			});
 			// Show the images on the page
 			document.getElementById('camera_container').appendChild(feed.canvas);

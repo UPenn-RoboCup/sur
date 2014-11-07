@@ -19,8 +19,6 @@
 			fr_raw,
 			fr_img_src;
 
-		fr_canvas.id = id;
-
 		function animate() {
 			var fr = frames.shift();
 			fr_img.src = fr_img_src = createObjectURL(fr.data);
@@ -31,6 +29,7 @@
 		}
 
 		// Set the Image properties
+		fr_canvas.id = id;
 		fr_img.alt = 'VideoFeed WS: ' + port;
 		fr_img.onload = function () {
 			var w = fr_img.width,

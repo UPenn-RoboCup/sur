@@ -4,8 +4,7 @@
 		util = ctx.util,
 		lA_canvas = document.createElement('canvas'),
 		lA_ctx = lA_canvas.getContext('2d'),
-		img_data = lA_ctx.getImageData(0, 0, lA_canvas.width, lA_canvas.height),
-		container,
+		lA_img_data,
 		feed,
 		label_worker;
 
@@ -19,19 +18,19 @@
 			// Only work with the canvas image data when necessary
 			lA_canvas.width = obj.w;
 			lA_canvas.height = obj.h;
-			img_data = lA_ctx.getImageData(0, 0, lA_canvas.width, lA_canvas.height);
+			lA_img_data = lA_ctx.getImageData(0, 0, lA_canvas.width, lA_canvas.height);
 		}
 		// Ask the WebWorker for labelA
 		obj.data = new window.Uint8Array(obj.data);
-		obj.lA_data = img_data;
+		obj.lA_data = lA_img_data;
 		label_worker.postMessage(obj, [obj.data.buffer, obj.lA_data.data.buffer]);
 	}
 
 	function recv_labelA(e) {
 		// Save the transferrable object
-		img_data = e.data.lA_data;
+		lA_img_data = e.data.lA_data;
 		// Paint the image back
-		lA_ctx.putImageData(img_data, 0, 0);
+		lA_ctx.putImageData(lA_img_data, 0, 0);
 	}
 
 	// Add the camera view and append
@@ -50,7 +49,7 @@
 				}
 			});
 			// Show the images on the page
-			container = document.getElementById('camera_container');
+			var container = document.getElementById('camera_container');
 			container.appendChild(feed.canvas);
 			container.appendChild(lA_canvas);
 			lA_canvas.classList.toggle('nodisplay');
