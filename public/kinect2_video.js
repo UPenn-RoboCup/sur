@@ -8,27 +8,52 @@
 		lA_canvas = document.createElement('canvas'),
 		lA_ctx = lA_canvas.getContext('2d'),
 		lA_img_data,
-		feed,
+		rgb_canvas,
+		rgb_feed,
 		fr_metadata,
 		depth_worker,
 		label_worker,
+		toggle_id = 0,
 		processing = false;
 
 	// Constant for the Kinect2
-	depth_canvas.width = 512;
-	depth_canvas.height = 424;
+	//depth_canvas.width = 512;
+	//depth_canvas.height = 424;
 	// Webots
-	/*
 	depth_canvas.width = 256;
 	depth_canvas.height = 212;
-	*/
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
 	function toggle() {
-		feed.canvas.classList.toggle('nodisplay');
-		depth_canvas.classList.toggle('nodisplay');
+		toggle_id += 1;
+		if (toggle_id > 2) {
+			toggle_id = 0;
+		}
+		switch (toggle_id) {
+		case 0:
+			rgb_canvas.classList.remove('nodisplay');
+			depth_canvas.classList.add('nodisplay');
+			lA_canvas.classList.add('nodisplay');
+			break;
+		case 1:
+			rgb_canvas.classList.add('nodisplay');
+			depth_canvas.classList.remove('nodisplay');
+			lA_canvas.classList.add('nodisplay');
+			break;
+		case 2:
+			rgb_canvas.classList.add('nodisplay');
+			depth_canvas.classList.add('nodisplay');
+			lA_canvas.classList.remove('nodisplay');
+			break;
+		default:
+			rgb_canvas.classList.remove('nodisplay');
+			depth_canvas.classList.add('nodisplay');
+			lA_canvas.classList.add('nodisplay');
+			break;
+		}
+
 	}
-	
+
 	function ask_labelA(obj) {
 		if (lA_canvas.width !== obj.w || lA_canvas.height !== obj.h) {
 			// Only work with the canvas image data when necessary
@@ -63,7 +88,7 @@
 			depth_worker.postMessage(fr_metadata, [fr_metadata.data.buffer, fr_metadata.depth_data.data.buffer]);
 		}
 	}
-	
+
 	function recv_depth(e) {
 		// Save the transferrable object
 		depth_img_data = e.data.depth_data;
@@ -84,9 +109,9 @@
 		// LabelA WebWorker
 		label_worker = new window.Worker("/label_worker.js");
 		label_worker.onmessage = recv_labelA;
-		// Add the video feed
+		// Add the video rgb_feed
 		d3.json('/streams/kinect2_color', function (error, port) {
-			feed = new ctx.VideoFeed({
+			rgb_feed = new ctx.VideoFeed({
 				id: 'kinect2_color',
 				port: port,
 				extra_cb: function (obj) {
@@ -95,11 +120,14 @@
 					}
 				}
 			});
+			rgb_canvas = rgb_feed.canvas;
 			// Show the images on the page
-			document.getElementById('camera_container').appendChild(feed.canvas);
-			depth_canvas.classList.toggle('nodisplay');
+			document.getElementById('camera_container').appendChild(rgb_canvas);
+			document.getElementById('camera_container').appendChild(lA_canvas);
+			depth_canvas.classList.add('nodisplay');
+			lA_canvas.classList.add('nodisplay');
 		});
-		// Add the depth feed
+		// Add the depth rgb_feed
 		d3.json('/streams/kinect2_depth', function (error, port) {
 			var depth_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
 				fr_metadata;
