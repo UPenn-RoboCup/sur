@@ -3,7 +3,11 @@
   height: 100%;
 	position: absolute;
 }
-.found {
+.found_circle {
 	stroke: #ff0000;
-	fill:none;
+	fill: none;
+}
+.found_bar {
+	stroke: #00ff00;
+	fill: none;
 }
