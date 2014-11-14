@@ -43,7 +43,8 @@
 					.attr("x", imin)
 					.attr("y", jmin)
 					.attr("width", imax - imin)
-					.attr("height", jmax - jmin);
+					.attr("height", jmax - jmin)
+					.attr('class', 'found');
 			}
 		}
 	}
@@ -177,5 +178,6 @@
 	});
 	// Load the CSS that we need for our app
 	util.lcss('/css/fullvideo.css');
+	util.lcss('/css/overlay.css');
 	util.lcss('/css/gh-buttons.css');
 }(this));
