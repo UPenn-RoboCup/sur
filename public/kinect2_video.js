@@ -29,7 +29,7 @@
 	function plot_overlay(detect) {
 		var i, j, valve_color, valve, valves = overlay.select('g'),
 			imin, imax, jmin, jmax;
-		valves.selectAll('rect').remove();
+		valves.selectAll('*').remove();
 		for (i = 0; i < valve_colors.length; i += 1) {
 			valve_color = detect[valve_colors[i]];
 			for (j = 0; j < valve_color.length; j += 1) {
@@ -45,6 +45,10 @@
 					.attr("width", imax - imin)
 					.attr("height", jmax - jmin)
 					.attr('class', 'found');
+				valves.append("text").text(100 / detect.n + '%')
+					.attr('font-size', "16px").attr('fill', "blue")
+					.attr('x', imin).attr('y', jmax);
+				//.attr('x', 2 * valve.centroid[0]).attr('y', 2 * valve.centroid[1]);
 			}
 		}
 	}
