@@ -14,7 +14,9 @@
 		depth_worker,
 		label_worker,
 		toggle_id = 0,
-		processing = false;
+		processing = false,
+		overlay,
+		valve_colors = ['cyan', 'magenta', 'yellow'];
 
 	// Constant for the Kinect2
 	//depth_canvas.width = 512;
@@ -23,6 +25,28 @@
 	depth_canvas.width = 256;
 	depth_canvas.height = 212;
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
+
+	function plot_overlay(detect) {
+		var i, j, valve_color, valve, valves = overlay.select('g'),
+			imin, imax, jmin, jmax;
+		valves.selectAll('rect').remove();
+		for (i = 0; i < valve_colors.length; i += 1) {
+			valve_color = detect[valve_colors[i]];
+			for (j = 0; j < valve_color.length; j += 1) {
+				//window.console.log(valve);
+				valve = valve_color[j];
+				imin = 2 * (valve.boundingBox[0] - 1);
+				imax = 2 * (valve.boundingBox[1] + 1);
+				jmin = 2 * (valve.boundingBox[2] - 1);
+				jmax = 2 * (valve.boundingBox[3] + 1);
+				valves.append("rect")
+					.attr("x", imin)
+					.attr("y", jmin)
+					.attr("width", imax - imin)
+					.attr("height", jmax - jmin);
+			}
+		}
+	}
 
 	function toggle() {
 		toggle_id += 1;
@@ -117,6 +141,8 @@
 				extra_cb: function (obj) {
 					if (obj.id === 'labelA') {
 						ask_labelA(obj);
+					} else if (obj.id === 'detect') {
+						plot_overlay(obj);
 					}
 				}
 			});
@@ -135,6 +161,11 @@
 			depth_ws.onmessage = procDepth;
 			document.getElementById('camera_container').appendChild(depth_canvas);
 		});
+		// Add the overlay
+		overlay = d3.select("#camera_container").append("svg").attr('class', 'overlay')
+			.attr('viewBox', "0 0 256 212").attr('preserveAspectRatio', "none")
+			.attr('width', depth_canvas.width).attr('height', depth_canvas.height);
+		overlay.append('g').attr('id', 'valves');
 
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {
@@ -145,6 +176,6 @@
 
 	});
 	// Load the CSS that we need for our app
-	util.lcss('/css/video.css');
+	util.lcss('/css/fullvideo.css');
 	util.lcss('/css/gh-buttons.css');
 }(this));
