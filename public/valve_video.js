@@ -83,6 +83,17 @@
 	depth_canvas.height = 212;
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
+	function procFinal(resp) {
+		document.getElementById('guidance').innerHTML = resp.hyp;
+		// Send to lua
+		d3.xhr("/shm/hcm/guidance/color")
+			.header("Content-type", "application/json")
+			.post(JSON.stringify(resp.hyp));
+		d3.xhr("/shm/hcm/guidance/t")
+			.header("Content-type", "application/json")
+			.post(JSON.stringify([1]));
+	}
+	
 	// Recognizer starting
 	recognizer.onmessage = function (e) {
 		var resp = e.data;
@@ -111,7 +122,11 @@
 			});
 		} else if (resp.final === true) {
 			window.console.log('FINAL', resp);
-			document.getElementById('guidance').innerHTML = resp.hyp;
+			procFinal(resp);
+		} else if (resp.hyp && resp.hyp.indexOf('VALVE') !== -1) {
+			window.console.log('AUTO STOP RECORDING');
+			recorder.stop();
+			procFinal(resp);
 		}
 	};
 	// Start the worker with a dummy message
@@ -124,7 +139,6 @@
 		for (i = 0; i < valve_colors.length; i += 1) {
 			valve_color = detect[valve_colors[i]];
 			for (j = 0; j < valve_color.length; j += 1) {
-				//window.console.log(valve);
 				valve = valve_color[j];
 				imin = 2 * (valve.boundingBox[0] - 1);
 				imax = 2 * (valve.boundingBox[1] + 1);
@@ -143,7 +157,6 @@
 				valves.append("text").text(100 / detect.n + '%')
 					.attr('font-size', "16px").attr('fill', "blue")
 					.attr('x', imin).attr('y', jmax);
-				//.attr('x', 2 * valve.centroid[0]).attr('y', 2 * valve.centroid[1]);
 			}
 		}
 	}

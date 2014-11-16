@@ -65,11 +65,11 @@ function rest_req(req, res, next) {
 	// Ensure we get a val inside the body of a PUT or POST operation
 	// Save the parsed body in the params
 	if (req.method === 'PUT' || req.method === 'POST') {
-		if (req.body.val === undefined) {
-			res.send('No val given!');
-			return next();
+		if (req.body !== undefined) {
+			req.params.val = req.body;
 		} else {
-			req.params.val = req.body.val;
+			// No value was given...
+			return next();
 		}
 	}
 	// Send to the RPC server
@@ -83,7 +83,7 @@ server.post('/fsm/:fsm/:evt', rest_req);
 // GET will retrieve SHM values
 // PUT will update SHM values
 server.get('/shm/:shm/:seg/:key', rest_req);
-server.put('/shm/:shm/:seg/:key', rest_req);
+server.post('/shm/:shm/:seg/:key', rest_req);
 
 // GET will retrieve Body values
 // PUT will update Body values
