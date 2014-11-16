@@ -1,6 +1,7 @@
 (function (ctx) {
 	'use strict';
 	var d3 = ctx.d3,
+		sprintf = ctx.sprintf,
 		util = ctx.util,
 		depth_canvas = document.createElement('canvas'),
 		depth_ctx = depth_canvas.getContext('2d'),
@@ -92,6 +93,7 @@
 		d3.xhr("/shm/hcm/guidance/t")
 			.header("Content-type", "application/json")
 			.post(JSON.stringify([1]));
+		d3.xhr("/fsm/Body/init").post();
 	}
 	
 	// Recognizer starting
@@ -126,7 +128,6 @@
 		} else if (resp.hyp && resp.hyp.indexOf('VALVE') !== -1) {
 			window.console.log('AUTO STOP RECORDING');
 			recorder.stop();
-			procFinal(resp);
 		}
 	};
 	// Start the worker with a dummy message
@@ -134,8 +135,30 @@
 
 	function plot_overlay(detect) {
 		var i, j, valve_color, valve, valves = overlay.select('g'),
-			imin, imax, jmin, jmax, found;
+			imin, imax, jmin, jmax, found, tracked = detect.tracked;
 		valves.selectAll('*').remove();
+		
+		for (i = 0; i < tracked.length; i += 1) {
+			valve = tracked[i];
+			imin = 2 * (valve.boundingBox[0] - 1);
+			imax = 2 * (valve.boundingBox[1] + 1);
+			jmin = 2 * (valve.boundingBox[2] - 1);
+			jmax = 2 * (valve.boundingBox[3] + 1);
+			found = valves.append("rect")
+				.attr("x", imin)
+				.attr("y", jmin)
+				.attr("width", imax - imin)
+				.attr("height", jmax - jmin);
+			if (valve.axisMajor / valve.axisMinor > 3) {
+				found.attr('class', 'found_bar');
+			} else {
+				found.attr('class', 'found_circle');
+			}
+			valves.append("text").text(sprintf('%0.2f%', 100 * valve.p))
+				.attr('font-size', "16px").attr('fill', "blue")
+				.attr('x', imin).attr('y', jmax);
+		}
+		/*
 		for (i = 0; i < valve_colors.length; i += 1) {
 			valve_color = detect[valve_colors[i]];
 			for (j = 0; j < valve_color.length; j += 1) {
@@ -159,6 +182,7 @@
 					.attr('x', imin).attr('y', jmax);
 			}
 		}
+		*/
 	}
 
 	function toggle() {
@@ -286,6 +310,7 @@
 			if (recorder && typeof recorder.start === 'function') {
 				// To start recording:
 				window.console.log('START RECORDING');
+				document.getElementById('guidance').innerHTML = '';
 				recorder.start();
 			}
 		});
