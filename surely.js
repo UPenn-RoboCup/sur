@@ -69,7 +69,8 @@ function rest_req(req, res, next) {
 			req.params.val = req.body;
 		} else {
 			// No value was given...
-			return next();
+			//res.send();
+			//return next();
 		}
 	}
 	// Send to the RPC server

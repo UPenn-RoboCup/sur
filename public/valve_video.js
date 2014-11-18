@@ -28,12 +28,18 @@
 			["YELLOW", "Y EH L OW"],
 			["CYAN", "S AY AE N"],
 			["MAGENTA", "M AH JH EH N T AH"],
+			["ANY", "EH N IY"],
+			["COLOR", "K AH L ER"],
+			["COLOR(1)", "K AO L ER"],
+			["SMALL", "S M AO L"],
+			["LARGE", "L AA R JH"],
+			["SIZE", "S AY Z"],
 			["VALVE", "V AE L V"]
 		],
 		grammar_grab = {
 			start: 0,
-			end: 3,
-			numStates: 5,
+			end: 4,
+			numStates: 10,
 			transitions: [
 				{
 					from: 0,
@@ -43,33 +49,68 @@
 				},
 				{
 					from: 1,
-					to: 2,
+					to: 3,
 					logp: -1.1,
 					word: "YELLOW"
 				},
 				{
 					from: 1,
-					to: 2,
+					to: 3,
 					logp: -1.1,
 					word: "CYAN"
 				},
 				{
 					from: 1,
-					to: 2,
+					to: 3,
 					logp: -1.1,
 					word: "MAGENTA"
 				},
-
+				{
+					from: 1,
+					to: 3,
+					logp: -1.1,
+					word: "SMALL"
+				},
+				{
+					from: 1,
+					to: 3,
+					logp: -1.1,
+					word: "LARGE"
+				},
+				{
+					from: 1,
+					to: 3,
+					logp: -1.1,
+					word: "ANY"
+				},
+				{
+					from: 1,
+					to: 2,
+					logp: -1.1,
+					word: "ANY"
+				},
 				{
 					from: 2,
 					to: 3,
+					logp: -1.1,
+					word: "COLOR"
+				},
+				{
+					from: 2,
+					to: 3,
+					logp: -1.1,
+					word: "SIZE"
+				},
+				{
+					from: 3,
+					to: 4,
 					logp: -2,
 					word: "VALVE"
 				},
 
 				{
-					from: 2,
-					to: 3,
+					from: 3,
+					to: 4,
 					logp: 0,
 					word: ""
 				}
@@ -85,6 +126,7 @@
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
 	function procFinal(resp) {
+		window.console.log('PROC FINAL HYP');
 		document.getElementById('guidance').innerHTML = resp.hyp;
 		// Send to lua
 		d3.xhr("/shm/hcm/guidance/color")
