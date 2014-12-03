@@ -115,6 +115,7 @@
 		// Accounting
 		scene.remove(meshes.shift());
 		meshes.push(mesh);
+    window.console.log(mesh);
 	}
 
 	// Process the frame, which is always the chest lidar
@@ -157,18 +158,26 @@
 				rgbd_depth_metadata.latency = (e.timeStamp / 1e3) - rgbd_depth_metadata.t;
 			}
 		} else if (!depth_is_processing) {
-			rgbd_depth_metadata.data = new window.Float32Array(e.data);
-			rgbd_depth_metadata.depth_data = depth_img_data;
-			depth_is_processing = true;
-			depth_worker.postMessage(rgbd_depth_metadata, [rgbd_depth_metadata.data.buffer, rgbd_depth_metadata.depth_data.data.buffer]);
+      // Allocations
+      var npix = depth_canvas.height * depth_canvas.width;
+			rgbd_depth_metadata.pixels = new window.Float32Array(e.data);
+      rgbd_depth_metadata.pixdex = new window.Uint32Array(e.data);
+			rgbd_depth_metadata.positions = new window.Float32Array(npix * 3);
+      rgbd_depth_metadata.index = new window.Uint16Array(npix * 6);
+      
+      window.console.log(rgbd_depth_metadata);
+			depth_worker.postMessage(rgbd_depth_metadata, [rgbd_depth_metadata.pixels.buffer]);
+      depth_is_processing = true;
 		}
 	}
 
 	function recv_rgbd_depth(e) {
+    window.console.log(e.data);
+    process_mesh(e.data);
 		// Save the transferrable object
-		depth_img_data = e.data.depth_data;
+		//depth_img_data = e.data.depth_data;
 		// Paint the image back
-		depth_ctx.putImageData(depth_img_data, 0, 0);
+		//depth_ctx.putImageData(depth_img_data, 0, 0);
 		depth_is_processing = false;
 		//window.console.log(e.data.data);
 	}
@@ -281,7 +290,7 @@
 		depth_ws.binaryType = 'arraybuffer';
 		depth_ws.onmessage = process_rgbd_depth;
 		// Depth Worker
-		depth_worker = new window.Worker("/depth_worker.js");
+		depth_worker = new window.Worker("/mesh_worker2.js");
 		depth_worker.onmessage = recv_rgbd_depth;
 	});
 
