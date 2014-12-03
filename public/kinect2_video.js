@@ -26,37 +26,6 @@
 	depth_canvas.height = 212;
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
-	function plot_overlay(detect) {
-		var i, j, valve_color, valve, valves = overlay.select('g'),
-			imin, imax, jmin, jmax, found;
-		valves.selectAll('*').remove();
-		for (i = 0; i < valve_colors.length; i += 1) {
-			valve_color = detect[valve_colors[i]];
-			for (j = 0; j < valve_color.length; j += 1) {
-				//window.console.log(valve);
-				valve = valve_color[j];
-				imin = 2 * (valve.boundingBox[0] - 1);
-				imax = 2 * (valve.boundingBox[1] + 1);
-				jmin = 2 * (valve.boundingBox[2] - 1);
-				jmax = 2 * (valve.boundingBox[3] + 1);
-				found = valves.append("rect")
-					.attr("x", imin)
-					.attr("y", jmin)
-					.attr("width", imax - imin)
-					.attr("height", jmax - jmin);
-				if (valve.axisMajor / valve.axisMinor > 3) {
-					found.attr('class', 'found_bar');
-				} else {
-					found.attr('class', 'found_circle');
-				}
-				valves.append("text").text(100 / detect.n + '%')
-					.attr('font-size', "16px").attr('fill', "blue")
-					.attr('x', imin).attr('y', jmax);
-				//.attr('x', 2 * valve.centroid[0]).attr('y', 2 * valve.centroid[1]);
-			}
-		}
-	}
-
 	function toggle() {
 		toggle_id += 1;
 		if (toggle_id > 2) {
@@ -151,7 +120,7 @@
 					if (obj.id === 'labelA') {
 						ask_labelA(obj);
 					} else if (obj.id === 'detect') {
-						plot_overlay(obj);
+
 					}
 				}
 			});
@@ -177,7 +146,7 @@
 		overlay.append('g').attr('id', 'valves');
 
 		// Animate the buttons
-		d3.selectAll('button').on('click', function () {
+		d3.select('#camera_container').on('click', function () {
 			// 'this' variable is the button node
 			//console.log('clicked', this);
 			toggle();
