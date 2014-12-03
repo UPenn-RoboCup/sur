@@ -6,6 +6,7 @@
 		d3 = ctx.d3,
 		THREE = ctx.THREE,
 		scene = new THREE.Scene(),
+    raycaster = new THREE.Raycaster(),
 		meshes = [],
 		items = [],
 		mesh_feed,
@@ -23,15 +24,16 @@
 	// TODO: Should work for right or left click...?
 	function select_object(e) {
 		// find the mouse position (use NDC coordinates, per documentation)
-		var mouse_vector = new THREE.Vector3((e.offsetX / CANVAS_WIDTH) * 2 - 1, -(e.offsetY / CANVAS_HEIGHT) * 2 + 1),
-			projector = new THREE.Projector(),
-			raycaster = projector.pickingRay(mouse_vector, camera),
-			intersections = raycaster.intersectObjects(items.concat(meshes).concat(robot.meshes)),
-			obj0,
-			p0,
+		var mouse_vector = new THREE.Vector3((e.offsetX / CANVAS_WIDTH) * 2 - 1, -(e.offsetY / CANVAS_HEIGHT) * 2 + 1).unproject(camera),
 			T_point = new THREE.Matrix4(),
 			T_inv = new THREE.Matrix4(),
-			T_offset = new THREE.Matrix4();
+			T_offset = new THREE.Matrix4(),
+			intersections,
+			obj0,
+			p0;
+
+    raycaster.ray.set( camera.position, mouse_vector.sub( camera.position ).normalize() );
+    intersections = raycaster.intersectObjects(items.concat(meshes).concat(robot.meshes));
 
 		// intersect the plane
 		// if no intersection
@@ -55,7 +57,7 @@
 			T_point,
 			T_inv
 		);
-		window.console.log(e, T_point, T_offset);
+		window.console.log(e, obj0, T_point, T_offset);
 
 		if (e.button === 2) {
 			// Right click
@@ -137,7 +139,7 @@
 		// Build the scene
 		var spotLight,
 			ground = new THREE.Mesh(
-				new THREE.PlaneGeometry(100000, 100000),
+				new THREE.PlaneBufferGeometry(100000, 100000),
 				new THREE.MeshBasicMaterial({
 					side: THREE.DoubleSide,
 					color: 0x7F5217
