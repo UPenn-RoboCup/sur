@@ -17,6 +17,7 @@ var chest_height = 0.09,
 	sin = Math.sin,
   tan = Math.tan,
 	min = Math.min,
+  max = Math.max,
 	abs = Math.abs,
 	near,
 	far,
@@ -75,12 +76,12 @@ function get_kinect2_xyz(u, v, w, bodyTilt, bodyRoll) {
 	var	r = w,
     //r = w * (far - near) / 255 + near, // Convert w of 0-255 to actual meters value
     y = 2 * (u / width - 0.5) * r * tan(70.6 / 2 * DEG_TO_RAD),
-    z = 2 * (v / height - 0.5) * r * tan(60 / 2 * DEG_TO_RAD),
+    z = -2 * (v / height - 0.5) * r * tan(60 / 2 * DEG_TO_RAD),
     x = r;
 	// Return in mm, since THREEjs uses that
 	// Return also the position
 	// Also, swap the coordinates
-	return [y * 1, (-1*z + 1000) * 1, x * 1, x, y, z];
+	return [y, z + 1000, x,     x, y, z];
 }
 
 this.addEventListener('message', function (e) {
@@ -145,11 +146,15 @@ this.addEventListener('message', function (e) {
 			positions[position_idx + 2] = three_and_local_pos[2];
 
 			// jet colors
+			//fourValue = 4 - (4 * max(three_and_local_pos[3] / 4000, 0));
+      fourValue = 4 - (4 * max(0, min(1, three_and_local_pos[5] / 1000))); // z height
+			colors[position_idx] = min(fourValue - 1.5, 4.5 - fourValue);
+			colors[position_idx + 1] = min(fourValue - 0.5, 3.5 - fourValue);
+			colors[position_idx + 2] = min(fourValue + 0.5, 2.5 - fourValue);
       /*
-			fourValue = 4 - (4 * three_and_local_pos[3] / far);
-			colors[position_idx] = 255 * min(fourValue - 1.5, 4.5 - fourValue);
-			colors[position_idx + 1] = 255 * min(fourValue - 0.5, 3.5 - fourValue);
-			colors[position_idx + 2] = 255 * min(fourValue + 0.5, 2.5 - fourValue);
+			colors[position_idx] = 1;
+			colors[position_idx + 1] = 0;
+			colors[position_idx + 2] = 1;
       */
 
 			// index of 3 for the positions (mesh knows to use TRIANGLE of 3)
@@ -305,10 +310,10 @@ this.addEventListener('message', function (e) {
 	this.postMessage({
 		idx: index.subarray(0, 6 * n_quad),
 		pos: positions.subarray(0, 3 * n_el),
-//		col: colors.subarray(0, 3 * n_el),
+		col: colors.subarray(0, 3 * n_el),
     pixdex: pixdex,
 		quad_offsets: quad_offsets,
     n_quad: n_quad,
-    n_el: n_el,
-	}, [index.buffer, positions.buffer /*, colors.buffer*/]);
+    n_el: n_el
+	}, [index.buffer, positions.buffer, colors.buffer]);
 }, false);

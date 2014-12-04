@@ -94,14 +94,16 @@
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
 		var geometry = new THREE.BufferGeometry(),
-			material = new THREE.MeshLambertMaterial({
+			material = new THREE.MeshPhongMaterial({
 				side: THREE.DoubleSide,
-				color: 0x00CC00
+				color: 0xaaaaaa,//0x00CC00,
+        vertexColors: THREE.VertexColors,
+//        ambient: 0xaaaaaa, specular: 0xffffff, shininess: 250,
 			}),
 			mesh;
 		geometry.addAttribute('position', new THREE.BufferAttribute(mesh_obj.pos, 3));
 		geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
-		//geometry.addAttribute('color', new THREE.BufferAttribute(mesh_obj.col, 3));
+		geometry.addAttribute('color', new THREE.BufferAttribute(mesh_obj.col, 3));
 		geometry.offsets = mesh_obj.quad_offsets;
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
@@ -163,6 +165,7 @@
 			rgbd_depth_metadata.pixels = new window.Float32Array(e.data);
       rgbd_depth_metadata.pixdex = new window.Uint32Array(e.data);
 			rgbd_depth_metadata.positions = new window.Float32Array(npix * 3);
+      rgbd_depth_metadata.colors = new window.Float32Array(npix * 3),
       rgbd_depth_metadata.index = new window.Uint16Array(npix * 6);
       rgbd_depth_metadata.width = depth_canvas.width;
       rgbd_depth_metadata.height = depth_canvas.height;
