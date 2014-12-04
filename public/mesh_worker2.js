@@ -80,7 +80,7 @@ function get_kinect2_xyz(u, v, w, bodyTilt, bodyRoll) {
 	// Return in mm, since THREEjs uses that
 	// Return also the position
 	// Also, swap the coordinates
-	return [y * 1, (z + bodyHeight) * 1, x * 1, x, y, z];
+	return [y * 1, (-1*z + 1000) * 1, x * 1, x, y, z];
 }
 
 this.addEventListener('message', function (e) {
@@ -244,11 +244,10 @@ this.addEventListener('message', function (e) {
 			d = positions.subarray(3 * d_position_idx, 3 * d_position_idx + 3);
 
 			// Ensure that quads are smoothly connected; restrict the derivatives on the durface here
-
 			if (abs(a[2] - b[2]) > CONNECTIVITY || abs(a[2] - c[2]) > CONNECTIVITY || abs(a[2] - d[2]) > CONNECTIVITY) {
 				continue;
 			}
-/*
+      /*
 			// Too high in the air (2m)
 			if (a[1] > max_ceiling || b[1] > max_ceiling || c[1] > max_ceiling || d[1] > max_ceiling) {
 				continue;
@@ -307,6 +306,7 @@ this.addEventListener('message', function (e) {
 		idx: index.subarray(0, 6 * n_quad),
 		pos: positions.subarray(0, 3 * n_el),
 //		col: colors.subarray(0, 3 * n_el),
+    pixdex: pixdex,
 		quad_offsets: quad_offsets,
     n_quad: n_quad,
     n_el: n_el,

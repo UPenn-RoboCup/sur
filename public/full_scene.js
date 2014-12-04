@@ -27,11 +27,11 @@
     depth_is_processing = false;
   
 	// Constant for the Kinect2
-	//depth_canvas.width = 512;
-	//depth_canvas.height = 424;
+	depth_canvas.width = 512;
+	depth_canvas.height = 424;
 	// Webots
-	depth_canvas.width = 256;
-	depth_canvas.height = 212;
+	//depth_canvas.width = 256;
+	//depth_canvas.height = 212;
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
 	// Select an object to rotate around, or general selection for other stuff
@@ -164,9 +164,12 @@
       rgbd_depth_metadata.pixdex = new window.Uint32Array(e.data);
 			rgbd_depth_metadata.positions = new window.Float32Array(npix * 3);
       rgbd_depth_metadata.index = new window.Uint16Array(npix * 6);
+      rgbd_depth_metadata.width = depth_canvas.width;
+      rgbd_depth_metadata.height = depth_canvas.height;
       
       window.console.log(rgbd_depth_metadata);
-			depth_worker.postMessage(rgbd_depth_metadata, [rgbd_depth_metadata.pixels.buffer]);
+			//depth_worker.postMessage(rgbd_depth_metadata, [rgbd_depth_metadata.pixels.buffer]);
+      depth_worker.postMessage(rgbd_depth_metadata);
       depth_is_processing = true;
 		}
 	}
