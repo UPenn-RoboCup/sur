@@ -14,27 +14,15 @@ var DEG_TO_RAD = Math.PI / 180,
 	far,
 	hfov,
 	vfov,
-	a,
-	b,
-	c,
-	d,
-	w,
 	p,
 	cm,
-	quad_idx,
-	three_and_local_pos,
-	n_plausible_quads,
-	n_plausible_index,
 	offset_num,
 	cur_offset,
 	face_count,
-	tmp_idx,
 	a_position_idx,
 	b_position_idx,
 	c_position_idx,
-	d_position_idx,
-	quad_index_offset,
-	offset_row;
+	d_position_idx;
 
 // Returns a point in xyz of the torso frame
 /*
@@ -50,20 +38,24 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   MIN_CONNECTIVITY = 75, // points within MIN_CONNECTIVITY of each other are connected
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
-    kinectV2: function (u, v, w, width, height) {
+    kinectV2: function (u, v, w, width, height, robot, destination) {
     	'use strict';
     	var	r = w,
         //r = w * (far - near) / 255 + near, // Convert w of 0-255 to actual meters value
         y = 2 * (u / width - 0.5) * r * K2_HFOV_FACTOR,
         z = -2 * (v / height - 0.5) * r * K2_VFOV_FACTOR,
         x = r;
-    	// Return in mm, since THREEjs uses that
-    	// Return also the position
-    	// Also, swap the coordinates
-    	return [y, z + 1000, x,     x, y, z];
+    	// Set in the THREE.js frame, with millimeters
+      destination[0] = y;
+      destination[1] = z + 1000;
+      destination[2] = x;
+    	// Return the position in our own frame
+    	return [x, y, z];
     },
-    chestLidar: function (u, v, w, width, height, robot) {
+    chestLidar: function (u, v, w, width, height, robot, destination) {
     	'use strict';
+      // Saturation
+      if (w === 0 || w === 255) {return;}
     	var bodyRoll = 0;
       var bodyTilt = 0;
     	var h_angle0 = hfov[1] - u * (hfov[1] - hfov[0]) / width,
@@ -103,6 +95,15 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     	// Return also the position
     	// Also, swap the coordinates
     	return [ty * 1000, tz * 1000, tx * 1000, xx, yy, zz];
+    }
+  },
+  SENSOR_COLOR = {
+    kinectV2: function (xyz, destination) {
+			// JET colormap. Colors range from 0.0 to 1.0
+      var fourValue = 4 - (4 * max(0, min(1, xyz[2] / 1000))); // z height
+			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
+			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
+			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
     }
   };
 
@@ -145,10 +146,12 @@ this.addEventListener('message', function (e) {
 		}],
     // Cartesian coordinate formation function
     get_xyz = SENSOR_XYZ.kinectV2,
-    // Coloring
-    fourValue,
+    // Color formation function
+    get_color = SENSOR_COLOR.kinectV2,
     // Loop counters
-    i, j;
+    i, j,
+    // Position of the point
+    point_xyz;
 
 	for (j = 0; j < height; j += 1) {
 		for (i = 0; i < width; i += 1) {
@@ -156,55 +159,44 @@ this.addEventListener('message', function (e) {
 			pixdex_idx += 1;
 			// move on to the next pixel (RGBA) for next time
 			pixel_idx += 1;
-
-			// Grab the pixel data
-			w = pixels[pixel_idx];
-
-/*
-			if (w === 0 || w === 255) {
+			// Compute and set the xyz positions
+			point_xyz = get_xyz(
+        i, j, pixels[pixel_idx], width, height, {}, positions.subarray(position_idx, position_idx + 3)
+      );
+      // Check if we are given a valid point
+      if (point_xyz === undefined) {
 				// Saturation check
 				// NOTE: u32 index. start @1, so we can make things invalid with 0
 				pixdex[pixdex_idx] = 0;
 				continue;
-			}
-*/
-
-			// TODO: Could make this faster?
-			// Compute the xyz positions from the LIDAR
-			three_and_local_pos = get_xyz(i, j, w, width, height);
-			positions[position_idx] = three_and_local_pos[0];
-			positions[position_idx + 1] = three_and_local_pos[1];
-			positions[position_idx + 2] = three_and_local_pos[2];
-
-			// JET colormap. Colors range from 0.0 to 1.0
-			//fourValue = 4 - (4 * max(three_and_local_pos[3] / 4000, 0));
-      fourValue = 4 - (4 * max(0, min(1, three_and_local_pos[5] / 1000))); // z height
-			colors[position_idx] = min(fourValue - 1.5, 4.5 - fourValue);
-			colors[position_idx + 1] = min(fourValue - 0.5, 3.5 - fourValue);
-			colors[position_idx + 2] = min(fourValue + 0.5, 2.5 - fourValue);
-
-			// index of 3 for the positions (mesh knows to use TRIANGLE of 3)
-			pixdex[pixdex_idx] = idx_idx;
-
-			// Save the pixel particle, since it is valid
+      }
+      // Set the color of this pixel
+      get_color(
+        point_xyz, colors.subarray(position_idx, position_idx + 3)
+      );
+      // TODO: Set the normal...
+			// Update the particle count, since it is valid
 			n_el += 1;
-
 			// Increment the index of where we are in the position typedarray
 			position_idx += 3;
-
+			// index of 3 for the positions (mesh knows to use TRIANGLE of 3)
+			pixdex[pixdex_idx] = idx_idx;
 			// records the number of position indices
 			idx_idx += 1;
-
 		} // for i in width
 
+    // TODO: Fix the row/index stuff
 		// 20000 triangles per offsets = 60000 indexes
 		// i think that is right:
 		// http://alteredqualia.com/three/examples/webgl_buffergeometry_perf2.html
-		n_plausible_quads = (n_el - n_last_chunk_el) / 2; // should be 2
-		n_plausible_index = n_plausible_quads * 6;
-		if (n_plausible_index > 55000) { // heuristic number
+		//n_plausible_quads = (n_el - n_last_chunk_el) / 2; // should be 2
+		//if (6 * n_plausible_quads > 55000) { // heuristic number
+    //if (n_plausible_quads > 9150) { // heuristic number
+    if ((n_el - n_last_chunk_el) > 18333) { // heuristic number
+      // Save the last chunk element number
+      n_last_chunk_el = n_el;
+      // Save the row
 			quad_offsets[quad_offsets.length - 1].row = j;
-			n_last_chunk_el = n_el;
 			// break into a new chunk
 			quad_offsets.push({
 				index: n_el,
@@ -213,6 +205,7 @@ this.addEventListener('message', function (e) {
 				count: 0 // ditto
 			});
 		}
+    
 	} // for j in height
 
 	quad_offsets[quad_offsets.length - 1].row = height;
@@ -220,9 +213,18 @@ this.addEventListener('message', function (e) {
 	// Allow for maximum number of quads
 	// 2 triangles per mesh. 3 indices per triangle
 	//index = new this.Uint16Array(n_el * 6);
-
-	quad_idx = 0;
+  
+  
+  // Reset the pixdex index
 	pixdex_idx = 0;
+  
+  var pixdex_next_row_idx = width,
+    // Quad points
+    quad_A, quad_B, quad_C, quad_D,
+    // Quad index
+    quad_idx = 0,
+    // View of the array there
+    quad_idx_view;
 
 	// begin the loop
 	offset_num = 0;
@@ -231,50 +233,34 @@ this.addEventListener('message', function (e) {
 
 	// Do not look at the last row/column
 	for (j = 0; j < height - 1; j += 1) {
-
 		for (i = 0; i < width - 1; i += 1) {
-
-			// use a temporary index
-			tmp_idx = pixdex_idx;
-
-			// ready for next iteration
+      // Find the four indices of the quad points
+      // First row
+			a_position_idx = pixdex[pixdex_idx];
+			b_position_idx = pixdex[pixdex_idx + 1];
 			pixdex_idx += 1;
-
-			// a of the quad
-			a_position_idx = pixdex[tmp_idx] - 1;
-			if (a_position_idx < 0) {
+      // Next row
+			c_position_idx = pixdex[pixdex_next_row_idx];
+			d_position_idx = pixdex[pixdex_next_row_idx + 1];
+      pixdex_next_row_idx += 1;
+      // Check if the quad would contain an invalid point, since wwe use 1 based indexing, with 0 as invalid
+			if (a_position_idx === 0 || b_position_idx === 0 || c_position_idx === 0 || d_position_idx === 0) {
 				continue;
 			}
-
-			// b of the quad
-			b_position_idx = pixdex[tmp_idx + 1] - 1;
-			if (b_position_idx < 0) {
-				continue;
-			}
-
-			// go to the next row
-			tmp_idx += width;
-
-			// c of the quad
-			c_position_idx = pixdex[tmp_idx] - 1;
-			if (c_position_idx < 0) {
-				continue;
-			}
-
-			// d of the quad
-			d_position_idx = pixdex[tmp_idx + 1] - 1;
-			if (d_position_idx < 0) {
-				continue;
-			}
-
-			// x, y, z of this position
-			a = positions.subarray(3 * a_position_idx, 3 * a_position_idx + 3);
-			b = positions.subarray(3 * b_position_idx, 3 * b_position_idx + 3);
-			c = positions.subarray(3 * c_position_idx, 3 * c_position_idx + 3);
-			d = positions.subarray(3 * d_position_idx, 3 * d_position_idx + 3);
-
+      // Correct 0-based indexing
+      a_position_idx -= 1;
+      b_position_idx -= 1;
+      c_position_idx -= 1;
+      d_position_idx -= 1;
+			// Positions of each Quad point
+			quad_A = positions.subarray(3 * a_position_idx, 3 * a_position_idx + 3);
+			quad_B = positions.subarray(3 * b_position_idx, 3 * b_position_idx + 3);
+			quad_C = positions.subarray(3 * c_position_idx, 3 * c_position_idx + 3);
+			quad_D = positions.subarray(3 * d_position_idx, 3 * d_position_idx + 3);
 			// Ensure that quads are smoothly connected; restrict the derivatives on the durface here
-			if (abs(a[2] - b[2]) > MIN_CONNECTIVITY || abs(a[2] - c[2]) > MIN_CONNECTIVITY || abs(a[2] - d[2]) > MIN_CONNECTIVITY) {
+			if (
+        abs(quad_A[2] - quad_B[2]) > MIN_CONNECTIVITY || abs(quad_A[2] - quad_C[2]) > MIN_CONNECTIVITY || abs(quad_A[2] - quad_D[2]) > MIN_CONNECTIVITY
+      ) {
 				continue;
 			}
       /*
@@ -287,34 +273,29 @@ this.addEventListener('message', function (e) {
 				continue;
 			}
       */
-
-			// find the quad index offset
-			quad_index_offset = cur_offset.index;
-
-			// Add the upper tri
-			index[quad_idx] = a_position_idx - quad_index_offset;
-			index[quad_idx + 1] = c_position_idx - quad_index_offset;
-			index[quad_idx + 2] = b_position_idx - quad_index_offset;
-			// add the lower tri
-			index[quad_idx + 3] = d_position_idx - quad_index_offset;
-			index[quad_idx + 4] = b_position_idx - quad_index_offset;
-			index[quad_idx + 5] = c_position_idx - quad_index_offset;
-			// Maybe [quad_idx++] is better... must do an operation anyway...
-			quad_idx += 6;
-
-			face_count += 2;
-
 			// We have a valid quad!
 			n_quad += 1;
-
+			// Find the quad index offset
+      quad_idx_view = index.subarray(quad_idx, quad_idx + 6)
+      quad_idx += 6;
+      // Add the upper tri
+			quad_idx_view[0] = a_position_idx - cur_offset.index;
+			quad_idx_view[1] = c_position_idx - cur_offset.index;
+			quad_idx_view[2] = b_position_idx - cur_offset.index;
+			// add the lower tri
+			quad_idx_view[3] = d_position_idx - cur_offset.index;
+			quad_idx_view[4] = b_position_idx - cur_offset.index;
+			quad_idx_view[5] = c_position_idx - cur_offset.index;
+      // Faces are triangles. Two faces make a quad
+			face_count += 2;
 		} // for i
 
-		// ready for next iteration
+		// Since we do not investiage the last item in the row, increment
 		pixdex_idx += 1;
+    pixdex_next_row_idx += 1;
 
 		// check the offset index
-		offset_row = cur_offset.row;
-		if (j === offset_row) {
+		if (j === cur_offset.row) {
 			cur_offset.count = 3 * face_count;
 			face_count = 0;
 			offset_num += 1;
@@ -325,6 +306,7 @@ this.addEventListener('message', function (e) {
 			cur_offset.start = quad_idx;
 			j += 1;
 			pixdex_idx += width;
+      pixdex_next_row_idx += width;
 		}
 
 	} // for j
