@@ -9,20 +9,7 @@ var DEG_TO_RAD = Math.PI / 180,
   	px: 0,
   	py: 0,
   	pa: 0
-  },
-	near,
-	far,
-	hfov,
-	vfov,
-	p,
-	cm,
-	offset_num,
-	cur_offset,
-	face_count,
-	a_position_idx,
-	b_position_idx,
-	c_position_idx,
-	d_position_idx;
+  };
 
 // Returns a point in xyz of the torso frame
 /*
@@ -110,6 +97,11 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 this.addEventListener('message', function (e) {
 	'use strict';
 
+
+  //////////////
+  // Convert depth ranges into XYZ coordinates
+  // Input: Pre-populated quad_offsets
+  //////////////
 	var mesh = e.data,
     // Width and height of the 2D range image
   	width = mesh.width,
@@ -131,7 +123,7 @@ this.addEventListener('message', function (e) {
   	// TODO: Number of what elements?
   	n_el = 0,
     // Number of quads found
-    n_quad = 0,
+    quad_point_count_total = 0,
   	// Access pixel array elements and particle elements
     // TODO: Better comment
   	pixdex_idx = -1,
@@ -209,40 +201,39 @@ this.addEventListener('message', function (e) {
 	} // for j in height
 
 	quad_offsets[quad_offsets.length - 1].row = height;
-
-	// Allow for maximum number of quads
-	// 2 triangles per mesh. 3 indices per triangle
-	//index = new this.Uint16Array(n_el * 6);
   
-  
-  // Reset the pixdex index
-	pixdex_idx = 0;
-  
-  var pixdex_next_row_idx = width,
+  //////////////
+  // Stitch together Quad faces
+  // Input: Pre-populated quad_offsets
+  //////////////
+  var point_pos_idx = 0,
+    point_pos_next_row_idx = width,
     // Quad points
     quad_A, quad_B, quad_C, quad_D,
+    // Indices for these points
+  	a_position_idx, b_position_idx, c_position_idx, d_position_idx,
     // Quad index
     quad_idx = 0,
     // View of the array there
-    quad_idx_view;
-
-	// begin the loop
-	offset_num = 0;
-	cur_offset = quad_offsets[offset_num];
-	face_count = 0;
+    quad_idx_view,
+    // Track the quad offset
+  	offset_num = 0,
+    cur_offset = quad_offsets[offset_num],
+    // Number of points in this offset
+    quad_point_count = 0;
 
 	// Do not look at the last row/column
 	for (j = 0; j < height - 1; j += 1) {
 		for (i = 0; i < width - 1; i += 1) {
       // Find the four indices of the quad points
       // First row
-			a_position_idx = pixdex[pixdex_idx];
-			b_position_idx = pixdex[pixdex_idx + 1];
-			pixdex_idx += 1;
+			a_position_idx = pixdex[point_pos_idx];
+			b_position_idx = pixdex[point_pos_idx + 1];
+			point_pos_idx += 1;
       // Next row
-			c_position_idx = pixdex[pixdex_next_row_idx];
-			d_position_idx = pixdex[pixdex_next_row_idx + 1];
-      pixdex_next_row_idx += 1;
+			c_position_idx = pixdex[point_pos_next_row_idx];
+			d_position_idx = pixdex[point_pos_next_row_idx + 1];
+      point_pos_next_row_idx += 1;
       // Check if the quad would contain an invalid point, since wwe use 1 based indexing, with 0 as invalid
 			if (a_position_idx === 0 || b_position_idx === 0 || c_position_idx === 0 || d_position_idx === 0) {
 				continue;
@@ -263,20 +254,9 @@ this.addEventListener('message', function (e) {
       ) {
 				continue;
 			}
-      /*
-			// Too high in the air (2m)
-			if (a[1] > max_ceiling || b[1] > max_ceiling || c[1] > max_ceiling || d[1] > max_ceiling) {
-				continue;
-			}
-			// Ground (2cm)
-			if (a[1] < 20 || b[1] < 20 || c[1] < 20 || d[1] < 20) {
-				continue;
-			}
-      */
 			// We have a valid quad!
-			n_quad += 1;
 			// Find the quad index offset
-      quad_idx_view = index.subarray(quad_idx, quad_idx + 6)
+      quad_idx_view = index.subarray(quad_idx, quad_idx + 6);
       quad_idx += 6;
       // Add the upper tri
 			quad_idx_view[0] = a_position_idx - cur_offset.index;
@@ -286,41 +266,49 @@ this.addEventListener('message', function (e) {
 			quad_idx_view[3] = d_position_idx - cur_offset.index;
 			quad_idx_view[4] = b_position_idx - cur_offset.index;
 			quad_idx_view[5] = c_position_idx - cur_offset.index;
-      // Faces are triangles. Two faces make a quad
-			face_count += 2;
+      // Faces are triangles. Two faces make a quad. Thus, there are 6 points per quad
+			quad_point_count += 6;
+      quad_point_count_total += 6;
 		} // for i
 
 		// Since we do not investiage the last item in the row, increment
-		pixdex_idx += 1;
-    pixdex_next_row_idx += 1;
+		point_pos_idx += 1;
+    point_pos_next_row_idx += 1;
 
 		// check the offset index
 		if (j === cur_offset.row) {
-			cur_offset.count = 3 * face_count;
-			face_count = 0;
+      // Store the number of points in the
+			cur_offset.count = quad_point_count;
+			quad_point_count = 0;
+      // Move to the next offset index for quad, if we have any left
 			offset_num += 1;
 			if (offset_num >= quad_offsets.length) {
 				break;
 			}
 			cur_offset = quad_offsets[offset_num];
+      // Save the starting index
 			cur_offset.start = quad_idx;
-			j += 1;
-			pixdex_idx += width;
-      pixdex_next_row_idx += width;
+      // Move to the next row, and skip adding the current one.
+      // TODO: This leads to breaks, I think
+			point_pos_idx += width;
+      point_pos_next_row_idx += width;
+      j += 1;
 		}
 
 	} // for j
 
-	// final offset count
-	cur_offset.count = 3 * face_count;
+	// Count of points for the final offset group
+	cur_offset.count = quad_point_count;
 
+  ///////////////
+  // Post the data back to the parent
+  ///////////////
 	this.postMessage({
-		idx: index.subarray(0, 6 * n_quad),
+		idx: index.subarray(0, quad_point_count_total),
 		pos: positions.subarray(0, 3 * n_el),
 		col: colors.subarray(0, 3 * n_el),
     pixdex: pixdex,
 		quad_offsets: quad_offsets,
-    n_quad: n_quad,
     n_el: n_el
 	}, [index.buffer, positions.buffer, colors.buffer]);
 }, false);
