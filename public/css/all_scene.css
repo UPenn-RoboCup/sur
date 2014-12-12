@@ -1,0 +1,17 @@
+html, body {
+  font-family: helvetica;
+  height: 100%;
+  margin: 0px;
+  overflow: hidden;
+}
+#world_container {
+  height: 100%;
+}
+#topic {
+  position: fixed;
+  top: 0px;
+  width: 100%;
+}
+select {
+  font-size: 24pt;
+}

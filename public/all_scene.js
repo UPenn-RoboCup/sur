@@ -20,6 +20,105 @@
 		CANVAS_WIDTH,
 		CANVAS_HEIGHT;
 
+  function find_plane(mesh, point) {
+    // Find all the points near it assuming upright
+    var indices = mesh.geometry.getAttribute('index').array,
+      positions = mesh.geometry.getAttribute('position').array,
+      offsets = mesh.geometry.drawcalls,
+      point2 = point.clone().divideScalar(1000),
+    	vA = new THREE.Vector3(),
+    	vB = new THREE.Vector3(),
+    	vC = new THREE.Vector3(),
+      a, b, c,
+      nClose = 0,
+      xSum = 0,
+      xxSum = 0,
+      zSum = 0,
+      zzSum = 0,
+      xzSum = 0,
+      xxxSum = 0,
+      zzzSum = 0,
+      xzzSum = 0,
+      xxzSum = 0;
+      window.console.log(mesh);
+    // From the raycaster (https://raw.githubusercontent.com/mrdoob/three.js/master/src/objects/Mesh.js)
+    for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
+			var start = offsets[ oi ].start;
+			var count = offsets[ oi ].count;
+			var index = offsets[ oi ].index;
+			for ( var i = start, il = start + count; i < il; i += 3 ) {
+				a = index + indices[ i ];
+				//b = index + indices[ i + 1 ];
+				//c = index + indices[ i + 2 ];
+				vA.fromArray( positions, a * 3 ).divideScalar(1000);
+				//vB.fromArray( positions, b * 3 ).sub(point).divideScalar(1000);
+				//vC.fromArray( positions, c * 3 ).sub(point).divideScalar(1000);
+        // Check distance - ensure the full face
+        if (Math.abs(vA.y - point2.y) > 0.05) {
+          continue;
+        }
+        if(Math.abs(point2.x - vA.x) > 0.10){
+          continue;
+        }
+        if(Math.abs(point2.z - vA.z) > 0.10){
+          continue;
+        }
+        window.console.log(vA);
+        // Compute the running nearest circle
+        nClose += 1;
+        xSum += vA.x;
+        zSum += vA.z;
+        //
+        xxSum += vA.x * vA.x;
+        zzSum += vA.z * vA.z;
+        xzSum += vA.x * vA.z;
+        //
+        xxxSum += vA.x * vA.x * vA.x;
+        zzzSum += vA.z * vA.z * vA.z;
+        xzzSum += vA.x * vA.z * vA.z;
+        xxzSum += vA.x * vA.x * vA.z;
+			}
+		}
+    // http://www.had2know.com/academics/best-fit-circle-least-squares.html
+    var Amat = $M([
+      [xxSum, xzSum, xSum],
+      [xzSum, zzSum, zSum],
+      [xSum, zSum, nClose]
+    ]);
+    window.console.log(Amat);
+    var bvec = $V([
+      xzzSum + xxxSum,
+      xxzSum + zzzSum,
+      xxSum + zzSum
+    ]);
+    window.console.log(bvec);
+    var Amat_inv = Amat.inv();
+    window.console.log(Amat_inv);
+    var Ainv_bvec = Amat_inv.multiply(bvec);
+    window.console.log(Ainv_bvec);
+    var xc = Ainv_bvec.e(1) / 2,
+      zc = Ainv_bvec.e(2) / 2,
+      r = Math.sqrt(4*Ainv_bvec.e(3) + Ainv_bvec.e(1)*Ainv_bvec.e(1) + Ainv_bvec.e(2)*Ainv_bvec.e(2)) / 2;
+    window.console.log(xc, zc, r);
+//    r = 0.10;
+    
+    //sqrt(3.88*4 + 1.2^2+3.74^2) /2
+
+    var geometry = new THREE.CylinderGeometry( r*1000, r*1000, 25.4 );
+    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    var cylinder = new THREE.Mesh( geometry, material );
+    cylinder.position.set(xc*1000, point.y, zc*1000);
+    scene.add( cylinder );
+    items.push(cylinder);
+    
+    /*
+    variance = sum( (xi - u)^2 )
+    sum( xi^2 + u^2 - 2*u*xi )
+    sum( xi^2 ) + sum(u^2) + 2 * sum(u*xi)
+    sum( xi^2 ) + u^2 + 2 * u * sum(xi)
+    */
+  }
+
 	// Select an object to rotate around, or general selection for other stuff
 	// TODO: Should work for right or left click...?
 	function select_object(e) {
@@ -30,7 +129,8 @@
 			T_offset = new THREE.Matrix4(),
 			intersections,
 			obj0,
-			p0;
+			p0,
+      mesh0;
     // Form the raycaster for the camera's current position
     raycaster.ray.set(camera.position, mouse_vector.sub( camera.position ).normalize());
     // Find the intersections with the various meshes in the scene
@@ -42,6 +142,7 @@
 		// Grab the first intersection object and the intersection point
 		obj0 = intersections[0];
 		p0 = obj0.point;
+    mesh0 = obj0.object;
     // Solve for the transform from the robot frame to the point
 		/*
     T_? * T_Robot = T_point
@@ -61,7 +162,16 @@
 		} else {
 			// Left click: Update the orbit target
 			// TODO: make smooth transition via a setInterval interpolation to the target
-			controls.target = p0;
+      if (controls.enabled) {
+        controls.target = p0;
+      } else {
+        // Default gives a text cursor
+        e.preventDefault();
+        if(mesh0.name !== 'kinectV2'){
+          return;
+        }
+        find_plane(mesh0, p0);
+      }
 		}
 	}
 	// Constantly animate the scene
@@ -92,21 +202,30 @@
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
 		geometry.addAttribute('position', new THREE.BufferAttribute(mesh_obj.pos, 3));
 		geometry.addAttribute('color', new THREE.BufferAttribute(mesh_obj.col, 3));
-    // TODO: Migrate from offsets to addDrawCall
-		geometry.offsets = mesh_obj.quad_offsets;
+    for(var i = 0; i<mesh_obj.quad_offsets.length; i++){
+      geometry.addDrawCall(
+        mesh_obj.quad_offsets[i].start, mesh_obj.quad_offsets[i].count, mesh_obj.quad_offsets[i].index
+      );
+    }
+		// Make the new mesh and remove the previous one
+		mesh = new THREE.Mesh(geometry, material);
+    mesh.name = 'kinectV2';
+		scene.remove(meshes.shift());
+		meshes.push(mesh);
+    // TODO: Apply the transform in which way? Not valid for plotting the LIDAR mesh, though
+    // For now, the best bet to to bake into the vertices
+    geometry.applyMatrix((new THREE.Matrix4()).makeTranslation(0,1000,0));
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
 		// for picking via raycasting
 		geometry.computeBoundingSphere();
+    geometry.computeBoundingBox();
 		// Phong Material requires normals for reflectivity
     // TODO: Perform the normals computation in the Worker thread maybe?
 		geometry.computeVertexNormals();
-		// Make the new mesh, and return to the user
-		mesh = new THREE.Mesh(geometry, material);
+    //mesh.applyMatrix((new THREE.Matrix4()).makeTranslation(0,1000,0));
+    // Add the mesh to the scene
 		scene.add(mesh);
-		// Accounting
-		scene.remove(meshes.shift());
-		meshes.push(mesh);
     //window.console.log(mesh);
     // Finished drawing on the screen
     depth_is_processing = false;
@@ -151,9 +270,6 @@
 	}
   
 	function process_kinectV2_frame(e) {
-    
-    //window.console.log(e);
-    
 		if (typeof e.data === 'string') {
 			rgbd_depth_metadata = JSON.parse(e.data);
 			if (rgbd_depth_metadata.t !== undefined) {
@@ -169,11 +285,6 @@
       rgbd_depth_metadata.colors = new window.Float32Array(npix * 3);
 			rgbd_depth_metadata.pixels = new window.Float32Array(e.data);
       rgbd_depth_metadata.pixdex = new window.Uint32Array(rgbd_depth_metadata.pixels.buffer);
-      
-      window.console.log(rgbd_depth_metadata);
-      //if(true){return;}
-      //depth_worker.postMessage(rgbd_depth_metadata);
-      
 			depth_worker.postMessage(rgbd_depth_metadata,[
         rgbd_depth_metadata.index.buffer,
         rgbd_depth_metadata.positions.buffer,
@@ -184,7 +295,6 @@
       depth_is_processing = true;
 		}
 	}
-  
 	// Add the camera view and append
 	function setup() {
 		// Build the scene
@@ -224,10 +334,6 @@
 		spotLight.position.set(0, 2000, -100);
 		spotLight.castShadow = true;
 		scene.add(spotLight);
-		// Animate the buttons
-		d3.selectAll('button').on('click', function () {
-			// 'this' variable is the button node
-		});
 		// Handle resizing
 		window.addEventListener('resize', function () {
 			CANVAS_WIDTH = container.clientWidth;
@@ -259,11 +365,29 @@
 			});
 			*/
 		});
+    // User interactions
+		d3.select('select#operations').on('change', function () {
+			// 'this' variable is the button node
+      switch(this.value){
+      case 'home':
+        break;
+      case 'look':
+        controls.enabled = true;
+        break;
+      case 'draw':
+        controls.enabled = false;
+        break;
+      default:
+        break;
+      }
+		});
 	}
+  // Load the Matrix library
+	ctx.util.ljs('/js/sylvester-min.js');
 	// Load the Styling
 	ctx.util.lcss('/css/gh-buttons.css');
-	ctx.util.lcss('/css/mesh_scene.css', function () {
-		d3.html('/view/mesh_scene.html', function (error, view) {
+	ctx.util.lcss('/css/all_scene.css', function () {
+		d3.html('/view/all_scene.html', function (error, view) {
 			// Remove landing page elements and add new content
 			d3.select("div#landing").remove();
 			// Just see the scene

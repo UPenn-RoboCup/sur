@@ -25,19 +25,18 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   MIN_CONNECTIVITY = 75, // points within MIN_CONNECTIVITY of each other are connected
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
-    kinectV2: function (u, v, w, width, height, robot, destination) {
+    kinectV2: function (u, v, x, width, height, robot, destination) {
+      // The range value is directly our x coordinate
     	'use strict';
-    	var	r = w,
-        //r = w * (far - near) / 255 + near, // Convert w of 0-255 to actual meters value
-        y = 2 * (u / width - 0.5) * r * K2_HFOV_FACTOR,
-        z = -2 * (v / height - 0.5) * r * K2_VFOV_FACTOR,
-        x = r;
+      // 2 meters away is too far to render
+      if(x > 2000){
+        return;
+      }
     	// Set in the THREE.js frame, with millimeters
-      destination[0] = y;
-      destination[1] = z + 1000;
+      destination[0] = 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR;
+      destination[1] = -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR;
       destination[2] = x;
-    	// Return the position in our own frame
-    	return [x, y, z];
+    	return destination;
     },
     chestLidar: function (u, v, w, width, height, robot, destination) {
     	'use strict';
@@ -87,7 +86,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   SENSOR_COLOR = {
     kinectV2: function (xyz, destination) {
 			// JET colormap. Colors range from 0.0 to 1.0
-      var fourValue = 4 - (4 * max(0, min(1, xyz[2] / 1000))); // z height
+      var fourValue = 4 - (4 * max(0, min(1, xyz[1] / 1000)));
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
@@ -97,11 +96,11 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 this.addEventListener('message', function (e) {
 	'use strict';
 
-
   //////////////
   // Convert depth ranges into XYZ coordinates
   // Input: Pre-populated quad_offsets
   //////////////
+  // TODO: Fix the naming of variables a bit
 	var mesh = e.data,
     // Width and height of the 2D range image
   	width = mesh.width,
@@ -126,8 +125,8 @@ this.addEventListener('message', function (e) {
     quad_point_count_total = 0,
   	// Access pixel array elements and particle elements
     // TODO: Better comment
-  	pixdex_idx = -1,
-  	pixel_idx = -1,
+  	pixdex_idx = 0,
+  	pixel_idx = 0,
 		// Quads will cite indexed pixels
 		// first offset is just zero
 		quad_offsets = [{
@@ -147,10 +146,6 @@ this.addEventListener('message', function (e) {
 
 	for (j = 0; j < height; j += 1) {
 		for (i = 0; i < width; i += 1) {
-			// next float32 in the image. += 4 if RGBA image to get each R of the greyscale, for instance
-			pixdex_idx += 1;
-			// move on to the next pixel (RGBA) for next time
-			pixel_idx += 1;
 			// Compute and set the xyz positions
 			point_xyz = get_xyz(
         i, j, pixels[pixel_idx], width, height, {}, positions.subarray(position_idx, position_idx + 3)
@@ -160,6 +155,10 @@ this.addEventListener('message', function (e) {
 				// Saturation check
 				// NOTE: u32 index. start @1, so we can make things invalid with 0
 				pixdex[pixdex_idx] = 0;
+  			// next float32 in the image. += 4 if RGBA image to get each R of the greyscale, for instance
+  			pixdex_idx += 1;
+  			// move on to the next pixel (RGBA) for next time
+  			pixel_idx += 1;
 				continue;
       }
       // Set the color of this pixel
@@ -175,16 +174,15 @@ this.addEventListener('message', function (e) {
 			pixdex[pixdex_idx] = idx_idx;
 			// records the number of position indices
 			idx_idx += 1;
+			// next float32 in the image. += 4 if RGBA image to get each R of the greyscale, for instance
+			pixdex_idx += 1;
+			// move on to the next pixel (RGBA) for next time
+			pixel_idx += 1;
 		} // for i in width
-
-    // TODO: Fix the row/index stuff
-		// 20000 triangles per offsets = 60000 indexes
-		// i think that is right:
-		// http://alteredqualia.com/three/examples/webgl_buffergeometry_perf2.html
-		//n_plausible_quads = (n_el - n_last_chunk_el) / 2; // should be 2
-		//if (6 * n_plausible_quads > 55000) { // heuristic number
-    //if (n_plausible_quads > 9150) { // heuristic number
-    if ((n_el - n_last_chunk_el) > 18333) { // heuristic number
+		
+    // Use a heurstic for splitting into a new chunk
+    // Splitting is needed for lots of triangles: http://alteredqualia.com/three/examples/webgl_buffergeometry_perf2.html
+    if ((n_el - n_last_chunk_el) > 18333) {
       // Save the last chunk element number
       n_last_chunk_el = n_el;
       // Save the row
@@ -196,6 +194,8 @@ this.addEventListener('message', function (e) {
 				start: 0, // this will change anyway
 				count: 0 // ditto
 			});
+      // TODO: Replicate the last row of the old chunk as the first row in the new chunk
+      // NOTE: Cannot do this now, since the index array is the range map array in order to save space...
 		}
     
 	} // for j in height
