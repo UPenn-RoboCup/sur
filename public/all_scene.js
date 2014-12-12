@@ -21,6 +21,7 @@
 		CANVAS_HEIGHT;
 
   function find_plane(mesh, point) {
+    window.console.log(mesh, point);
     // Find all the points near it assuming upright
     var indices = mesh.geometry.getAttribute('index').array,
       positions = mesh.geometry.getAttribute('position').array,
@@ -39,8 +40,10 @@
       xxxSum = 0,
       zzzSum = 0,
       xzzSum = 0,
-      xxzSum = 0;
-      window.console.log(mesh);
+      xxzSum = 0,
+      xySum = 0,
+      zySum = 0,
+      ySum = 0;
     // From the raycaster (https://raw.githubusercontent.com/mrdoob/three.js/master/src/objects/Mesh.js)
     for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
 			var start = offsets[ oi ].start;
@@ -54,16 +57,10 @@
 				//vB.fromArray( positions, b * 3 ).sub(point).divideScalar(1000);
 				//vC.fromArray( positions, c * 3 ).sub(point).divideScalar(1000);
         // Check distance - ensure the full face
-        if (Math.abs(vA.y - point2.y) > 0.05) {
+        // TODO: Grab these values from the user somehow
+        if (Math.abs(vA.y - point2.y) > 0.01 || Math.abs(point2.x - vA.x) > 0.15 || Math.abs(point2.z - vA.z) > 0.15){
           continue;
         }
-        if(Math.abs(point2.x - vA.x) > 0.10){
-          continue;
-        }
-        if(Math.abs(point2.z - vA.z) > 0.10){
-          continue;
-        }
-        window.console.log(vA);
         // Compute the running nearest circle
         nClose += 1;
         xSum += vA.x;
@@ -77,46 +74,74 @@
         zzzSum += vA.z * vA.z * vA.z;
         xzzSum += vA.x * vA.z * vA.z;
         xxzSum += vA.x * vA.x * vA.z;
+        //
+        xySum += vA.x * vA.y;
+        zySum += vA.z * vA.y;
+        ySum += vA.y;
 			}
 		}
+    
+    // http://www.geometrictools.com/Documentation/CylinderFitting.pdf
+    // http://www.physics.oregonstate.edu/paradigms/Publications/ConicSections.html
     // http://www.had2know.com/academics/best-fit-circle-least-squares.html
     var Amat = $M([
       [xxSum, xzSum, xSum],
       [xzSum, zzSum, zSum],
       [xSum, zSum, nClose]
     ]);
-    window.console.log(Amat);
+    //window.console.log(Amat);
     var bvec = $V([
       xzzSum + xxxSum,
       xxzSum + zzzSum,
       xxSum + zzSum
     ]);
-    window.console.log(bvec);
+    //window.console.log(bvec);
     var Amat_inv = Amat.inv();
-    window.console.log(Amat_inv);
+    //window.console.log(Amat_inv);
     var Ainv_bvec = Amat_inv.multiply(bvec);
-    window.console.log(Ainv_bvec);
+    //window.console.log(Ainv_bvec);
     var xc = Ainv_bvec.e(1) / 2,
       zc = Ainv_bvec.e(2) / 2,
       r = Math.sqrt(4*Ainv_bvec.e(3) + Ainv_bvec.e(1)*Ainv_bvec.e(1) + Ainv_bvec.e(2)*Ainv_bvec.e(2)) / 2;
-    window.console.log(xc, zc, r);
-//    r = 0.10;
-    
-    //sqrt(3.88*4 + 1.2^2+3.74^2) /2
-
-    var geometry = new THREE.CylinderGeometry( r*1000, r*1000, 25.4 );
-    var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-    var cylinder = new THREE.Mesh( geometry, material );
+    var geometry = new THREE.CylinderGeometry(r*1000, r*1000, 25.4);
+    var material = new THREE.MeshBasicMaterial({color: 0xffff00});
+    var cylinder = new THREE.Mesh(geometry, material);
     cylinder.position.set(xc*1000, point.y, zc*1000);
-    scene.add( cylinder );
+    scene.add(cylinder);
     items.push(cylinder);
     
+    // http://stackoverflow.com/questions/1400213/3d-least-squares-plane
+    var A_plane = $M([
+      [zzSum, xzSum, zSum],
+      [xzSum, xxSum, xSum],
+      [zSum, xSum, nClose]
+    ]);
+    var b_plane = $V([xySum, zySum, ySum]);
+    var A_plane_inv = Amat.inv();
+    var sol_plane = A_plane_inv.multiply(b_plane);
+    var pl_normal = (new THREE.Vector3()).set(-sol_plane.e(1), sol_plane.e(3), -sol_plane.e(2)).normalize();
+    var pl_geometry = new THREE.PlaneBufferGeometry(150, 150, 4);
+    var pl_material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa, side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( pl_geometry, pl_material );
+    //var plane_rot = (new THREE.Quaternion()).setFromUnitVectors( pl_normal, plane.up );
+    var plane_rot = (new THREE.Quaternion()).setFromUnitVectors( new THREE.Vector3(0, 1, 0), pl_normal );
+    window.console.log(sol_plane.inspect());
+    window.console.log(plane.up, pl_normal);
+    window.console.log(plane_rot, plane.quaternion);
+    plane.quaternion.copy(plane_rot);
+    var plane_to_ground = (new THREE.Quaternion()).setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), Math.PI / 2 );
+    plane.quaternion.multiply(plane_to_ground);
+    //plane.quaternion.copy(plane_rot);
+    plane.position.copy(point);
+    scene.add( plane );
+      
     /*
     variance = sum( (xi - u)^2 )
     sum( xi^2 + u^2 - 2*u*xi )
     sum( xi^2 ) + sum(u^2) + 2 * sum(u*xi)
     sum( xi^2 ) + u^2 + 2 * u * sum(xi)
     */
+    // Useful? http://people.cas.uab.edu/~mosya/cl/
   }
 
 	// Select an object to rotate around, or general selection for other stuff
