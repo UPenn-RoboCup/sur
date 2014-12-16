@@ -21,8 +21,77 @@
 		CANVAS_HEIGHT;
 
   function find_plane(mesh, point) {
-    window.console.log(mesh, point);
     // Find all the points near it assuming upright
+    var indices = mesh.geometry.getAttribute('index').array,
+      positions = mesh.geometry.getAttribute('position').array,
+      offsets = mesh.geometry.drawcalls,
+      point2 = point.clone().divideScalar(1000),
+    	vA = new THREE.Vector3(),
+    	vB = new THREE.Vector3(),
+    	vC = new THREE.Vector3(),
+      a, b, c,
+      nClose = 0,
+      xSum = 0,
+      zSum = 0,
+      ySum = 0,
+      xxSum = 0,
+      zzSum = 0,
+      xzSum = 0,
+      xySum = 0,
+      zySum = 0;
+    // From the raycaster (https://raw.githubusercontent.com/mrdoob/three.js/master/src/objects/Mesh.js)
+    for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
+			var start = offsets[ oi ].start;
+			var count = offsets[ oi ].count;
+			var index = offsets[ oi ].index;
+			for ( var i = start, il = start + count; i < il; i += 3 ) {
+				a = index + indices[ i ];
+				//b = index + indices[ i + 1 ];
+				//c = index + indices[ i + 2 ];
+				vA.fromArray( positions, a * 3 ).divideScalar(1000);
+				//vB.fromArray( positions, b * 3 ).sub(point).divideScalar(1000);
+				//vC.fromArray( positions, c * 3 ).sub(point).divideScalar(1000);
+        // Check distance - ensure the full face
+        // TODO: Grab these values from the user somehow
+        if (Math.abs(vA.y - point2.y) > 0.01 || Math.abs(point2.x - vA.x) > 0.1 || Math.abs(point2.z - vA.z) > 0.1){
+          continue;
+        }
+        // Compute the running nearest circle
+        nClose += 1;
+        xSum += vA.x;
+        zSum += vA.z;
+        //
+        xxSum += vA.x * vA.x;
+        zzSum += vA.z * vA.z;
+        xzSum += vA.x * vA.z;
+        //
+        xySum += vA.x * vA.y;
+        zySum += vA.z * vA.y;
+        ySum += vA.y;
+			}
+		}
+    
+    // http://stackoverflow.com/questions/1400213/3d-least-squares-plane
+    var A_plane = $M([
+      [zzSum, xzSum, zSum],
+      [xzSum, xxSum, xSum],
+      [zSum, xSum, nClose]
+    ]);
+    var b_plane = $V([zySum, xySum, ySum]);
+    var A_plane_inv = A_plane.inv();
+    var sol_plane = A_plane_inv.multiply(b_plane);
+    var pl_normal = (new THREE.Vector3()).set(sol_plane.e(2), sol_plane.e(3), sol_plane.e(1)).normalize();
+    var plane_rot = (new THREE.Quaternion()).setFromUnitVectors(pl_normal, new THREE.Vector3(0, 1, 0));    
+    var pl_geometry = new THREE.BoxGeometry(100, 10, 100);
+    var pl_material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa, side: THREE.DoubleSide} );
+    var plane = new THREE.Mesh( pl_geometry, pl_material );
+    plane.position.copy(point);
+    plane.quaternion.copy(plane_rot);
+    scene.add(plane);
+  }
+
+
+  function find_cylinder(mesh, point) {
     var indices = mesh.geometry.getAttribute('index').array,
       positions = mesh.geometry.getAttribute('position').array,
       offsets = mesh.geometry.drawcalls,
@@ -44,7 +113,6 @@
       xySum = 0,
       zySum = 0,
       ySum = 0;
-    // From the raycaster (https://raw.githubusercontent.com/mrdoob/three.js/master/src/objects/Mesh.js)
     for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
 			var start = offsets[ oi ].start;
 			var count = offsets[ oi ].count;
@@ -70,8 +138,8 @@
         zzSum += vA.z * vA.z;
         xzSum += vA.x * vA.z;
         //
-        xxxSum += vA.x * vA.x * vA.x;
-        zzzSum += vA.z * vA.z * vA.z;
+        xxxSum += Math.pow(vA.x, 3);
+        zzzSum += Math.pow(vA.z, 3);
         xzzSum += vA.x * vA.z * vA.z;
         xxzSum += vA.x * vA.x * vA.z;
         //
@@ -80,68 +148,33 @@
         ySum += vA.y;
 			}
 		}
-    
     // http://www.geometrictools.com/Documentation/CylinderFitting.pdf
     // http://www.physics.oregonstate.edu/paradigms/Publications/ConicSections.html
     // http://www.had2know.com/academics/best-fit-circle-least-squares.html
     var Amat = $M([
-      [xxSum, xzSum, xSum],
-      [xzSum, zzSum, zSum],
-      [xSum, zSum, nClose]
-    ]);
-    //window.console.log(Amat);
-    var bvec = $V([
-      xzzSum + xxxSum,
-      xxzSum + zzzSum,
-      xxSum + zzSum
-    ]);
-    //window.console.log(bvec);
-    var Amat_inv = Amat.inv();
-    //window.console.log(Amat_inv);
-    var Ainv_bvec = Amat_inv.multiply(bvec);
-    //window.console.log(Ainv_bvec);
-    var xc = Ainv_bvec.e(1) / 2,
-      zc = Ainv_bvec.e(2) / 2,
-      r = Math.sqrt(4*Ainv_bvec.e(3) + Ainv_bvec.e(1)*Ainv_bvec.e(1) + Ainv_bvec.e(2)*Ainv_bvec.e(2)) / 2;
-    var geometry = new THREE.CylinderGeometry(r*1000, r*1000, 25.4);
-    var material = new THREE.MeshBasicMaterial({color: 0xffff00});
-    var cylinder = new THREE.Mesh(geometry, material);
-    cylinder.position.set(xc*1000, point.y, zc*1000);
-    scene.add(cylinder);
-    items.push(cylinder);
-    
-    // http://stackoverflow.com/questions/1400213/3d-least-squares-plane
-    var A_plane = $M([
       [zzSum, xzSum, zSum],
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
     ]);
-    var b_plane = $V([xySum, zySum, ySum]);
-    var A_plane_inv = Amat.inv();
-    var sol_plane = A_plane_inv.multiply(b_plane);
-    var pl_normal = (new THREE.Vector3()).set(-sol_plane.e(1), sol_plane.e(3), -sol_plane.e(2)).normalize();
-    var pl_geometry = new THREE.PlaneBufferGeometry(150, 150, 4);
-    var pl_material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa, side: THREE.DoubleSide} );
-    var plane = new THREE.Mesh( pl_geometry, pl_material );
-    //var plane_rot = (new THREE.Quaternion()).setFromUnitVectors( pl_normal, plane.up );
-    var plane_rot = (new THREE.Quaternion()).setFromUnitVectors( new THREE.Vector3(0, 1, 0), pl_normal );
-    window.console.log(sol_plane.inspect());
-    window.console.log(plane.up, pl_normal);
-    window.console.log(plane_rot, plane.quaternion);
-    plane.quaternion.copy(plane_rot);
-    var plane_to_ground = (new THREE.Quaternion()).setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), Math.PI / 2 );
-    plane.quaternion.multiply(plane_to_ground);
-    //plane.quaternion.copy(plane_rot);
-    plane.position.copy(point);
-    scene.add( plane );
-      
-    /*
-    variance = sum( (xi - u)^2 )
-    sum( xi^2 + u^2 - 2*u*xi )
-    sum( xi^2 ) + sum(u^2) + 2 * sum(u*xi)
-    sum( xi^2 ) + u^2 + 2 * u * sum(xi)
-    */
-    // Useful? http://people.cas.uab.edu/~mosya/cl/
+    //window.console.log(Amat);
+    var bvec = $V([
+      xxzSum + zzzSum,
+      xzzSum + xxxSum,
+      zzSum + xxSum
+    ]);
+    var Amat_inv = Amat.inv();
+    var Ainv_bvec = Amat_inv.multiply(bvec);
+    var zc = Ainv_bvec.e(1) / 2,
+      xc = Ainv_bvec.e(2) / 2,
+      r = Math.sqrt(4 * Ainv_bvec.e(3) + Math.pow(Ainv_bvec.e(1), 2) + Math.pow(Ainv_bvec.e(2), 2)) / 2;
+    var geometry = new THREE.CylinderGeometry(r*1000, r*1000, 25.4);
+    var material = new THREE.MeshBasicMaterial({color: 0xffff00});
+    var cylinder = new THREE.Mesh(geometry, material);
+    cylinder.position.set(xc*1000, point.y, zc*1000);
+    
+    // Add to the scene
+    scene.add(cylinder);
+    items.push(cylinder);
   }
 
 	// Select an object to rotate around, or general selection for other stuff
@@ -195,7 +228,8 @@
         if(mesh0.name !== 'kinectV2'){
           return;
         }
-        find_plane(mesh0, p0);
+        //find_plane(mesh0, p0);
+        find_cylinder(mesh0, p0);
       }
 		}
 	}
@@ -227,9 +261,9 @@
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
 		geometry.addAttribute('position', new THREE.BufferAttribute(mesh_obj.pos, 3));
 		geometry.addAttribute('color', new THREE.BufferAttribute(mesh_obj.col, 3));
-    for(var i = 0; i<mesh_obj.quad_offsets.length; i++){
+    for(var i = 0; i<mesh_obj.drawCalls.length; i++){
       geometry.addDrawCall(
-        mesh_obj.quad_offsets[i].start, mesh_obj.quad_offsets[i].count, mesh_obj.quad_offsets[i].index
+        mesh_obj.drawCalls[i].start, mesh_obj.drawCalls[i].count, mesh_obj.drawCalls[i].index
       );
     }
 		// Make the new mesh and remove the previous one
@@ -239,7 +273,23 @@
 		meshes.push(mesh);
     // TODO: Apply the transform in which way? Not valid for plotting the LIDAR mesh, though
     // For now, the best bet to to bake into the vertices
-    geometry.applyMatrix((new THREE.Matrix4()).makeTranslation(0,1000,0));
+    window.console.log(mesh_obj);
+    var rpy = new THREE.Euler().fromArray(mesh_obj.rpy);
+    rpy.order = 'ZXY';
+    /*
+local trNeck0 = T.trans(-Config.walk.footX, 0, Config.walk.bodyHeight)
+* T.rotY(Config.vision.bodyTilt)
+* T.trans(Config.head.neckX, 0, Config.head.neckZ)
+local cam_z = Config.head.cameraPos[3]
+    trNeck = trNeck0 * T.rotZ(head[1]) * T.rotY(head[2])
+    */
+    var head_pitch_yaw = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(mesh_obj.q[1], mesh_obj.q[0], 0, 'XYZ'));
+    window.console.log(head_pitch_yaw);
+    var neckZ = new THREE.Matrix4().makeTranslation(0, 1000*(0.165 + 0.161), 0);
+    var bodyCOM = new THREE.Matrix4().compose(new THREE.Vector3(0, 1000*mesh_obj.bh, 0), new THREE.Quaternion().setFromEuler(rpy), new THREE.Vector3(1,1,1));
+    geometry.applyMatrix(
+      head_pitch_yaw.multiply(neckZ.multiply(bodyCOM))
+    );
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
 		// for picking via raycasting

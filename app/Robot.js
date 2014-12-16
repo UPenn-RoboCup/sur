@@ -42,6 +42,9 @@
 			rpy = feedback.rpy || [0, 0, 0],
 			pose = feedback.pose || [0, 0, 0],
 			servos = obj.servos;
+    if (servos === undefined) {
+      return;
+    }
 		for (i = 0; i < servos.length; i += 1) {
 			rotateServo(servos[i], joints[i]);
 		}

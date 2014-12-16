@@ -303,12 +303,14 @@ this.addEventListener('message', function (e) {
   ///////////////
   // Post the data back to the parent
   ///////////////
-	this.postMessage({
-		idx: index.subarray(0, quad_point_count_total),
-		pos: positions.subarray(0, 3 * n_el),
-		col: colors.subarray(0, 3 * n_el),
-    pixdex: pixdex,
-		quad_offsets: quad_offsets,
-    n_el: n_el
-	}, [index.buffer, positions.buffer, colors.buffer]);
+  delete mesh.pixels;
+  delete mesh.pixdex;
+	delete mesh.positions;
+  delete mesh.colors;
+  delete mesh.index;
+  mesh.drawCalls = quad_offsets;
+  mesh.idx = index.subarray(0, quad_point_count_total);
+  mesh.pos = positions.subarray(0, 3 * n_el);
+  mesh.col = colors.subarray(0, 3 * n_el);
+	this.postMessage(mesh, [mesh.idx.buffer, mesh.pos.buffer, mesh.col.buffer]);
 }, false);
