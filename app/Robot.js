@@ -198,7 +198,7 @@
 			parent: 'LEFT_SHOULDER_ROLL',
 			tr: new THREE.Vector3(0, -STL_MOTOR_WIDTH / 2, -STL_MOTOR_WIDTH / 2),
 			rot: new THREE.Quaternion(),
-			axel: new THREE.Vector3(0, 1, 0)
+			axel: new THREE.Vector3(0, -1, 0)
 		};
 		parts.INTER_LEFT_ELBOW = {
 			parent: 'LEFT_ARM',

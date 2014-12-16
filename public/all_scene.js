@@ -273,22 +273,18 @@
 		meshes.push(mesh);
     // TODO: Apply the transform in which way? Not valid for plotting the LIDAR mesh, though
     // For now, the best bet to to bake into the vertices
-    window.console.log(mesh_obj);
-    var rpy = new THREE.Euler().fromArray(mesh_obj.rpy);
-    rpy.order = 'ZXY';
-    /*
-local trNeck0 = T.trans(-Config.walk.footX, 0, Config.walk.bodyHeight)
-* T.rotY(Config.vision.bodyTilt)
-* T.trans(Config.head.neckX, 0, Config.head.neckZ)
-local cam_z = Config.head.cameraPos[3]
-    trNeck = trNeck0 * T.rotZ(head[1]) * T.rotY(head[2])
-    */
-    var head_pitch_yaw = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(mesh_obj.q[1], mesh_obj.q[0], 0, 'XYZ'));
-    window.console.log(head_pitch_yaw);
-    var neckZ = new THREE.Matrix4().makeTranslation(0, 1000*(0.165 + 0.161), 0);
-    var bodyCOM = new THREE.Matrix4().compose(new THREE.Vector3(0, 1000*mesh_obj.bh, 0), new THREE.Quaternion().setFromEuler(rpy), new THREE.Vector3(1,1,1));
+    
+    var head_pitch = new THREE.Matrix4().makeRotationX(mesh_obj.q[1]),
+      head_yaw = new THREE.Matrix4().makeRotationY(mesh_obj.q[0]);
+    //window.console.log(head_pitch_yaw);
+    var neckZ = new THREE.Matrix4().makeTranslation(0, 1000 * (0.165 + 0.161), 0);  
+//    var rpy = new THREE.Euler().fromArray(mesh_obj.rpy);
+//    rpy.order = 'ZXY';
+    var bodyCOM = new THREE.Matrix4().makeRotationX(mesh_obj.rpy[1]);
+    bodyCOM.setPosition(new THREE.Vector3(0, 1000*mesh_obj.bh, 0));
     geometry.applyMatrix(
-      head_pitch_yaw.multiply(neckZ.multiply(bodyCOM))
+      //head_yaw.multiply(head_pitch.multiply(neckZ.multiply(bodyCOM)))
+      bodyCOM.multiply(neckZ.multiply(head_yaw.multiply(head_pitch)))
     );
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;

@@ -33,7 +33,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
         return;
       }
     	// Set in the THREE.js frame, with millimeters
-      destination[0] = 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR;
+      destination[0] = -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR;
       destination[1] = -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR;
       destination[2] = x;
     	return destination;
