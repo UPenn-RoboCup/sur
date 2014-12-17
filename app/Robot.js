@@ -50,7 +50,7 @@
 		}
 		tmp_quat.setFromEuler(new THREE.Euler(rpy[1], pose[2], rpy[0], 'ZXY'));
 		obj.setRotationFromQuaternion(tmp_quat);
-		obj.position.y = (feedback.height || 1) * 1e3;
+		obj.position.y = (feedback.bh || 1) * 1e3;
 		obj.position.z = pose[0] * 1e3;
 		obj.position.x = pose[1] * 1e3;
 	}
@@ -215,7 +215,7 @@
 		parts.LEFT_WRIST = {
 			parent: 'LEFT_ELBOW',
 			tr: new THREE.Vector3(0, -250, 0),
-			rot: new THREE.Quaternion()
+			rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), -Math.PI / 2),
 		};
 		// RLeg
 		parts.RIGHT_HIP_YAW = {

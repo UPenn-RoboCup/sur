@@ -18,7 +18,8 @@
 		robot,
 		robot_preview,
 		CANVAS_WIDTH,
-		CANVAS_HEIGHT;
+		CANVAS_HEIGHT,
+    pow = Math.pow;
 
   function find_plane(mesh, point) {
     // Find all the points near it assuming upright
@@ -138,8 +139,8 @@
         zzSum += vA.z * vA.z;
         xzSum += vA.x * vA.z;
         //
-        xxxSum += Math.pow(vA.x, 3);
-        zzzSum += Math.pow(vA.z, 3);
+        xxxSum += pow(vA.x, 3);
+        zzzSum += pow(vA.z, 3);
         xzzSum += vA.x * vA.z * vA.z;
         xxzSum += vA.x * vA.x * vA.z;
         //
@@ -164,24 +165,92 @@
     ]);
     var Amat_inv = Amat.inv();
     var Ainv_bvec = Amat_inv.multiply(bvec);
-    var zc = Ainv_bvec.e(1) / 2,
-      xc = Ainv_bvec.e(2) / 2,
-      r = Math.sqrt(4 * Ainv_bvec.e(3) + Math.pow(Ainv_bvec.e(1), 2) + Math.pow(Ainv_bvec.e(2), 2)) / 2;
-    var geometry = new THREE.CylinderGeometry(r*1000, r*1000, 25.4);
-    var material = new THREE.MeshBasicMaterial({color: 0xffff00});
-    var cylinder = new THREE.Mesh(geometry, material);
-    cylinder.position.set(xc*1000, point.y, zc*1000);
+    var zc = Ainv_bvec.e(1) / 2 * 1000,
+      xc = Ainv_bvec.e(2) / 2 * 1000,
+      r = Math.sqrt(4 * Ainv_bvec.e(3) + pow(Ainv_bvec.e(1), 2) + pow(Ainv_bvec.e(2), 2)) / 2 * 1000;
+    
+    return {
+      r: r,
+      xc: xc,
+      zc: zc,
+      yc: point.y
+    };
+  }
+  
+  // Grow a cylinder from a parameter set
+  // (x - h)^2 + (y - k)^2 = r^2
+  function grow_cylinder(mesh, parameters) {
+    var indices = mesh.geometry.getAttribute('index').array,
+      positions = mesh.geometry.getAttribute('position').array,
+      offsets = mesh.geometry.drawcalls,
+      vA = new THREE.Vector3(),
+      a, err_r,
+      r0 = parameters.r, // radius
+      x0 = parameters.xc, // center position
+      z0 = parameters.zc,
+      y0 = parameters.yc, // height center
+      sublevels = [],
+      sublevel_heights = [];
+    for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
+			var start = offsets[ oi ].start;
+			var count = offsets[ oi ].count;
+			var index = offsets[ oi ].index;
+			for ( var i = start, il = start + count; i < il; i += 3 ) {
+				a = index + indices[ i ];
+        vA.fromArray( positions, a * 3 );
+        err_r = Math.sqrt(pow(vA.x - x0, 2) +  pow(vA.z - z0, 2)) - r0;
+        // Less than 1cm error, then a valid sublevel
+        if (err_r < 10) {
+          sublevel_heights.push(vA.y);
+          sublevels.push(vA.toArray());
+        }
+      }
+    }
+    // Now run connected regions, here
+    sublevel_heights.sort();
+    var y0_is_seen = false,
+      i_lower = 0, i_upper = sublevel_heights.length,
+      y_lower = sublevel_heights[i_lower], y_upper = sublevel_heights[i_upper - 1],
+      y, y_last;
+    // TODO: Get statistics, now, so we know some noise ideas?
+    for(var si = 1, sl = sublevel_heights.length; si < sl; si += 1) {
+      y = sublevel_heights[si];
+      y_last = sublevel_heights[si - 1];
+      if (Math.abs(y - y0) < 100) { y0_is_seen = true; }
+      // 1cm discepancy is a break
+      if (y - y_last > 5) {
+        if(y0_is_seen){
+          i_upper = si;
+          y_upper = y_last;
+        } else {
+          i_lower = si;
+          y_lower = y;
+        }
+      }
+    }
+    /*
+    window.console.log(y_lower, y_upper);
+    window.console.log(i_lower, i_upper);
+    window.console.log(sublevel_heights.slice(i_lower, i_upper));
+    */
+    // TODO: Run the regression on the included points to get a better estimate.
+    
     
     // Add to the scene
+    var geometry = new THREE.CylinderGeometry(r0, r0, (y_upper - y_lower));
+    var material = new THREE.MeshBasicMaterial({color: 0xffff00});
+    var cylinder = new THREE.Mesh(geometry, material);
+    cylinder.position.set(x0, (y_upper + y_lower) / 2, z0);
     scene.add(cylinder);
     items.push(cylinder);
+    
   }
 
 	// Select an object to rotate around, or general selection for other stuff
 	// TODO: Should work for right or left click...?
 	function select_object(e) {
 		// find the mouse position (use NDC coordinates, per documentation)
-		var mouse_vector = new THREE.Vector3((e.offsetX / CANVAS_WIDTH) * 2 - 1, -(e.offsetY / CANVAS_HEIGHT) * 2 + 1).unproject(camera),
+		var mouse_vector = new THREE.Vector3((e.offsetX / CANVAS_WIDTH) * 2 - 1, 1 - (e.offsetY / CANVAS_HEIGHT) * 2).unproject(camera),
 			T_point = new THREE.Matrix4(),
 			T_inv = new THREE.Matrix4(),
 			T_offset = new THREE.Matrix4(),
@@ -229,7 +298,8 @@
           return;
         }
         //find_plane(mesh0, p0);
-        find_cylinder(mesh0, p0);
+        var parameters = find_cylinder(mesh0, p0);
+        grow_cylinder(mesh0, parameters);
       }
 		}
 	}
@@ -273,17 +343,13 @@
 		meshes.push(mesh);
     // TODO: Apply the transform in which way? Not valid for plotting the LIDAR mesh, though
     // For now, the best bet to to bake into the vertices
-    
     var head_pitch = new THREE.Matrix4().makeRotationX(mesh_obj.q[1]),
-      head_yaw = new THREE.Matrix4().makeRotationY(mesh_obj.q[0]);
-    //window.console.log(head_pitch_yaw);
-    var neckZ = new THREE.Matrix4().makeTranslation(0, 1000 * (0.165 + 0.161), 0);  
-//    var rpy = new THREE.Euler().fromArray(mesh_obj.rpy);
-//    rpy.order = 'ZXY';
-    var bodyCOM = new THREE.Matrix4().makeRotationX(mesh_obj.rpy[1]);
+      head_yaw = new THREE.Matrix4().makeRotationY(mesh_obj.q[0]),
+      neckZ = new THREE.Matrix4().makeTranslation(0, 1000 * (0.165 + 0.161), 0),
+      bodyCOM = new THREE.Matrix4().makeRotationX(mesh_obj.rpy[1]);
     bodyCOM.setPosition(new THREE.Vector3(0, 1000*mesh_obj.bh, 0));
+    head_pitch.multiply(new THREE.Matrix4().makeTranslation(0,0.049,0));
     geometry.applyMatrix(
-      //head_yaw.multiply(head_pitch.multiply(neckZ.multiply(bodyCOM)))
       bodyCOM.multiply(neckZ.multiply(head_yaw.multiply(head_pitch)))
     );
 		// Dynamic, because we will do raycasting
