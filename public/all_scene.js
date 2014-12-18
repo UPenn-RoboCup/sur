@@ -33,17 +33,14 @@
     var indices = mesh.geometry.getAttribute('index').array,
       positions = mesh.geometry.getAttribute('position').array,
       offsets = mesh.geometry.drawcalls,
-      p, subarr;
+      p;
     for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
 			var start = offsets[ oi ].start;
 			var count = offsets[ oi ].count;
 			var index = offsets[ oi ].index;
 			for ( var i = start, il = start + count; i < il; i += 3 ) {
         p = index + indices[ i ];
-        subarr = positions.subarray(3 * p, 3 * p + 3)
-        //subarr = [positions[3 * p], positions[3 * p + 1], positions[3 * p + 2]];
-        //window.console.log(subarr);
-			  yield subarr;
+			  yield positions.subarray(3 * p, 3 * p + 3);
 			}
     }
   }
@@ -118,12 +115,7 @@
     scene.add(plane);
   }
 
-  // TODO: Tune these values
-  function cyl_point_mask(vertex, point) {
-    return (abs(vertex.y - point.y) > 10 || abs(vertex.x - point.x) > 150 || abs(vertex.z - point.z) > 150);
-  }
-
-  function estimate_cylinder(mesh, point, mask_function) {
+  function estimate_cylinder(it, mask_func) {
     var vA = new THREE.Vector3(),
       nClose = 0,
       xSum = 0,
@@ -135,23 +127,23 @@
       zzzSum = 0,
       xzzSum = 0,
       xxzSum = 0;
-    var it = new mesh_generator(mesh);
     for (var p of it){
       vA.fromArray(p);
-      if (mask_function(vA, point)) { continue; }
-      // Avoid overflow
-      vA.divideScalar(1000);
-      // Compute the running nearest circle
-      nClose += 1;
-      xSum += vA.x;
-      zSum += vA.z;
-      xxSum += pow(vA.x, 2);
-      zzSum += pow(vA.z, 2);
-      xzSum += vA.x * vA.z;
-      xzzSum += vA.x * pow(vA.z, 2);
-      xxzSum += pow(vA.x, 2) * vA.z;
-      xxxSum += pow(vA.x, 3);
-      zzzSum += pow(vA.z, 3);
+      if (mask_func===undefined || mask_func(vA)) {
+        // Avoid overflow
+        vA.divideScalar(1000);
+        // Compute the running nearest circle
+        nClose += 1;
+        xSum += vA.x;
+        zSum += vA.z;
+        xxSum += pow(vA.x, 2);
+        zzSum += pow(vA.z, 2);
+        xzSum += vA.x * vA.z;
+        xzzSum += vA.x * pow(vA.z, 2);
+        xxzSum += pow(vA.x, 2) * vA.z;
+        xxxSum += pow(vA.x, 3);
+        zzzSum += pow(vA.z, 3);
+      }
     }
     // http://www.geometrictools.com/Documentation/CylinderFitting.pdf
     // http://www.physics.oregonstate.edu/paradigms/Publications/ConicSections.html
@@ -176,55 +168,26 @@
       r: r,
       xc: xc,
       zc: zc,
-      yc: point && point.y
     };
   }
 
   // Grow a cylinder from a parameter set
   // (x - h)^2 + (y - k)^2 = r^2
-  function grow_cylinder(mesh, parameters) {
-    var indices = mesh.geometry.getAttribute('index').array,
-      positions = mesh.geometry.getAttribute('position').array,
-      offsets = mesh.geometry.drawcalls,
-      vA = new THREE.Vector3(),
-      a, err_r,
-      r0 = parameters.r, // radius
-      x0 = parameters.xc, // center position
-      z0 = parameters.zc,
-      y0 = parameters.yc, // height center
-      sublevels = [];
-//      sublevel_heights = [];
-    for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
-			var start = offsets[ oi ].start;
-			var count = offsets[ oi ].count;
-			var index = offsets[ oi ].index;
-			for ( var i = start, il = start + count; i < il; i += 3 ) {
-				a = index + indices[ i ];
-        vA.fromArray( positions, a * 3 );
-        err_r = Math.sqrt(pow(vA.x - x0, 2) +  pow(vA.z - z0, 2)) - r0;
-        // Less than 1cm error, then a valid sublevel
-        if (err_r < 10) {
-//          sublevel_heights.push(vA.y);
-          sublevels.push(vA.toArray());
-        }
-      }
+  function grow_cylinder(mesh, params) {
+    var vA = new THREE.Vector3(),
+      sublevels = [],
+      err_r;
+    var it = new mesh_generator(mesh);
+    for (var p of it){
+      vA.fromArray(p);
+      err_r = Math.sqrt(pow(vA.x - params.xc, 2) +  pow(vA.z - params.zc, 2)) - params.r;
+      if (err_r < 7) { sublevels.push(vA.toArray()); }
     }
-    // Now run connected regions, here
-    sublevels.sort(function(first, second){
-      if (first[1] === second[1])
-          return 0;
-      if (first[1] < second[1])
-          return -1;
-      else
-          return 1; 
-    });
-    /*
-    sublevel_heights.sort();
-    window.console.log(sublevels);
-    window.console.log(sublevel_heights);
-    */
     
     // Get the connected region that includes the clicked point
+    sublevels.sort(function(first, second){
+      if (first[1] === second[1]){return 0;} else if (first[1] < second[1]){return -1;} else{return 1;}
+    });
     var y0_is_seen = false,
       i_lower = 0, i_upper = sublevels.length,
       p_lower = sublevels[i_lower], p_upper = sublevels[i_upper - 1],
@@ -233,7 +196,8 @@
     for(var si = 1, sl = sublevels.length; si < sl; si += 1) {
       p = sublevels[si];
       p_last = sublevels[si - 1];
-      if (abs(p[1] - y0) < 100) { y0_is_seen = true; }
+      if (abs(p[1] - params.yc) < 10) { y0_is_seen = true; }
+      //if (p[1] === params.yc) { y0_is_seen = true; }
       // 1cm discepancy is a break
       if (p[1] - p_last[1] > 5) {
         if(y0_is_seen){
@@ -245,34 +209,24 @@
         }
       }
     }
+    
     // Filter to only the points we want
     var valid_cyl_points = sublevels.filter(function(value, index, arr){
       return index>=i_lower && index<i_upper;
     });
     
+    // Update the parameters from these points
     var it = new array_generator(valid_cyl_points);
-    //for (p of it){ window.console.log(p); }
-    /*
-    window.console.log(y_lower, y_upper);
-    window.console.log(i_lower, i_upper);
-    window.console.log(sublevel_heights.slice(i_lower, i_upper));
-    */
-    /*
-    // TODO: Run the regression on the included points to get a better estimate.
-    var p2 = estimate_cylinder(mesh, null, function(vertex, point){
-      return vertex.y < y_lower || vertex.y > y_upper || (Math.sqrt(pow(vertex.x - x0, 2) +  pow(vertex.z - z0, 2)) - r0) >= 10;
-    });
-    window.console.log(p2);
-    */
+    //params = estimate_cylinder(it);
+    window.console.log(params);
     
     // Add to the scene
-    var geometry = new THREE.CylinderGeometry(r0, r0, (p_upper[1] - p_lower[1]));
+    var geometry = new THREE.CylinderGeometry(params.r, params.r, (p_upper[1] - p_lower[1]), 20);
     var material = new THREE.MeshBasicMaterial({color: 0xffff00});
     var cylinder = new THREE.Mesh(geometry, material);
-    cylinder.position.set(x0, (p_upper[1] + p_lower[1]) / 2, z0);
+    cylinder.position.set(params.xc, (p_upper[1] + p_lower[1]) / 2, params.zc);
     scene.add(cylinder);
     items.push(cylinder);
-    
   }
 
 	// Select an object to rotate around, or general selection for other stuff
@@ -327,7 +281,13 @@
           return;
         }
         //find_plane(mesh0, p0);
-        var parameters = estimate_cylinder(mesh0, p0, cyl_point_mask);
+        // TODO: Tune these values
+        var it = new mesh_generator(mesh0);
+        var parameters = estimate_cylinder(it, function(vertex) {
+          //return abs(vertex.y - p0.y) > 5 || abs(vertex.x - p0.x) > 150 || abs(vertex.z - p0.z) > 150;
+          return abs(vertex.y - p0.y) < 5 && abs(vertex.x - p0.x) < 150 && abs(vertex.z - p0.z) < 150;
+        });
+        parameters.yc = p0.y;
         window.console.log(parameters);
         grow_cylinder(mesh0, parameters);
       }

@@ -22,7 +22,7 @@ var DEG_TO_RAD = Math.PI / 180,
 // robot: pose (px,py,pa element) and bodyTilt elements
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
-  MIN_CONNECTIVITY = 75, // points within MIN_CONNECTIVITY of each other are connected
+  MIN_CONNECTIVITY = 25.4, // points within MIN_CONNECTIVITY of each other are connected
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, robot, destination) {
