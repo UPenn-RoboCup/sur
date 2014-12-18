@@ -19,7 +19,34 @@
 		robot_preview,
 		CANVAS_WIDTH,
 		CANVAS_HEIGHT,
-    pow = Math.pow;
+    pow = Math.pow,
+    abs = Math.abs;
+  
+  function* array_generator(arr){
+    var i, l;
+    for(i = 0, l = arr.length; i<l; i+=1){
+      yield arr[i];
+    }
+  }
+  
+  function* mesh_generator(mesh){
+    var indices = mesh.geometry.getAttribute('index').array,
+      positions = mesh.geometry.getAttribute('position').array,
+      offsets = mesh.geometry.drawcalls,
+      p, subarr;
+    for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
+			var start = offsets[ oi ].start;
+			var count = offsets[ oi ].count;
+			var index = offsets[ oi ].index;
+			for ( var i = start, il = start + count; i < il; i += 3 ) {
+        p = index + indices[ i ];
+        subarr = positions.subarray(3 * p, 3 * p + 3)
+        //subarr = [positions[3 * p], positions[3 * p + 1], positions[3 * p + 2]];
+        //window.console.log(subarr);
+			  yield subarr;
+			}
+    }
+  }
 
   function find_plane(mesh, point) {
     // Find all the points near it assuming upright
@@ -54,7 +81,7 @@
 				//vC.fromArray( positions, c * 3 ).sub(point).divideScalar(1000);
         // Check distance - ensure the full face
         // TODO: Grab these values from the user somehow
-        if (Math.abs(vA.y - point2.y) > 0.01 || Math.abs(point2.x - vA.x) > 0.1 || Math.abs(point2.z - vA.z) > 0.1){
+        if (abs(vA.y - point2.y) > 0.01 || abs(point2.x - vA.x) > 0.1 || abs(point2.z - vA.z) > 0.1){
           continue;
         }
         // Compute the running nearest circle
@@ -91,16 +118,13 @@
     scene.add(plane);
   }
 
+  // TODO: Tune these values
+  function cyl_point_mask(vertex, point) {
+    return (abs(vertex.y - point.y) > 10 || abs(vertex.x - point.x) > 150 || abs(vertex.z - point.z) > 150);
+  }
 
-  function find_cylinder(mesh, point) {
-    var indices = mesh.geometry.getAttribute('index').array,
-      positions = mesh.geometry.getAttribute('position').array,
-      offsets = mesh.geometry.drawcalls,
-      point2 = point.clone().divideScalar(1000),
-    	vA = new THREE.Vector3(),
-    	vB = new THREE.Vector3(),
-    	vC = new THREE.Vector3(),
-      a, b, c,
+  function estimate_cylinder(mesh, point, mask_function) {
+    var vA = new THREE.Vector3(),
       nClose = 0,
       xSum = 0,
       xxSum = 0,
@@ -110,45 +134,25 @@
       xxxSum = 0,
       zzzSum = 0,
       xzzSum = 0,
-      xxzSum = 0,
-      xySum = 0,
-      zySum = 0,
-      ySum = 0;
-    for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
-			var start = offsets[ oi ].start;
-			var count = offsets[ oi ].count;
-			var index = offsets[ oi ].index;
-			for ( var i = start, il = start + count; i < il; i += 3 ) {
-				a = index + indices[ i ];
-				//b = index + indices[ i + 1 ];
-				//c = index + indices[ i + 2 ];
-				vA.fromArray( positions, a * 3 ).divideScalar(1000);
-				//vB.fromArray( positions, b * 3 ).sub(point).divideScalar(1000);
-				//vC.fromArray( positions, c * 3 ).sub(point).divideScalar(1000);
-        // Check distance - ensure the full face
-        // TODO: Grab these values from the user somehow
-        if (Math.abs(vA.y - point2.y) > 0.01 || Math.abs(point2.x - vA.x) > 0.15 || Math.abs(point2.z - vA.z) > 0.15){
-          continue;
-        }
-        // Compute the running nearest circle
-        nClose += 1;
-        xSum += vA.x;
-        zSum += vA.z;
-        //
-        xxSum += vA.x * vA.x;
-        zzSum += vA.z * vA.z;
-        xzSum += vA.x * vA.z;
-        //
-        xxxSum += pow(vA.x, 3);
-        zzzSum += pow(vA.z, 3);
-        xzzSum += vA.x * vA.z * vA.z;
-        xxzSum += vA.x * vA.x * vA.z;
-        //
-        xySum += vA.x * vA.y;
-        zySum += vA.z * vA.y;
-        ySum += vA.y;
-			}
-		}
+      xxzSum = 0;
+    var it = new mesh_generator(mesh);
+    for (var p of it){
+      vA.fromArray(p);
+      if (mask_function(vA, point)) { continue; }
+      // Avoid overflow
+      vA.divideScalar(1000);
+      // Compute the running nearest circle
+      nClose += 1;
+      xSum += vA.x;
+      zSum += vA.z;
+      xxSum += pow(vA.x, 2);
+      zzSum += pow(vA.z, 2);
+      xzSum += vA.x * vA.z;
+      xzzSum += vA.x * pow(vA.z, 2);
+      xxzSum += pow(vA.x, 2) * vA.z;
+      xxxSum += pow(vA.x, 3);
+      zzzSum += pow(vA.z, 3);
+    }
     // http://www.geometrictools.com/Documentation/CylinderFitting.pdf
     // http://www.physics.oregonstate.edu/paradigms/Publications/ConicSections.html
     // http://www.had2know.com/academics/best-fit-circle-least-squares.html
@@ -157,7 +161,7 @@
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
     ]);
-    //window.console.log(Amat);
+    window.console.log(Amat.inspect());
     var bvec = $V([
       xxzSum + zzzSum,
       xzzSum + xxxSum,
@@ -168,15 +172,14 @@
     var zc = Ainv_bvec.e(1) / 2 * 1000,
       xc = Ainv_bvec.e(2) / 2 * 1000,
       r = Math.sqrt(4 * Ainv_bvec.e(3) + pow(Ainv_bvec.e(1), 2) + pow(Ainv_bvec.e(2), 2)) / 2 * 1000;
-    
     return {
       r: r,
       xc: xc,
       zc: zc,
-      yc: point.y
+      yc: point && point.y
     };
   }
-  
+
   // Grow a cylinder from a parameter set
   // (x - h)^2 + (y - k)^2 = r^2
   function grow_cylinder(mesh, parameters) {
@@ -189,8 +192,8 @@
       x0 = parameters.xc, // center position
       z0 = parameters.zc,
       y0 = parameters.yc, // height center
-      sublevels = [],
-      sublevel_heights = [];
+      sublevels = [];
+//      sublevel_heights = [];
     for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
 			var start = offsets[ oi ].start;
 			var count = offsets[ oi ].count;
@@ -201,46 +204,72 @@
         err_r = Math.sqrt(pow(vA.x - x0, 2) +  pow(vA.z - z0, 2)) - r0;
         // Less than 1cm error, then a valid sublevel
         if (err_r < 10) {
-          sublevel_heights.push(vA.y);
+//          sublevel_heights.push(vA.y);
           sublevels.push(vA.toArray());
         }
       }
     }
     // Now run connected regions, here
+    sublevels.sort(function(first, second){
+      if (first[1] === second[1])
+          return 0;
+      if (first[1] < second[1])
+          return -1;
+      else
+          return 1; 
+    });
+    /*
     sublevel_heights.sort();
+    window.console.log(sublevels);
+    window.console.log(sublevel_heights);
+    */
+    
+    // Get the connected region that includes the clicked point
     var y0_is_seen = false,
-      i_lower = 0, i_upper = sublevel_heights.length,
-      y_lower = sublevel_heights[i_lower], y_upper = sublevel_heights[i_upper - 1],
-      y, y_last;
+      i_lower = 0, i_upper = sublevels.length,
+      p_lower = sublevels[i_lower], p_upper = sublevels[i_upper - 1],
+      p, p_last;
     // TODO: Get statistics, now, so we know some noise ideas?
-    for(var si = 1, sl = sublevel_heights.length; si < sl; si += 1) {
-      y = sublevel_heights[si];
-      y_last = sublevel_heights[si - 1];
-      if (Math.abs(y - y0) < 100) { y0_is_seen = true; }
+    for(var si = 1, sl = sublevels.length; si < sl; si += 1) {
+      p = sublevels[si];
+      p_last = sublevels[si - 1];
+      if (abs(p[1] - y0) < 100) { y0_is_seen = true; }
       // 1cm discepancy is a break
-      if (y - y_last > 5) {
+      if (p[1] - p_last[1] > 5) {
         if(y0_is_seen){
           i_upper = si;
-          y_upper = y_last;
+          p_upper = p_last;
         } else {
           i_lower = si;
-          y_lower = y;
+          p_lower = p;
         }
       }
     }
+    // Filter to only the points we want
+    var valid_cyl_points = sublevels.filter(function(value, index, arr){
+      return index>=i_lower && index<i_upper;
+    });
+    
+    var it = new array_generator(valid_cyl_points);
+    //for (p of it){ window.console.log(p); }
     /*
     window.console.log(y_lower, y_upper);
     window.console.log(i_lower, i_upper);
     window.console.log(sublevel_heights.slice(i_lower, i_upper));
     */
+    /*
     // TODO: Run the regression on the included points to get a better estimate.
-    
+    var p2 = estimate_cylinder(mesh, null, function(vertex, point){
+      return vertex.y < y_lower || vertex.y > y_upper || (Math.sqrt(pow(vertex.x - x0, 2) +  pow(vertex.z - z0, 2)) - r0) >= 10;
+    });
+    window.console.log(p2);
+    */
     
     // Add to the scene
-    var geometry = new THREE.CylinderGeometry(r0, r0, (y_upper - y_lower));
+    var geometry = new THREE.CylinderGeometry(r0, r0, (p_upper[1] - p_lower[1]));
     var material = new THREE.MeshBasicMaterial({color: 0xffff00});
     var cylinder = new THREE.Mesh(geometry, material);
-    cylinder.position.set(x0, (y_upper + y_lower) / 2, z0);
+    cylinder.position.set(x0, (p_upper[1] + p_lower[1]) / 2, z0);
     scene.add(cylinder);
     items.push(cylinder);
     
@@ -298,7 +327,8 @@
           return;
         }
         //find_plane(mesh0, p0);
-        var parameters = find_cylinder(mesh0, p0);
+        var parameters = estimate_cylinder(mesh0, p0, cyl_point_mask);
+        window.console.log(parameters);
         grow_cylinder(mesh0, parameters);
       }
 		}
