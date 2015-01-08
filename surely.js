@@ -214,8 +214,10 @@ for (var w in streams) {
 	// Add TCP
 	if (b.tcp !== undefined) {
 		var zmq_recv_skt = zmq.socket('sub');
-		zmq_recv_skt.connect('tcp://'+robot_ip+':'+b.tcp);
-		zmq_recv_skt.subscribe('');
+		//zmq_recv_skt.connect('tcp://'+robot_ip+':'+b.tcp);
+    //zmq_recv_skt.subscribe('');
+    zmq_recv_skt.subscribe('');
+    zmq_recv_skt.bind('tcp://*:'+b.tcp);
 		zmq_recv_skt.on('message', zmq_message);
 		zmq_recv_skt.sur_stream = b;
 	}

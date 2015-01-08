@@ -20,7 +20,8 @@
 		CANVAS_WIDTH,
 		CANVAS_HEIGHT,
     pow = Math.pow,
-    abs = Math.abs;
+    abs = Math.abs,
+    sqrt = Math.sqrt;
   
   function* array_generator(arr){
     var i, l;
@@ -45,16 +46,9 @@
     }
   }
 
-  function find_plane(mesh, point) {
+  function estimate_plane(it, base, mask_func) {
     // Find all the points near it assuming upright
-    var indices = mesh.geometry.getAttribute('index').array,
-      positions = mesh.geometry.getAttribute('position').array,
-      offsets = mesh.geometry.drawcalls,
-      point2 = point.clone().divideScalar(1000),
-    	vA = new THREE.Vector3(),
-    	vB = new THREE.Vector3(),
-    	vC = new THREE.Vector3(),
-      a, b, c,
+    var vA = new THREE.Vector3(),
       nClose = 0,
       xSum = 0,
       zSum = 0,
@@ -64,55 +58,45 @@
       xzSum = 0,
       xySum = 0,
       zySum = 0;
-    // From the raycaster (https://raw.githubusercontent.com/mrdoob/three.js/master/src/objects/Mesh.js)
-    for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
-			var start = offsets[ oi ].start;
-			var count = offsets[ oi ].count;
-			var index = offsets[ oi ].index;
-			for ( var i = start, il = start + count; i < il; i += 3 ) {
-				a = index + indices[ i ];
-				//b = index + indices[ i + 1 ];
-				//c = index + indices[ i + 2 ];
-				vA.fromArray( positions, a * 3 ).divideScalar(1000);
-				//vB.fromArray( positions, b * 3 ).sub(point).divideScalar(1000);
-				//vC.fromArray( positions, c * 3 ).sub(point).divideScalar(1000);
-        // Check distance - ensure the full face
-        // TODO: Grab these values from the user somehow
-        if (abs(vA.y - point2.y) > 0.01 || abs(point2.x - vA.x) > 0.1 || abs(point2.z - vA.z) > 0.1){
-          continue;
-        }
+    for (var p of it){
+      vA.fromArray(p);
+      if (mask_func===undefined || mask_func(vA)) {
+        // Avoid overflow
+        vA.sub(base);//.divideScalar(1000);
         // Compute the running nearest circle
         nClose += 1;
         xSum += vA.x;
         zSum += vA.z;
+        ySum += vA.y;
         //
-        xxSum += vA.x * vA.x;
-        zzSum += vA.z * vA.z;
+        xxSum += pow(vA.x, 2);
+        zzSum += pow(vA.z, 2);
+        //
         xzSum += vA.x * vA.z;
-        //
         xySum += vA.x * vA.y;
         zySum += vA.z * vA.y;
-        ySum += vA.y;
-			}
-		}
-    
+      }
+    }
     // http://stackoverflow.com/questions/1400213/3d-least-squares-plane
     var A_plane = $M([
       [zzSum, xzSum, zSum],
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
     ]);
+    //window.console.log(A_plane.inspect());
     var b_plane = $V([zySum, xySum, ySum]);
+    //window.console.log(b_plane.inspect());
     var A_plane_inv = A_plane.inv();
     var sol_plane = A_plane_inv.multiply(b_plane);
-    var pl_normal = (new THREE.Vector3()).set(sol_plane.e(2), sol_plane.e(3), sol_plane.e(1)).normalize();
-    var plane_rot = (new THREE.Quaternion()).setFromUnitVectors(pl_normal, new THREE.Vector3(0, 1, 0));    
-    var pl_geometry = new THREE.BoxGeometry(100, 10, 100);
-    var pl_material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa, side: THREE.DoubleSide} );
-    var plane = new THREE.Mesh( pl_geometry, pl_material );
-    plane.position.copy(point);
-    plane.quaternion.copy(plane_rot);
-    scene.add(plane);
+    var a = sol_plane.e(1),
+      b = sol_plane.e(2);
+    //window.console.log('abcd',a,b,c,d);
+    var normal = $V([-a, -b, 1]).toUnitVector();
+    window.console.log(sol_plane);
+    return {
+      normal: [normal.e(2), normal.e(3), normal.e(1)],
+    }
+    
   }
 
   function estimate_cylinder(it, mask_func) {
@@ -153,7 +137,7 @@
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
     ]);
-    window.console.log(Amat.inspect());
+    //window.console.log(Amat.inspect());
     var bvec = $V([
       xxzSum + zzzSum,
       xzzSum + xxxSum,
@@ -163,7 +147,7 @@
     var Ainv_bvec = Amat_inv.multiply(bvec);
     var zc = Ainv_bvec.e(1) / 2 * 1000,
       xc = Ainv_bvec.e(2) / 2 * 1000,
-      r = Math.sqrt(4 * Ainv_bvec.e(3) + pow(Ainv_bvec.e(1), 2) + pow(Ainv_bvec.e(2), 2)) / 2 * 1000;
+      r = sqrt(4 * Ainv_bvec.e(3) + pow(Ainv_bvec.e(1), 2) + pow(Ainv_bvec.e(2), 2)) / 2 * 1000;
     return {
       r: r,
       xc: xc,
@@ -176,28 +160,31 @@
   function grow_cylinder(mesh, params) {
     var vA = new THREE.Vector3(),
       sublevels = [],
-      err_r;
-    var it = new mesh_generator(mesh);
-    for (var p of it){
+      err_r,
+      iter;
+    
+    // Find the valid sublevels based on how well the radius agrees
+    // TODO: Use some probablity thing, maybe
+    iter = new mesh_generator(mesh);
+    for (var p of iter){
       vA.fromArray(p);
-      err_r = Math.sqrt(pow(vA.x - params.xc, 2) +  pow(vA.z - params.zc, 2)) - params.r;
+      err_r = sqrt(pow(vA.x - params.xc, 2) +  pow(vA.z - params.zc, 2)) - params.r;
       if (err_r < 7) { sublevels.push(vA.toArray()); }
     }
     
     // Get the connected region that includes the clicked point
-    sublevels.sort(function(first, second){
+    var goodlevels = sublevels.sort(function(first, second){
       if (first[1] === second[1]){return 0;} else if (first[1] < second[1]){return -1;} else{return 1;}
     });
     var y0_is_seen = false,
-      i_lower = 0, i_upper = sublevels.length,
-      p_lower = sublevels[i_lower], p_upper = sublevels[i_upper - 1],
+      i_lower = 0, i_upper = goodlevels.length,
+      p_lower = goodlevels[i_lower], p_upper = goodlevels[i_upper - 1],
       p, p_last;
     // TODO: Get statistics, now, so we know some noise ideas?
-    for(var si = 1, sl = sublevels.length; si < sl; si += 1) {
-      p = sublevels[si];
-      p_last = sublevels[si - 1];
+    for(var si = 1, sl = goodlevels.length; si < sl; si += 1) {
+      p = goodlevels[si];
+      p_last = goodlevels[si - 1];
       if (abs(p[1] - params.yc) < 10) { y0_is_seen = true; }
-      //if (p[1] === params.yc) { y0_is_seen = true; }
       // 1cm discepancy is a break
       if (p[1] - p_last[1] > 5) {
         if(y0_is_seen){
@@ -211,14 +198,13 @@
     }
     
     // Filter to only the points we want
-    var valid_cyl_points = sublevels.filter(function(value, index, arr){
+    var valid_cyl_points = goodlevels.filter(function(value, index, arr){
       return index>=i_lower && index<i_upper;
     });
     
     // Update the parameters from these points
-    var it = new array_generator(valid_cyl_points);
-    //params = estimate_cylinder(it);
-    window.console.log(params);
+    iter = new array_generator(valid_cyl_points);
+    params = estimate_cylinder(iter);
     
     // Add to the scene
     var geometry = new THREE.CylinderGeometry(params.r, params.r, (p_upper[1] - p_lower[1]), 20);
@@ -280,15 +266,32 @@
         if(mesh0.name !== 'kinectV2'){
           return;
         }
-        //find_plane(mesh0, p0);
-        // TODO: Tune these values
+        
+        // Plane
+        /*
+        var it = new mesh_generator(mesh0);
+        var pl_parameters = estimate_plane(it, p0, function(vertex) {
+          // TODO: Tune these values
+          return abs(vertex.y - p0.y) < 5 || abs(vertex.x - p0.x) < 8 || abs(vertex.z - p0.z) < 8
+        });
+        window.console.log(pl_parameters);
+        var pl_normal = (new THREE.Vector3().fromArray(pl_parameters.normal)).multiplyScalar(100);
+        var pl_material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa, side: THREE.DoubleSide} );
+        var plane = new THREE.Mesh( new THREE.BoxGeometry(50, 50, 50), pl_material );
+        plane.position.copy(p0);
+        scene.add(plane);
+        plane = new THREE.Mesh( new THREE.BoxGeometry(50, 50, 50), pl_material );
+        plane.position.copy(p0).add(pl_normal);
+        scene.add(plane);
+        */
+        
+        // Cylinder
         var it = new mesh_generator(mesh0);
         var parameters = estimate_cylinder(it, function(vertex) {
-          //return abs(vertex.y - p0.y) > 5 || abs(vertex.x - p0.x) > 150 || abs(vertex.z - p0.z) > 150;
+          // TODO: Tune these values
           return abs(vertex.y - p0.y) < 5 && abs(vertex.x - p0.x) < 150 && abs(vertex.z - p0.z) < 150;
         });
         parameters.yc = p0.y;
-        window.console.log(parameters);
         grow_cylinder(mesh0, parameters);
       }
 		}
@@ -333,6 +336,11 @@
 		meshes.push(mesh);
     // TODO: Apply the transform in which way? Not valid for plotting the LIDAR mesh, though
     // For now, the best bet to to bake into the vertices
+    if(mesh_obj.q===undefined){
+      mesh_obj.q = [0,0,0];
+      mesh_obj.bh = 1;
+      mesh_obj.rpy = [0,0,0];
+    }
     var head_pitch = new THREE.Matrix4().makeRotationX(mesh_obj.q[1]),
       head_yaw = new THREE.Matrix4().makeRotationY(mesh_obj.q[0]),
       neckZ = new THREE.Matrix4().makeTranslation(0, 1000 * (0.165 + 0.161), 0),
