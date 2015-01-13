@@ -205,14 +205,18 @@
     // Update the parameters from these points
     iter = new array_generator(valid_cyl_points);
     params = estimate_cylinder(iter);
+    params.h = p_upper[1] - p_lower[1];
+    params.yc = (p_upper[1] + p_lower[1]) / 2;
     
     // Add to the scene
-    var geometry = new THREE.CylinderGeometry(params.r, params.r, (p_upper[1] - p_lower[1]), 20);
+    var geometry = new THREE.CylinderGeometry(params.r, params.r, params.h, 20);
     var material = new THREE.MeshBasicMaterial({color: 0xffff00});
     var cylinder = new THREE.Mesh(geometry, material);
-    cylinder.position.set(params.xc, (p_upper[1] + p_lower[1]) / 2, params.zc);
+    cylinder.position.set(params.xc, params.yc, params.zc);
     scene.add(cylinder);
     items.push(cylinder);
+    //
+    return params;
   }
 
 	// Select an object to rotate around, or general selection for other stuff
@@ -250,7 +254,8 @@
 			T_point,
 			T_inv
 		);
-		//window.console.log(e, obj0, T_point, T_offset);
+    window.console.log(robot.object.matrix);
+		window.console.log(e, obj0, T_point, T_offset);
     // TODO: Right click behavior
 		if (e.button === 2) {
 			// Right click
@@ -289,10 +294,21 @@
         var it = new mesh_generator(mesh0);
         var parameters = estimate_cylinder(it, function(vertex) {
           // TODO: Tune these values
-          return abs(vertex.y - p0.y) < 5 && abs(vertex.x - p0.x) < 150 && abs(vertex.z - p0.z) < 150;
+          return abs(vertex.y - p0.y) < 5 && abs(vertex.x - p0.x) < 50 && abs(vertex.z - p0.z) < 50;
         });
         parameters.yc = p0.y;
-        grow_cylinder(mesh0, parameters);
+        // Grow to update
+        parameters = grow_cylinder(mesh0, parameters);
+        // TODO: add uncertainty
+        // [x center, y center, z center, radius, height]
+        d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
+          parameters.zc / 1000,
+          parameters.xc / 1000,
+          parameters.yc / 1000,
+          parameters.r / 1000,
+          parameters.h / 1000,
+        ]));
+        window.console.log(parameters);
       }
 		}
 	}
@@ -336,20 +352,28 @@
 		meshes.push(mesh);
     // TODO: Apply the transform in which way? Not valid for plotting the LIDAR mesh, though
     // For now, the best bet to to bake into the vertices
-    if(mesh_obj.q===undefined){
-      mesh_obj.q = [0,0,0];
-      mesh_obj.bh = 1;
-      mesh_obj.rpy = [0,0,0];
-    }
-    var head_pitch = new THREE.Matrix4().makeRotationX(mesh_obj.q[1]),
-      head_yaw = new THREE.Matrix4().makeRotationY(mesh_obj.q[0]),
-      neckZ = new THREE.Matrix4().makeTranslation(0, 1000 * (0.165 + 0.161), 0),
-      bodyCOM = new THREE.Matrix4().makeRotationX(mesh_obj.rpy[1]);
-    bodyCOM.setPosition(new THREE.Vector3(0, 1000*mesh_obj.bh, 0));
-    head_pitch.multiply(new THREE.Matrix4().makeTranslation(0,0.049,0));
-    geometry.applyMatrix(
-      bodyCOM.multiply(neckZ.multiply(head_yaw.multiply(head_pitch)))
-    );
+    //window.console.log(mesh_obj);
+    /*
+    var trNew = new THREE.Matrix4();
+    trNew.set.apply(trNew, mesh_obj.tr);
+    window.console.log(trNew, mesh_obj.tr);
+    var yaw0 = new THREE.Matrix4().makeRotationZ(Math.PI/2);
+    var roll0 = new THREE.Matrix4().makeRotationX(-Math.PI/2);
+    var composition0 = new THREE.Matrix4().multiplyMatrices(roll0, yaw0);
+    var trComp = new THREE.Matrix4().multiplyMatrices(composition0, trNew);
+    geometry.applyMatrix(trComp);
+    */
+    //from_rpy_trans({-imu[1],-imu[2],0}, {0, 0, body_height}) * tNeck * rotZ(head_angles[1]) * rotY(head_angles[2]) * tKinect
+    var rpy = new THREE.Euler(mesh_obj.imu_rpy[1],0,mesh_obj.imu_rpy[0], 'ZYX' );
+    //window.console.log(mesh_obj.imu_rpy[1] * util.RAD_TO_DEG);
+    var tBody = new THREE.Matrix4().makeRotationFromEuler(rpy);
+    tBody.setPosition(new THREE.Vector3(0,1000*mesh_obj.body_height,0));
+    var tNeck = new THREE.Matrix4().makeTranslation(0, 1000*0.32, 0);// TODO: Put the 4 degree roll here
+    var tKinect = new THREE.Matrix4().makeTranslation(0,1000*0.08,1000*0.03);
+    var head_rpy = new THREE.Euler( mesh_obj.head_angles[1], mesh_obj.head_angles[0], 0*4*util.DEG_TO_RAD, 'ZYX' );
+    var tHead = new THREE.Matrix4().makeRotationFromEuler(head_rpy);
+    var tTotal = tBody.multiply(tNeck.multiply(tHead.multiply(tKinect)));
+    geometry.applyMatrix(tTotal);
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
 		// for picking via raycasting
@@ -543,6 +567,25 @@
 		var depth_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
 		depth_ws.binaryType = 'arraybuffer';
 		depth_ws.onmessage = process_kinectV2_frame;
+	});
+  // kinect offsets
+  function map2array(obj){
+    var arr = [];
+    for(var a in obj){ arr.push(obj[a]); }
+    return arr;
+  }
+	d3.json('/Config/head/neckOffset', function (error, neck) {
+    neck = JSON.parse(neck);
+    var tNeck = THREE.Matrix4.prototype.makeTranslation.apply(new THREE.Matrix4(), map2array(neck));
+  	d3.json('/Config/kinect/mountOffset', function (error, kinect) {
+      kinect = map2array(JSON.parse(kinect));
+      var k_rpy = map2array(kinect[0]);
+      k_rpy.push('XYZ');
+      var rpy = THREE.Euler.prototype.set.apply(new THREE.Euler(), k_rpy);
+      var trans = THREE.Vector3.prototype.set.apply(new THREE.Vector3(), map2array(kinect[1]));
+      var tKinect = new THREE.Matrix4();
+      tKinect.makeRotationFromEuler(rpy).setPosition(trans);
+  	});
 	});
 	// Depth Worker for both mesh and kinect
 	depth_worker = new window.Worker("/allmesh_worker.js");

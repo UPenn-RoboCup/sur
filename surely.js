@@ -66,11 +66,8 @@ function rest_req(req, res, next) {
 	// Save the parsed body in the params
 	if (req.method === 'PUT' || req.method === 'POST') {
 		if (req.body !== undefined) {
-			req.params.val = req.body;
-		} else {
-			// No value was given...
-			//res.send();
-			//return next();
+			req.params.val = JSON.parse(req.body);
+      console.log(req.params);
 		}
 	}
 	// Send to the RPC server
@@ -96,6 +93,29 @@ server.get('/streams/:stream', function (req, res, next) {
 	var stream = streams[req.params.stream];
 	if (typeof stream === 'object' && stream.ws !== undefined) {
 		res.json(JSON.stringify(stream.ws));
+	} else {
+		res.send();
+	}
+	return next();
+});
+
+// Grab Config information
+function findKey(prev, cur){
+  if (typeof prev !== 'object'){
+    prev = Config[prev];
+  }
+  if (cur !== undefined) {
+    return prev[cur];
+  }
+}
+//var cfg_regexp = new RegExp(/^\/([a-zA-Z0-9_\.~-]+)\/(.*)/);
+//server.get(cfg_regexp, function(req, res, next) {
+//server.get('/config/:key', function (req, res, next) {
+//server.get(/\/config\/(.+)/, function (req, res, next) {
+server.get(/\/Config\/(.+)/, function (req, res, next) {
+  var value = req.params[0].split('/').reduce(findKey);
+	if (value !== undefined) {
+		res.json(JSON.stringify(value));
 	} else {
 		res.send();
 	}

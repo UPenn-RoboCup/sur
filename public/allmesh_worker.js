@@ -1,3 +1,4 @@
+this.importScripts('/js/sylvester-min.js');
 var DEG_TO_RAD = Math.PI / 180,
 	cos = Math.cos,
 	sin = Math.sin,
