@@ -255,8 +255,12 @@
 			T_point,
 			T_inv
 		);
-    window.console.log(robot.object.matrix);
-		window.console.log(e, obj0, T_point, T_offset);
+		//window.console.log(e, obj0, T_point, T_offset);
+    window.console.log(
+      obj0.object.name,
+      'Torso Offset:',
+      new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1000).toArray()
+    );
     // TODO: Right click behavior
 		if (e.button === 2) {
 			// Right click
@@ -326,18 +330,16 @@
 		var mesh_obj = e.data,
       geometry = new THREE.BufferGeometry(),
 			material = new THREE.MeshPhongMaterial({
-        // See the mesh on both sides
 				side: THREE.DoubleSide,
-        // Enable all color channels
-				color: 0xFFFFFF, //0xaaaaaa,
+        // Enable all color channels. Super important for vertex colors!
+				color: 0xFFFFFF,
         // Fill the color channels with the colors attribute through the vertex shader
         vertexColors: THREE.VertexColors,
         // TODO: Check the extra Phong parameters
-//        ambient: 0xaaaaaa, specular: 0xffffff, shininess: 250,
+        // ambient: 0xaaaaaa, specular: 0xffffff, shininess: 250,
 			}),
 			mesh;
     // Custom attributes required for rendering the BufferGeometry
-    // http://threejs.org/docs/#Reference/Core/BufferGeometry
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
 		geometry.addAttribute('position', new THREE.BufferAttribute(mesh_obj.pos, 3));
 		geometry.addAttribute('color', new THREE.BufferAttribute(mesh_obj.col, 3));
@@ -351,32 +353,6 @@
     mesh.name = 'kinectV2';
 		scene.remove(meshes.shift());
 		meshes.push(mesh);
-    // TODO: Apply the transform in which way? Not valid for plotting the LIDAR mesh, though
-    // For now, the best bet to to bake into the vertices
-    //window.console.log(mesh_obj);
-    /*
-    var trNew = new THREE.Matrix4();
-    trNew.set.apply(trNew, mesh_obj.tr);
-    window.console.log(trNew, mesh_obj.tr);
-    var yaw0 = new THREE.Matrix4().makeRotationZ(Math.PI/2);
-    var roll0 = new THREE.Matrix4().makeRotationX(-Math.PI/2);
-    var composition0 = new THREE.Matrix4().multiplyMatrices(roll0, yaw0);
-    var trComp = new THREE.Matrix4().multiplyMatrices(composition0, trNew);
-    geometry.applyMatrix(trComp);
-    */
-    //from_rpy_trans({-imu[1],-imu[2],0}, {0, 0, body_height}) * tNeck * rotZ(head_angles[1]) * rotY(head_angles[2]) * tKinect
-    /*
-    var rpy = new THREE.Euler(mesh_obj.imu_rpy[1],0,mesh_obj.imu_rpy[0], 'ZYX' );
-    //window.console.log(mesh_obj.imu_rpy[1] * util.RAD_TO_DEG);
-    var tBody = new THREE.Matrix4().makeRotationFromEuler(rpy);
-    tBody.setPosition(new THREE.Vector3(0,1000*mesh_obj.body_height,0));
-    var tNeck = new THREE.Matrix4().makeTranslation(0, 1000*0.32, 0);// TODO: Put the 4 degree roll here
-    var tKinect = new THREE.Matrix4().makeTranslation(0,1000*0.08,1000*0.03);
-    var head_rpy = new THREE.Euler( mesh_obj.head_angles[1], mesh_obj.head_angles[0], 0*4*util.DEG_TO_RAD, 'ZYX' );
-    var tHead = new THREE.Matrix4().makeRotationFromEuler(head_rpy);
-    var tTotal = tBody.multiply(tNeck.multiply(tHead.multiply(tKinect)));
-    geometry.applyMatrix(tTotal);
-    */
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
 		// for picking via raycasting
@@ -385,10 +361,8 @@
 		// Phong Material requires normals for reflectivity
     // TODO: Perform the normals computation in the Worker thread maybe?
 		geometry.computeVertexNormals();
-    //mesh.applyMatrix((new THREE.Matrix4()).makeTranslation(0,1000,0));
     // Add the mesh to the scene
 		scene.add(mesh);
-    //window.console.log(mesh);
     // Finished drawing on the screen
     depth_is_processing = false;
 	}

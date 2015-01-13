@@ -76,7 +76,6 @@ function get_k2_transform(head_angles, imu_rpy, body_height){
 var tNeck;
 get_config(["head","neckOffset"], function(val){
   tNeck = trans(map2array(val));
-  console.log(tNeck);
 });
 var tKinect;
 get_config(["kinect","mountOffset"], function(val){
