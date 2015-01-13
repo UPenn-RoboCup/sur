@@ -11,6 +11,80 @@ var DEG_TO_RAD = Math.PI / 180,
   	py: 0,
   	pa: 0
   };
+  
+  var tK2, tK2_M;
+
+function get_config(tree, cb){
+  var url = "/Config/" + tree.join('/');
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+      cb(JSON.parse(xmlhttp.responseText));
+    }
+  }
+  xmlhttp.open("GET", url, true);
+  xmlhttp.send();
+}
+
+function map2array(obj){
+  var arr = [];
+  for(var a in obj){ arr.push(obj[a]); }
+  return arr;
+}
+
+function flat2mat(flat){
+  return [
+    flat.slice(0,4),
+    flat.slice(4,8),
+    flat.slice(8,12),
+    flat.slice(12,16)
+  ]
+}
+
+function mat_times_vec(m, v){
+  var t = [];
+  for(var i = 0; i<3; i+=1){
+    t[i] = m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2] + m[i][3] * (v[3] || 1);
+  }
+  return t;
+}
+
+function trans(v){
+  return $M([
+    [1,0,0,v[0]],
+    [0,1,0,v[1]],
+    [0,0,1,v[2]],
+    [0,0,0,1],
+  ]);
+}
+function rpy_trans(r,v){
+  var alpha = r[0],
+    beta = r[1],
+    gamma = r[2];
+  return $M([
+    [cos(alpha) * cos(beta), cos(alpha) * sin(beta) * sin(gamma) - sin(alpha) * cos(gamma), cos(alpha) * sin(beta) * cos(gamma) + sin(alpha) * sin(gamma), trans[1]],
+    [sin(alpha) * cos(beta), sin(alpha) * sin(beta) * sin(gamma) + cos(alpha) * cos(gamma), sin(alpha) * sin(beta) * cos(gamma) - cos(alpha) * sin(gamma), trans[2]],
+    [-sin(beta), cos(beta) * sin(gamma), cos(beta) * cos(gamma), trans[3]],
+    [0, 0, 0, 1]
+  ]);
+}
+
+function get_k2_transform(head_angles, imu_rpy, body_height){
+  return rpy_trans([-imu_rpy[1], -imu_rpy[2], 0], [0, 0, body_height]).multiply(tNeck).multiply(Matrix.RotationZ(head_angles[1])).multiply(Matrix.RotationY(head_angles[2])).multiply(tKinect);
+}
+
+var tNeck;
+get_config(["head","neckOffset"], function(val){
+  tNeck = trans(map2array(val));
+  console.log(tNeck);
+});
+var tKinect;
+get_config(["kinect","mountOffset"], function(val){
+  var kinect = map2array(kinect);
+  var k_rpy = map2array(kinect[0]),
+    k_trans = map2array(kinect[1]);
+  tKinect = rpy_trans(k_rpy, k_trans);
+});
 
 // Returns a point in xyz of the torso frame
 /*
@@ -33,11 +107,21 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       if(x > 2000){
         return;
       }
+      x = x / 1000;
+      var rFrame = mat_times_vec(
+        tK2,
+        [x, -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR]
+      );
+      destination[0] = rFrame[1]*1000;
+      destination[1] = rFrame[2]*1000;
+      destination[2] = rFrame[0]*1000;
+      /*
     	// Set in the THREE.js frame, with millimeters
       destination[0] = -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR;
       destination[1] = -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR;
       destination[2] = x;
-    	return destination;
+      */
+      return destination;
     },
     chestLidar: function (u, v, w, width, height, robot, destination) {
     	'use strict';
@@ -144,6 +228,13 @@ this.addEventListener('message', function (e) {
     i, j,
     // Position of the point
     point_xyz;
+    
+    //console.log(mesh);
+    if (mesh.id==='k2_depth'){
+      //tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
+      tK2_M = $M(flat2mat(mesh.tr));
+      tK2 = tK2_M.elements;
+    }
 
 	for (j = 0; j < height; j += 1) {
 		for (i = 0; i < width; i += 1) {

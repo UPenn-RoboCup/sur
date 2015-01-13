@@ -92,7 +92,7 @@ server.put('/body/:body/:comp', rest_req);
 server.get('/streams/:stream', function (req, res, next) {
 	var stream = streams[req.params.stream];
 	if (typeof stream === 'object' && stream.ws !== undefined) {
-		res.json(JSON.stringify(stream.ws));
+		res.json(stream.ws);
 	} else {
 		res.send();
 	}
@@ -115,7 +115,7 @@ function findKey(prev, cur){
 server.get(/\/Config\/(.+)/, function (req, res, next) {
   var value = req.params[0].split('/').reduce(findKey);
 	if (value !== undefined) {
-		res.json(JSON.stringify(value));
+    res.json(value);
 	} else {
 		res.send();
 	}

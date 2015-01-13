@@ -21,7 +21,8 @@
 		CANVAS_HEIGHT,
     pow = Math.pow,
     abs = Math.abs,
-    sqrt = Math.sqrt;
+    sqrt = Math.sqrt,
+    tNeck, tKinect;
   
   function* array_generator(arr){
     var i, l;
@@ -364,6 +365,7 @@
     geometry.applyMatrix(trComp);
     */
     //from_rpy_trans({-imu[1],-imu[2],0}, {0, 0, body_height}) * tNeck * rotZ(head_angles[1]) * rotY(head_angles[2]) * tKinect
+    /*
     var rpy = new THREE.Euler(mesh_obj.imu_rpy[1],0,mesh_obj.imu_rpy[0], 'ZYX' );
     //window.console.log(mesh_obj.imu_rpy[1] * util.RAD_TO_DEG);
     var tBody = new THREE.Matrix4().makeRotationFromEuler(rpy);
@@ -374,6 +376,7 @@
     var tHead = new THREE.Matrix4().makeRotationFromEuler(head_rpy);
     var tTotal = tBody.multiply(tNeck.multiply(tHead.multiply(tKinect)));
     geometry.applyMatrix(tTotal);
+    */
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
 		// for picking via raycasting
@@ -402,6 +405,7 @@
 			npix = width * height,
 			pixels = mesh_feed.context2d.getImageData(1, 1, width, height).data,
 			mesh_obj = {
+        id: 'mesh',
 				width: width,
 				height: height,
 				hfov: metadata.sfov,
@@ -567,25 +571,6 @@
 		var depth_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
 		depth_ws.binaryType = 'arraybuffer';
 		depth_ws.onmessage = process_kinectV2_frame;
-	});
-  // kinect offsets
-  function map2array(obj){
-    var arr = [];
-    for(var a in obj){ arr.push(obj[a]); }
-    return arr;
-  }
-	d3.json('/Config/head/neckOffset', function (error, neck) {
-    neck = JSON.parse(neck);
-    var tNeck = THREE.Matrix4.prototype.makeTranslation.apply(new THREE.Matrix4(), map2array(neck));
-  	d3.json('/Config/kinect/mountOffset', function (error, kinect) {
-      kinect = map2array(JSON.parse(kinect));
-      var k_rpy = map2array(kinect[0]);
-      k_rpy.push('XYZ');
-      var rpy = THREE.Euler.prototype.set.apply(new THREE.Euler(), k_rpy);
-      var trans = THREE.Vector3.prototype.set.apply(new THREE.Vector3(), map2array(kinect[1]));
-      var tKinect = new THREE.Matrix4();
-      tKinect.makeRotationFromEuler(rpy).setPosition(trans);
-  	});
 	});
 	// Depth Worker for both mesh and kinect
 	depth_worker = new window.Worker("/allmesh_worker.js");

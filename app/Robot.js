@@ -6,7 +6,7 @@
     sin = Math.sin,
     sqrt = Math.sqrt,
     atan = Math.atan,
-    DEG_TO_RAD = ctx.util.DEG_TO_RAD;
+    DEG_TO_RAD = Math.PI / 180;
   // Arm constants
   var shoulderOffsetX = 0;    
   var shoulderOffsetY = 0.234;
@@ -264,7 +264,8 @@
 		parts.RIGHT_WRIST = {
 			parent: 'RIGHT_ELBOW',
 			tr: new THREE.Vector3(0, -250, 0),
-			rot: new THREE.Quaternion()
+      rot: new THREE.Quaternion(),//(new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), -Math.PI / 2),
+      axel: new THREE.Vector3(0, -1, 0),
 		};
 		// LArm
 		parts.LEFT_SHOULDER_PITCH = {
@@ -301,7 +302,8 @@
 		parts.LEFT_WRIST = {
 			parent: 'LEFT_ELBOW',
 			tr: new THREE.Vector3(0, -250, 0),
-			rot: (new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), -Math.PI / 2),
+			rot: new THREE.Quaternion(),//(new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI / 2),
+      axel: new THREE.Vector3(0, -1, 0)
 		};
 		// RLeg
 		parts.RIGHT_HIP_YAW = {
@@ -397,7 +399,7 @@
 		servos.push(parts.LEFT_SHOULDER_ROLL);
 		servos.push(parts.LEFT_ARM);
 		servos.push(parts.INTER_LEFT_ELBOW);
-		servos.push(null); // placeholder
+		servos.push(parts.LEFT_WRIST); // placeholder
 		servos.push(null);
 		servos.push(null);
 		// left leg
@@ -419,7 +421,7 @@
 		servos.push(parts.RIGHT_SHOULDER_ROLL);
 		servos.push(parts.RIGHT_ARM);
 		servos.push(parts.INTER_RIGHT_ELBOW);
-		servos.push(null); // placeholder
+		servos.push(parts.RIGHT_WRIST); // placeholder
 		servos.push(null);
 		servos.push(null);
 
