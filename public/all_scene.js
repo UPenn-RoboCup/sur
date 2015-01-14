@@ -2,6 +2,7 @@
 	'use strict';
 	// Private variables
 	var d3 = ctx.d3,
+    E,// = ctx.Estimate,
 		THREE = ctx.THREE,
 		scene = new THREE.Scene(),
     raycaster = new THREE.Raycaster(),
@@ -18,207 +19,7 @@
 		robot,
 		robot_preview,
 		CANVAS_WIDTH,
-		CANVAS_HEIGHT,
-    pow = Math.pow,
-    abs = Math.abs,
-    sqrt = Math.sqrt,
-    tNeck, tKinect;
-  
-  function* array_generator(arr){
-    var i, l;
-    for(i = 0, l = arr.length; i<l; i+=1){
-      yield arr[i];
-    }
-  }
-  
-  function* mesh_generator(mesh){
-    var indices = mesh.geometry.getAttribute('index').array,
-      positions = mesh.geometry.getAttribute('position').array,
-      offsets = mesh.geometry.drawcalls,
-      p;
-    for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
-			var start = offsets[ oi ].start;
-			var count = offsets[ oi ].count;
-			var index = offsets[ oi ].index;
-			for ( var i = start, il = start + count; i < il; i += 3 ) {
-        p = index + indices[ i ];
-			  yield positions.subarray(3 * p, 3 * p + 3);
-			}
-    }
-  }
-
-  function estimate_plane(it, base, mask_func) {
-    // Find all the points near it assuming upright
-    var vA = new THREE.Vector3(),
-      nClose = 0,
-      xSum = 0,
-      zSum = 0,
-      ySum = 0,
-      xxSum = 0,
-      zzSum = 0,
-      xzSum = 0,
-      xySum = 0,
-      zySum = 0;
-    for (var p of it){
-      vA.fromArray(p);
-      if (mask_func===undefined || mask_func(vA)) {
-        // Avoid overflow
-        vA.sub(base);//.divideScalar(1000);
-        // Compute the running nearest circle
-        nClose += 1;
-        xSum += vA.x;
-        zSum += vA.z;
-        ySum += vA.y;
-        //
-        xxSum += pow(vA.x, 2);
-        zzSum += pow(vA.z, 2);
-        //
-        xzSum += vA.x * vA.z;
-        xySum += vA.x * vA.y;
-        zySum += vA.z * vA.y;
-      }
-    }
-    // http://stackoverflow.com/questions/1400213/3d-least-squares-plane
-    var A_plane = $M([
-      [zzSum, xzSum, zSum],
-      [xzSum, xxSum, xSum],
-      [zSum, xSum, nClose]
-    ]);
-    //window.console.log(A_plane.inspect());
-    var b_plane = $V([zySum, xySum, ySum]);
-    //window.console.log(b_plane.inspect());
-    var A_plane_inv = A_plane.inv();
-    var sol_plane = A_plane_inv.multiply(b_plane);
-    var a = sol_plane.e(1),
-      b = sol_plane.e(2);
-    //window.console.log('abcd',a,b,c,d);
-    var normal = $V([-a, -b, 1]).toUnitVector();
-    window.console.log(sol_plane);
-    return {
-      normal: [normal.e(2), normal.e(3), normal.e(1)],
-    }
-    
-  }
-
-  function estimate_cylinder(it, mask_func) {
-    var vA = new THREE.Vector3(),
-      nClose = 0,
-      xSum = 0,
-      xxSum = 0,
-      zSum = 0,
-      zzSum = 0,
-      xzSum = 0,
-      xxxSum = 0,
-      zzzSum = 0,
-      xzzSum = 0,
-      xxzSum = 0;
-    for (var p of it){
-      vA.fromArray(p);
-      if (mask_func===undefined || mask_func(vA)) {
-        // Avoid overflow
-        vA.divideScalar(1000);
-        // Compute the running nearest circle
-        nClose += 1;
-        xSum += vA.x;
-        zSum += vA.z;
-        xxSum += pow(vA.x, 2);
-        zzSum += pow(vA.z, 2);
-        xzSum += vA.x * vA.z;
-        xzzSum += vA.x * pow(vA.z, 2);
-        xxzSum += pow(vA.x, 2) * vA.z;
-        xxxSum += pow(vA.x, 3);
-        zzzSum += pow(vA.z, 3);
-      }
-    }
-    // http://www.geometrictools.com/Documentation/CylinderFitting.pdf
-    // http://www.physics.oregonstate.edu/paradigms/Publications/ConicSections.html
-    // http://www.had2know.com/academics/best-fit-circle-least-squares.html
-    var Amat = $M([
-      [zzSum, xzSum, zSum],
-      [xzSum, xxSum, xSum],
-      [zSum, xSum, nClose]
-    ]);
-    //window.console.log(Amat.inspect());
-    var bvec = $V([
-      xxzSum + zzzSum,
-      xzzSum + xxxSum,
-      zzSum + xxSum
-    ]);
-    var Amat_inv = Amat.inv();
-    var Ainv_bvec = Amat_inv.multiply(bvec);
-    var zc = Ainv_bvec.e(1) / 2 * 1000,
-      xc = Ainv_bvec.e(2) / 2 * 1000,
-      r = sqrt(4 * Ainv_bvec.e(3) + pow(Ainv_bvec.e(1), 2) + pow(Ainv_bvec.e(2), 2)) / 2 * 1000;
-    return {
-      r: r,
-      xc: xc,
-      zc: zc,
-    };
-  }
-
-  // Grow a cylinder from a parameter set
-  // (x - h)^2 + (y - k)^2 = r^2
-  function grow_cylinder(mesh, params) {
-    var vA = new THREE.Vector3(),
-      sublevels = [],
-      err_r,
-      iter;
-    
-    // Find the valid sublevels based on how well the radius agrees
-    // TODO: Use some probablity thing, maybe
-    iter = new mesh_generator(mesh);
-    for (var p of iter){
-      vA.fromArray(p);
-      err_r = sqrt(pow(vA.x - params.xc, 2) +  pow(vA.z - params.zc, 2)) - params.r;
-      if (err_r < 7) { sublevels.push(vA.toArray()); }
-    }
-    
-    // Get the connected region that includes the clicked point
-    var goodlevels = sublevels.sort(function(first, second){
-      if (first[1] === second[1]){return 0;} else if (first[1] < second[1]){return -1;} else{return 1;}
-    });
-    var y0_is_seen = false,
-      i_lower = 0, i_upper = goodlevels.length,
-      p_lower = goodlevels[i_lower], p_upper = goodlevels[i_upper - 1],
-      p, p_last;
-    // TODO: Get statistics, now, so we know some noise ideas?
-    for(var si = 1, sl = goodlevels.length; si < sl; si += 1) {
-      p = goodlevels[si];
-      p_last = goodlevels[si - 1];
-      if (abs(p[1] - params.yc) < 10) { y0_is_seen = true; }
-      // 1cm discepancy is a break
-      if (p[1] - p_last[1] > 5) {
-        if(y0_is_seen){
-          i_upper = si;
-          p_upper = p_last;
-        } else {
-          i_lower = si;
-          p_lower = p;
-        }
-      }
-    }
-    
-    // Filter to only the points we want
-    var valid_cyl_points = goodlevels.filter(function(value, index, arr){
-      return index>=i_lower && index<i_upper;
-    });
-    
-    // Update the parameters from these points
-    iter = new array_generator(valid_cyl_points);
-    params = estimate_cylinder(iter);
-    params.h = p_upper[1] - p_lower[1];
-    params.yc = (p_upper[1] + p_lower[1]) / 2;
-    
-    // Add to the scene
-    var geometry = new THREE.CylinderGeometry(params.r, params.r, params.h, 20);
-    var material = new THREE.MeshBasicMaterial({color: 0xffff00});
-    var cylinder = new THREE.Mesh(geometry, material);
-    cylinder.position.set(params.xc, params.yc, params.zc);
-    scene.add(cylinder);
-    items.push(cylinder);
-    //
-    return params;
-  }
+    CANVAS_HEIGHT;
 
 	// Select an object to rotate around, or general selection for other stuff
 	// TODO: Should work for right or left click...?
@@ -277,33 +78,28 @@
           return;
         }
         
-        // Plane
-        /*
-        var it = new mesh_generator(mesh0);
-        var pl_parameters = estimate_plane(it, p0, function(vertex) {
-          // TODO: Tune these values
-          return abs(vertex.y - p0.y) < 5 || abs(vertex.x - p0.x) < 8 || abs(vertex.z - p0.z) < 8
-        });
-        window.console.log(pl_parameters);
-        var pl_normal = (new THREE.Vector3().fromArray(pl_parameters.normal)).multiplyScalar(100);
-        var pl_material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa, side: THREE.DoubleSide} );
-        var plane = new THREE.Mesh( new THREE.BoxGeometry(50, 50, 50), pl_material );
-        plane.position.copy(p0);
+        var parameters = E.plane(mesh0, p0);
+        var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
+        var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+        var plane = new THREE.Mesh( geometry, material );
+        plane.useQuaternion = true;
+        plane.position.fromArray(parameters.root);
+        var quat = (new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,0,1), (new THREE.Vector3()).fromArray(parameters.normal));
+        window.console.log(quat);
+        plane.quaternion.multiply(quat);
+        window.console.log(plane);
         scene.add(plane);
-        plane = new THREE.Mesh( new THREE.BoxGeometry(50, 50, 50), pl_material );
-        plane.position.copy(p0).add(pl_normal);
-        scene.add(plane);
-        */
+        items.push(plane);
         
+        /*
         // Cylinder
-        var it = new mesh_generator(mesh0);
-        var parameters = estimate_cylinder(it, function(vertex) {
-          // TODO: Tune these values
-          return abs(vertex.y - p0.y) < 5 && abs(vertex.x - p0.x) < 50 && abs(vertex.z - p0.z) < 50;
-        });
-        parameters.yc = p0.y;
-        // Grow to update
-        parameters = grow_cylinder(mesh0, parameters);
+        var parameters = E.cylinder(mesh0, p0);
+        var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20);
+        var material = new THREE.MeshBasicMaterial({color: 0xffff00});
+        var cylinder = new THREE.Mesh(geometry, material);
+        cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
+        scene.add(cylinder);
+        items.push(cylinder);
         // TODO: add uncertainty
         // [x center, y center, z center, radius, height]
         d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
@@ -313,7 +109,7 @@
           parameters.r / 1000,
           parameters.h / 1000,
         ]));
-        window.console.log(parameters);
+        */
       }
 		}
 	}
@@ -519,8 +315,11 @@
       }
 		});
 	}
-  // Load the Matrix library
-	ctx.util.ljs('/js/sylvester-min.js');
+  
+  ctx.util.ljs('/Estimate.js', function(){
+    E = ctx.Estimate;
+  });
+  
 	// Load the Styling
 	ctx.util.lcss('/css/gh-buttons.css');
 	ctx.util.lcss('/css/all_scene.css', function () {

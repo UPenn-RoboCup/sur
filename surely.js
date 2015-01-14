@@ -91,8 +91,8 @@ server.put('/body/:body/:comp', rest_req);
 // Grab streams
 server.get('/streams/:stream', function (req, res, next) {
 	var stream = streams[req.params.stream];
-	if (typeof stream === 'object' && stream.ws !== undefined) {
-		res.json(stream.ws);
+	if (typeof stream === 'object' && typeof stream.ws === 'number') {
+		res.json(200, stream.ws);
 	} else {
 		res.send();
 	}
