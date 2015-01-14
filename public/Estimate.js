@@ -80,7 +80,6 @@
     var sol_plane = A_plane_inv.multiply(b_plane);
     var a = sol_plane.e(1),
       b = sol_plane.e(2);
-    window.console.log(sol_plane);
     var normal = $V([-a, -b, 1]).toUnitVector();
     return {
       normal: [normal.e(2), normal.e(3), normal.e(1)],
@@ -96,19 +95,25 @@
     var plane_points = [],
     p0 = params.root,
     n = params.normal,
-    err_r;
+    err_r,
+    total_err = 0;
     
     // Find the valid sublevels based on how well the radius agrees
     // TODO: Use some probablity thing, maybe
     for (var p of it){
       err_r = abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
-      if (err_r < 5) { plane_points.push(p); }
+      if (err_r < 5) {
+        plane_points.push(p);
+        total_err += err_r;
+      }
     }
     
     // Update the parameters from these points
     var iter = new array_generator(plane_points);
     params = estimate_plane(iter);
     params.root = p0;
+    params.error = total_err;
+    params.npoints = plane_points.length;
     
     return params;
   }
@@ -174,14 +179,19 @@
   // (x - h)^2 + (y - k)^2 = r^2
   function grow_cylinder(it, params) {
     var sublevels = [],
-      err_r;
+    err_r,
+    total_err = 0;
+    
     
     // Find the valid sublevels based on how well the radius agrees
     // TODO: Use some probablity thing, maybe
     
     for (var p of it){
       err_r = sqrt(pow(p[0] - params.xc, 2) +  pow(p[2] - params.zc, 2)) - params.r;
-      if (err_r < 7) { sublevels.push(p); }
+      if (err_r < 7) {
+        sublevels.push(p);
+        total_err += err_r;
+      }
     }
     
     // Get the connected region that includes the clicked point
@@ -220,45 +230,72 @@
     params.h = p_upper[1] - p_lower[1];
     params.yc = (p_upper[1] + p_lower[1]) / 2;
     
+    params.error = total_err;
+    params.npoints = valid_cyl_points.length;
+    
     return params;
   }
   
   
-  
+  // TODO: Tune the filters (for the generator)
   ctx.Estimate = {
     cylinder: function(mesh0, p0){
       var px = p0.x,
         py = p0.y,
         pz = p0.z,
         it = new mesh_generator(mesh0, function(vertex) {
-          // TODO: Tune these values
           return abs(vertex[1] - py) < 5 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
         });
       var parameters = estimate_cylinder(it);
       parameters.yc = py;
+      //console.log(parameters);
+      
       // Grow to update
       it = new mesh_generator(mesh0);
       parameters = grow_cylinder(it, parameters);
+      //console.log(parameters);
+      
       return parameters;
     },
     plane: function(mesh0, p0){
       var px = p0.x,
         py = p0.y,
         pz = p0.z,
-        it = new mesh_generator(mesh0, function(vertex) {
-          // TODO: Tune these values
+        horizontal_it = new mesh_generator(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 5 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
+        }),
+        vertical_it = new mesh_generator(mesh0, function(vertex) {
+          return abs(vertex[1] - py) < 50 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 5;
         });
-      var parameters = estimate_plane(it);
-      parameters.root = [px,py,pz];
-      console.log(parameters);
-      
+      var horiz_params = estimate_plane(horizontal_it);
+      horiz_params.root = [px,py,pz];
+      //console.log(horiz_params);
       // Grow to update
-      it = new mesh_generator(mesh0);
-      parameters = grow_plane(it, parameters);
-      console.log(parameters);
+      horiz_params = grow_plane(new mesh_generator(mesh0), horiz_params);
       
-      return parameters;
+      //console.log(horiz_params);
+      
+      var vert_params = estimate_plane(vertical_it);
+      vert_params.root = [px,py,pz];
+      //console.log(vert_params);
+      // Grow to update
+      vert_params = grow_plane(new mesh_generator(mesh0), vert_params);
+      //console.log(vert_params);
+      
+      // Choose if vertical or horizontal
+      var epp_horiz = horiz_params.error / horiz_params.npoints,
+        epp_vert = vert_params.error / vert_params.npoints;
+      
+      if (epp_horiz < epp_vert) {
+        horiz_params.id = 'h';
+        //console.log(horiz_params);
+        return horiz_params;
+      } else {
+        vert_params.id = 'v';
+        //console.log(vert_params);
+        return vert_params;
+      }
+      
     }
   }
 
