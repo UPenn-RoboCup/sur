@@ -2,7 +2,7 @@
 	'use strict';
   
   // Load the Matrix library
-	ctx.util.ljs('/js/sylvester-min.js');
+  ctx.util.ljs('/js/numeric-1.2.6.min.js');
   
 	var pow = Math.pow,
     abs = Math.abs,
@@ -71,52 +71,45 @@
       xySum += v[0] * v[1];
       zySum += v[2] * v[1];
     }
-    // http://stackoverflow.com/questions/1400213/3d-least-squares-plane
-    var A_plane = $M([
+    
+    var A_plane_inv = numeric.inv([
       [zzSum, xzSum, zSum],
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
     ]);
-    //window.console.log(A_plane.inspect());
-    var b_plane = $V([zySum, xySum, ySum]);
-    //window.console.log(b_plane.inspect());
-    var A_plane_inv = A_plane.inv();
-    var sol_plane = A_plane_inv.multiply(b_plane);
-    var a = sol_plane.e(1),
-      b = sol_plane.e(2);
-    var normal = $V([-a, -b, 1]).toUnitVector();
+    var sol_plane = numeric.dot(A_plane_inv, [zySum, xySum, ySum]);
+    var normal = [-sol_plane[0], -sol_plane[1], 1];
+    var nrm = numeric.norm2(normal);
+    normal[0] = normal[0] / nrm;
+    normal[1] = normal[1] / nrm;
+    normal[2] = normal[2] / nrm;
     
     // TODO: Add the standard deviation
+    function divN(v){return v / (nClose + 1);}
     // diagonal entries
     var d = [
       xxSum - pow(xSum,2)/nClose,
       zzSum - pow(zSum,2)/nClose,
       yySum - pow(ySum,2)/nClose
-    ];
+    ].map(divN);
     // off diagonals: xz, xy, zy
     var of = 2 / nClose + nClose,
       o = [
       xzSum - of*xSum*zSum,
       xySum - of*xSum*ySum,
       zySum - of*zSum*ySum
-    ];
-    var cov = $M([
+    ].map(divN);
+    var cov = [
       [d[0],o[0],o[1]],
       [o[0],d[1],o[2]],
       [o[1],o[2],d[2]]
-    ]).multiply(1 / (nClose + 1));
-    
-    // Works fine:
-    //e,v= torch.eig(x,'V') yields the correct information
-    //console.log(d, o);
-    //console.log(cov.inspect());
-    
+    ];
     return {
-      normal: [normal.e(2), normal.e(3), normal.e(1)],
+      normal: [normal[1], normal[2], normal[0]],
       root: root,
       cov: cov
     }
-    
+
   }
   
   // Grow a plane from a parameter set
@@ -188,27 +181,22 @@
     // http://www.geometrictools.com/Documentation/CylinderFitting.pdf
     // http://www.physics.oregonstate.edu/paradigms/Publications/ConicSections.html
     // http://www.had2know.com/academics/best-fit-circle-least-squares.html
-    var Amat = $M([
+    //window.console.log(Amat.inspect());
+    var Amat_inv = numeric.inv([
       [zzSum, xzSum, zSum],
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
     ]);
-    //window.console.log(Amat.inspect());
-    var bvec = $V([
+    var Ainv_bvec = numeric.dot(Amat_inv, [
       xxzSum + zzzSum,
       xzzSum + xxxSum,
       zzSum + xxSum
     ]);
-    var Amat_inv = Amat.inv();
-    var Ainv_bvec = Amat_inv.multiply(bvec);
-    var zc = Ainv_bvec.e(1) / 2 * 1000 + root[2],
-      xc = Ainv_bvec.e(2) / 2 * 1000 + root[0],
-      r = sqrt(4 * Ainv_bvec.e(3) + pow(Ainv_bvec.e(1), 2) + pow(Ainv_bvec.e(2), 2)) / 2 * 1000;
     return {
-      r: r,
-      xc: xc,
+      r: sqrt(4 * Ainv_bvec[2] + pow(Ainv_bvec[0], 2) + pow(Ainv_bvec[1], 2)) / 2 * 1000,
+      xc: Ainv_bvec[1] / 2 * 1000 + root[0],
       yc: root[1],
-      zc: zc,
+      zc: Ainv_bvec[0] / 2 * 1000 + root[2],
       root: root,
     };
   }
@@ -321,11 +309,16 @@
       // Grow to update
       vert_params = grow_plane(new mesh_generator(mesh0), vert_params);
       epp_vert = vert_params.error / vert_params.npoints;
-      console.log(vert_params);
+      //console.log(vert_params);
       
       // Choose if vertical or horizontal
       if (epp_horiz < epp_vert) {
         horiz_params.id = 'h';
+        
+        var eigs = numeric.eig(horiz_params.cov);
+        console.log(eigs.lambda);
+        console.log(eigs.E);
+        
         //console.log(horiz_params);
         return horiz_params;
       } else {
