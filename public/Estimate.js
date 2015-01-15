@@ -1,13 +1,13 @@
 (function (ctx) {
 	'use strict';
-	// Private variables
+  
+  // Load the Matrix library
+	ctx.util.ljs('/js/sylvester-min.js');
+  
 	var pow = Math.pow,
     abs = Math.abs,
     sqrt = Math.sqrt,
     tNeck, tKinect;
-  
-  // Load the Matrix library
-	ctx.util.ljs('/js/sylvester-min.js');
   
   function always(p){ return true; }
   
@@ -36,9 +36,8 @@
       yield arr[i];
     }
   }
-  function div1k(v){return v/1000;}
 
-  function estimate_plane(it) {
+  function estimate_plane(it, root) {
     // Find all the points near it assuming upright
     var v,
       nClose = 0,
@@ -47,13 +46,17 @@
       ySum = 0,
       xxSum = 0,
       zzSum = 0,
+      yySum = 0,
       xzSum = 0,
       xySum = 0,
       zySum = 0;
     for (var p of it){
       // Avoid overflow
-      v = p.map(div1k);
-      //vA.sub(base);//.divideScalar(1000);
+      v = [
+        (p[0]-root[0]) / 1000,
+        (p[1]-root[1]) / 1000,
+        (p[2]-root[2]) / 1000
+      ];
       // Compute the running nearest circle
       nClose += 1;
       xSum += v[0];
@@ -62,6 +65,7 @@
       //
       xxSum += pow(v[0], 2);
       zzSum += pow(v[2], 2);
+      yySum += pow(v[1], 2);
       //
       xzSum += v[0] * v[2];
       xySum += v[0] * v[1];
@@ -81,8 +85,36 @@
     var a = sol_plane.e(1),
       b = sol_plane.e(2);
     var normal = $V([-a, -b, 1]).toUnitVector();
+    
+    // TODO: Add the standard deviation
+    // diagonal entries
+    var d = [
+      xxSum - pow(xSum,2)/nClose,
+      zzSum - pow(zSum,2)/nClose,
+      yySum - pow(ySum,2)/nClose
+    ];
+    // off diagonals: xz, xy, zy
+    var of = 2 / nClose + nClose,
+      o = [
+      xzSum - of*xSum*zSum,
+      xySum - of*xSum*ySum,
+      zySum - of*zSum*ySum
+    ];
+    var cov = $M([
+      [d[0],o[0],o[1]],
+      [o[0],d[1],o[2]],
+      [o[1],o[2],d[2]]
+    ]).multiply(1 / (nClose + 1));
+    
+    // Works fine:
+    //e,v= torch.eig(x,'V') yields the correct information
+    //console.log(d, o);
+    //console.log(cov.inspect());
+    
     return {
       normal: [normal.e(2), normal.e(3), normal.e(1)],
+      root: root,
+      cov: cov
     }
     
   }
@@ -110,7 +142,7 @@
     
     // Update the parameters from these points
     var iter = new array_generator(plane_points);
-    params = estimate_plane(iter);
+    params = estimate_plane(iter, p0);
     params.root = p0;
     params.error = total_err;
     params.npoints = plane_points.length;
@@ -122,7 +154,7 @@
   // y: up
   // x: left
   // z: forward
-  function estimate_cylinder(it) {
+  function estimate_cylinder(it, root) {
     var v,
       nClose = 0,
       xSum = 0,
@@ -136,7 +168,11 @@
       xxzSum = 0;
     for (var p of it){
       // Avoid overflow
-      v = p.map(div1k);
+      v = [
+        (p[0]-root[0]) / 1000,
+        (p[1]-root[1]) / 1000,
+        (p[2]-root[2]) / 1000
+      ];
       // Compute the running nearest circle
       nClose += 1;
       xSum += v[0];
@@ -165,13 +201,15 @@
     ]);
     var Amat_inv = Amat.inv();
     var Ainv_bvec = Amat_inv.multiply(bvec);
-    var zc = Ainv_bvec.e(1) / 2 * 1000,
-      xc = Ainv_bvec.e(2) / 2 * 1000,
+    var zc = Ainv_bvec.e(1) / 2 * 1000 + root[2],
+      xc = Ainv_bvec.e(2) / 2 * 1000 + root[0],
       r = sqrt(4 * Ainv_bvec.e(3) + pow(Ainv_bvec.e(1), 2) + pow(Ainv_bvec.e(2), 2)) / 2 * 1000;
     return {
       r: r,
       xc: xc,
+      yc: root[1],
       zc: zc,
+      root: root,
     };
   }
 
@@ -182,17 +220,16 @@
     err_r,
     total_err = 0;
     
-    
     // Find the valid sublevels based on how well the radius agrees
     // TODO: Use some probablity thing, maybe
     
     for (var p of it){
       err_r = sqrt(pow(p[0] - params.xc, 2) +  pow(p[2] - params.zc, 2)) - params.r;
-      if (err_r < 7) {
+      if (err_r < 8) {
         sublevels.push(p);
         total_err += err_r;
       }
-    }
+    }    
     
     // Get the connected region that includes the clicked point
     var goodlevels = sublevels.sort(function(first, second){
@@ -226,7 +263,7 @@
     
     // Update the parameters from these points
     var iter = new array_generator(valid_cyl_points);
-    params = estimate_cylinder(iter);
+    params = estimate_cylinder(iter, params.root);
     params.h = p_upper[1] - p_lower[1];
     params.yc = (p_upper[1] + p_lower[1]) / 2;
     
@@ -243,11 +280,11 @@
       var px = p0.x,
         py = p0.y,
         pz = p0.z,
+        root = [px,py,pz],
         it = new mesh_generator(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 5 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
         });
-      var parameters = estimate_cylinder(it);
-      parameters.yc = py;
+      var parameters = estimate_cylinder(it, root);
       //console.log(parameters);
       
       // Grow to update
@@ -261,31 +298,32 @@
       var px = p0.x,
         py = p0.y,
         pz = p0.z,
+        root = [px,py,pz],
         horizontal_it = new mesh_generator(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 5 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
         }),
         vertical_it = new mesh_generator(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 50 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 5;
-        });
-      var horiz_params = estimate_plane(horizontal_it);
+        }),
+        epp_horiz = Infinity,
+        epp_vert = Infinity;
+      var horiz_params = estimate_plane(horizontal_it, root);
       horiz_params.root = [px,py,pz];
       //console.log(horiz_params);
       // Grow to update
       horiz_params = grow_plane(new mesh_generator(mesh0), horiz_params);
-      
+      epp_horiz = horiz_params.error / horiz_params.npoints;
       //console.log(horiz_params);
       
-      var vert_params = estimate_plane(vertical_it);
+      var vert_params = estimate_plane(vertical_it, root);
       vert_params.root = [px,py,pz];
       //console.log(vert_params);
       // Grow to update
       vert_params = grow_plane(new mesh_generator(mesh0), vert_params);
-      //console.log(vert_params);
+      epp_vert = vert_params.error / vert_params.npoints;
+      console.log(vert_params);
       
       // Choose if vertical or horizontal
-      var epp_horiz = horiz_params.error / horiz_params.npoints,
-        epp_vert = vert_params.error / vert_params.npoints;
-      
       if (epp_horiz < epp_vert) {
         horiz_params.id = 'h';
         //console.log(horiz_params);

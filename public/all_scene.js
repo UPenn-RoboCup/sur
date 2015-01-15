@@ -78,6 +78,7 @@
           return;
         }
         
+        /*
         // Plane estimation
         var parameters = E.plane(mesh0, p0);
         var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
@@ -87,8 +88,8 @@
         plane.quaternion.multiply((new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,0,1), (new THREE.Vector3()).fromArray(parameters.normal)));
         scene.add(plane);
         items.push(plane);
+        */
         
-        /*
         // Cylinder
         var parameters = E.cylinder(mesh0, p0);
         var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20);
@@ -106,7 +107,6 @@
           parameters.r / 1000,
           parameters.h / 1000,
         ]));
-        */
       }
 		}
 	}
@@ -248,6 +248,7 @@
 		// Object selection
 		container.addEventListener('mousedown', select_object, false);
 		camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
+    //camera = new THREE.OrthographicCamera( CANVAS_WIDTH / - 2, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_HEIGHT / - 2, 1, 1000 );
 		camera.position.copy(new THREE.Vector3(500, 2000, -500));
 		// Load in the Orbit controls dynamically
 		ctx.util.ljs('/OrbitControls.js', function () {
