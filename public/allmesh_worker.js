@@ -1,4 +1,3 @@
-this.importScripts('/js/sylvester-min.js');
 var DEG_TO_RAD = Math.PI / 180,
 	cos = Math.cos,
 	sin = Math.sin,
@@ -10,9 +9,8 @@ var DEG_TO_RAD = Math.PI / 180,
   	px: 0,
   	py: 0,
   	pa: 0
-  };
-  
-  var tK2, tK2_M;
+  },
+  tK2;
 
 function get_config(tree, cb){
   var url = "/Config/" + tree.join('/');
@@ -50,27 +48,29 @@ function mat_times_vec(m, v){
 }
 
 function trans(v){
-  return $M([
+  return [
     [1,0,0,v[0]],
     [0,1,0,v[1]],
     [0,0,1,v[2]],
     [0,0,0,1],
-  ]);
+  ];
 }
 function rpy_trans(r,v){
   var alpha = r[0],
     beta = r[1],
     gamma = r[2];
-  return $M([
-    [cos(alpha) * cos(beta), cos(alpha) * sin(beta) * sin(gamma) - sin(alpha) * cos(gamma), cos(alpha) * sin(beta) * cos(gamma) + sin(alpha) * sin(gamma), trans[1]],
-    [sin(alpha) * cos(beta), sin(alpha) * sin(beta) * sin(gamma) + cos(alpha) * cos(gamma), sin(alpha) * sin(beta) * cos(gamma) - cos(alpha) * sin(gamma), trans[2]],
-    [-sin(beta), cos(beta) * sin(gamma), cos(beta) * cos(gamma), trans[3]],
+  return [
+    [cos(alpha) * cos(beta), cos(alpha) * sin(beta) * sin(gamma) - sin(alpha) * cos(gamma), cos(alpha) * sin(beta) * cos(gamma) + sin(alpha) * sin(gamma), v[0]],
+    [sin(alpha) * cos(beta), sin(alpha) * sin(beta) * sin(gamma) + cos(alpha) * cos(gamma), sin(alpha) * sin(beta) * cos(gamma) - cos(alpha) * sin(gamma), v[1]],
+    [-sin(beta), cos(beta) * sin(gamma), cos(beta) * cos(gamma), v[2]],
     [0, 0, 0, 1]
-  ]);
+  ];
 }
 
+/*
+this.importScripts('/js/sylvester-min.js');
 function get_k2_transform(head_angles, imu_rpy, body_height){
-  return rpy_trans([-imu_rpy[1], -imu_rpy[2], 0], [0, 0, body_height]).multiply(tNeck).multiply(Matrix.RotationZ(head_angles[1])).multiply(Matrix.RotationY(head_angles[2])).multiply(tKinect);
+  return rpy_trans([imu_rpy[1], imu_rpy[2], 0], [0, 0, body_height]).multiply(tNeck).multiply(Matrix.RotationZ(head_angles[1])).multiply(Matrix.RotationY(head_angles[2])).multiply(tKinect);
 }
 
 var tNeck;
@@ -79,11 +79,13 @@ get_config(["head","neckOffset"], function(val){
 });
 var tKinect;
 get_config(["kinect","mountOffset"], function(val){
-  var kinect = map2array(kinect);
+  var kinect = map2array(val);
   var k_rpy = map2array(kinect[0]),
     k_trans = map2array(kinect[1]);
   tKinect = rpy_trans(k_rpy, k_trans);
+  console.log(k_rpy, k_trans, tKinect);
 });
+*/
 
 // Returns a point in xyz of the torso frame
 /*
@@ -96,7 +98,7 @@ get_config(["kinect","mountOffset"], function(val){
 // robot: pose (px,py,pa element) and bodyTilt elements
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
-  MIN_CONNECTIVITY = 25.4, // points within MIN_CONNECTIVITY of each other are connected
+  MIN_CONNECTIVITY = 50, //25.4, // points within MIN_CONNECTIVITY of each other are connected
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, robot, destination) {
@@ -106,7 +108,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       if(x > 2000){
         return;
       }
-      x = x / 1000;
+      x = x / 1000;// * 0.97;
       var rFrame = mat_times_vec(
         tK2,
         [x, -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR]
@@ -231,8 +233,7 @@ this.addEventListener('message', function (e) {
     //console.log(mesh);
     if (mesh.id==='k2_depth'){
       //tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
-      tK2_M = $M(flat2mat(mesh.tr));
-      tK2 = tK2_M.elements;
+      tK2 = flat2mat(mesh.tr);
     }
 
 	for (j = 0; j < height; j += 1) {

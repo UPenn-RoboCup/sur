@@ -104,9 +104,11 @@
       [o[0],d[1],o[2]],
       [o[1],o[2],d[2]]
     ];
+    
+    var root2 = [xSum, ySum, zSum].map(function(v,i){return 1000*v/nClose + root[i];});
     return {
       normal: [normal[1], normal[2], normal[0]],
-      root: root,
+      root: root2,
       cov: cov
     }
 
@@ -136,7 +138,6 @@
     // Update the parameters from these points
     var iter = new array_generator(plane_points);
     params = estimate_plane(iter, p0);
-    params.root = p0;
     params.error = total_err;
     params.npoints = plane_points.length;
     
@@ -261,7 +262,6 @@
     return params;
   }
   
-  
   // TODO: Tune the filters (for the generator)
   ctx.Estimate = {
     cylinder: function(mesh0, p0){
@@ -299,7 +299,10 @@
       horiz_params.root = [px,py,pz];
       //console.log(horiz_params);
       // Grow to update
-      horiz_params = grow_plane(new mesh_generator(mesh0), horiz_params);
+      // TODO: Use the covariance to determine the ranges here
+      horiz_params = grow_plane(new mesh_generator(mesh0, function(vertex) {
+          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 500 && abs(vertex[2] - pz) < 500;
+        }), horiz_params);
       epp_horiz = horiz_params.error / horiz_params.npoints;
       //console.log(horiz_params);
       
@@ -307,7 +310,9 @@
       vert_params.root = [px,py,pz];
       //console.log(vert_params);
       // Grow to update
-      vert_params = grow_plane(new mesh_generator(mesh0), vert_params);
+      vert_params = grow_plane(new mesh_generator(mesh0, function(vertex) {
+          return abs(vertex[1] - py) < 500 && abs(vertex[0] - px) < 500 && abs(vertex[2] - pz) < 50;
+        }), vert_params);
       epp_vert = vert_params.error / vert_params.npoints;
       //console.log(vert_params);
       

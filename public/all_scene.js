@@ -57,10 +57,12 @@
 			T_inv
 		);
 		//window.console.log(e, obj0, T_point, T_offset);
-    window.console.log(
-      obj0.object.name,
-      'Torso Offset:',
+    window.console.log(obj0.object.name);
+    window.console.log('Torso Offset:',
       new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1000).toArray()
+    );
+    window.console.log('World Coords:',
+      new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray()
     );
     // TODO: Right click behavior
 		if (e.button === 2) {
@@ -78,7 +80,6 @@
           return;
         }
         
-        /*
         // Plane estimation
         var parameters = E.plane(mesh0, p0);
         var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
@@ -88,8 +89,9 @@
         plane.quaternion.multiply((new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,0,1), (new THREE.Vector3()).fromArray(parameters.normal)));
         scene.add(plane);
         items.push(plane);
-        */
+        console.log('Plane',parameters);
         
+        /*
         // Cylinder
         var parameters = E.cylinder(mesh0, p0);
         var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20);
@@ -107,6 +109,7 @@
           parameters.r / 1000,
           parameters.h / 1000,
         ]));
+        */
       }
 		}
 	}

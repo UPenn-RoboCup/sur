@@ -115,7 +115,7 @@ function findKey(prev, cur){
 server.get(/\/Config\/(.+)/, function (req, res, next) {
   var value = req.params[0].split('/').reduce(findKey);
 	if (value !== undefined) {
-    res.json(value);
+    res.json(200, value);
 	} else {
 		res.send();
 	}
