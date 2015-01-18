@@ -19,38 +19,38 @@
 		valve_colors = ['cyan', 'magenta', 'yellow'];
 
 	// Constant for the Kinect2
-	//depth_canvas.width = 512;
-	//depth_canvas.height = 424;
+	depth_canvas.width = 512;
+	depth_canvas.height = 424;
 	// Webots
-	depth_canvas.width = 256;
-	depth_canvas.height = 212;
+	//depth_canvas.width = 256;
+	//depth_canvas.height = 212;
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
 	function toggle() {
-		toggle_id += 1;
-		if (toggle_id > 2) {
-			toggle_id = 0;
-		}
 		switch (toggle_id) {
 		case 0:
 			rgb_canvas.classList.remove('nodisplay');
 			depth_canvas.classList.add('nodisplay');
 			lA_canvas.classList.add('nodisplay');
+      toggle_id = 1;
 			break;
 		case 1:
 			rgb_canvas.classList.add('nodisplay');
 			depth_canvas.classList.remove('nodisplay');
 			lA_canvas.classList.add('nodisplay');
+      toggle_id = 0;
 			break;
 		case 2:
 			rgb_canvas.classList.add('nodisplay');
 			depth_canvas.classList.add('nodisplay');
 			lA_canvas.classList.remove('nodisplay');
+      toggle_id = 0;
 			break;
 		default:
 			rgb_canvas.classList.remove('nodisplay');
 			depth_canvas.classList.add('nodisplay');
 			lA_canvas.classList.add('nodisplay');
+      toggle_id = 0;
 			break;
 		}
 

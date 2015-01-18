@@ -59,6 +59,7 @@
 .button.rss.icon:before { background-position: 0 -312px; }
 .button.reload.icon:before { background-position: 0 -300px; }
 .button.pin.icon:before { background-position: 0 -276px; }
+.button.home.icon:before { background-position: 0 -168px; }
 
 /*
 .button:hover,

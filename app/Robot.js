@@ -123,7 +123,6 @@
 
 	function update(obj, feedback) {
 		var i,
-			tmp_quat = new THREE.Quaternion(),
 			joints = feedback.p,
 			rpy = feedback.rpy || [0, 0, 0],
 			pose = feedback.pose || [0, 0, 0],
@@ -134,8 +133,7 @@
 		for (i = 0; i < servos.length; i += 1) {
 			rotateServo(servos[i], joints[i]);
 		}
-		tmp_quat.setFromEuler(new THREE.Euler(rpy[1], pose[2], rpy[0], 'ZXY'));
-		obj.setRotationFromQuaternion(tmp_quat);
+		obj.quaternion.setFromEuler(new THREE.Euler(rpy[1], pose[2], rpy[0], 'ZXY'));
 		obj.position.y = (feedback.bh || 1) * 1e3;
 		obj.position.z = pose[0] * 1e3;
 		obj.position.x = pose[1] * 1e3;
@@ -201,7 +199,7 @@
 
 		// TODO: The following should be laoded from JSON
 		// Starting position
-		object.position.y = 1000;
+		//object.position.y = 1000;
 		object.name = 'ROBOT';
 		// root
 		parts.TORSO_PITCH_SERVO = {

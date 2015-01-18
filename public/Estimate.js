@@ -105,6 +105,8 @@
       [o[1],o[2],d[2]]
     ];
     
+    // d[2] is the variance in the y direction only... find variance in the normal direction. Should be the third eigenvalue....
+    
     var root2 = [xSum, ySum, zSum].map(function(v,i){return 1000*v/nClose + root[i];});
     return {
       normal: [normal[1], normal[2], normal[0]],
@@ -142,6 +144,14 @@
     params.npoints = plane_points.length;
     
     return params;
+  }
+  
+  // Give a good idea of noise in the planar estimation
+  function plane_noise(params) {
+    var eigs = numeric.eig(params.cov);
+    console.log(eigs.lambda);
+    console.log(eigs.E);
+    // Smallest eigenvector represents the variance in the normal vector direction
   }
 
   // Estimate the grip using a vertical cyinder
@@ -319,11 +329,6 @@
       // Choose if vertical or horizontal
       if (epp_horiz < epp_vert) {
         horiz_params.id = 'h';
-        
-        var eigs = numeric.eig(horiz_params.cov);
-        console.log(eigs.lambda);
-        console.log(eigs.E);
-        
         //console.log(horiz_params);
         return horiz_params;
       } else {

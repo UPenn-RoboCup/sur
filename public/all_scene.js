@@ -8,18 +8,66 @@
     raycaster = new THREE.Raycaster(),
 		meshes = [],
 		items = [],
-    depth_is_processing = false,
+    is_processing = false,
     depth_worker,
-    rgbd_depth_metadata,
+    rgbd_metadata = {},
 		mesh_feed,
+    rgb_ctx,
+    rgb_feed,
 		container,
 		renderer,
 		camera,
 		controls,
+    selection,
 		robot,
 		robot_preview,
 		CANVAS_WIDTH,
     CANVAS_HEIGHT;
+    
+  var describe = {
+    cylinder: function(mesh0, p0){
+      // Cylinder
+      var parameters = E.cylinder(mesh0, p0);
+      var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20);
+      var material = new THREE.MeshBasicMaterial({color: 0xffff00});
+      var cylinder = new THREE.Mesh(geometry, material);
+      cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
+      scene.add(cylinder);
+      items.push(cylinder);
+      // TODO: add uncertainty
+      // [x center, y center, z center, radius, height]
+      d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
+        parameters.zc / 1000,
+        parameters.xc / 1000,
+        parameters.yc / 1000,
+        parameters.r / 1000,
+        parameters.h / 1000,
+      ]));
+    },
+    plane: function(mesh0, p0){
+      // Cylinder
+      var parameters = E.cylinder(mesh0, p0);
+      var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20);
+      var material = new THREE.MeshBasicMaterial({color: 0xffff00});
+      var cylinder = new THREE.Mesh(geometry, material);
+      cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
+      scene.add(cylinder);
+      items.push(cylinder);
+      // TODO: add uncertainty
+      // [x center, y center, z center, radius, height]
+      d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
+        parameters.zc / 1000,
+        parameters.xc / 1000,
+        parameters.yc / 1000,
+        parameters.r / 1000,
+        parameters.h / 1000,
+      ]));
+    }
+  };
+    
+  function debug(arr){
+    d3.select("#info").html(arr.join('<br/>'));
+  }
 
 	// Select an object to rotate around, or general selection for other stuff
 	// TODO: Should work for right or left click...?
@@ -56,14 +104,19 @@
 			T_point,
 			T_inv
 		);
-		//window.console.log(e, obj0, T_point, T_offset);
-    window.console.log(obj0.object.name);
-    window.console.log('Torso Offset:',
-      new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1000).toArray()
-    );
-    window.console.log('World Coords:',
-      new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray()
-    );
+    
+    // Debugging
+    sprintf.apply({},['%0.2f %f', 1,2, 55])
+    var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1000).toArray();
+    offset_msg.unshift('Offset: %0.2f %0.2f %0.2f');
+    var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray();
+    global_msg.unshift('Global: %0.2f %0.2f %0.2f');
+    debug([
+      obj0.object.name,
+      sprintf.apply(null, offset_msg),
+      sprintf.apply(null, global_msg)
+    ]);
+    
     // TODO: Right click behavior
 		if (e.button === 2) {
 			// Right click
@@ -79,37 +132,8 @@
         if(mesh0.name !== 'kinectV2'){
           return;
         }
-        
-        // Plane estimation
-        var parameters = E.plane(mesh0, p0);
-        var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
-        var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-        var plane = new THREE.Mesh(geometry, material);
-        plane.position.fromArray(parameters.root);
-        plane.quaternion.multiply((new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,0,1), (new THREE.Vector3()).fromArray(parameters.normal)));
-        scene.add(plane);
-        items.push(plane);
-        console.log('Plane',parameters);
-        
-        /*
-        // Cylinder
-        var parameters = E.cylinder(mesh0, p0);
-        var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20);
-        var material = new THREE.MeshBasicMaterial({color: 0xffff00});
-        var cylinder = new THREE.Mesh(geometry, material);
-        cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
-        scene.add(cylinder);
-        items.push(cylinder);
-        // TODO: add uncertainty
-        // [x center, y center, z center, radius, height]
-        d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
-          parameters.zc / 1000,
-          parameters.xc / 1000,
-          parameters.yc / 1000,
-          parameters.r / 1000,
-          parameters.h / 1000,
-        ]));
-        */
+        var f_describe = describe[selection.value]
+        if(typeof f_describe === 'function'){ f_describe(mesh0, p0); }
       }
 		}
 	}
@@ -160,12 +184,12 @@
     // Add the mesh to the scene
 		scene.add(mesh);
     // Finished drawing on the screen
-    depth_is_processing = false;
+    is_processing = false;
 	}
 
 	// Process the frame, which is always the chest lidar
 	function process_mesh_frame() {
-    if (depth_is_processing) {
+    if (is_processing) {
       return;
     }
 		var canvas = mesh_feed.canvas,
@@ -199,35 +223,51 @@
       mesh_obj.pixels.buffer,
     ]);
     // Don't post to the depth worker until done
-    depth_is_processing = true;
+    is_processing = true;
 	}
   
-	function process_kinectV2_frame(e) {
+  
+  function process_kinectV2_color(){
+    rgbd_metadata.rgb = rgb_ctx.getImageData(0, 0, 1920, 1080).data;
+  }
+	function process_kinectV2_depth(e) {
 		if (typeof e.data === 'string') {
-			rgbd_depth_metadata = JSON.parse(e.data);
-			if (rgbd_depth_metadata.t !== undefined) {
+      var rgb = rgbd_metadata.rgb;
+			rgbd_metadata = JSON.parse(e.data);
+      rgbd_metadata.rgb = rgb;
+			if (rgbd_metadata.t !== undefined) {
 				// Add latency measure if possible
-				rgbd_depth_metadata.latency = (e.timeStamp / 1e3) - rgbd_depth_metadata.t;
+				rgbd_metadata.latency = (e.timeStamp / 1e3) - rgbd_metadata.t;
 			}
-		} else if (!depth_is_processing) {
-      // Allocations
-      // TODO: Maintain a fixed set of allocations to avoid penalty on each new data
-      var npix = rgbd_depth_metadata.height * rgbd_depth_metadata.width;
-      rgbd_depth_metadata.index = new window.Uint16Array(npix * 6);
-			rgbd_depth_metadata.positions = new window.Float32Array(npix * 3);
-      rgbd_depth_metadata.colors = new window.Float32Array(npix * 3);
-			rgbd_depth_metadata.pixels = new window.Float32Array(e.data);
-      rgbd_depth_metadata.pixdex = new window.Uint32Array(rgbd_depth_metadata.pixels.buffer);
-			depth_worker.postMessage(rgbd_depth_metadata,[
-        rgbd_depth_metadata.index.buffer,
-        rgbd_depth_metadata.positions.buffer,
-        rgbd_depth_metadata.colors.buffer,
-        rgbd_depth_metadata.pixels.buffer
-      ]);
-      // Don't post to the depth worker until done
-      depth_is_processing = true;
+		} else {
+		  rgbd_metadata.pixels = new window.Float32Array(e.data);
 		}
+    if(rgbd_metadata.pixels!==undefined && rgbd_metadata.rgb!==undefined){ post_rgbd(); }
 	}
+  
+  function post_rgbd(){
+    // Don't post to the depth worker until done
+    if (is_processing) { return; }
+    is_processing = true;
+    
+    console.log(rgbd_metadata.rgb[0], rgbd_metadata.rgb[1920*4]);
+    
+    // Allocations
+    // TODO: Maintain a fixed set of allocations to avoid penalty on each new data
+    var npix = rgbd_metadata.height * rgbd_metadata.width;
+    rgbd_metadata.index = new window.Uint16Array(npix * 6);
+		rgbd_metadata.positions = new window.Float32Array(npix * 3);
+    rgbd_metadata.colors = new window.Float32Array(npix * 3);
+    rgbd_metadata.pixdex = new window.Uint32Array(rgbd_metadata.pixels.buffer);
+		depth_worker.postMessage(rgbd_metadata,[
+      rgbd_metadata.index.buffer,
+      rgbd_metadata.positions.buffer,
+      rgbd_metadata.colors.buffer,
+      rgbd_metadata.pixels.buffer,
+      rgbd_metadata.rgb.buffer
+    ]);
+  }
+  
 	// Add the camera view and append
 	function setup() {
 		// Build the scene
@@ -300,21 +340,13 @@
 			*/
 		});
     // User interactions
-		d3.select('select#operations').on('change', function () {
-			// 'this' variable is the button node
-      switch(this.value){
-      case 'home':
-        break;
-      case 'look':
-        controls.enabled = true;
-        break;
-      case 'draw':
-        controls.enabled = false;
-        break;
-      default:
-        break;
-      }
-		});
+		selection = d3.select('select#objects').node();
+    d3.select('button#look').on('click', function(){
+      controls.enabled = true;
+    });
+    d3.select('button#draw').on('click', function(){
+      controls.enabled = false;
+    });
 	}
   
   ctx.util.ljs('/Estimate.js', function(){
@@ -332,6 +364,11 @@
 			setTimeout(setup, 0);
 		});
 	});
+  
+	// Depth Worker for both mesh and kinect
+	depth_worker = new window.Worker("/allmesh_worker.js");
+	depth_worker.onmessage = process_mesh;
+  
 	// Begin listening to the feed
 	d3.json('/streams/mesh', function (error, port) {
 		mesh_feed = new ctx.VideoFeed({
@@ -344,9 +381,17 @@
 	d3.json('/streams/kinect2_depth', function (error, port) {
 		var depth_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
 		depth_ws.binaryType = 'arraybuffer';
-		depth_ws.onmessage = process_kinectV2_frame;
+		depth_ws.onmessage = process_kinectV2_depth;
 	});
-	// Depth Worker for both mesh and kinect
-	depth_worker = new window.Worker("/allmesh_worker.js");
-	depth_worker.onmessage = process_mesh;
+  
+	d3.json('/streams/kinect2_color', function (error, port) {
+		rgb_feed = new ctx.VideoFeed({
+			id: 'kinect2_color',
+			port: port,
+			fr_callback: process_kinectV2_color
+		}
+    );
+		rgb_ctx = rgb_feed.context2d;
+	});
+  
 }(this));

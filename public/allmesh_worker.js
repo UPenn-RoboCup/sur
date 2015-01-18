@@ -12,24 +12,6 @@ var DEG_TO_RAD = Math.PI / 180,
   },
   tK2;
 
-function get_config(tree, cb){
-  var url = "/Config/" + tree.join('/');
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
-    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-      cb(JSON.parse(xmlhttp.responseText));
-    }
-  }
-  xmlhttp.open("GET", url, true);
-  xmlhttp.send();
-}
-
-function map2array(obj){
-  var arr = [];
-  for(var a in obj){ arr.push(obj[a]); }
-  return arr;
-}
-
 function flat2mat(flat){
   return [
     flat.slice(0,4),
@@ -47,14 +29,6 @@ function mat_times_vec(m, v){
   return t;
 }
 
-function trans(v){
-  return [
-    [1,0,0,v[0]],
-    [0,1,0,v[1]],
-    [0,0,1,v[2]],
-    [0,0,0,1],
-  ];
-}
 function rpy_trans(r,v){
   var alpha = r[0],
     beta = r[1],
@@ -71,6 +45,33 @@ function rpy_trans(r,v){
 this.importScripts('/js/sylvester-min.js');
 function get_k2_transform(head_angles, imu_rpy, body_height){
   return rpy_trans([imu_rpy[1], imu_rpy[2], 0], [0, 0, body_height]).multiply(tNeck).multiply(Matrix.RotationZ(head_angles[1])).multiply(Matrix.RotationY(head_angles[2])).multiply(tKinect);
+}
+
+function trans(v){
+  return [
+    [1,0,0,v[0]],
+    [0,1,0,v[1]],
+    [0,0,1,v[2]],
+    [0,0,0,1],
+  ];
+}
+
+function map2array(obj){
+  var arr = [];
+  for(var a in obj){ arr.push(obj[a]); }
+  return arr;
+}
+
+function get_config(tree, cb){
+  var url = "/Config/" + tree.join('/');
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+      cb(JSON.parse(xmlhttp.responseText));
+    }
+  }
+  xmlhttp.open("GET", url, true);
+  xmlhttp.send();
 }
 
 var tNeck;
@@ -108,7 +109,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       if(x > 2000){
         return;
       }
-      x = x / 1000;// * 0.97;
+      x = x / 1000;
       var rFrame = mat_times_vec(
         tK2,
         [x, -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR]
@@ -116,12 +117,6 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       destination[0] = rFrame[1]*1000;
       destination[1] = rFrame[2]*1000;
       destination[2] = rFrame[0]*1000;
-      /*
-    	// Set in the THREE.js frame, with millimeters
-      destination[0] = -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR;
-      destination[1] = -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR;
-      destination[2] = x;
-      */
       return destination;
     },
     chestLidar: function (u, v, w, width, height, robot, destination) {
@@ -170,13 +165,22 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     }
   },
   SENSOR_COLOR = {
+    /*
     kinectV2: function (xyz, destination) {
 			// JET colormap. Colors range from 0.0 to 1.0
       var fourValue = 4 - (4 * max(0, min(1, xyz[1] / 1000)));
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
-    }
+    },
+    */
+    kinectV2: function (i, j, xyz, img, destination) {
+			// Colors range from 0.0 to 1.0
+      var idx = 4 * (j * 1920 + i);
+			destination[0] = img[idx] / 255;
+			destination[1] = img[idx + 1] / 255;
+			destination[2] = img[idx + 2] / 255;
+    },
   };
 
 this.addEventListener('message', function (e) {
@@ -193,6 +197,8 @@ this.addEventListener('message', function (e) {
   	height = mesh.height,
     // Pixels are the values of the ranges, actually.
     pixels = mesh.pixels,
+    // RGB are the color values from the kinect
+    rgb = mesh.rgb,
     // Pixdex is now an indexing that overwrites the pixel value
     pixdex = mesh.pixdex,
 		// TypedArrays to be put into the WebGL buffer
@@ -229,7 +235,7 @@ this.addEventListener('message', function (e) {
     i, j,
     // Position of the point
     point_xyz;
-    
+        
     //console.log(mesh);
     if (mesh.id==='k2_depth'){
       //tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
@@ -255,7 +261,7 @@ this.addEventListener('message', function (e) {
       }
       // Set the color of this pixel
       get_color(
-        point_xyz, colors.subarray(position_idx, position_idx + 3)
+        i, j, point_xyz, rgb, colors.subarray(position_idx, position_idx + 3)
       );
       // TODO: Set the normal...
 			// Update the particle count, since it is valid

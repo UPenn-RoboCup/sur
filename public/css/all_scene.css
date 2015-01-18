@@ -15,3 +15,12 @@ html, body {
 select {
   font-size: 24pt;
 }
+#topic select {
+  float: left;
+}
+#topic div {
+  float: left;
+}
+#info {
+  font-size: 10pt;
+}
