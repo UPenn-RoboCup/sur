@@ -1,7 +1,10 @@
-var DEG_TO_RAD = Math.PI / 180,
+var PI = Math.PI,
+  DEG_TO_RAD = PI / 180,
+	floor = Math.floor,
 	cos = Math.cos,
 	sin = Math.sin,
   tan = Math.tan,
+  atan = Math.atan,
 	min = Math.min,
   max = Math.max,
 	abs = Math.abs,
@@ -99,7 +102,7 @@ get_config(["kinect","mountOffset"], function(val){
 // robot: pose (px,py,pa element) and bodyTilt elements
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
-  MIN_CONNECTIVITY = 50, //25.4, // points within MIN_CONNECTIVITY of each other are connected
+  MIN_CONNECTIVITY = 30,//50, //25.4, // points within MIN_CONNECTIVITY of each other are connected
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, robot, destination) {
@@ -110,14 +113,12 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
         return;
       }
       x = x / 1000;
-      var rFrame = mat_times_vec(
-        tK2,
-        [x, -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR]
-      );
+      var local = [x, -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR];
+      var rFrame = mat_times_vec(tK2, local);
       destination[0] = rFrame[1]*1000;
       destination[1] = rFrame[2]*1000;
       destination[2] = rFrame[0]*1000;
-      return destination;
+      return local;
     },
     chestLidar: function (u, v, w, width, height, robot, destination) {
     	'use strict';
@@ -174,13 +175,33 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
     },
     */
+    /*
     kinectV2: function (i, j, xyz, img, destination) {
 			// Colors range from 0.0 to 1.0
-      var idx = 4 * (j * 1920 + i);
+      var j2 = floor(2.75 * j) - 63;
+      if (j2 < 0) { return; }
+      var i2 = floor(3.75 * i);// - 154;
+      
+      var idx = 4 * (i2 + j2 * 1920);
 			destination[0] = img[idx] / 255;
 			destination[1] = img[idx + 1] / 255;
 			destination[2] = img[idx + 2] / 255;
     },
+    */
+    kinectV2: function (i, j, xyz, img, destination) {
+			// Colors range from 0.0 to 1.0
+      var j2 = floor(2.65 * j) - 12;
+      if (j2 < 0) { return; }
+      //var i2 = 1920 * (0.5 - (.68)*atan((xyz[1] - 0.075)/xyz[0]));
+      //var i2 = 1920 * (0.5 - (.5)*atan((xyz[1] - 0.07)/xyz[0])) + 10;
+      var i2 = 1920 * (0.5 - (.57)*atan((xyz[1] - 0.05)/xyz[0]));
+      if (i2 < 0 || i2 >= 1920) { return; }
+      var idx = 4 * floor(i2 + j2 * 1920);
+			destination[0] = img[idx] / 255;
+			destination[1] = img[idx + 1] / 255;
+			destination[2] = img[idx + 2] / 255;
+    },
+    
   };
 
 this.addEventListener('message', function (e) {
@@ -241,15 +262,16 @@ this.addEventListener('message', function (e) {
       //tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
       tK2 = flat2mat(mesh.tr);
     }
-
+    var point_local;
 	for (j = 0; j < height; j += 1) {
 		for (i = 0; i < width; i += 1) {
 			// Compute and set the xyz positions
-			point_xyz = get_xyz(
-        i, j, pixels[pixel_idx], width, height, {}, positions.subarray(position_idx, position_idx + 3)
+			point_xyz = positions.subarray(position_idx, position_idx + 3);
+      point_local = get_xyz(
+        i, j, pixels[pixel_idx], width, height, {}, point_xyz
       );
       // Check if we are given a valid point
-      if (point_xyz === undefined) {
+      if (point_local === undefined) {
 				// Saturation check
 				// NOTE: u32 index. start @1, so we can make things invalid with 0
 				pixdex[pixdex_idx] = 0;
@@ -261,7 +283,7 @@ this.addEventListener('message', function (e) {
       }
       // Set the color of this pixel
       get_color(
-        i, j, point_xyz, rgb, colors.subarray(position_idx, position_idx + 3)
+        i, j, point_local, rgb, colors.subarray(position_idx, position_idx + 3)
       );
       // TODO: Set the normal...
 			// Update the particle count, since it is valid

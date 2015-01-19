@@ -141,7 +141,7 @@
     var iter = new array_generator(plane_points);
     params = estimate_plane(iter, p0);
     params.error = total_err;
-    params.npoints = plane_points.length;
+    params.points = plane_points;
     
     return params;
   }
@@ -267,7 +267,7 @@
     params.yc = (p_upper[1] + p_lower[1]) / 2;
     
     params.error = total_err;
-    params.npoints = valid_cyl_points.length;
+    params.points = valid_cyl_points;
     
     return params;
   }
@@ -280,7 +280,7 @@
         pz = p0.z,
         root = [px,py,pz],
         it = new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 5 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
+          return abs(vertex[1] - py) < 20 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
         });
       var parameters = estimate_cylinder(it, root);
       //console.log(parameters);

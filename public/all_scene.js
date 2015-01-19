@@ -13,6 +13,7 @@
     rgbd_metadata = {},
 		mesh_feed,
     rgb_ctx,
+    rgb_canvas,
     rgb_feed,
 		container,
 		renderer,
@@ -22,7 +23,9 @@
 		robot,
 		robot_preview,
 		CANVAS_WIDTH,
-    CANVAS_HEIGHT;
+    CANVAS_HEIGHT,
+    cur_rgb,
+    cur_depth;
     
   var describe = {
     cylinder: function(mesh0, p0){
@@ -149,7 +152,8 @@
 	function process_mesh(e) {
 		var mesh_obj = e.data,
       geometry = new THREE.BufferGeometry(),
-			material = new THREE.MeshPhongMaterial({
+			//material = new THREE.MeshPhongMaterial({
+      material = new THREE.MeshBasicMaterial({
 				side: THREE.DoubleSide,
         // Enable all color channels. Super important for vertex colors!
 				color: 0xFFFFFF,
@@ -228,21 +232,35 @@
   
   
   function process_kinectV2_color(){
-    rgbd_metadata.rgb = rgb_ctx.getImageData(0, 0, 1920, 1080).data;
+    cur_rgb = rgb_canvas.metadata;
+    //console.log('color', cur_rgb);
+    if (cur_depth) {
+      rgbd_metadata.pixels = cur_depth;
+      rgbd_metadata.rgb = rgb_ctx.getImageData(0, 0, cur_rgb.width, cur_rgb.height).data;
+      cur_rgb = null;
+      cur_depth = null;
+      post_rgbd();
+    }
   }
 	function process_kinectV2_depth(e) {
 		if (typeof e.data === 'string') {
-      var rgb = rgbd_metadata.rgb;
 			rgbd_metadata = JSON.parse(e.data);
-      rgbd_metadata.rgb = rgb;
+      //console.log('depth', rgbd_metadata);
 			if (rgbd_metadata.t !== undefined) {
 				// Add latency measure if possible
 				rgbd_metadata.latency = (e.timeStamp / 1e3) - rgbd_metadata.t;
 			}
 		} else {
-		  rgbd_metadata.pixels = new window.Float32Array(e.data);
+		  //rgbd_metadata.pixels = new window.Float32Array(e.data);
+      cur_depth = new window.Float32Array(e.data);
+      if (cur_rgb) {
+        rgbd_metadata.pixels = cur_depth;
+        rgbd_metadata.rgb = rgb_ctx.getImageData(0, 0, cur_rgb.width, cur_rgb.height).data;
+        cur_rgb = null;
+        cur_depth = null;
+        post_rgbd();
+      }
 		}
-    if(rgbd_metadata.pixels!==undefined && rgbd_metadata.rgb!==undefined){ post_rgbd(); }
 	}
   
   function post_rgbd(){
@@ -250,7 +268,7 @@
     if (is_processing) { return; }
     is_processing = true;
     
-    console.log(rgbd_metadata.rgb[0], rgbd_metadata.rgb[1920*4]);
+    //console.log(rgbd_metadata.rgb[0], rgbd_metadata.rgb[1920*4]);
     
     // Allocations
     // TODO: Maintain a fixed set of allocations to avoid penalty on each new data
@@ -392,6 +410,7 @@
 		}
     );
 		rgb_ctx = rgb_feed.context2d;
+    rgb_canvas = rgb_feed.canvas;
 	});
   
 }(this));

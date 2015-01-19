@@ -69,6 +69,7 @@
 			revokeObjectURL(fr_img_src);
 			// Run the callback on the next JS loop
 			if (typeof cb === 'function') {
+        fr_canvas.metadata = fr_metadata;
 				setTimeout(cb, 0);
 			}
 			// Keep de-queueing if necessary, even if not just animation frames
