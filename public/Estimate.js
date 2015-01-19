@@ -7,6 +7,7 @@
 	var pow = Math.pow,
     abs = Math.abs,
     sqrt = Math.sqrt,
+    exp = Math.exp,
     tNeck, tKinect;
   
   function always(p){ return true; }
@@ -28,6 +29,7 @@
           positions[3 * pidx], positions[3 * pidx + 1], positions[3 * pidx + 2],
           colors[3 * pidx], colors[3 * pidx + 1], colors[3 * pidx + 2],
         ];
+        data.colors = colors.subarray(3 * pidx, 3 * pidx + 3);
         if (filter(data)) { yield data; }
 			}
     }
@@ -38,6 +40,27 @@
     for(i = 0, l = arr.length; i<l; i+=1){
       yield arr[i];
     }
+  }
+  
+  function get_plane_error_rate(it, params){
+    var total_err = 0,
+      cnt = 0,
+      p0 = params.root,
+      n = params.normal;
+    for (var p of it){
+      total_err += abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
+      cnt += 1;
+    }
+    return total_err / cnt;
+  }
+  
+  function normalize(normal){
+    var nrm = numeric.norm2(normal);
+    return [
+      normal[0] / nrm,
+      normal[1] / nrm,
+      normal[2] / nrm
+    ];
   }
   
   function estimate_colors(it){
@@ -82,7 +105,7 @@
       zzSum - pow(zSum,2)/nClose,
     ].map(divN);
     // off diagonals: xz, xy, zy
-    var of = 2 / nClose + nClose,
+    var of = 1 / nClose,//2 / nClose + nClose,
       o = [
       xySum - of*xSum*ySum,
       xzSum - of*xSum*zSum,
@@ -112,7 +135,8 @@
       yySum = 0,
       xzSum = 0,
       xySum = 0,
-      zySum = 0;
+      zySum = 0,
+      points = [];
     for (var p of it){
       // Avoid overflow
       v = [
@@ -133,6 +157,8 @@
       xzSum += v[0] * v[2];
       xySum += v[0] * v[1];
       zySum += v[2] * v[1];
+      //
+      points.push(p);
     }
     
     var A_plane_inv = numeric.inv([
@@ -141,11 +167,7 @@
       [zSum, xSum, nClose]
     ]);
     var sol_plane = numeric.dot(A_plane_inv, [zySum, xySum, ySum]);
-    var normal = [-sol_plane[0], -sol_plane[1], 1];
-    var nrm = numeric.norm2(normal);
-    normal[0] = normal[0] / nrm;
-    normal[1] = normal[1] / nrm;
-    normal[2] = normal[2] / nrm;
+    var normal = normalize([-sol_plane[0], -sol_plane[1], 1]);
     
     // TODO: Add the standard deviation
     function divN(v){return v / (nClose + 1);}
@@ -156,7 +178,7 @@
       yySum - pow(ySum,2)/nClose
     ].map(divN);
     // off diagonals: xz, xy, zy
-    var of = 2 / nClose + nClose,
+    var of = 1 / nClose,//2 / nClose + nClose,
       o = [
       xzSum - of*xSum*zSum,
       xySum - of*xSum*ySum,
@@ -175,9 +197,71 @@
       normal: [normal[1], normal[2], normal[0]],
       root: root2,
       cov: cov,
-      n: nClose
+      n: nClose,
+      points: points,
     }
 
+  }
+  
+  function grow_plane2(it, params){
+    var c_cov = params.colors.cov,
+      c_u = params.colors.mean,
+      p0 = params.root,
+      n = params.normal,
+      plane_points = [];
+    
+    
+    
+    /*
+    var eigs = numeric.eig(params.cov);
+    console.log(eigs.lambda);
+    console.log(eigs.E);
+    */
+
+    /*
+    var c_eigs = numeric.eig(c_cov);
+    console.log(c_eigs.lambda);
+    console.log(c_eigs.E);
+    console.log('color inv', numeric.inv(c_cov));
+    console.log('c_u', c_u);
+    console.log('c_cov', c_cov);
+    */
+    
+    /*
+    var c_factor = 1 / sqrt((2*Math.PI)^3 * numeric.det(c_cov));
+    var c_prob = function(c){
+      return c_factor * exp(numeric.dotVM( c, numeric.dotMV(c_inv_cov, c)));
+    }
+    */
+    //c_cov = numeric.diag(numeric.getDiag(c_cov));
+    var c_inv_cov = numeric.inv(c_cov);
+    var c_prob = function(c){
+      return -0.5*numeric.dotVV(numeric.dotVM(c, c_inv_cov), c);
+    }
+    
+    var c_pr, err_r, cc = [0,0,0];
+    //var i = 0;
+    for (var p of it){
+      err_r = abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
+      if (err_r < 10) {
+        cc[0] = 255*p[3] - c_u[0];
+        cc[1] = 255*p[4] - c_u[1];
+        cc[2] = 255*p[5] - c_u[2];
+        c_pr = c_prob(cc);
+        if (c_pr > -7) {
+          plane_points.push(p);
+          p.colors[0] = 0;//c_u[0] / 255;
+          p.colors[1] = 255;//c_u[1] / 255;
+          p.colors[2] = 0;//c_u[2] / 255;
+        }
+        //i+=1;
+        //console.log(c_pr, cc, p);
+      }
+      //if(i>5){break;}
+    }
+    //console.log(plane_points);
+    console.log(plane_points.length);
+    return plane_points;
   }
   
   // Grow a plane from a parameter set
@@ -188,8 +272,12 @@
     var plane_points = [],
     p0 = params.root,
     n = params.normal,
+    id = params.id,
     err_r,
     total_err = 0;
+    
+    if(id==='v'){ n[1] = 0; }
+    n = normalize(n);
     
     // Find the valid sublevels based on how well the radius agrees
     // TODO: Use some probablity thing, maybe
@@ -206,18 +294,17 @@
     params = estimate_plane(iter, p0);
     params.error = total_err;
     params.points = plane_points;
+    params.id = id;
+    
+    if(id==='v'){ params.normal[1] = 0; }
+    var nrm = numeric.norm2(params.normal);
+    params.normal[0] = params.normal[0] / nrm;
+    params.normal[1] = params.normal[1] / nrm;
+    params.normal[2] = params.normal[2] / nrm;
     
     return params;
   }
   
-  // Give a good idea of noise in the planar estimation
-  function plane_noise(params) {
-    var eigs = numeric.eig(params.cov);
-    console.log(eigs.lambda);
-    console.log(eigs.E);
-    // Smallest eigenvector represents the variance in the normal vector direction
-  }
-
   // Estimate the grip using a vertical cyinder
   // y: up
   // x: left
@@ -365,47 +452,51 @@
           return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60 && abs(vertex[2] - pz) < 60;
         }),
         vertical_it = new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 80 && abs(vertex[0] - px) < 30 && abs(vertex[2] - pz) < 30;
+          return abs(vertex[1] - py) < 100 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
         });
+
       var horiz_params = estimate_plane(horizontal_it, root);
-      horiz_params.root = [px,py,pz];
+      horiz_params.id = 'h';
       console.log('horiz', horiz_params);
+      
+      var vert_params = estimate_plane(vertical_it, root);
+      vert_params.id = 'v';
+      vert_params.normal[1] = 0;
+      vert_params.normal = normalize(vert_params.normal);
+      console.log('vert', vert_params);
+      
+      var e_h = get_plane_error_rate(array_generator(horiz_params.points), horiz_params);
+      var e_v = get_plane_error_rate(array_generator(vert_params.points), vert_params);
+      console.log(e_h, e_v);
+      
+
       // Grow to update
+      /*
       // TODO: Use the covariance to determine the ranges here
       horiz_params = grow_plane(new mesh_generator(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 200 && abs(vertex[2] - pz) < 200;
         }), horiz_params);
       console.log('horiz', horiz_params);
-      
-      var vert_params = estimate_plane(vertical_it, root);
-      vert_params.root = [px,py,pz];
-      console.log('vert', vert_params);
       // Grow to update
       vert_params = grow_plane(new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 200 && abs(vertex[0] - px) < 200 && abs(vertex[2] - pz) < 10;
+          return abs(vertex[1] - py) < 200 && abs(vertex[0] - px) < 100 && abs(vertex[2] - pz) < 100;
         }), vert_params);
       console.log('vert', vert_params);
-      
-      /*
-      epp_horiz = horiz_params.error / horiz_params.points.length;
-      epp_vert = vert_params.error / vert_params.points.length;
       */
-      
       
       // Choose if vertical or horizontal
       var params;
       if (horiz_params.n > vert_params.n) {
-        horiz_params.id = 'h';
-        //console.log(horiz_params);
         params = horiz_params;
       } else {
-        vert_params.id = 'v';
         //console.log(vert_params);
         params = vert_params;
       }
       
-      var colors = estimate_colors(array_generator(params.points));
-      params.colors = colors;
+      params.colors = estimate_colors(array_generator(params.points));
+      grow_plane2(new mesh_generator(mesh0), params);
+      mesh0.geometry.getAttribute('color').needsUpdate = true;
+      
       return params;
     }
   }

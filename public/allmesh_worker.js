@@ -108,8 +108,8 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     kinectV2: function (u, v, x, width, height, robot, destination) {
       // The range value is directly our x coordinate
     	'use strict';
-      // 2 meters away is too far to render
-      if(x > 2000){
+      // 4.5 meters away is too far to render
+      if(x > 4500 || x < 200){
         return;
       }
       x = x / 1000;
@@ -175,7 +175,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     },
     kinectV2: function (i, j, xyz, img, destination) {
 			// Colors range from 0.0 to 1.0
-      var j2 = floor(2.65 * j) - 12;
+      var j2 = floor(2.65 * j) - 6;
       if (j2 < 0) { return; }
       var i2 = 1920 * (0.5 - (.57)*atan((xyz[1] - 0.05)/xyz[0]));
       if (i2 < 0 || i2 >= 1920) { return; }
