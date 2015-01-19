@@ -10,12 +10,13 @@
     tNeck, tKinect;
   
   function always(p){ return true; }
-  
+
   function* mesh_generator(mesh, filter){
     var indices = mesh.geometry.getAttribute('index').array,
       positions = mesh.geometry.getAttribute('position').array,
+      colors = mesh.geometry.getAttribute('color').array,
       offsets = mesh.geometry.drawcalls,
-      pidx, p;
+      pidx, data;
     if(typeof filter !== 'function'){ filter = always; }
     for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
 			var start = offsets[ oi ].start,
@@ -23,9 +24,11 @@
 			  index = offsets[ oi ].index;
 			for ( var i = start, il = start + count; i < il; i += 3 ) {
         pidx = index + indices[ i ];
-        p = [positions[3 * pidx], positions[3 * pidx + 1], positions[3 * pidx + 2]]
-        //positions.subarray(3 * p, 3 * p + 3);
-        if (filter(p)) { yield p; }
+        data = [
+          positions[3 * pidx], positions[3 * pidx + 1], positions[3 * pidx + 2],
+          colors[3 * pidx], colors[3 * pidx + 1], colors[3 * pidx + 2],
+        ];
+        if (filter(data)) { yield data; }
 			}
     }
   }
@@ -35,6 +38,66 @@
     for(i = 0, l = arr.length; i<l; i+=1){
       yield arr[i];
     }
+  }
+  
+  function estimate_colors(it){
+    var v,
+      nClose = 0,
+      xSum = 0,
+      ySum = 0,
+      zSum = 0,
+      xxSum = 0,
+      yySum = 0,
+      zzSum = 0,
+      xySum = 0,
+      xzSum = 0,
+      yzSum = 0;
+    for (var p of it) {
+      // Go to 0-255
+      v = [
+        p[3] * 255,
+        p[4] * 255,
+        p[5] * 255
+      ];
+      nClose += 1;
+      xSum += v[0];
+      ySum += v[1];
+      zSum += v[2];
+      //
+      xxSum += pow(v[0], 2);
+      yySum += pow(v[1], 2);
+      zzSum += pow(v[2], 2);
+      //
+      xySum += v[0] * v[1];
+      xzSum += v[0] * v[2];
+      yzSum += v[2] * v[1];
+    }
+    
+    // TODO: Add the standard deviation
+    function divN(v){return v / (nClose + 1);}
+    // diagonal entries
+    var d = [
+      xxSum - pow(xSum,2)/nClose,
+      yySum - pow(ySum,2)/nClose,
+      zzSum - pow(zSum,2)/nClose,
+    ].map(divN);
+    // off diagonals: xz, xy, zy
+    var of = 2 / nClose + nClose,
+      o = [
+      xySum - of*xSum*ySum,
+      xzSum - of*xSum*zSum,
+      yzSum - of*ySum*zSum
+    ].map(divN);
+    var cov = [
+      [d[0],o[0],o[1]],
+      [o[0],d[1],o[2]],
+      [o[1],o[2],d[2]]
+    ];
+    return {
+      mean: [xSum, ySum, zSum].map(function(v,i){return v/nClose;}),
+      cov: cov,
+    }
+    
   }
 
   function estimate_plane(it, root) {
@@ -111,7 +174,8 @@
     return {
       normal: [normal[1], normal[2], normal[0]],
       root: root2,
-      cov: cov
+      cov: cov,
+      n: nClose
     }
 
   }
@@ -298,45 +362,51 @@
         pz = p0.z,
         root = [px,py,pz],
         horizontal_it = new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 5 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
+          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60 && abs(vertex[2] - pz) < 60;
         }),
         vertical_it = new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 50 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 5;
-        }),
-        epp_horiz = Infinity,
-        epp_vert = Infinity;
+          return abs(vertex[1] - py) < 80 && abs(vertex[0] - px) < 30 && abs(vertex[2] - pz) < 30;
+        });
       var horiz_params = estimate_plane(horizontal_it, root);
       horiz_params.root = [px,py,pz];
-      //console.log(horiz_params);
+      console.log('horiz', horiz_params);
       // Grow to update
       // TODO: Use the covariance to determine the ranges here
       horiz_params = grow_plane(new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 500 && abs(vertex[2] - pz) < 500;
+          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 200 && abs(vertex[2] - pz) < 200;
         }), horiz_params);
-      epp_horiz = horiz_params.error / horiz_params.npoints;
-      //console.log(horiz_params);
+      console.log('horiz', horiz_params);
       
       var vert_params = estimate_plane(vertical_it, root);
       vert_params.root = [px,py,pz];
-      //console.log(vert_params);
+      console.log('vert', vert_params);
       // Grow to update
       vert_params = grow_plane(new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 500 && abs(vertex[0] - px) < 500 && abs(vertex[2] - pz) < 50;
+          return abs(vertex[1] - py) < 200 && abs(vertex[0] - px) < 200 && abs(vertex[2] - pz) < 10;
         }), vert_params);
-      epp_vert = vert_params.error / vert_params.npoints;
-      //console.log(vert_params);
+      console.log('vert', vert_params);
+      
+      /*
+      epp_horiz = horiz_params.error / horiz_params.points.length;
+      epp_vert = vert_params.error / vert_params.points.length;
+      */
+      
       
       // Choose if vertical or horizontal
-      if (epp_horiz < epp_vert) {
+      var params;
+      if (horiz_params.n > vert_params.n) {
         horiz_params.id = 'h';
         //console.log(horiz_params);
-        return horiz_params;
+        params = horiz_params;
       } else {
         vert_params.id = 'v';
         //console.log(vert_params);
-        return vert_params;
+        params = vert_params;
       }
       
+      var colors = estimate_colors(array_generator(params.points));
+      params.colors = colors;
+      return params;
     }
   }
 

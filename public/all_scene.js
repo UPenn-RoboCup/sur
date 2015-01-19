@@ -38,6 +38,7 @@
       scene.add(cylinder);
       items.push(cylinder);
       // TODO: add uncertainty
+      /*
       // [x center, y center, z center, radius, height]
       d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
         parameters.zc / 1000,
@@ -46,25 +47,18 @@
         parameters.r / 1000,
         parameters.h / 1000,
       ]));
+      */
     },
     plane: function(mesh0, p0){
-      // Cylinder
-      var parameters = E.cylinder(mesh0, p0);
-      var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20);
-      var material = new THREE.MeshBasicMaterial({color: 0xffff00});
-      var cylinder = new THREE.Mesh(geometry, material);
-      cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
-      scene.add(cylinder);
-      items.push(cylinder);
-      // TODO: add uncertainty
-      // [x center, y center, z center, radius, height]
-      d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
-        parameters.zc / 1000,
-        parameters.xc / 1000,
-        parameters.yc / 1000,
-        parameters.r / 1000,
-        parameters.h / 1000,
-      ]));
+      var parameters = E.plane(mesh0, p0);
+      var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
+      var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+      var plane = new THREE.Mesh(geometry, material);
+      plane.position.fromArray(parameters.root);
+      plane.quaternion.multiply((new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,0,1), (new THREE.Vector3()).fromArray(parameters.normal)));
+      scene.add(plane);
+      items.push(plane);
+      console.log(parameters);
     }
   };
     

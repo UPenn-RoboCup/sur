@@ -102,7 +102,7 @@ get_config(["kinect","mountOffset"], function(val){
 // robot: pose (px,py,pa element) and bodyTilt elements
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
-  MIN_CONNECTIVITY = 30,//50, //25.4, // points within MIN_CONNECTIVITY of each other are connected
+  MIN_CONNECTIVITY = 40,//50, //25.4, // points within MIN_CONNECTIVITY of each other are connected
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, robot, destination) {
@@ -166,34 +166,17 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     }
   },
   SENSOR_COLOR = {
-    /*
-    kinectV2: function (xyz, destination) {
+    mesh: function (i, j, xyz, img, destination) {
 			// JET colormap. Colors range from 0.0 to 1.0
       var fourValue = 4 - (4 * max(0, min(1, xyz[1] / 1000)));
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
     },
-    */
-    /*
-    kinectV2: function (i, j, xyz, img, destination) {
-			// Colors range from 0.0 to 1.0
-      var j2 = floor(2.75 * j) - 63;
-      if (j2 < 0) { return; }
-      var i2 = floor(3.75 * i);// - 154;
-      
-      var idx = 4 * (i2 + j2 * 1920);
-			destination[0] = img[idx] / 255;
-			destination[1] = img[idx + 1] / 255;
-			destination[2] = img[idx + 2] / 255;
-    },
-    */
     kinectV2: function (i, j, xyz, img, destination) {
 			// Colors range from 0.0 to 1.0
       var j2 = floor(2.65 * j) - 12;
       if (j2 < 0) { return; }
-      //var i2 = 1920 * (0.5 - (.68)*atan((xyz[1] - 0.075)/xyz[0]));
-      //var i2 = 1920 * (0.5 - (.5)*atan((xyz[1] - 0.07)/xyz[0])) + 10;
       var i2 = 1920 * (0.5 - (.57)*atan((xyz[1] - 0.05)/xyz[0]));
       if (i2 < 0 || i2 >= 1920) { return; }
       var idx = 4 * floor(i2 + j2 * 1920);
