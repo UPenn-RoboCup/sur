@@ -7,6 +7,7 @@
     peer,
     p_conn,
     overlay,
+    map_c,
 		polyF = d3.svg.line()
 			.x(function (d) { return d.x; })
 			.y(function (d) { return d.y; })
@@ -43,22 +44,33 @@
       console.log('scene data', data);
     });
   }
-  
+  /*
+    minx—the beginning x coordinate
+    miny—the beginning y coordinate
+    width—width of the view box
+    height—height of the view box
+  */
   function setup(){
     setup_rtc();
+    map_c = d3.select('#map_container').node();
   	// Add the overlay
-  	overlay = d3.select("#map_container").append("svg").attr('class', 'overlay');
-//    .attr('viewBox', "0 0 256 212").attr('preserveAspectRatio', "none");
-//  		.attr('width', depth_canvas.width).attr('height', depth_canvas.height);
-  	var pose_g = overlay.append('g').attr('id', 'pose');
-    var points = [{'x':-7,'y':10},{'x':0,'y':-10},{'x':7,'y':10}];
-    pose_g.append("path")
+  	overlay = d3.select("#map_container").append("svg").attr('class', 'overlay')
+    .attr('viewBox', "-2 -2 4 4").attr('preserveAspectRatio', "none")
+    .attr('width', map_c.clientWidth).attr('height', map_c.clientHeight);
+    var points = [/*tip*/{'x':0,'y':0}, {'x':-0.05,'y':0.25},{'x':0.05,'y':0.25}];
+    overlay.append("path")
   		.attr("d", polyF(points))
   		.attr("stroke", "red")
-  		.attr("stroke-width", 2)
-  		.attr("fill", "red")
-      .attr("transform", "translate(" + 100 + "," + 100 + ")");
+  		.attr("stroke-width", 0.01)
+  		.attr("fill", "none")
+      .attr("transform", "translate(" + 0 + "," + 0 + ")")
+      .attr('id', 'pose');
   }
+  
+	// Handle resizing
+	window.addEventListener('resize', function () {
+    overlay.attr('width', map_c.clientWidth).attr('height', map_c.clientHeight);
+	}, false);
 
 	// Load the Styling
 	ctx.util.lcss('/css/gh-buttons.css');
