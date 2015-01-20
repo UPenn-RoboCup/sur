@@ -25,10 +25,33 @@
 		CANVAS_WIDTH,
     CANVAS_HEIGHT,
     cur_rgb,
-    cur_depth;
+    cur_depth,
+    peer,
+    p_conn,
+    peer_id = 'all_scene',
+    peer_map_id = 'all_map';
     
   function debug(arr){
     d3.select("#info").html(arr.join('<br/>'));
+  }
+
+  function setup_rtc (){
+    peer = new Peer(peer_id, {host: 'localhost', port: 9000});
+    peer.on('open', function(id) {
+      console.log('My peer ID is: ' + id);
+      console.log('peer', peer);
+    });
+    peer.on('disconnected', function(conn) { console.log('disconnected'); });
+    peer.on('error', function(e) { console.log('error', e); });
+    peer.on('close', function() { console.log('close'); });
+    peer.on('connection', function(conn) {
+      conn.on('data', function(data){
+        console.log('map data',data);
+      });
+      conn.on('close', function(){
+        console.log('closed conn');
+      });
+    });
   }
     
   var describe = {
@@ -378,6 +401,9 @@
 			// Just see the scene
 			document.body.appendChild(view);
 			setTimeout(setup, 0);
+      setTimeout(function(){
+        ctx.util.ljs('/js/peer.min.js', setup_rtc);
+      },0)
 		});
 	});
   

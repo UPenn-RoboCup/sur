@@ -13,7 +13,7 @@ var restify = require('restify'),
 	dgram = require('dgram'),
 	zmq = require('zmq'),
 	mp = require('msgpack'),
-	PeerServer = require('peer').PeerServer;
+  PeerServer = require('peer').PeerServer;
 
 /* Is this Needed? Seems so, to get JSON data posted. TODO: See why */
 server.use(restify.acceptParser(server.acceptable));
@@ -251,3 +251,9 @@ server.listen(8080, function () {
 
 /* PeerServer for WebRTC */
 var pserver = new PeerServer({ port: 9000 });
+pserver.on('connection', function(id) {
+  console.log('Peer connected:', id);
+});
+pserver.on('disconnect', function(id) {
+  console.log('Peer disconnected:', id);
+});

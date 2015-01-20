@@ -7,6 +7,7 @@ var mainBowerFiles = require('main-bower-files');
 
 gulp.task('concat_libs', function () {
 	"use strict";
+	console.log(mainBowerFiles())
 	return gulp.src(mainBowerFiles())
 		.pipe(sourcemaps.init())
 		.pipe(concat('ext.min.js'))

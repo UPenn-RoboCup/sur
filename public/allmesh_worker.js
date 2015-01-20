@@ -176,7 +176,9 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     kinectV2: function (i, j, xyz, img, destination) {
 			// Colors range from 0.0 to 1.0
       var j2 = floor(2.65 * j) - 6;
-      if (j2 < 0) { return; }
+      //var j2 = floor(1080 * (0.48 - (0.85)*atan(xyz[2]/xyz[0])));
+      //var j2 = floor(1080 * (0.44 - (0.7)*atan(xyz[2]/xyz[0])));
+      if (j2 < 0 || j2 >= 1080) { return; }
       var i2 = 1920 * (0.5 - (.57)*atan((-xyz[1] - 0.05)/xyz[0]));
       if (i2 < 0 || i2 >= 1920) { return; }
       var idx = 4 * floor(i2 + j2 * 1920);

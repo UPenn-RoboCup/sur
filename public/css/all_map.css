@@ -1,0 +1,26 @@
+html, body {
+  font-family: helvetica;
+  height: 100%;
+  margin: 0px;
+  overflow: hidden;
+}
+#map_container {
+  height: 100%;
+}
+#topic {
+  position: fixed;
+  top: 0px;
+  width: 100%;
+}
+select {
+  font-size: 24pt;
+}
+#topic select {
+  float: left;
+}
+#topic div {
+  float: left;
+}
+#info {
+  font-size: 10pt;
+}
