@@ -423,35 +423,36 @@
       
       // Run the colors
       params.colors = estimate_colors(array_generator(params.points));
-      var big_plane_points = grow_plane(new mesh_generator(mesh0), params);
+      params.points = grow_plane(new mesh_generator(mesh0), params);
       
       // Update the roughness
-      var p2 = estimate_plane(new array_generator(big_plane_points), params.root);
+      var p2 = estimate_plane(new array_generator(params.points), params.root);
       params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
       // e_val = eigs.lambda.x[2] * 1e6, // 1e3 * 1e3, since covariance is a squared dependence
       // e_vec = [eigs.E.x[0][2],eigs.E.x[1][2],eigs.E.x[2][2]];
       
+      return params;
+    },
+    classify: function(params) {
       // Learning and lassifiers here...
       // If ground...
       //console.log('h_ground', h_ground(params));
       if (h_ground(params)>9) {
-        big_plane_points.forEach(function(p){
+        params.points.forEach(function(p){
           p.colors[0] = 0;
           p.colors[1] = 1;
           p.colors[2] = 0;
         });
       } else {
-        big_plane_points.forEach(function(p){
+        params.points.forEach(function(p){
           p.colors[0] = 1;
           p.colors[1] = 1;
           p.colors[2] = 0;
         });
       }
-
-      mesh0.geometry.getAttribute('color').needsUpdate = true;
-      
-      return params;
-    }
+    },
+    find_plane: function(mesh){
+    },
   }
 
 }(this));

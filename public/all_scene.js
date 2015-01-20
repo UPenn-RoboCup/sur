@@ -27,6 +27,10 @@
     cur_rgb,
     cur_depth;
     
+  function debug(arr){
+    d3.select("#info").html(arr.join('<br/>'));
+  }
+    
   var describe = {
     cylinder: function(mesh0, p0){
       // Cylinder
@@ -51,6 +55,9 @@
     },
     plane: function(mesh0, p0){
       var parameters = E.plane(mesh0, p0);
+      console.log(parameters);
+      E.classify(parameters);
+      mesh0.geometry.getAttribute('color').needsUpdate = true;
       /*
       var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
       var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
@@ -60,13 +67,8 @@
       scene.add(plane);
       items.push(plane);
       */
-      console.log(parameters);
     }
   };
-    
-  function debug(arr){
-    d3.select("#info").html(arr.join('<br/>'));
-  }
 
 	// Select an object to rotate around, or general selection for other stuff
 	// TODO: Should work for right or left click...?

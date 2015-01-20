@@ -113,7 +113,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
         return;
       }
       x = x / 1000;
-      var local = [x, -2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR];
+      var local = [x, 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR];
       var rFrame = mat_times_vec(tK2, local);
       destination[0] = rFrame[1]*1000;
       destination[1] = rFrame[2]*1000;
@@ -177,7 +177,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			// Colors range from 0.0 to 1.0
       var j2 = floor(2.65 * j) - 6;
       if (j2 < 0) { return; }
-      var i2 = 1920 * (0.5 - (.57)*atan((xyz[1] - 0.05)/xyz[0]));
+      var i2 = 1920 * (0.5 - (.57)*atan((-xyz[1] - 0.05)/xyz[0]));
       if (i2 < 0 || i2 >= 1920) { return; }
       var idx = 4 * floor(i2 + j2 * 1920);
 			destination[0] = img[idx] / 255;
