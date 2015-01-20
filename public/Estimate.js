@@ -1,6 +1,5 @@
 (function (ctx) {
 	'use strict';
-  
   // Load the Matrix library
   ctx.util.ljs('/js/numeric-1.2.6.min.js');
   
@@ -8,17 +7,33 @@
     abs = Math.abs,
     sqrt = Math.sqrt,
     exp = Math.exp,
-    tNeck, tKinect;
+    min = Math.min;
+    
+    /*
+    var eigs = numeric.eig(params.cov);
+    console.log(eigs.lambda);
+    console.log(eigs.E);
+    var c_eigs = numeric.eig(c_cov);
+    console.log(c_eigs.lambda);
+    console.log(c_eigs.E);
+    console.log('color inv', numeric.inv(c_cov));
+    console.log('c_u', c_u);
+    console.log('c_cov', c_cov);
+    */
+    
+  // Ground classifier
+  // Larger it is, then more ground-y it is
+  function h_ground(params){
+    return numeric.dotVV(params.normal, [0,1,0]) * (1 + 1/abs(params.root[1]/1000));
+  }
   
-  function always(p){ return true; }
-
   function* mesh_generator(mesh, filter){
     var indices = mesh.geometry.getAttribute('index').array,
       positions = mesh.geometry.getAttribute('position').array,
       colors = mesh.geometry.getAttribute('color').array,
       offsets = mesh.geometry.drawcalls,
+      filter = filter || function(p){return true;},
       pidx, data;
-    if(typeof filter !== 'function'){ filter = always; }
     for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
 			var start = offsets[ oi ].start,
 			  count = offsets[ oi ].count,
@@ -54,13 +69,9 @@
     return total_err / cnt;
   }
   
-  function normalize(normal){
-    var nrm = numeric.norm2(normal);
-    return [
-      normal[0] / nrm,
-      normal[1] / nrm,
-      normal[2] / nrm
-    ];
+  function normalize(n){
+    var nrm = numeric.norm2(n);
+    return [ n[0] / nrm, n[1] / nrm, n[2] / nrm ];
   }
   
   function estimate_colors(it){
@@ -82,6 +93,9 @@
         p[4] * 255,
         p[5] * 255
       ];
+      if(v[1]>255){
+        console.log(p);
+      }
       nClose += 1;
       xSum += v[0];
       ySum += v[1];
@@ -203,106 +217,34 @@
 
   }
   
-  function grow_plane2(it, params){
+  // (x - h)^2 + (y - k)^2 = r^2
+  // a(x - x0) + b(y - y0) + c(z - z0) == 0
+  // n = [a b c]
+  function grow_plane(it, params){
     var c_cov = params.colors.cov,
       c_u = params.colors.mean,
       p0 = params.root,
       n = params.normal,
-      plane_points = [];
+      plane_points = [],
+      c_inv_cov = numeric.inv(c_cov),
+      surf_thresh = 30;
     
-    
-    
-    /*
-    var eigs = numeric.eig(params.cov);
-    console.log(eigs.lambda);
-    console.log(eigs.E);
-    */
-
-    /*
-    var c_eigs = numeric.eig(c_cov);
-    console.log(c_eigs.lambda);
-    console.log(c_eigs.E);
-    console.log('color inv', numeric.inv(c_cov));
-    console.log('c_u', c_u);
-    console.log('c_cov', c_cov);
-    */
-    
-    /*
-    var c_factor = 1 / sqrt((2*Math.PI)^3 * numeric.det(c_cov));
-    var c_prob = function(c){
-      return c_factor * exp(numeric.dotVM( c, numeric.dotMV(c_inv_cov, c)));
-    }
-    */
-    //c_cov = numeric.diag(numeric.getDiag(c_cov));
-    var c_inv_cov = numeric.inv(c_cov);
     var c_prob = function(c){
       return -0.5*numeric.dotVV(numeric.dotVM(c, c_inv_cov), c);
     }
-    
     var c_pr, err_r, cc = [0,0,0];
-    //var i = 0;
     for (var p of it){
       err_r = abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
-      if (err_r < 10) {
-        cc[0] = 255*p[3] - c_u[0];
-        cc[1] = 255*p[4] - c_u[1];
-        cc[2] = 255*p[5] - c_u[2];
+      if (err_r < surf_thresh) {
+        cc[0] = 255 * p[3] - c_u[0];
+        cc[1] = 255 * p[4] - c_u[1];
+        cc[2] = 255 * p[5] - c_u[2];
         c_pr = c_prob(cc);
-        if (c_pr > -7) {
-          plane_points.push(p);
-          p.colors[0] = 0;//c_u[0] / 255;
-          p.colors[1] = 255;//c_u[1] / 255;
-          p.colors[2] = 0;//c_u[2] / 255;
-        }
-        //i+=1;
-        //console.log(c_pr, cc, p);
+        if (c_pr > -12) { plane_points.push(p); }
       }
-      //if(i>5){break;}
     }
-    //console.log(plane_points);
-    console.log(plane_points.length);
+    
     return plane_points;
-  }
-  
-  // Grow a plane from a parameter set
-  // (x - h)^2 + (y - k)^2 = r^2
-  // a(x - x0) + b(y - y0) + c(z - z0) == 0
-  // n = [a b c]
-  function grow_plane(it, params) {
-    var plane_points = [],
-    p0 = params.root,
-    n = params.normal,
-    id = params.id,
-    err_r,
-    total_err = 0;
-    
-    if(id==='v'){ n[1] = 0; }
-    n = normalize(n);
-    
-    // Find the valid sublevels based on how well the radius agrees
-    // TODO: Use some probablity thing, maybe
-    for (var p of it){
-      err_r = abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
-      if (err_r < 5) {
-        plane_points.push(p);
-        total_err += err_r;
-      }
-    }
-    
-    // Update the parameters from these points
-    var iter = new array_generator(plane_points);
-    params = estimate_plane(iter, p0);
-    params.error = total_err;
-    params.points = plane_points;
-    params.id = id;
-    
-    if(id==='v'){ params.normal[1] = 0; }
-    var nrm = numeric.norm2(params.normal);
-    params.normal[0] = params.normal[0] / nrm;
-    params.normal[1] = params.normal[1] / nrm;
-    params.normal[2] = params.normal[2] / nrm;
-    
-    return params;
   }
   
   // Estimate the grip using a vertical cyinder
@@ -355,7 +297,7 @@
       zzSum + xxSum
     ]);
     return {
-      r: sqrt(4 * Ainv_bvec[2] + pow(Ainv_bvec[0], 2) + pow(Ainv_bvec[1], 2)) / 2 * 1000,
+      r: sqrt(4 * Ainv_bvec[2] + pow(Ainv_bvec[0], 2) + pow(Ainv_bvec[1], 2)) / 2 * 1e3,
       xc: Ainv_bvec[1] / 2 * 1000 + root[0],
       yc: root[1],
       zc: Ainv_bvec[0] / 2 * 1000 + root[2],
@@ -431,14 +373,14 @@
         pz = p0.z,
         root = [px,py,pz],
         it = new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 20 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
+          return abs(vertex[1] - py) < 30 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
         });
       var parameters = estimate_cylinder(it, root);
       //console.log(parameters);
       
       // Grow to update
-      it = new mesh_generator(mesh0);
-      parameters = grow_cylinder(it, parameters);
+      parameters = grow_cylinder(new mesh_generator(mesh0), parameters);
+      parameters.id = 'cyl';
       //console.log(parameters);
       
       return parameters;
@@ -457,44 +399,55 @@
 
       var horiz_params = estimate_plane(horizontal_it, root);
       horiz_params.id = 'h';
-      console.log('horiz', horiz_params);
+      //console.log('horiz', horiz_params);
       
       var vert_params = estimate_plane(vertical_it, root);
       vert_params.id = 'v';
       vert_params.normal[1] = 0;
       vert_params.normal = normalize(vert_params.normal);
-      console.log('vert', vert_params);
+      //console.log('vert', vert_params);
       
-      var e_h = get_plane_error_rate(array_generator(horiz_params.points), horiz_params);
-      var e_v = get_plane_error_rate(array_generator(vert_params.points), vert_params);
-      console.log(e_h, e_v);
-      
+      var e_h = get_plane_error_rate(array_generator(horiz_params.points), horiz_params),
+        n_h = horiz_params.points.length;
+      var e_v = get_plane_error_rate(array_generator(vert_params.points), vert_params),
+        n_v = vert_params.points.length;
+      //console.log(e_h, e_v);
 
-      // Grow to update
-      /*
-      // TODO: Use the covariance to determine the ranges here
-      horiz_params = grow_plane(new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 200 && abs(vertex[2] - pz) < 200;
-        }), horiz_params);
-      console.log('horiz', horiz_params);
-      // Grow to update
-      vert_params = grow_plane(new mesh_generator(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 200 && abs(vertex[0] - px) < 100 && abs(vertex[2] - pz) < 100;
-        }), vert_params);
-      console.log('vert', vert_params);
-      */
-      
       // Choose if vertical or horizontal
       var params;
-      if (horiz_params.n > vert_params.n) {
+      if (e_h < e_v) {
         params = horiz_params;
       } else {
-        //console.log(vert_params);
         params = vert_params;
       }
       
+      // Run the colors
       params.colors = estimate_colors(array_generator(params.points));
-      grow_plane2(new mesh_generator(mesh0), params);
+      var big_plane_points = grow_plane(new mesh_generator(mesh0), params);
+      
+      // Update the roughness
+      var p2 = estimate_plane(new array_generator(big_plane_points), params.root);
+      params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
+      // e_val = eigs.lambda.x[2] * 1e6, // 1e3 * 1e3, since covariance is a squared dependence
+      // e_vec = [eigs.E.x[0][2],eigs.E.x[1][2],eigs.E.x[2][2]];
+      
+      // Learning and lassifiers here...
+      // If ground...
+      //console.log('h_ground', h_ground(params));
+      if (h_ground(params)>9) {
+        big_plane_points.forEach(function(p){
+          p.colors[0] = 0;
+          p.colors[1] = 1;
+          p.colors[2] = 0;
+        });
+      } else {
+        big_plane_points.forEach(function(p){
+          p.colors[0] = 1;
+          p.colors[1] = 1;
+          p.colors[2] = 0;
+        });
+      }
+
       mesh0.geometry.getAttribute('color').needsUpdate = true;
       
       return params;

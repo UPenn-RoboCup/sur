@@ -51,6 +51,7 @@
     },
     plane: function(mesh0, p0){
       var parameters = E.plane(mesh0, p0);
+      /*
       var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
       var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
       var plane = new THREE.Mesh(geometry, material);
@@ -58,6 +59,7 @@
       plane.quaternion.multiply((new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,0,1), (new THREE.Vector3()).fromArray(parameters.normal)));
       scene.add(plane);
       items.push(plane);
+      */
       console.log(parameters);
     }
   };
