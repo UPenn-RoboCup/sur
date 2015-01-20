@@ -42,6 +42,13 @@
     });
     p_conn.on('data',function(data){
       console.log('scene data', data);
+    	overlay.append("circle")
+    		.attr("cx", data.xc / -1000)
+    		.attr("cy", data.zc / -1000)
+    		.attr("r", data.r / 1000)
+    		.style("fill", "red")
+    		.style("stroke", "blue")
+    		.style("stroke-width", 0.01);
     });
   }
   /*

@@ -29,7 +29,8 @@
     peer,
     p_conn,
     peer_id = 'all_scene',
-    peer_map_id = 'all_map';
+    peer_map_id = 'all_map',
+    map_peers = [];
     
   function debug(arr){
     d3.select("#info").html(arr.join('<br/>'));
@@ -45,10 +46,12 @@
     peer.on('error', function(e) { console.log('error', e); });
     peer.on('close', function() { console.log('close'); });
     peer.on('connection', function(conn) {
+      map_peers.push(conn);
       conn.on('data', function(data){
         console.log('map data',data);
       });
       conn.on('close', function(){
+        // remove from map_peers
         console.log('closed conn');
       });
     });
@@ -64,6 +67,10 @@
       cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
       scene.add(cylinder);
       items.push(cylinder);
+      map_peers.forEach(function(conn){
+        delete parameters.points;
+        conn.send(parameters);
+      });
       // TODO: add uncertainty
       /*
       // [x center, y center, z center, radius, height]
