@@ -5,7 +5,12 @@
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
     peer,
-    p_conn;
+    p_conn,
+    overlay,
+		polyF = d3.svg.line()
+			.x(function (d) { return d.x; })
+			.y(function (d) { return d.y; })
+    .interpolate("linear-closed");
   
   function debug(arr){
     d3.select("#info").html(arr.join('<br/>'));
@@ -41,6 +46,18 @@
   
   function setup(){
     setup_rtc();
+  	// Add the overlay
+  	overlay = d3.select("#map_container").append("svg").attr('class', 'overlay');
+//    .attr('viewBox', "0 0 256 212").attr('preserveAspectRatio', "none");
+//  		.attr('width', depth_canvas.width).attr('height', depth_canvas.height);
+  	var pose_g = overlay.append('g').attr('id', 'pose');
+    var points = [{'x':-7,'y':10},{'x':0,'y':-10},{'x':7,'y':10}];
+    pose_g.append("path")
+  		.attr("d", polyF(points))
+  		.attr("stroke", "red")
+  		.attr("stroke-width", 2)
+  		.attr("fill", "red")
+      .attr("transform", "translate(" + 100 + "," + 100 + ")");
   }
 
 	// Load the Styling
