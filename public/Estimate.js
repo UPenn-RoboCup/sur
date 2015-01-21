@@ -7,7 +7,13 @@
     abs = Math.abs,
     sqrt = Math.sqrt,
     exp = Math.exp,
-    min = Math.min;
+    min = Math.min,
+    PI = Math.PI,
+    atan = Math.atan,
+    atan2 = Math.atan2,
+    sin = Math.sin,
+    cos = Math.cos,
+    floor = Math.floor;
     
     /*
     var eigs = numeric.eig(params.cov);
@@ -451,7 +457,33 @@
         });
       }
     },
-    find_plane: function(mesh){
+    find_poly: function(params){
+      var points = params.points,
+        root = params.root;
+      points.sort(function(p1, p2){
+        return numeric.norm2([p1[0]-root[0], p1[1]-root[1], p1[2]-root[2]]) - numeric.norm2([p2[0]-root[0], p2[1]-root[1], p2[2]-root[2]]);
+      });
+      var rhoDist = [], point = [0,0,0], rho, theta, theta_idx, res = 10;
+      points.forEach(function(p){
+        // rho squared for now
+        point[0] = p[0] - root[0];
+        point[1] = p[1] - root[1];
+        point[2] = p[2] - root[2];
+        rho = numeric.norm2(point);
+        theta = atan2(point[0], point[2]);
+        theta_idx = floor(0.5+(180/res) * theta / PI) + res; // 10 degree chunks
+        if(rhoDist[theta_idx]===undefined){
+          rhoDist[theta_idx] = rho;
+        } else if (rho - rhoDist[theta_idx] < 100) {
+          rhoDist[theta_idx] = rho;
+        }
+      });
+      console.log(rhoDist);
+      var xy = rhoDist.map(function(r, th){
+        return [r*cos((th-res)*PI/(180/res)), r*sin((th-res)*PI/(180/res))];
+      });
+      //console.log(xy);
+      return xy;
     },
   }
 

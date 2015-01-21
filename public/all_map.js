@@ -17,6 +17,30 @@
     d3.select("#info").html(arr.join('<br/>'));
   }
   
+  function add_cylinder(){
+  	overlay.append("circle")
+  		.attr("cx", data.xc / -1000)
+  		.attr("cy", data.zc / -1000)
+  		.attr("r", data.r / 1000)
+  		.style("fill", "red")
+  		.style("stroke", "blue")
+  		.style("stroke-width", 0.01);
+    });
+  }
+  
+  function add_plane(){
+  	svg.append("rect")
+  		.attr("class", "goal")
+  		.attr("id", "cur_goal")
+  		.attr("width", g_mark_w)
+  		.attr("height", g_mark_h)
+  		.attr("x", -g_mark_w / 2)
+  		.attr("y", -g_mark_w / 2)
+  		.style("fill", "green")
+  		.style("stroke", "black")
+  		.style("stroke-width", 3);
+  }
+  
   function setup_rtc (){
     peer = new Peer(peer_id, {host: 'localhost', port: 9000});
     peer.on('open', function(id) {
@@ -42,14 +66,7 @@
     });
     p_conn.on('data',function(data){
       console.log('scene data', data);
-    	overlay.append("circle")
-    		.attr("cx", data.xc / -1000)
-    		.attr("cy", data.zc / -1000)
-    		.attr("r", data.r / 1000)
-    		.style("fill", "red")
-    		.style("stroke", "blue")
-    		.style("stroke-width", 0.01);
-    });
+
   }
   /*
     minx—the beginning x coordinate

@@ -86,8 +86,36 @@
     plane: function(mesh0, p0){
       var parameters = E.plane(mesh0, p0);
       console.log(parameters);
+      
+      var geometry = new THREE.SphereGeometry( 50, 16, 16 );
+      var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+      var marker = new THREE.Mesh(geometry, material);
+      marker.position.fromArray(parameters.root);
+      scene.add(marker);
+      
+      var xy = E.find_poly(parameters);
+      
+      var material = new THREE.LineBasicMaterial({
+      	color: 0x00ff00,
+        linewidth: 20
+      });
+      var geometry = new THREE.Geometry();
+      xy.forEach(function(p){
+        geometry.vertices.push( new THREE.Vector3(p[1], 10, p[0]) );
+      });
+      // close the loop
+      geometry.vertices.push(new THREE.Vector3(xy[0][1], 10, xy[0][0]));
+      var line = new THREE.Line( geometry, material );
+      line.position.fromArray(parameters.root);
+      line.quaternion.multiply((new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,1,0), (new THREE.Vector3()).fromArray(parameters.normal)));
+      scene.add(line);
+      console.log(line);
+      
+      /*
       E.classify(parameters);
       mesh0.geometry.getAttribute('color').needsUpdate = true;
+      */
+      
       /*
       var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
       var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
