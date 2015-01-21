@@ -17,28 +17,26 @@
     d3.select("#info").html(arr.join('<br/>'));
   }
   
-  function add_cylinder(){
-  	overlay.append("circle")
-  		.attr("cx", data.xc / -1000)
-  		.attr("cy", data.zc / -1000)
-  		.attr("r", data.r / 1000)
-  		.style("fill", "red")
-  		.style("stroke", "blue")
-  		.style("stroke-width", 0.01);
-    });
-  }
-  
-  function add_plane(){
-  	svg.append("rect")
-  		.attr("class", "goal")
-  		.attr("id", "cur_goal")
-  		.attr("width", g_mark_w)
-  		.attr("height", g_mark_h)
-  		.attr("x", -g_mark_w / 2)
-  		.attr("y", -g_mark_w / 2)
-  		.style("fill", "green")
-  		.style("stroke", "black")
-  		.style("stroke-width", 3);
+  var add_map = {
+    cyl : function (params){
+    	overlay.append("circle")
+    		.attr("cx", params.xc / -1000)
+    		.attr("cy", params.zc / -1000)
+    		.attr("r", params.r / 1000)
+    		.style("fill", "black")
+    		.style("stroke", "black")
+    		.style("stroke-width", 0.01);
+    },
+    // horiz plane
+    h: function (params){
+      overlay.append("path")
+    		.attr("d", polyF(params.xy))
+    		.attr("stroke", "green")
+    		.attr("stroke-width", 0.01)
+    		.attr("fill", "green")
+        .attr("transform", "translate(" + 0 + "," + 0 + ")")
+        .attr('id', 'pose');
+    },
   }
   
   function setup_rtc (){
@@ -66,7 +64,10 @@
     });
     p_conn.on('data',function(data){
       console.log('scene data', data);
-
+      var f_proc = add_map[data.id];
+      if(typeof f_proc !== 'function'){return; }
+      f_proc(data);
+    });
   }
   /*
     minx—the beginning x coordinate
@@ -79,7 +80,7 @@
     map_c = d3.select('#map_container').node();
   	// Add the overlay
   	overlay = d3.select("#map_container").append("svg").attr('class', 'overlay')
-    .attr('viewBox', "-2 -2 4 4").attr('preserveAspectRatio', "none")
+    .attr('viewBox', "-3 -3 6 6").attr('preserveAspectRatio', "none")
     .attr('width', map_c.clientWidth).attr('height', map_c.clientHeight);
     var points = [/*tip*/{'x':0,'y':0}, {'x':-0.05,'y':0.25},{'x':0.05,'y':0.25}];
     overlay.append("path")

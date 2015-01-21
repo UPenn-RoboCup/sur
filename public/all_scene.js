@@ -40,7 +40,6 @@
     peer = new Peer(peer_id, {host: 'localhost', port: 9000});
     peer.on('open', function(id) {
       console.log('My peer ID is: ' + id);
-      console.log('peer', peer);
     });
     peer.on('disconnected', function(conn) { console.log('disconnected'); });
     peer.on('error', function(e) { console.log('error', e); });
@@ -52,6 +51,7 @@
       });
       conn.on('close', function(){
         // remove from map_peers
+        map_peers.shift();
         console.log('closed conn');
       });
     });
@@ -85,7 +85,11 @@
     },
     plane: function(mesh0, p0){
       var parameters = E.plane(mesh0, p0);
-      console.log(parameters);
+      
+      var quat_rot = (new THREE.Quaternion()).setFromUnitVectors(
+        new THREE.Vector3(0,1,0),
+        (new THREE.Vector3()).fromArray(parameters.normal)
+      );
       
       var geometry = new THREE.SphereGeometry( 50, 16, 16 );
       var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
@@ -101,30 +105,30 @@
       });
       var geometry = new THREE.Geometry();
       xy.forEach(function(p){
-        geometry.vertices.push( new THREE.Vector3(p[1], 10, p[0]) );
+        geometry.vertices.push( (new THREE.Vector3(p.y, 10, p.x)).applyQuaternion(quat_rot) );
       });
       // close the loop
-      geometry.vertices.push(new THREE.Vector3(xy[0][1], 10, xy[0][0]));
+      geometry.vertices.push((new THREE.Vector3(xy[0].y, 10, xy[0].x)).applyQuaternion(quat_rot));
       var line = new THREE.Line( geometry, material );
       line.position.fromArray(parameters.root);
-      line.quaternion.multiply((new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,1,0), (new THREE.Vector3()).fromArray(parameters.normal)));
+      //line.quaternion.multiply(quat_rot);
       scene.add(line);
-      console.log(line);
       
       /*
       E.classify(parameters);
       mesh0.geometry.getAttribute('color').needsUpdate = true;
       */
       
-      /*
-      var geometry = new THREE.PlaneBufferGeometry( 200, 200, 200 );
-      var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-      var plane = new THREE.Mesh(geometry, material);
-      plane.position.fromArray(parameters.root);
-      plane.quaternion.multiply((new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,0,1), (new THREE.Vector3()).fromArray(parameters.normal)));
-      scene.add(plane);
-      items.push(plane);
-      */
+      // Send to the map
+      map_peers.forEach(function(conn){
+        delete parameters.points;
+        parameters.xy = geometry.vertices.map(function(p){
+          return {x: (p.x + parameters.root[0])/-1e3, y: (p.z+parameters.root[2])/-1e3};
+        });
+        console.log(parameters);
+        conn.send(parameters);
+      });
+      
     }
   };
 

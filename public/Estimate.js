@@ -478,12 +478,11 @@
           rhoDist[theta_idx] = rho;
         }
       });
-      console.log(rhoDist);
-      var xy = rhoDist.map(function(r, th){
-        return [r*cos((th-res)*PI/(180/res)), r*sin((th-res)*PI/(180/res))];
+      return rhoDist.map(function(r, th){
+        return {x: r*cos((th-res)*PI/(180/res)), y: r*sin((th-res)*PI/(180/res)) };
       });
-      //console.log(xy);
-      return xy;
+      
+      
     },
   }
 
