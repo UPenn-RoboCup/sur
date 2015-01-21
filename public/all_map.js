@@ -29,11 +29,13 @@
     },
     // horiz plane
     h: function (params){
+      console.log(params);
+      var color = params.classifiers[0] > 20 ? 'green' : 'orange';
       overlay.append("path")
-    		.attr("d", polyF(params.xy))
-    		.attr("stroke", "green")
+    		.attr("d", polyF(params.perimeter))
+    		.attr("stroke", color)
     		.attr("stroke-width", 0.01)
-    		.attr("fill", "green")
+    		.attr("fill", color)
         .attr("transform", "translate(" + 0 + "," + 0 + ")")
         .attr('id', 'pose');
     },

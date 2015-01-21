@@ -90,44 +90,48 @@
         new THREE.Vector3(0,1,0),
         (new THREE.Vector3()).fromArray(parameters.normal)
       );
+      E.classify(parameters);
+      console.log(parameters);
       
-      var geometry = new THREE.SphereGeometry( 50, 16, 16 );
-      var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-      var marker = new THREE.Mesh(geometry, material);
-      marker.position.fromArray(parameters.root);
-      scene.add(marker);
-      
-      var xy = E.find_poly(parameters);
-      
+      parameters.perimeter = E.find_poly(parameters);
       var material = new THREE.LineBasicMaterial({
-      	color: 0x00ff00,
+      	color: parameters.classifiers[0] > 20 ? 0x00ff00 : 0xFF9900,
         linewidth: 20
       });
       var geometry = new THREE.Geometry();
-      xy.forEach(function(p){
-        geometry.vertices.push( (new THREE.Vector3(p.y, 10, p.x)).applyQuaternion(quat_rot) );
+      parameters.perimeter.forEach(function(p){
+        geometry.vertices.push( (new THREE.Vector3(p[1], 10, p[0])).applyQuaternion(quat_rot) );
       });
       // close the loop
-      geometry.vertices.push((new THREE.Vector3(xy[0].y, 10, xy[0].x)).applyQuaternion(quat_rot));
+      geometry.vertices.push(
+        (new THREE.Vector3(parameters.perimeter[0][1], 10, parameters.perimeter[0][0]))
+        .applyQuaternion(quat_rot)
+      );
       var line = new THREE.Line( geometry, material );
       line.position.fromArray(parameters.root);
       //line.quaternion.multiply(quat_rot);
       scene.add(line);
       
-      /*
-      E.classify(parameters);
-      mesh0.geometry.getAttribute('color').needsUpdate = true;
-      */
-      
       // Send to the map
       map_peers.forEach(function(conn){
         delete parameters.points;
-        parameters.xy = geometry.vertices.map(function(p){
+        parameters.perimeter = geometry.vertices.map(function(p){
           return {x: (p.x + parameters.root[0])/-1e3, y: (p.z+parameters.root[2])/-1e3};
         });
-        console.log(parameters);
         conn.send(parameters);
       });
+      
+      /*
+      var geometry = new THREE.SphereGeometry( 50, 16, 16 );
+      var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+      var marker = new THREE.Mesh(geometry, material);
+      marker.position.fromArray(parameters.root);
+      scene.add(marker);
+      */
+      /*
+      E.paint(parameters);
+      mesh0.geometry.getAttribute('color').needsUpdate = true;
+      */
       
     }
   };

@@ -442,7 +442,11 @@
     classify: function(params) {
       // Learning and lassifiers here...
       // If ground...
-      //console.log('h_ground', h_ground(params));
+      params.classifiers = [
+        h_ground(params)
+      ];
+    },
+    paint: function(params){
       if (h_ground(params)>9) {
         params.points.forEach(function(p){
           p.colors[0] = 0;
@@ -458,31 +462,27 @@
       }
     },
     find_poly: function(params){
-      var points = params.points,
-        root = params.root;
-      points.sort(function(p1, p2){
-        return numeric.norm2([p1[0]-root[0], p1[1]-root[1], p1[2]-root[2]]) - numeric.norm2([p2[0]-root[0], p2[1]-root[1], p2[2]-root[2]]);
-      });
-      var rhoDist = [], point = [0,0,0], rho, theta, theta_idx, res = 10;
+      var root = params.root,
+        norm2 = numeric.norm2,
+        rhoDist = [],
+        theta_idx,
+        res = 10, // 10 degree chunks
+        factor = (180/PI)/res,
+        inv_factor = res*(PI/180),
+        points = params.points.map(function(p){
+          return [p[0] - root[0], p[1] - root[1], p[2] - root[2]];
+        });
+      // Sort in ascending radius
+      points.forEach(function(p){ p[3] = norm2(p); });
+      points.sort(function(p1, p2){ return p1[3] - p2[3]; });
       points.forEach(function(p){
-        // rho squared for now
-        point[0] = p[0] - root[0];
-        point[1] = p[1] - root[1];
-        point[2] = p[2] - root[2];
-        rho = numeric.norm2(point);
-        theta = atan2(point[0], point[2]);
-        theta_idx = floor(0.5+(180/res) * theta / PI) + res; // 10 degree chunks
-        if(rhoDist[theta_idx]===undefined){
-          rhoDist[theta_idx] = rho;
-        } else if (rho - rhoDist[theta_idx] < 100) {
-          rhoDist[theta_idx] = rho;
-        }
+        theta_idx = res + floor(0.5 + factor * atan2(p[0], p[2]));
+        rhoDist[theta_idx] = p[3] - (rhoDist[theta_idx] || p[3]) < 100 ? p[3] : rhoDist[theta_idx];
       });
       return rhoDist.map(function(r, th){
-        return {x: r*cos((th-res)*PI/(180/res)), y: r*sin((th-res)*PI/(180/res)) };
+        return [r*cos((th-res)*inv_factor), r*sin((th-res)*inv_factor)];
       });
-      
-      
+
     },
   }
 
