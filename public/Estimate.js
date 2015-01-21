@@ -33,7 +33,13 @@
     return numeric.dotVV(params.normal, [0,1,0]) * (1 + 1/abs(params.root[1]/1000));
   }
   
-  function* mesh_generator(mesh, filter){
+  function normalize(n){
+    var nrm = numeric.norm2(n);
+    return [ n[0] / nrm, n[1] / nrm, n[2] / nrm ];
+  }
+  
+  /*
+  function* mesh_entries_original(mesh, filter){
     var indices = mesh.geometry.getAttribute('index').array,
       positions = mesh.geometry.getAttribute('position').array,
       colors = mesh.geometry.getAttribute('color').array,
@@ -51,37 +57,43 @@
           colors[3 * pidx], colors[3 * pidx + 1], colors[3 * pidx + 2],
         ];
         data.colors = colors.subarray(3 * pidx, 3 * pidx + 3);
-        if (filter(data)) { yield data; }
+        if (filter(data)) { yield [pidx, data]; }
 			}
     }
   }
+  */
   
-  function* array_generator(arr){
-    var i, l;
-    for(i = 0, l = arr.length; i<l; i+=1){
-      yield arr[i];
-    }
+  function* mesh_entries(mesh, filter){
+    var positions = mesh.geometry.getAttribute('position').array,
+      colors = mesh.geometry.getAttribute('color').array,
+      filter = filter || function(p){return true;},
+      n = 3*mesh.n_el,
+      data;
+		for (var pidx = 0; pidx < n; pidx += 3) {
+      data = [
+        positions[pidx], positions[pidx + 1], positions[pidx + 2],
+        colors[pidx], colors[pidx + 1], colors[pidx + 2],
+      ];
+      if (filter(data)) { yield [pidx, data]; }
+		}
   }
   
   function get_plane_error_rate(it, params){
     var total_err = 0,
       cnt = 0,
       p0 = params.root,
-      n = params.normal;
-    for (var p of it){
+      n = params.normal,
+      p;
+    for (var a of it){
+      p = a[1];
       total_err += abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
       cnt += 1;
     }
     return total_err / cnt;
   }
   
-  function normalize(n){
-    var nrm = numeric.norm2(n);
-    return [ n[0] / nrm, n[1] / nrm, n[2] / nrm ];
-  }
-  
   function estimate_colors(it){
-    var v,
+    var v, p,
       nClose = 0,
       xSum = 0,
       ySum = 0,
@@ -92,16 +104,14 @@
       xySum = 0,
       xzSum = 0,
       yzSum = 0;
-    for (var p of it) {
+    for (var a of it) {
+      p = a[1];
       // Go to 0-255
       v = [
         p[3] * 255,
         p[4] * 255,
         p[5] * 255
       ];
-      if(v[1]>255){
-        console.log(p);
-      }
       nClose += 1;
       xSum += v[0];
       ySum += v[1];
@@ -145,7 +155,7 @@
 
   function estimate_plane(it, root) {
     // Find all the points near it assuming upright
-    var v,
+    var v, p,
       nClose = 0,
       xSum = 0,
       zSum = 0,
@@ -157,7 +167,8 @@
       xySum = 0,
       zySum = 0,
       points = [];
-    for (var p of it){
+    for (var a of it){
+      p = a[1];
       // Avoid overflow
       v = [
         (p[0]-root[0]) / 1000,
@@ -233,13 +244,15 @@
       n = params.normal,
       plane_points = [],
       c_inv_cov = numeric.inv(c_cov),
-      surf_thresh = 30;
+      surf_thresh = 30,
+      p;
     
     var c_prob = function(c){
       return -0.5*numeric.dotVV(numeric.dotVM(c, c_inv_cov), c);
     }
     var c_pr, err_r, cc = [0,0,0];
-    for (var p of it){
+    for (var a of it){
+      p = a[1];
       err_r = abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
       if (err_r < surf_thresh) {
         cc[0] = 255 * p[3] - c_u[0];
@@ -258,7 +271,7 @@
   // x: left
   // z: forward
   function estimate_cylinder(it, root) {
-    var v,
+    var v, p,
       nClose = 0,
       xSum = 0,
       xxSum = 0,
@@ -269,7 +282,8 @@
       zzzSum = 0,
       xzzSum = 0,
       xxzSum = 0;
-    for (var p of it){
+    for (var a of it){
+      p = a[1];
       // Avoid overflow
       v = [
         (p[0]-root[0]) / 1000,
@@ -314,14 +328,16 @@
   // Grow a cylinder from a parameter set
   // (x - h)^2 + (y - k)^2 = r^2
   function grow_cylinder(it, params) {
-    var sublevels = [],
-    err_r,
-    total_err = 0;
+    var p,
+      sublevels = [],
+      err_r,
+      total_err = 0;
     
     // Find the valid sublevels based on how well the radius agrees
     // TODO: Use some probablity thing, maybe
     
-    for (var p of it){
+    for (var a of it){
+      p = a[1];
       err_r = sqrt(pow(p[0] - params.xc, 2) +  pow(p[2] - params.zc, 2)) - params.r;
       if (err_r < 8) {
         sublevels.push(p);
@@ -360,8 +376,7 @@
     });
     
     // Update the parameters from these points
-    var iter = new array_generator(valid_cyl_points);
-    params = estimate_cylinder(iter, params.root);
+    params = estimate_cylinder(valid_cyl_points.entries(), params.root);
     params.h = p_upper[1] - p_lower[1];
     params.yc = (p_upper[1] + p_lower[1]) / 2;
     
@@ -378,14 +393,14 @@
         py = p0.y,
         pz = p0.z,
         root = [px,py,pz],
-        it = new mesh_generator(mesh0, function(vertex) {
+        it = new mesh_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 30 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
         });
       var parameters = estimate_cylinder(it, root);
       //console.log(parameters);
       
       // Grow to update
-      parameters = grow_cylinder(new mesh_generator(mesh0), parameters);
+      parameters = grow_cylinder(new mesh_entries(mesh0), parameters);
       parameters.id = 'cyl';
       //console.log(parameters);
       
@@ -396,10 +411,10 @@
         py = p0.y,
         pz = p0.z,
         root = [px,py,pz],
-        horizontal_it = new mesh_generator(mesh0, function(vertex) {
+        horizontal_it = new mesh_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60 && abs(vertex[2] - pz) < 60;
         }),
-        vertical_it = new mesh_generator(mesh0, function(vertex) {
+        vertical_it = new mesh_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 100 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
         });
 
@@ -413,9 +428,9 @@
       vert_params.normal = normalize(vert_params.normal);
       //console.log('vert', vert_params);
       
-      var e_h = get_plane_error_rate(array_generator(horiz_params.points), horiz_params),
+      var e_h = get_plane_error_rate(horiz_params.points.entries(), horiz_params),
         n_h = horiz_params.points.length;
-      var e_v = get_plane_error_rate(array_generator(vert_params.points), vert_params),
+      var e_v = get_plane_error_rate(vert_params.points.entries(), vert_params),
         n_v = vert_params.points.length;
       //console.log(e_h, e_v);
 
@@ -428,11 +443,11 @@
       }
       
       // Run the colors
-      params.colors = estimate_colors(array_generator(params.points));
-      params.points = grow_plane(new mesh_generator(mesh0), params);
+      params.colors = estimate_colors(params.points.entries());
+      params.points = grow_plane(new mesh_entries(mesh0), params);
       
       // Update the roughness
-      var p2 = estimate_plane(new array_generator(params.points), params.root);
+      var p2 = estimate_plane(params.points.entries(), params.root);
       params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
       // e_val = eigs.lambda.x[2] * 1e6, // 1e3 * 1e3, since covariance is a squared dependence
       // e_vec = [eigs.E.x[0][2],eigs.E.x[1][2],eigs.E.x[2][2]];

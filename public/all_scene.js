@@ -239,6 +239,7 @@
 		// Make the new mesh and remove the previous one
 		mesh = new THREE.Mesh(geometry, material);
     mesh.name = 'kinectV2';
+    mesh.n_el = mesh_obj.n_el;
 		scene.remove(meshes.shift());
 		meshes.push(mesh);
 		// Dynamic, because we will do raycasting

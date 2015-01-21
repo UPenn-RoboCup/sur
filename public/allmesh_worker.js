@@ -417,5 +417,6 @@ this.addEventListener('message', function (e) {
   mesh.idx = index.subarray(0, quad_point_count_total);
   mesh.pos = positions.subarray(0, 3 * n_el);
   mesh.col = colors.subarray(0, 3 * n_el);
+  mesh.n_el = n_el;
 	this.postMessage(mesh, [mesh.idx.buffer, mesh.pos.buffer, mesh.col.buffer]);
 }, false);
