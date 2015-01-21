@@ -23,8 +23,8 @@
     		.attr("cx", params.xc / -1000)
     		.attr("cy", params.zc / -1000)
     		.attr("r", params.r / 1000)
-    		.style("fill", "black")
-    		.style("stroke", "black")
+    		.style("fill", "red")
+    		.style("stroke", "red")
     		.style("stroke-width", 0.01);
     },
     // horiz plane
@@ -36,6 +36,17 @@
     		.attr("stroke", color)
     		.attr("stroke-width", 0.01)
     		.attr("fill", color)
+        .attr("transform", "translate(" + 0 + "," + 0 + ")")
+        .attr('id', 'pose');
+    },
+    // vertical plane
+    v: function (params){
+      console.log(params);
+      overlay.append("path")
+    		.attr("d", polyF(params.endpoints))
+    		.attr("stroke", 'black')
+    		.attr("stroke-width", 0.01)
+    		.attr("fill", 'black')
         .attr("transform", "translate(" + 0 + "," + 0 + ")")
         .attr('id', 'pose');
     },

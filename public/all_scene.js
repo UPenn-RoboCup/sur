@@ -99,8 +99,8 @@
         linewidth: 20
       });
       var geometry = new THREE.Geometry();
-      parameters.perimeter.forEach(function(p){
-        geometry.vertices.push( (new THREE.Vector3(p[1], 10, p[0])).applyQuaternion(quat_rot) );
+      geometry.vertices = parameters.perimeter.map(function(p){
+        return (new THREE.Vector3(p[1], 10, p[0])).applyQuaternion(quat_rot);
       });
       // close the loop
       geometry.vertices.push(
@@ -113,13 +113,58 @@
       scene.add(line);
       
       // Send to the map
-      map_peers.forEach(function(conn){
+      if(parameters.id==='v'){
+        
+        parameters.endpoints = [];
+        
+        var dir1 = [-parameters.normal[1], parameters.normal[0]];
+        var dir2 = [parameters.normal[1], -parameters.normal[0]];
+        
+        
+        // TODO: Should be a reduce operation
+        // maxRho can be this way as well
+        var maxDot = 0, maxPoint;
+        geometry.vertices.forEach(function(p){
+          var dot = p.x * dir1[0] + p.z * dir1[1];
+          if(dot > maxDot){
+            maxDot = dot;
+            maxPoint = p;
+          }
+        });
+        console.log(maxDot,maxPoint);
+        parameters.endpoints.push({
+          x: (maxPoint.x + parameters.root[0])/-1e3,
+          y: (maxPoint.z + parameters.root[2])/-1e3
+        });
+        
+        maxDot = 0;
+        geometry.vertices.forEach(function(p){
+          var dot = p.x * dir2[0] + p.z * dir2[1];
+          if(dot > maxDot){
+            maxDot = dot;
+            maxPoint = p;
+          }
+        });
+        console.log(maxDot,maxPoint);
+        parameters.endpoints.push({
+          x: (maxPoint.x + parameters.root[0])/-1e3,
+          y: (maxPoint.z + parameters.root[2])/-1e3
+        });
+        
         delete parameters.points;
+        map_peers.forEach(function(conn){
+          conn.send(parameters);
+        });
+      } else if(parameters.id==='h'){
         parameters.perimeter = geometry.vertices.map(function(p){
           return {x: (p.x + parameters.root[0])/-1e3, y: (p.z+parameters.root[2])/-1e3};
         });
-        conn.send(parameters);
-      });
+        delete parameters.points;
+        map_peers.forEach(function(conn){
+          conn.send(parameters);
+        });
+      }
+
       
       /*
       var geometry = new THREE.SphereGeometry( 50, 16, 16 );

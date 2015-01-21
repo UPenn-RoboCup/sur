@@ -39,7 +39,7 @@
   }
   
   /*
-  function* mesh_entries_original(mesh, filter){
+  function* face_entries(mesh, filter){
     var indices = mesh.geometry.getAttribute('index').array,
       positions = mesh.geometry.getAttribute('position').array,
       colors = mesh.geometry.getAttribute('color').array,
@@ -63,7 +63,7 @@
   }
   */
   
-  function* mesh_entries(mesh, filter){
+  function* point_cloud_entries(mesh, filter){
     var positions = mesh.geometry.getAttribute('position').array,
       colors = mesh.geometry.getAttribute('color').array,
       filter = filter || function(p){return true;},
@@ -393,14 +393,14 @@
         py = p0.y,
         pz = p0.z,
         root = [px,py,pz],
-        it = new mesh_entries(mesh0, function(vertex) {
+        it = new point_cloud_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 30 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
         });
       var parameters = estimate_cylinder(it, root);
       //console.log(parameters);
       
       // Grow to update
-      parameters = grow_cylinder(new mesh_entries(mesh0), parameters);
+      parameters = grow_cylinder(new point_cloud_entries(mesh0), parameters);
       parameters.id = 'cyl';
       //console.log(parameters);
       
@@ -411,10 +411,10 @@
         py = p0.y,
         pz = p0.z,
         root = [px,py,pz],
-        horizontal_it = new mesh_entries(mesh0, function(vertex) {
+        horizontal_it = new point_cloud_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60 && abs(vertex[2] - pz) < 60;
         }),
-        vertical_it = new mesh_entries(mesh0, function(vertex) {
+        vertical_it = new point_cloud_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 100 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
         });
 
@@ -444,7 +444,7 @@
       
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
-      params.points = grow_plane(new mesh_entries(mesh0), params);
+      params.points = grow_plane(new point_cloud_entries(mesh0), params);
       
       // Update the roughness
       var p2 = estimate_plane(params.points.entries(), params.root);
