@@ -432,7 +432,8 @@
         n_h = horiz_params.points.length;
       var e_v = get_plane_error_rate(vert_params.points.entries(), vert_params),
         n_v = vert_params.points.length;
-      //console.log(e_h, e_v);
+      console.log(e_h, e_v);
+      console.log(n_h, n_v);
 
       // Choose if vertical or horizontal
       var params;

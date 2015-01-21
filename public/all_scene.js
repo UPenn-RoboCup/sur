@@ -115,40 +115,24 @@
       // Send to the map
       if(parameters.id==='v'){
         
+        function minDotI(maxI, curDot, i, arr){ return (curDot > arr[maxI]) ? i : maxI;}
+        function makeDot(p) { return numeric.dot([p.x, p.z], this.dir); }
+        var dir1 = [-parameters.normal[2], parameters.normal[0]];
+        var dir2 = [parameters.normal[2], -parameters.normal[0]];
         parameters.endpoints = [];
-        
-        var dir1 = [-parameters.normal[1], parameters.normal[0]];
-        var dir2 = [parameters.normal[1], -parameters.normal[0]];
-        
-        
-        // TODO: Should be a reduce operation
-        // maxRho can be this way as well
-        var maxDot = 0, maxPoint;
-        geometry.vertices.forEach(function(p){
-          var dot = p.x * dir1[0] + p.z * dir1[1];
-          if(dot > maxDot){
-            maxDot = dot;
-            maxPoint = p;
-          }
-        });
-        console.log(maxDot,maxPoint);
+        var maxPoint1 = geometry.vertices[
+          geometry.vertices.map(makeDot, {dir: dir1}).reduce(minDotI, 0)
+        ];
         parameters.endpoints.push({
-          x: (maxPoint.x + parameters.root[0])/-1e3,
-          y: (maxPoint.z + parameters.root[2])/-1e3
+          x: (maxPoint1.x + parameters.root[0])/-1e3,
+          y: (maxPoint1.z + parameters.root[2])/-1e3
         });
-        
-        maxDot = 0;
-        geometry.vertices.forEach(function(p){
-          var dot = p.x * dir2[0] + p.z * dir2[1];
-          if(dot > maxDot){
-            maxDot = dot;
-            maxPoint = p;
-          }
-        });
-        console.log(maxDot,maxPoint);
+        var maxPoint2 = geometry.vertices[
+          geometry.vertices.map(makeDot, {dir: dir2}).reduce(minDotI, 0)
+        ];
         parameters.endpoints.push({
-          x: (maxPoint.x + parameters.root[0])/-1e3,
-          y: (maxPoint.z + parameters.root[2])/-1e3
+          x: (maxPoint2.x + parameters.root[0])/-1e3,
+          y: (maxPoint2.z + parameters.root[2])/-1e3
         });
         
         delete parameters.points;
