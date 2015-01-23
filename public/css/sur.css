@@ -4,3 +4,7 @@ html, body {
   margin: 0px;
   overflow: hidden;
 }
+
+button {
+  font-size: 24px;
+}

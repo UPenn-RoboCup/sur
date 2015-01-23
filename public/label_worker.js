@@ -1,4 +1,4 @@
-this.importScripts('/js/pako_inflate.min.js');
+this.importScripts('/js/pako_inflate.js');
 var zInflate = this.pako.inflate,
 	postMessage = this.postMessage;
 this.addEventListener('message', function (e) {

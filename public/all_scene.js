@@ -2,10 +2,10 @@
 	'use strict';
 	// Private variables
 	var d3 = ctx.d3,
-    E,// = ctx.Estimate,
-		THREE = ctx.THREE,
-		scene = new THREE.Scene(),
-    raycaster = new THREE.Raycaster(),
+    E,
+		THREE,
+		scene,
+    raycaster,
 		meshes = [],
 		items = [],
     is_processing = false,
@@ -93,23 +93,22 @@
       E.classify(parameters);
       console.log(parameters);
       
-      parameters.perimeter = E.find_poly(parameters);
+      var poly = E.find_poly(parameters);
       var material = new THREE.LineBasicMaterial({
       	color: parameters.classifiers[0] > 20 ? 0x00ff00 : 0xFF9900,
         linewidth: 20
       });
       var geometry = new THREE.Geometry();
-      geometry.vertices = parameters.perimeter.map(function(p){
+      geometry.vertices = poly.xy.map(function(p){
         return (new THREE.Vector3(p[1], 10, p[0])).applyQuaternion(quat_rot);
       });
       // close the loop
       geometry.vertices.push(
-        (new THREE.Vector3(parameters.perimeter[0][1], 10, parameters.perimeter[0][0]))
+        (new THREE.Vector3(poly.xy[0][1], 10, poly.xy[0][0]))
         .applyQuaternion(quat_rot)
       );
       var line = new THREE.Line( geometry, material );
       line.position.fromArray(parameters.root);
-      //line.quaternion.multiply(quat_rot);
       scene.add(line);
       
       // Send to the map
@@ -381,7 +380,12 @@
   }
   
 	// Add the camera view and append
-	function setup() {
+	function setup3d() {
+    
+		THREE = ctx.THREE;
+		scene = new THREE.Scene();
+    raycaster = new THREE.Raycaster();
+    
 		// Build the scene
 		var spotLight,
 			ground = new THREE.Mesh(
@@ -430,27 +434,15 @@
 		}, false);
 		animate();
 		// Begin listening to the feed
-		d3.json('/streams/feedback', function (error, port) {
-			// Load the robot
-			robot = new ctx.Robot({
-				scene: scene,
-				port: port
-			});
-			/*
-			robot_preview = new ctx.Robot({
-				scene: scene,
-				port: port,
-				material: new THREE.MeshPhongMaterial({
-					// Black knight! http://encycolorpedia.com/313637
-					ambient: 0x87EE81,
-					color: 0x313637,
-					specular: 0x111111,
-					transparent: true,
-					opacity: 0.5
-				})
-			});
-			*/
-		});
+    util.ljs('/Robot.js', function(){
+  		d3.json('/streams/feedback', function (error, port) {
+  			// Load the robot
+  			robot = new ctx.Robot({
+  				scene: scene,
+  				port: port
+  			});
+  		});
+    });
     // User interactions
 		selection = d3.select('select#objects').node();
     d3.select('button#look').on('click', function(){
@@ -459,6 +451,8 @@
     d3.select('button#draw').on('click', function(){
       controls.enabled = false;
     });
+    // ReatTime Comms to other windows
+    setup_rtc();
 	}
   
   ctx.util.ljs('/Estimate.js', function(){
@@ -473,10 +467,7 @@
 			d3.select("div#landing").remove();
 			// Just see the scene
 			document.body.appendChild(view);
-			setTimeout(setup, 0);
-      setTimeout(function(){
-        ctx.util.ljs('/js/peer.min.js', setup_rtc);
-      },0)
+      ctx.util.ljs('/bc/threejs/build/three.js', setup3d);
 		});
 	});
   
@@ -485,29 +476,30 @@
 	depth_worker.onmessage = process_mesh;
   
 	// Begin listening to the feed
-	d3.json('/streams/mesh', function (error, port) {
-		mesh_feed = new ctx.VideoFeed({
-			port: port,
-			fr_callback: process_mesh_frame,
-			cw90: true
-		});
-	});
+  util.ljs("/VideoFeed.js",function(){
+  	d3.json('/streams/mesh', function (error, port) {
+  		mesh_feed = new ctx.VideoFeed({
+  			port: port,
+  			fr_callback: process_mesh_frame,
+  			cw90: true
+  		});
+  	});
+  	d3.json('/streams/kinect2_color', function (error, port) {
+  		rgb_feed = new ctx.VideoFeed({
+  			id: 'kinect2_color',
+  			port: port,
+  			fr_callback: process_kinectV2_color
+  		}
+      );
+  		rgb_ctx = rgb_feed.context2d;
+      rgb_canvas = rgb_feed.canvas;
+  	});
+  });
 	// Add the depth rgb_feed
 	d3.json('/streams/kinect2_depth', function (error, port) {
 		var depth_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
 		depth_ws.binaryType = 'arraybuffer';
 		depth_ws.onmessage = process_kinectV2_depth;
-	});
-  
-	d3.json('/streams/kinect2_color', function (error, port) {
-		rgb_feed = new ctx.VideoFeed({
-			id: 'kinect2_color',
-			port: port,
-			fr_callback: process_kinectV2_color
-		}
-    );
-		rgb_ctx = rgb_feed.context2d;
-    rgb_canvas = rgb_feed.canvas;
 	});
   
 }(this));

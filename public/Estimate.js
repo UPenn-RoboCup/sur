@@ -26,12 +26,6 @@
     console.log('c_u', c_u);
     console.log('c_cov', c_cov);
     */
-    
-  // Ground classifier
-  // Larger it is, then more ground-y it is
-  function h_ground(params){
-    return numeric.dotVV(params.normal, [0,1,0]) * (1 + 1/abs(params.root[1]/1000));
-  }
   
   function normalize(n){
     var nrm = numeric.norm2(n);
@@ -455,28 +449,6 @@
       
       return params;
     },
-    classify: function(params) {
-      // Learning and lassifiers here...
-      // If ground...
-      params.classifiers = [
-        h_ground(params)
-      ];
-    },
-    paint: function(params){
-      if (h_ground(params)>9) {
-        params.points.forEach(function(p){
-          p.colors[0] = 0;
-          p.colors[1] = 1;
-          p.colors[2] = 0;
-        });
-      } else {
-        params.points.forEach(function(p){
-          p.colors[0] = 1;
-          p.colors[1] = 1;
-          p.colors[2] = 0;
-        });
-      }
-    },
     find_poly: function(params){
       var root = params.root,
         norm2 = numeric.norm2,
@@ -495,10 +467,14 @@
         theta_idx = res + floor(0.5 + factor * atan2(p[0], p[2]));
         rhoDist[theta_idx] = p[3] - (rhoDist[theta_idx] || p[3]) < 100 ? p[3] : rhoDist[theta_idx];
       });
-      return rhoDist.map(function(r, th){
+      var xy = rhoDist.map(function(r, th){
         return [r*cos((th-res)*inv_factor), r*sin((th-res)*inv_factor)];
       });
-
+      return {
+        xy: xy,
+        rhoDist: rhoDist,
+        resolution: res // degrees
+      }
     },
   }
 

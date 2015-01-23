@@ -38,6 +38,7 @@
     		.attr("fill", color)
         .attr("transform", "translate(" + 0 + "," + 0 + ")")
         .attr('id', 'pose');
+      //
     },
     // vertical plane
     v: function (params){
@@ -54,40 +55,21 @@
   
   function setup_rtc (){
     peer = new Peer(peer_id, {host: 'localhost', port: 9000});
-    peer.on('open', function(id) {
-      console.log('My peer ID is: ' + id);
-      console.log('peer', peer);
-    });
-    peer.on('disconnected', function(conn) {
-      console.log('disconnected');
-    });
-    peer.on('error', function(e) {
-      console.log('error', e);
-    });
-    peer.on('close', function() {
-      console.log('close');
-    });
+    peer.on('open', function(id) { console.log('My peer ID is: ' + id); });
+    peer.on('disconnected', function(conn) { console.log('disconnected'); });
+    peer.on('error', function(e) { console.log('error', e); });
+    peer.on('close', function() { console.log('close'); });
     p_conn = peer.connect(peer_scene_id);
-    p_conn.on('open', function(){
-      console.log('p_conn', p_conn);
-      p_conn.send('hello from a map');
-    });
-    p_conn.on('close', function(){
-      console.log('p_conn closed');
-    });
+    p_conn.on('open', function(){ p_conn.send('hello from a map'); });
+    p_conn.on('close', function(){ console.log('p_conn closed'); });
     p_conn.on('data',function(data){
       console.log('scene data', data);
       var f_proc = add_map[data.id];
-      if(typeof f_proc !== 'function'){return; }
+      if(typeof f_proc !== 'function'){return;}
       f_proc(data);
     });
   }
-  /*
-    minx—the beginning x coordinate
-    miny—the beginning y coordinate
-    width—width of the view box
-    height—height of the view box
-  */
+
   function setup(){
     setup_rtc();
     map_c = d3.select('#map_container').node();
@@ -118,7 +100,7 @@
 			d3.select("div#landing").remove();
 			// Just see the scene
 			document.body.appendChild(view);
-      ctx.util.ljs('/js/peer.min.js', setup);
+      window.setTimeout(setup,0 );
 		});
 	});
   
