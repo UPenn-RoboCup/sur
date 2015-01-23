@@ -90,12 +90,28 @@
         new THREE.Vector3(0,1,0),
         (new THREE.Vector3()).fromArray(parameters.normal)
       );
-      E.classify(parameters);
-      console.log(parameters);
+      
+      var quat_rot_robot_frame = (new THREE.Quaternion()).setFromUnitVectors(
+        new THREE.Vector3(0,0,1),
+        (new THREE.Vector3()).fromArray([parameters.normal[2],parameters.normal[0],parameters.normal[1]])
+      );
+      var mat_rot_robot_frame = new THREE.Matrix4().makeRotationFromQuaternion(quat_rot_robot_frame);
+      parameters.rot = [
+        mat_rot_robot_frame.elements.subarray(0,4),
+        mat_rot_robot_frame.elements.subarray(4,8),
+        mat_rot_robot_frame.elements.subarray(8,12),
+        mat_rot_robot_frame.elements.subarray(12,16),
+      ];
       
       var poly = E.find_poly(parameters);
+      parameters.poly = poly;
+      // Classify:
+      var poly_features = Classify.poly_features;
+      var pf = Classify.get_poly_features(parameters);
+      parameters.features = pf;
+      
       var material = new THREE.LineBasicMaterial({
-      	color: parameters.classifiers[0] > 20 ? 0x00ff00 : 0xFF9900,
+      	color: pf[poly_features.indexOf('ground')] > 20 ? 0x00ff00 : 0xFF9900,
         linewidth: 20
       });
       var geometry = new THREE.Geometry();
@@ -457,6 +473,9 @@
   
   ctx.util.ljs('/Estimate.js', function(){
     E = ctx.Estimate;
+  });
+  ctx.util.ljs('/Classify.js', function(){
+    Classify = ctx.Classify;
   });
   
 	// Load the Styling

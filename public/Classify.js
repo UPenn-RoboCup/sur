@@ -1,7 +1,8 @@
 (function (ctx) {
 	'use strict';
+  
   // Load the Matrix library
-  ctx.util.ljs('/js/numeric-1.2.6.min.js');
+  //ctx.util.ljs('/js/numeric-1.2.6.min.js');
   
 	var pow = Math.pow,
     abs = Math.abs,
@@ -27,20 +28,35 @@
     console.log('c_cov', c_cov);
     */
     
-  // Ground classifier
-  // Larger it is, then more ground-y it is
-  function h_ground(params){
-    return numeric.dotVV(params.normal, [0,1,0]) * (1 + 1/abs(params.root[1]/1000));
+  function smaller(m, cur){ return m < cur ? m : cur; }
+  
+  // Hold all the classifiers
+  var classifiers = {
+    ground: function(p){
+      // Larger it is, then more ground-y it is
+      return numeric.dotVV(p.normal, [0,1,0]) * (1 + 1/abs(p.root[1]/1000));
+    },
+    inscribedCircle: function(p){
+      // Just the smallest radius. Technically not correct, but OK for now
+      return p.poly.rhoDist.reduce(smaller);
+    },
+    
   }
+  // Order of the features
+  var poly_features = [
+    'ground', 'inscribedCircle', 
+  ];
+  // Quickly compute the features from the functions in the correct order
+  var pf = poly_features.map(function(n){ return this[n]; }, classifiers);
   
   ctx.Classify = {
-    classify: function(params) {
-      // Learning and lassifiers here...
-      // If ground...
-      params.classifiers = [
-        h_ground(params)
-      ];
+    get_poly_features: function(parameters) {
+      console.log('Classify', parameters);
+      var feat = pf.map(function(func){ return func(this); }, parameters);
+      console.log('Features', feat);
+      return feat;
     },
+    poly_features: poly_features,
   }
 
 }(this));

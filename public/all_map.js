@@ -30,7 +30,7 @@
     // horiz plane
     h: function (params){
       console.log(params);
-      var color = params.classifiers[0] > 20 ? 'green' : 'orange';
+      var color = params.features[0] > 20 ? 'green' : 'orange';
       overlay.append("path")
     		.attr("d", polyF(params.perimeter))
     		.attr("stroke", color)
@@ -46,7 +46,7 @@
       overlay.append("path")
     		.attr("d", polyF(params.endpoints))
     		.attr("stroke", 'black')
-    		.attr("stroke-width", 0.01)
+    		.attr("stroke-width", 0.05)
     		.attr("fill", 'black')
         .attr("transform", "translate(" + 0 + "," + 0 + ")")
         .attr('id', 'pose');

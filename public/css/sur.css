@@ -5,6 +5,6 @@ html, body {
   overflow: hidden;
 }
 
-button {
+.launcher {
   font-size: 24px;
 }
