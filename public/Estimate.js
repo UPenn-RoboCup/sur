@@ -1,7 +1,5 @@
 (function (ctx) {
 	'use strict';
-  // Load the Matrix library
-  ctx.util.ljs('/js/numeric-1.2.6.min.js');
   
 	var pow = Math.pow,
     abs = Math.abs,
@@ -13,7 +11,8 @@
     atan2 = Math.atan2,
     sin = Math.sin,
     cos = Math.cos,
-    floor = Math.floor;
+    floor = Math.floor,
+    norm2 = numeric.norm2;
     
     /*
     var eigs = numeric.eig(params.cov);
@@ -26,11 +25,8 @@
     console.log('c_u', c_u);
     console.log('c_cov', c_cov);
     */
-  
-  function normalize(n){
-    var nrm = numeric.norm2(n);
-    return [ n[0] / nrm, n[1] / nrm, n[2] / nrm ];
-  }
+  function div(v){ return v/this; }
+  function normalize(n){ return n.map(div, norm2(n)); }
   
   /*
   function* face_entries(mesh, filter){
@@ -228,6 +224,12 @@
 
   }
   
+  // zero mean assumed for color probability
+  var dotVV = numeric.dotVV, dotVM = numeric.dotVM;
+  function c_prob(c, icov){
+    return -0.5*dotVV(dotVM(c, icov), c);
+  }
+  
   // (x - h)^2 + (y - k)^2 = r^2
   // a(x - x0) + b(y - y0) + c(z - z0) == 0
   // n = [a b c]
@@ -240,10 +242,6 @@
       c_inv_cov = numeric.inv(c_cov),
       surf_thresh = 30,
       p;
-    
-    var c_prob = function(c){
-      return -0.5*numeric.dotVV(numeric.dotVM(c, c_inv_cov), c);
-    }
     var c_pr, err_r, cc = [0,0,0];
     for (var a of it){
       p = a[1];
@@ -252,7 +250,7 @@
         cc[0] = 255 * p[3] - c_u[0];
         cc[1] = 255 * p[4] - c_u[1];
         cc[2] = 255 * p[5] - c_u[2];
-        c_pr = c_prob(cc);
+        c_pr = c_prob(cc, c_inv_cov);
         if (c_pr > -12) { plane_points.push(p); }
       }
     }
@@ -452,7 +450,6 @@
     },
     find_poly: function(params){
       var root = params.root,
-        norm2 = numeric.norm2,
         rhoDist = [],
         theta_idx,
         res = 10, // 10 degree chunks
