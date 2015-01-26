@@ -35,6 +35,9 @@
   function debug(arr){
     d3.select("#info").html(arr.join('<br/>'));
   }
+  function minDotI(maxI, curDot, i, arr){
+    return (curDot > arr[maxI]) ? i : maxI;
+  }
 
   function setup_rtc (){
     peer = new Peer(peer_id, {host: 'localhost', port: 9000});
@@ -129,21 +132,19 @@
       
       // Send to the map
       if(parameters.id==='v'){
-        
-        function minDotI(maxI, curDot, i, arr){ return (curDot > arr[maxI]) ? i : maxI;}
-        function makeDot(p) { return numeric.dot([p.x, p.z], this.dir); }
+        var makeDot = function(p){ return numeric.dot([p.x, p.z], this); };
         var dir1 = [-parameters.normal[2], parameters.normal[0]];
         var dir2 = [parameters.normal[2], -parameters.normal[0]];
         parameters.endpoints = [];
         var maxPoint1 = geometry.vertices[
-          geometry.vertices.map(makeDot, {dir: dir1}).reduce(minDotI, 0)
+          geometry.vertices.map(makeDot, dir1).reduce(minDotI, 0)
         ];
         parameters.endpoints.push({
           x: (maxPoint1.x + parameters.root[0])/-1e3,
           y: (maxPoint1.z + parameters.root[2])/-1e3
         });
         var maxPoint2 = geometry.vertices[
-          geometry.vertices.map(makeDot, {dir: dir2}).reduce(minDotI, 0)
+          geometry.vertices.map(makeDot, dir2).reduce(minDotI, 0)
         ];
         parameters.endpoints.push({
           x: (maxPoint2.x + parameters.root[0])/-1e3,
@@ -217,7 +218,7 @@
 		);
     
     // Debugging
-    sprintf.apply({},['%0.2f %f', 1,2, 55])
+    sprintf.apply({},['%0.2f %f', 1,2, 55]);
     var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1000).toArray();
     offset_msg.unshift('Offset: %0.2f %0.2f %0.2f');
     var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray();
@@ -243,7 +244,7 @@
         if(mesh0.name !== 'kinectV2'){
           return;
         }
-        var f_describe = describe[selection.value]
+        var f_describe = describe[selection.value];
         if(typeof f_describe === 'function'){ f_describe(mesh0, p0); }
       }
 		}

@@ -1,9 +1,9 @@
 (function (ctx) {
 	'use strict';
-  
+
   // Load the Matrix library
   //ctx.util.ljs('/js/numeric-1.2.6.min.js');
-  
+
 	var pow = Math.pow,
     abs = Math.abs,
     sqrt = Math.sqrt,
@@ -15,7 +15,7 @@
     sin = Math.sin,
     cos = Math.cos,
     floor = Math.floor;
-    
+
     /*
     var eigs = numeric.eig(params.cov);
     console.log(eigs.lambda);
@@ -27,9 +27,9 @@
     console.log('c_u', c_u);
     console.log('c_cov', c_cov);
     */
-    
+
   function smaller(m, cur){ return m < cur ? m : cur; }
-  
+
   // Hold all the classifiers
   var classifiers = {
     ground: function(p){
@@ -40,15 +40,15 @@
       // Just the smallest radius. Technically not correct, but OK for now
       return p.poly.rhoDist.reduce(smaller);
     },
-    
-  }
+
+  };
   // Order of the features
   var poly_features = [
-    'ground', 'inscribedCircle', 
+    'ground', 'inscribedCircle',
   ];
   // Quickly compute the features from the functions in the correct order
   var pf = poly_features.map(function(n){ return this[n]; }, classifiers);
-  
+
   ctx.Classify = {
     get_poly_features: function(parameters) {
       console.log('Classify', parameters);
@@ -57,6 +57,6 @@
       return feat;
     },
     poly_features: poly_features,
-  }
+  };
 
 }(this));

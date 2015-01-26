@@ -1,6 +1,6 @@
 (function (ctx) {
 	'use strict';
-  
+
 	var pow = Math.pow,
     abs = Math.abs,
     sqrt = Math.sqrt,
@@ -13,7 +13,7 @@
     cos = Math.cos,
     floor = Math.floor,
     norm2 = numeric.norm2;
-    
+
     /*
     var eigs = numeric.eig(params.cov);
     console.log(eigs.lambda);
@@ -25,9 +25,16 @@
     console.log('c_u', c_u);
     console.log('c_cov', c_cov);
     */
-  function div(v){ return v/this; }
-  function normalize(n){ return n.map(div, norm2(n)); }
-  
+  function div(v) {
+		return v / this;
+	}
+  function normalize(n) {
+		return n.map(div, norm2(n));
+	}
+	function always(p){
+		return true;
+	}
+
   /*
   function* face_entries(mesh, filter){
     var indices = mesh.geometry.getAttribute('index').array,
@@ -52,13 +59,15 @@
     }
   }
   */
-  
-  function* point_cloud_entries(mesh, filter){
+
+  function* Point_cloud_entries(mesh, filter){
     var positions = mesh.geometry.getAttribute('position').array,
       colors = mesh.geometry.getAttribute('color').array,
-      filter = filter || function(p){return true;},
       n = 3*mesh.n_el,
       data;
+		if(typeof filter !== 'function'){
+			filter = always;
+		}
 		for (var pidx = 0; pidx < n; pidx += 3) {
       data = [
         positions[pidx], positions[pidx + 1], positions[pidx + 2],
@@ -67,7 +76,7 @@
       if (filter(data)) { yield [pidx, data]; }
 		}
   }
-  
+
   function get_plane_error_rate(it, params){
     var total_err = 0,
       cnt = 0,
@@ -81,7 +90,7 @@
     }
     return total_err / cnt;
   }
-  
+
   function estimate_colors(it){
     var v, p,
       nClose = 0,
@@ -115,7 +124,7 @@
       xzSum += v[0] * v[2];
       yzSum += v[2] * v[1];
     }
-    
+
     // TODO: Add the standard deviation
     function divN(v){return v / (nClose + 1);}
     // diagonal entries
@@ -139,8 +148,8 @@
     return {
       mean: [xSum, ySum, zSum].map(function(v,i){return v/nClose;}),
       cov: cov,
-    }
-    
+    };
+
   }
 
   function estimate_plane(it, root) {
@@ -181,7 +190,7 @@
       //
       points.push(p);
     }
-    
+
     var A_plane_inv = numeric.inv([
       [zzSum, xzSum, zSum],
       [xzSum, xxSum, xSum],
@@ -189,7 +198,7 @@
     ]);
     var sol_plane = numeric.dot(A_plane_inv, [zySum, xySum, ySum]);
     var normal = normalize([-sol_plane[0], -sol_plane[1], 1]);
-    
+
     // TODO: Add the standard deviation
     function divN(v){return v / (nClose + 1);}
     // diagonal entries
@@ -210,9 +219,9 @@
       [o[0],d[1],o[2]],
       [o[1],o[2],d[2]]
     ];
-    
+
     // d[2] is the variance in the y direction only... find variance in the normal direction. Should be the third eigenvalue....
-    
+
     var root2 = [xSum, ySum, zSum].map(function(v,i){return 1000*v/nClose + root[i];});
     return {
       normal: [normal[1], normal[2], normal[0]],
@@ -220,16 +229,15 @@
       cov: cov,
       n: nClose,
       points: points,
-    }
-
+    };
   }
-  
+
   // zero mean assumed for color probability
   var dotVV = numeric.dotVV, dotVM = numeric.dotVM;
   function c_prob(c, icov){
     return -0.5*dotVV(dotVM(c, icov), c);
   }
-  
+
   // (x - h)^2 + (y - k)^2 = r^2
   // a(x - x0) + b(y - y0) + c(z - z0) == 0
   // n = [a b c]
@@ -254,10 +262,10 @@
         if (c_pr > -12) { plane_points.push(p); }
       }
     }
-    
+
     return plane_points;
   }
-  
+
   // Estimate the grip using a vertical cyinder
   // y: up
   // x: left
@@ -324,10 +332,10 @@
       sublevels = [],
       err_r,
       total_err = 0;
-    
+
     // Find the valid sublevels based on how well the radius agrees
     // TODO: Use some probablity thing, maybe
-    
+
     for (var a of it){
       p = a[1];
       err_r = sqrt(pow(p[0] - params.xc, 2) +  pow(p[2] - params.zc, 2)) - params.r;
@@ -335,8 +343,8 @@
         sublevels.push(p);
         total_err += err_r;
       }
-    }    
-    
+    }
+
     // Get the connected region that includes the clicked point
     var goodlevels = sublevels.sort(function(first, second){
       if (first[1] === second[1]){return 0;} else if (first[1] < second[1]){return -1;} else{return 1;}
@@ -344,7 +352,7 @@
     var y0_is_seen = false,
       i_lower = 0, i_upper = goodlevels.length,
       p_lower = goodlevels[i_lower], p_upper = goodlevels[i_upper - 1],
-      p, p_last;
+      p_last;
     // TODO: Get statistics, now, so we know some noise ideas?
     for(var si = 1, sl = goodlevels.length; si < sl; si += 1) {
       p = goodlevels[si];
@@ -361,23 +369,23 @@
         }
       }
     }
-    
+
     // Filter to only the points we want
     var valid_cyl_points = goodlevels.filter(function(value, index, arr){
       return index>=i_lower && index<i_upper;
     });
-    
+
     // Update the parameters from these points
     params = estimate_cylinder(valid_cyl_points.entries(), params.root);
     params.h = p_upper[1] - p_lower[1];
     params.yc = (p_upper[1] + p_lower[1]) / 2;
-    
+
     params.error = total_err;
     params.points = valid_cyl_points;
-    
+
     return params;
   }
-  
+
   // TODO: Tune the filters (for the generator)
   ctx.Estimate = {
     cylinder: function(mesh0, p0){
@@ -385,17 +393,17 @@
         py = p0.y,
         pz = p0.z,
         root = [px,py,pz],
-        it = new point_cloud_entries(mesh0, function(vertex) {
+        it = new Point_cloud_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 30 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
         });
       var parameters = estimate_cylinder(it, root);
       //console.log(parameters);
-      
+
       // Grow to update
-      parameters = grow_cylinder(new point_cloud_entries(mesh0), parameters);
+      parameters = grow_cylinder(new Point_cloud_entries(mesh0), parameters);
       parameters.id = 'cyl';
       //console.log(parameters);
-      
+
       return parameters;
     },
     plane: function(mesh0, p0){
@@ -403,28 +411,28 @@
         py = p0.y,
         pz = p0.z,
         root = [px,py,pz],
-        horizontal_it = new point_cloud_entries(mesh0, function(vertex) {
+        horizontal_it = new Point_cloud_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60 && abs(vertex[2] - pz) < 60;
         }),
-        vertical_it = new point_cloud_entries(mesh0, function(vertex) {
+        vertical_it = new Point_cloud_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 100 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
         });
 
       var horiz_params = estimate_plane(horizontal_it, root);
       horiz_params.id = 'h';
       //console.log('horiz', horiz_params);
-      
+
       var vert_params = estimate_plane(vertical_it, root);
       vert_params.id = 'v';
       vert_params.normal[1] = 0;
       vert_params.normal = normalize(vert_params.normal);
       //console.log('vert', vert_params);
-      
+
       var e_h = get_plane_error_rate(horiz_params.points.entries(), horiz_params),
         n_h = horiz_params.points.length;
       var e_v = get_plane_error_rate(vert_params.points.entries(), vert_params),
         n_v = vert_params.points.length;
-      
+
       //console.log(e_h, e_v);
       //console.log(n_h, n_v);
 
@@ -435,17 +443,17 @@
       } else {
         params = vert_params;
       }
-      
+
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
-      params.points = grow_plane(new point_cloud_entries(mesh0), params);
-      
+      params.points = grow_plane(new Point_cloud_entries(mesh0), params);
+
       // Update the roughness
       var p2 = estimate_plane(params.points.entries(), params.root);
       params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
       // e_val = eigs.lambda.x[2] * 1e6, // 1e3 * 1e3, since covariance is a squared dependence
       // e_vec = [eigs.E.x[0][2],eigs.E.x[1][2],eigs.E.x[2][2]];
-      
+
       return params;
     },
     find_poly: function(params){
@@ -472,8 +480,8 @@
         xy: xy,
         rhoDist: rhoDist,
         resolution: res // degrees
-      }
+      };
     },
-  }
+  };
 
 }(this));

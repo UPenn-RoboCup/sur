@@ -21,7 +21,7 @@ function flat2mat(flat){
     flat.slice(4,8),
     flat.slice(8,12),
     flat.slice(12,16)
-  ]
+  ];
 }
 
 function mat_times_vec(m, v){
@@ -149,9 +149,9 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		xx = (cp * x) + (sr * sp * y) + (sp * cr * z),
     		yy = (cr * y) - (sr * z),
     		zz = (-sp * x) + (cp * sr * y) + (cp * cr * z),
-			
+
     		// TODO: supportX?
-		
+
     		// Place into global pose THREE coords
     		pa = robot.pa,
     		ca = cos(pa),
@@ -179,14 +179,14 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       //var j2 = floor(1080 * (0.48 - (0.85)*atan(xyz[2]/xyz[0])));
       //var j2 = floor(1080 * (0.44 - (0.7)*atan(xyz[2]/xyz[0])));
       if (j2 < 0 || j2 >= 1080) { return; }
-      var i2 = 1920 * (0.5 - (.57)*atan((-xyz[1] - 0.05)/xyz[0]));
+      var i2 = 1920 * (0.5 - (0.57)*atan((-xyz[1] - 0.05)/xyz[0]));
       if (i2 < 0 || i2 >= 1920) { return; }
       var idx = 4 * floor(i2 + j2 * 1920);
 			destination[0] = img[idx] / 255;
 			destination[1] = img[idx + 1] / 255;
 			destination[2] = img[idx + 2] / 255;
     },
-    
+
   };
 
 this.addEventListener('message', function (e) {
@@ -241,7 +241,7 @@ this.addEventListener('message', function (e) {
     i, j,
     // Position of the point
     point_xyz;
-        
+
     //console.log(mesh);
     if (mesh.id==='k2_depth'){
       //tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
@@ -284,7 +284,7 @@ this.addEventListener('message', function (e) {
 			// move on to the next pixel (RGBA) for next time
 			pixel_idx += 1;
 		} // for i in width
-		
+
     // Use a heurstic for splitting into a new chunk
     // Splitting is needed for lots of triangles: http://alteredqualia.com/three/examples/webgl_buffergeometry_perf2.html
     if ((n_el - n_last_chunk_el) > 18333) {
@@ -302,11 +302,11 @@ this.addEventListener('message', function (e) {
       // TODO: Replicate the last row of the old chunk as the first row in the new chunk
       // NOTE: Cannot do this now, since the index array is the range map array in order to save space...
 		}
-    
+
 	} // for j in height
 
 	quad_offsets[quad_offsets.length - 1].row = height;
-  
+
   //////////////
   // Stitch together Quad faces
   // Input: Pre-populated quad_offsets

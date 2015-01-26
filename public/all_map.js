@@ -46,15 +46,16 @@
         .attr("transform", "translate(" + 0 + "," + 0 + ")")
         .attr('class', 'wall');
     },
-  }
+  };
   
-  var add_graph(){
+  var add_graph = {
     h: function(params){
+      console.log(params);
       adjacency_matrix.forEach(function(){
         
       });
     }
-  }
+  };
   
   function setup_rtc (){
     peer = new Peer(peer_id, {host: 'localhost', port: 9000});
@@ -69,7 +70,7 @@
       console.log('scene data', data);
       var f_map = add_map[data.id];
       if(typeof f_map === 'function'){ f_map(data); }
-      var f_map = add_map[data.id];
+      var f_graph = add_graph[data.id];
       if(typeof f_map === 'function'){ f_map(data); }
     });
   }
