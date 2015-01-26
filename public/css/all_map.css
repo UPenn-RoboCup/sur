@@ -24,3 +24,26 @@ select {
 #info {
   font-size: 10pt;
 }
+/* SVG
+http://www.hongkiat.com/blog/scalable-vector-graphic-css-styling/
+*/
+.obstacle {
+	fill: "red";
+	stroke: "red";
+	stroke-width: 0.01;
+}
+.wall {
+	fill: "black";
+	stroke: "black";
+	stroke-width: 0.05;
+}
+.flat {
+	fill: "green";
+	stroke: "green";
+	stroke-width: 0.01;
+}
+.step {
+	fill: "orange";
+	stroke: "orange";
+	stroke-width: 0.01;
+}

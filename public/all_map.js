@@ -8,36 +8,34 @@
     p_conn,
     overlay,
     map_c,
-		polyF = d3.svg.line()
-			.x(function (d) { return d.x; })
-			.y(function (d) { return d.y; })
-    .interpolate("linear-closed");
+    adjacency_matrix = [];
+  
+  var polyF = d3.svg.line().x(function (d) { return d.x; }).y(function (d) { return d.y; }).interpolate("linear-closed");
   
   function debug(arr){
     d3.select("#info").html(arr.join('<br/>'));
   }
   
   var add_map = {
-    cyl : function (params){
+    cyl: function (params){
     	overlay.append("circle")
     		.attr("cx", params.xc / -1000)
     		.attr("cy", params.zc / -1000)
-    		.attr("r", params.r / 1000)
-    		.style("fill", "red")
-    		.style("stroke", "red")
-    		.style("stroke-width", 0.01);
+        .attr("r", params.r / 1000)
+        .attr('class', 'obstascle');
     },
     // horiz plane
     h: function (params){
       console.log(params);
-      var color = params.features[0] > 20 ? 'green' : 'orange';
-      overlay.append("path")
+      var patch = overlay.append("path")
     		.attr("d", polyF(params.perimeter))
-    		.attr("stroke", color)
-    		.attr("stroke-width", 0.01)
-    		.attr("fill", color)
-        .attr("transform", "translate(" + 0 + "," + 0 + ")")
-        .attr('id', 'pose');
+        .attr("transform", "translate(" + 0 + "," + 0 + ")");
+      // Color correctly
+      if (params.features[0] > 20){
+        patch.attr('class', 'flat');
+      } else {
+        patch.attr('class', 'step');
+      }
       //
     },
     // vertical plane
@@ -45,12 +43,17 @@
       console.log(params);
       overlay.append("path")
     		.attr("d", polyF(params.endpoints))
-    		.attr("stroke", 'black')
-    		.attr("stroke-width", 0.05)
-    		.attr("fill", 'black')
         .attr("transform", "translate(" + 0 + "," + 0 + ")")
-        .attr('id', 'pose');
+        .attr('class', 'wall');
     },
+  }
+  
+  var add_graph(){
+    h: function(params){
+      adjacency_matrix.forEach(function(){
+        
+      });
+    }
   }
   
   function setup_rtc (){
@@ -64,9 +67,10 @@
     p_conn.on('close', function(){ console.log('p_conn closed'); });
     p_conn.on('data',function(data){
       console.log('scene data', data);
-      var f_proc = add_map[data.id];
-      if(typeof f_proc !== 'function'){return;}
-      f_proc(data);
+      var f_map = add_map[data.id];
+      if(typeof f_map === 'function'){ f_map(data); }
+      var f_map = add_map[data.id];
+      if(typeof f_map === 'function'){ f_map(data); }
     });
   }
 
