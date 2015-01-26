@@ -25,7 +25,7 @@
 	}
 
 	function open(){
-		d3.text('/logs/hmap1422306373174.json').get(function(e,data){
+		d3.text('/logs/hmap1422307400736.json').get(function(e,data){
 			if (!e) {
 				var param_arr = JSON.parse(data);
 				param_arr.forEach(parse_param);
