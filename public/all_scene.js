@@ -31,7 +31,7 @@
     peer_id = 'all_scene',
     peer_map_id = 'all_map',
     map_peers = [];
-    
+
   function debug(arr){
     d3.select("#info").html(arr.join('<br/>'));
   }
@@ -59,7 +59,7 @@
       });
     });
   }
-    
+
   var describe = {
     cylinder: function(mesh0, p0){
       // Cylinder
@@ -88,12 +88,12 @@
     },
     plane: function(mesh0, p0){
       var parameters = E.plane(mesh0, p0);
-      
+
       var quat_rot = (new THREE.Quaternion()).setFromUnitVectors(
         new THREE.Vector3(0,1,0),
         (new THREE.Vector3()).fromArray(parameters.normal)
       );
-      
+
       var quat_rot_robot_frame = (new THREE.Quaternion()).setFromUnitVectors(
         new THREE.Vector3(0,0,1),
         (new THREE.Vector3()).fromArray([parameters.normal[2],parameters.normal[0],parameters.normal[1]])
@@ -104,15 +104,18 @@
         mat_rot_robot_frame.elements.subarray(4,8),
         mat_rot_robot_frame.elements.subarray(8,12),
         mat_rot_robot_frame.elements.subarray(12,16),
-      ];
-      
+      ].map(function(v){
+				return [v[0],v[1],v[2],v[3]];
+			});
+
+
       var poly = E.find_poly(parameters);
       parameters.poly = poly;
       // Classify:
       var poly_features = Classify.poly_features;
       var pf = Classify.get_poly_features(parameters);
       parameters.features = pf;
-      
+
       var material = new THREE.LineBasicMaterial({
       	color: pf[poly_features.indexOf('ground')] > 20 ? 0x00ff00 : 0xFF9900,
         linewidth: 20
@@ -129,7 +132,7 @@
       var line = new THREE.Line( geometry, material );
       line.position.fromArray(parameters.root);
       scene.add(line);
-      
+
       // Send to the map
       if(parameters.id==='v'){
         var makeDot = function(p){ return numeric.dot([p.x, p.z], this); };
@@ -150,7 +153,7 @@
           x: (maxPoint2.x + parameters.root[0])/-1e3,
           y: (maxPoint2.z + parameters.root[2])/-1e3
         });
-        
+
         delete parameters.points;
         map_peers.forEach(function(conn){
           conn.send(parameters);
@@ -165,7 +168,7 @@
         });
       }
 
-      
+
       /*
       var geometry = new THREE.SphereGeometry( 50, 16, 16 );
       var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
@@ -177,7 +180,7 @@
       E.paint(parameters);
       mesh0.geometry.getAttribute('color').needsUpdate = true;
       */
-      
+
     }
   };
 
@@ -216,7 +219,7 @@
 			T_point,
 			T_inv
 		);
-    
+
     // Debugging
     sprintf.apply({},['%0.2f %f', 1,2, 55]);
     var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1000).toArray();
@@ -228,7 +231,7 @@
       sprintf.apply(null, offset_msg),
       sprintf.apply(null, global_msg)
     ]);
-    
+
     // TODO: Right click behavior
 		if (e.button === 2) {
 			// Right click
@@ -339,8 +342,8 @@
     // Don't post to the depth worker until done
     is_processing = true;
 	}
-  
-  
+
+
   function process_kinectV2_color(){
     cur_rgb = rgb_canvas.metadata;
     //console.log('color', cur_rgb);
@@ -372,14 +375,14 @@
       }
 		}
 	}
-  
+
   function post_rgbd(){
     // Don't post to the depth worker until done
     if (is_processing) { return; }
     is_processing = true;
-    
+
     //console.log(rgbd_metadata.rgb[0], rgbd_metadata.rgb[1920*4]);
-    
+
     // Allocations
     // TODO: Maintain a fixed set of allocations to avoid penalty on each new data
     var npix = rgbd_metadata.height * rgbd_metadata.width;
@@ -395,14 +398,14 @@
       rgbd_metadata.rgb.buffer
     ]);
   }
-  
+
 	// Add the camera view and append
 	function setup3d() {
-    
+
 		THREE = ctx.THREE;
 		scene = new THREE.Scene();
     raycaster = new THREE.Raycaster();
-    
+
 		// Build the scene
 		var spotLight,
 			ground = new THREE.Mesh(
@@ -471,14 +474,14 @@
     // ReatTime Comms to other windows
     setup_rtc();
 	}
-  
+
   ctx.util.ljs('/Estimate.js', function(){
     E = ctx.Estimate;
   });
   ctx.util.ljs('/Classify.js', function(){
     Classify = ctx.Classify;
   });
-  
+
 	// Load the Styling
 	ctx.util.lcss('/css/gh-buttons.css');
 	ctx.util.lcss('/css/all_scene.css', function () {
@@ -490,11 +493,11 @@
       ctx.util.ljs('/bc/threejs/build/three.js', setup3d);
 		});
 	});
-  
+
 	// Depth Worker for both mesh and kinect
 	depth_worker = new window.Worker("/allmesh_worker.js");
 	depth_worker.onmessage = process_mesh;
-  
+
 	// Begin listening to the feed
   util.ljs("/VideoFeed.js",function(){
   	d3.json('/streams/mesh', function (error, port) {
@@ -521,5 +524,5 @@
 		depth_ws.binaryType = 'arraybuffer';
 		depth_ws.onmessage = process_kinectV2_depth;
 	});
-  
+
 }(this));

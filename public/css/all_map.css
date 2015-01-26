@@ -28,22 +28,22 @@ select {
 http://www.hongkiat.com/blog/scalable-vector-graphic-css-styling/
 */
 .obstacle {
-	fill: "red";
-	stroke: "red";
-	stroke-width: 0.01;
+	fill: #ff0000;
+	stroke: #aa0000;
+	stroke-width: 0.025;
 }
 .wall {
-	fill: "black";
-	stroke: "black";
-	stroke-width: 0.05;
+  fill: #000000;
+  stroke: #000000;
+  stroke-width: 0.025;
 }
 .flat {
-	fill: "green";
-	stroke: "green";
-	stroke-width: 0.01;
+  fill: #00ff00;
+  stroke: #00aa00;
+  stroke-width: 0.025;
 }
 .step {
-	fill: "orange";
-	stroke: "orange";
+	fill: #ffaa00;
+	stroke: #cc6600;
 	stroke-width: 0.01;
 }

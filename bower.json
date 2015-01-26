@@ -18,13 +18,13 @@
     "tests"
   ],
   "dependencies": {
-    "Keypress": "*",
-    "d3": "*",
-    "leapjs": "*",
-    "pako": "*",
-    "sprintfjs": "*",
-    "threejs": "*",
-		"peerjs": "*",
-		"numericjs": "*"
+    "Keypress": "latest",
+    "d3": "latest",
+    "leapjs": "latest",
+    "pako": "latest",
+    "sprintfjs": "latest",
+    "threejs": "latest",
+		"peerjs": "latest",
+		"numericjs": "latest"
   }
 }

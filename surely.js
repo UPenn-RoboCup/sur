@@ -13,7 +13,8 @@ var restify = require('restify'),
 	dgram = require('dgram'),
 	zmq = require('zmq'),
 	mp = require('msgpack'),
-  PeerServer = require('peer').PeerServer;
+  PeerServer = require('peer').PeerServer,
+	fs = require('fs');
 
 /* Is this Needed? Seems so, to get JSON data posted. TODO: See why */
 server.use(restify.acceptParser(server.acceptable));
@@ -23,7 +24,7 @@ server.use(restify.queryParser({
 }));
 server.use(restify.bodyParser({
 	mapParams: false,
-	maxBodySize: 1024 // Attempt to prevent overflow
+	//maxBodySize: 1024 // Attempt to prevent overflow
 }));
 // Try this to find the clock skew... may be useful
 server.use(restify.dateParser());
@@ -74,6 +75,23 @@ function rest_req(req, res, next) {
 	rpc_skt.send(mp.pack(req.params)).http_responses.push(res);
 	return next();
 }
+
+// Save data from the app
+server.post('/log/:name', function(req, res, next){
+	console.log('Saving a log...');
+	var name = 'public/logs/'+req.params.name+'.json'
+	//var name = req.params.name+'.json'
+	if (req.body !== undefined) {
+		fs.writeFile(name, req.body, function (err) {
+			if (err) throw err;
+			res.send();
+			console.log('Saved '+name);
+		});
+	} else {
+		res.send();
+	}
+	return next();
+});
 
 // POST will send FSM events
 server.post('/fsm/:fsm/:evt', rest_req);
