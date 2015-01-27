@@ -122,14 +122,6 @@
       geometry.vertices = poly.xy.map(function(p){
         return (new THREE.Vector3(p[1], 10, p[0])).applyQuaternion(quat_rot);
       });
-      // close the loop
-      geometry.vertices.push(
-        (new THREE.Vector3(poly.xy[0][1], 10, poly.xy[0][0]))
-        .applyQuaternion(quat_rot)
-      );
-      var line = new THREE.Line( geometry, material );
-      line.position.fromArray(parameters.root);
-      scene.add(line);
 
       // Send to the map
       if(parameters.id==='v'){
@@ -157,14 +149,23 @@
           conn.send(parameters);
         });
       } else if(parameters.id==='h'){
-        parameters.perimeter = geometry.vertices.map(function(p){
-          return {x: (p.x + parameters.root[0])/-1e3, y: (p.z+parameters.root[2])/-1e3};
-        });
+				parameters.projected = {
+					root : [parameters.root[0] / -1e3, parameters.root[2]/-1e3],
+					xy : geometry.vertices.map(function(p){return {x: p.x/-1e3, y: p.z/-1e3};}),
+					resolution : parameters.poly.resolution
+				};
         delete parameters.points;
-        map_peers.forEach(function(conn){
-          conn.send(parameters);
-        });
+        map_peers.forEach(function(conn){conn.send(parameters);});
       }
+
+			// close the loop
+			geometry.vertices.push(
+				(new THREE.Vector3(poly.xy[0][1], 10, poly.xy[0][0]))
+				.applyQuaternion(quat_rot)
+			);
+			var line = new THREE.Line( geometry, material );
+			line.position.fromArray(parameters.root);
+			scene.add(line);
 
 
       /*

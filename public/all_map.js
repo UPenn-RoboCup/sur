@@ -3,28 +3,73 @@
 	// Private variables
 	var d3 = ctx.d3,
 		debug = ctx.util.debug,
+		DEG_TO_RAD = ctx.util.DEG_TO_RAD,
+		RAD_TO_DEG = ctx.util.RAD_TO_DEG,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
+		logname = 'hmap1422400990852',
     peer,
     p_conn,
     overlay,
 		pose_marker,
     map_c,
-    adjacency_matrix = [],
-		human = [];
+		human = [],
+		polys = [];
 	var polyF = d3.svg.line().x(function (d) { return d.x; }).y(function (d) { return d.y; }).interpolate("linear-closed");
 
+	function local2global(v){ return [v[0]+this[0], v[1]+this[1]]; }
+	// wrap within [lower, upper]
+	function wrap(v){
+		v = v >= this.upper ? v - this.upper + this.lower : v;
+		v = v < this.lower ? v - this.lower + this.upper : v;
+		return v;
+	}
+
+	var add_graph = {
+		h: function(params){
+			// Half plane angle
+			var nChunks = params.projected.xy.length, PI = Math.PI;
+			console.log('nChunks', nChunks);
+
+			var angle_to_poly = polys
+			.map(function(v){
+				return Math.atan2(v.center[1]-this[1], v.center[0]-this[0]);
+			}, params.projected.root);
+			console.log('Degrees',RAD_TO_DEG*angle_to_poly);
+			var angleIdx = angle_to_poly.map(function(angle){
+				return Math.floor(angle*nChunks/(2*PI)+nChunks/2);
+			});
+			console.log('Center angle', angleIdx);
+			var lowerIndices = angleIdx.map(function(angleIdx){
+				return angleIdx - nChunks/4;
+			});
+			console.log('lower',lowerIndices);
+			var upperIndices = angleIdx.map(function(angleIdx){
+				return angleIdx + nChunks/4;
+			});
+			console.log('upper',upperIndices);
+			lowerIndices = lowerIndices.map(wrap, {upper:params.projected.length, lower:0});
+			upperIndices = upperIndices.map(wrap, {upper:params.projected.length, lower:0});
+			console.log(lowerIndices);
+			console.log(upperIndices);
+			var perimeterNodes = params.projected.xy.map(local2global, params.projected.root);
+			polys.push({
+				center : params.projected.root,
+				perimeter: perimeterNodes
+			});
+		}
+	};
+
 	function parse_param(data){
-		var f_map = add_map[data.id];
+		console.log(data);
+		var f_map = add_map[data.id], f_graph = add_graph[data.id];
 		if(typeof f_map === 'function'){ f_map(data); }
-		var f_graph = add_graph[data.id];
-		if(typeof f_map === 'function'){ f_map(data); }
+		if(typeof f_graph === 'function'){ f_graph(data); }
 		// Save the data we received
 		human.push(data);
 	}
 
 	function open(){
-		var logname = 'hmap1422307400736'
 		d3.text('/logs/'+logname+'.json').get(function(e,data){
 			if (e) {
 				console.log('Could not open log',e);
@@ -54,14 +99,18 @@
     // horiz plane
     h: function (params){
       var patch = overlay.append("path")
-    		.attr("d", polyF(params.perimeter))
-        .attr("transform", "translate(" + 0 + "," + 0 + ")");
+    		.attr("d", polyF(params.projected.xy))
+        .attr("transform", "translate(" + params.projected.root[0] + "," + params.projected.root[1] + ")");
       // Color correctly
       if (params.features[0] > 20){
         patch.attr('class', 'flat');
       } else {
         patch.attr('class', 'step');
       }
+			overlay.append("circle")
+				.attr("cx", params.projected.root[0])
+				.attr("cy", params.projected.root[1])
+				.attr("r", 0.02);
     },
     // vertical plane
     v: function (params){
@@ -70,14 +119,6 @@
         .attr("transform", "translate(" + 0 + "," + 0 + ")")
         .attr('class', 'wall');
     },
-  };
-
-  var add_graph = {
-    h: function(params){
-      adjacency_matrix.forEach(function(){
-
-      });
-    }
   };
 
   function setup_rtc (){
