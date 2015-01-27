@@ -2,54 +2,46 @@
 	'use strict';
 	// Private variables
 	var d3 = ctx.d3,
+		debug = ctx.util.debug,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
     peer,
     p_conn,
     overlay,
+		pose_marker,
     map_c,
     adjacency_matrix = [],
 		human = [];
-
-	function debug(arr){
-		d3.select("#info").html(arr.join('<br/>'));
-	}
+	var polyF = d3.svg.line().x(function (d) { return d.x; }).y(function (d) { return d.y; }).interpolate("linear-closed");
 
 	function parse_param(data){
 		var f_map = add_map[data.id];
 		if(typeof f_map === 'function'){ f_map(data); }
 		var f_graph = add_graph[data.id];
 		if(typeof f_map === 'function'){ f_map(data); }
-		// So we can replay the data later
+		// Save the data we received
 		human.push(data);
 	}
 
 	function open(){
-		d3.text('/logs/hmap1422307400736.json').get(function(e,data){
-			if (!e) {
-				var param_arr = JSON.parse(data);
-				param_arr.forEach(parse_param);
+		var logname = 'hmap1422307400736'
+		d3.text('/logs/'+logname+'.json').get(function(e,data){
+			if (e) {
+				console.log('Could not open log',e);
 			} else {
-				console.log(e);
+				debug(['Loaded ' + logname]);
+				JSON.parse(data).forEach(parse_param);
 			}
 		});
 	}
 
 	function save(){
-		var name = 'hmap'+Date.now();
-		var data = JSON.stringify(human);
-		debug([
-			'Saving '+name,
-			data.length + ' bytes'
-		]);
-		//d3.json('/log/'+name).post(JSON.stringify(human));
+		var name = 'hmap' + Date.now(), data = JSON.stringify(human);
+		debug(['Saving ' + name, data.length + ' bytes']);
 		d3.text('/log/'+name).post(data, function(e,d){
-			console.log('error', e);
-			console.log('data', d);
+			if (e) { console.log('Could not save', e); }
 		});
 	}
-
-  var polyF = d3.svg.line().x(function (d) { return d.x; }).y(function (d) { return d.y; }).interpolate("linear-closed");
 
   var add_map = {
     cyl: function (params){
@@ -57,7 +49,7 @@
     		.attr("cx", params.xc / -1000)
     		.attr("cy", params.zc / -1000)
         .attr("r", params.r / 1000)
-        .attr('class', 'obstascle');
+        .attr('class', 'obstacle');
     },
     // horiz plane
     h: function (params){
@@ -70,7 +62,6 @@
       } else {
         patch.attr('class', 'step');
       }
-      //
     },
     // vertical plane
     v: function (params){
@@ -101,25 +92,36 @@
     p_conn.on('data', parse_param);
   }
 
-  function setup(){
-    setup_rtc();
+	// Add the robot marker
+	function draw_pose(pose){
+		if(pose_marker===undefined){
+			pose_marker = overlay.append("path")
+				.attr('id', 'pose')
+				.attr("d", polyF([
+					{'x':0,'y':0}, // tip of the triangle
+					{'x':-0.05,'y':0.25},
+					{'x':0.05,'y':0.25}])
+				);
+		} else {
+			pose_marker.attr("transform", "translate(" + -pose.y + "," + -pose.x + ")");
+		}
+	}
+
+  function setup_dom(){
     map_c = d3.select('#map_container').node();
   	// Add the overlay
   	overlay = d3.select("#map_container").append("svg").attr('class', 'overlay')
-    .attr('viewBox', "-3 -3 6 6").attr('preserveAspectRatio', "none")
-    .attr('width', map_c.clientWidth).attr('height', map_c.clientHeight);
-		// Add the robot marker
-    var points = [/*tip*/{'x':0,'y':0}, {'x':-0.05,'y':0.25},{'x':0.05,'y':0.25}];
-    overlay.append("path")
-  		.attr("d", polyF(points))
-  		.attr("stroke", "red")
-  		.attr("stroke-width", 0.01)
-  		.attr("fill", "none")
-      .attr("transform", "translate(" + 0 + "," + 0 + ")")
-      .attr('id', 'pose');
+	    .attr('viewBox', "-3 -3 6 6").attr('preserveAspectRatio', "none")
+	    .attr('width', map_c.clientWidth).attr('height', map_c.clientHeight);
 		// Allow saving
 		d3.select('button#save').on('click', save);
 		d3.select('button#open').on('click', open);
+		// Draw the robot icon
+		window.setTimeout(draw_pose, 0);
+		// Connect with the peer
+		//window.setTimeout(setup_rtc, 0);
+		// Open logs
+		window.setTimeout(open, 0);
   }
 
 	// Handle resizing
@@ -133,9 +135,8 @@
 		d3.html('/view/all_map.html', function (error, view) {
 			// Remove landing page elements and add new content
 			d3.select("div#landing").remove();
-			// Just see the scene
 			document.body.appendChild(view);
-      window.setTimeout(setup,0 );
+      window.setTimeout(setup_dom, 0);
 		});
 	});
 

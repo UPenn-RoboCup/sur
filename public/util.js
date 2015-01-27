@@ -64,9 +64,16 @@
 		}
 		head.appendChild(link);
 	}
+
+	// Take in an array of debugging messages and combine into the info div
+	function debug(arr){
+		document.getElementById('info').innerHTML = arr.join('<br/>');
+	}
+
 	// Exports
 	// TODO: Pollute global namespace, or call these utils?
 	ctx.util = {
+		debug: debug,
 		ljs: ljs,
 		lcss: lcss,
 		DEG_TO_RAD: Math.PI / 180,

@@ -2,6 +2,7 @@
 	'use strict';
 	// Private variables
 	var d3 = ctx.d3,
+		debug = ctx.util.debug,
     E,
 		THREE,
 		scene,
@@ -32,9 +33,6 @@
     peer_map_id = 'all_map',
     map_peers = [];
 
-  function debug(arr){
-    d3.select("#info").html(arr.join('<br/>'));
-  }
   function minDotI(maxI, curDot, i, arr){
     return (curDot > arr[maxI]) ? i : maxI;
   }
