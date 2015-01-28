@@ -55,9 +55,11 @@ http://www.hongkiat.com/blog/scalable-vector-graphic-css-styling/
   fill: #00ff00;
   stroke: #00aa00;
   stroke-width: 0.025;
+  fill-opacity: 50%;
 }
 .step {
 	fill: #ffaa00;
 	stroke: #cc6600;
 	stroke-width: 0.01;
+  fill-opacity: 50%;
 }

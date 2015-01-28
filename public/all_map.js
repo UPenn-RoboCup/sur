@@ -7,7 +7,7 @@
 		RAD_TO_DEG = ctx.util.RAD_TO_DEG,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1422420624071',//'hmap1422420587688',//'hmap1422420624071',
+		logname = 'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
     peer,
     p_conn,
     overlay,
@@ -50,16 +50,17 @@
 					//[their_idx]
 				];
 			}, params.projected);
+			// Draw it
 			polys.forEach(function(poly, i){
 				var my_arc = halfplane_indices[i][0].map(function(idx){ return perimeterNodes[idx];});
-				overlay.append("path").attr('class','arc').attr("d", arcF(my_arc));
+				var their_arc = halfplane_indices[i][1].map(function(idx){ return poly.perimeter[idx];});
+				//overlay.append("path").attr('class','arc').attr("d", arcF(my_arc));
 				overlay.append('g').attr('class', 'marker').selectAll('path')
 				.data(my_arc).enter()
 				.append("path").attr('class', 'arc')
 				.attr("d", d3.svg.symbol().type("circle").size(0.002))
 				.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
-				var their_arc = halfplane_indices[i][1].map(function(idx){ return poly.perimeter[idx];});
-				overlay.append("path").attr('class','arc').attr("d", arcF(their_arc));
+				//overlay.append("path").attr('class','arc').attr("d", arcF(their_arc));
 				overlay.append('g').attr('class', 'marker').selectAll('path')
 				.data(their_arc).enter()
 				.append("path").attr('class', 'arc')
@@ -143,7 +144,7 @@
     peer = new Peer(peer_id, {host: 'localhost', port: 9000});
     peer.on('open', function(id) { console.log('My peer ID is: ' + id); });
     peer.on('disconnected', function(conn) { console.log('disconnected'); });
-    peer.on('error', function(e) { console.log('error', e); });
+    //peer.on('error', function(e) {console.log('error', e);});
     peer.on('close', function() { console.log('close'); });
     p_conn = peer.connect(peer_scene_id);
     p_conn.on('open', function(){ p_conn.send('hello from a map'); });
@@ -180,7 +181,7 @@
 		// Connect with the peer
 		window.setTimeout(setup_rtc, 0);
 		// Open logs
-		//window.setTimeout(open, 0);
+		window.setTimeout(open, 0);
   }
 
 	// Handle resizing
