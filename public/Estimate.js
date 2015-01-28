@@ -458,31 +458,24 @@
     },
     find_poly: function(params){
       var root = params.root,
-        theta_idx,
-				DEG_TO_RAD = ctx.util.DEG_TO_RAD,
-				RAD_TO_DEG = ctx.util.RAD_TO_DEG,
         nChunks = 20,
-				chunkSz = 2*PI / nChunks,
-        points = params.points.map(function(p){
-          return [p[0] - root[0], p[1] - root[1], p[2] - root[2]];
-        });
-      // Sort in ascending radius
-      points.forEach(function(p){ p[3] = norm2(p); });
+				chunkSz = 2*PI / nChunks;
+      var points = params.points.map(function(p){
+        return [p[0] - root[0], p[1] - root[1], p[2] - root[2]];
+      }).map(function(p){return p.concat(norm2(p));});
+			// Sort in ascending radius
       points.sort(function(p1, p2){ return p1[3] - p2[3]; });
-			var thetaRadius = points.map(function(p){ return [atan2(p[0], p[2]), p[3]]; });
-			var idxRadius = thetaRadius.map(function(tr){
-				return [floor(tr[0]*nChunks/(2*PI)+nChunks/2), tr[1]];
-			});
-			// Try reduce
-			var rhoDist = [];
-			idxRadius.forEach(function(ir){
-				var idx = ir[0]==nChunks ? 0 : ir[0];
-				rhoDist[idx] = ir[1] - (rhoDist[idx] || ir[1]) < 100 ? ir[1] : rhoDist[idx];
-      });
-			// TODO: This is not precise, since it floors out the stuff. Should not be used...
-			// But maybe it is ok... let's see
-      var xy = rhoDist.map(function(r, ith){
-        return [r*cos((ith-nChunks/2)*2*PI/nChunks), r*sin((ith-nChunks/2)*2*PI/nChunks)];
+			var rhoDist = [], xy = [];
+			points.map(function(p){
+				var angle = atan2(p[0], p[2]);
+				//return p.concat(angle, floor(angle*nChunks/(2*PI)+nChunks/2));
+				return p.concat(angle, floor((angle/PI+1)*(nChunks/2));
+			}).forEach(function(p){
+				var idx = p[p.length-1]==nChunks ? 0 : p[p.length-1];
+				if (!rhoDist[idx] || (p[3] - rhoDist[idx]) < 100) {
+					rhoDist[idx] = p[3];
+					xy[idx] = [p[2], p[0]];
+				}
       });
       return {
         xy: xy,

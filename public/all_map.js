@@ -39,18 +39,10 @@
 			// Half plane angle
 			var halfplane_indices = polys.map(function(v){
 				var nChunks = this.xy.length;
-				//var my_angle = Math.atan2(this.root[1]-v.center[1], v.center[0]-this.root[0]);
 				var my_angle = Math.atan2(v.center[1]-this.root[1], v.center[0]-this.root[0]);
-				var my_idx = Math.floor(my_angle*nChunks/(2*Math.PI)
-				+nChunks/4
-				//-nChunks/4
-				);
+				var my_idx = Math.floor(my_angle*nChunks/(2*Math.PI)+nChunks/4);
 				var their_angle = my_angle > 0 ? my_angle-Math.PI : my_angle + Math.PI;
-				var their_idx = Math.floor(their_angle*nChunks/(2*Math.PI)
-					//+nChunks/2
-					+nChunks/4
-				);
-				//return [my_idx, their_idx];
+				var their_idx = Math.floor(their_angle*nChunks/(2*Math.PI)+nChunks/4);
 				return [
 					get_wrapped_indices(my_idx-nChunks/4, my_idx+nChunks/4, nChunks),
 					get_wrapped_indices(their_idx-nChunks/4, their_idx+nChunks/4, nChunks)
@@ -59,8 +51,18 @@
 			polys.forEach(function(poly, i){
 				var my_arc = halfplane_indices[i][0].map(function(idx){ return perimeterNodes[idx];});
 				overlay.append("path").attr('class','arc').attr("d", arcF(my_arc));
+				overlay.append('g').attr('class', 'marker').selectAll('path')
+				.data(my_arc).enter()
+				.append("path").attr('class', 'arc')
+				.attr("d", d3.svg.symbol().type("circle").size(0.002))
+				.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
 				var their_arc = halfplane_indices[i][1].map(function(idx){ return poly.perimeter[idx];});
 				overlay.append("path").attr('class','arc').attr("d", arcF(their_arc));
+				overlay.append('g').attr('class', 'marker').selectAll('path')
+				.data(their_arc).enter()
+				.append("path").attr('class', 'arc')
+				.attr("d", d3.svg.symbol().type("circle").size(0.002))
+				.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
 			});
 
 

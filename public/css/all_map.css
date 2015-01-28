@@ -37,6 +37,10 @@ http://www.hongkiat.com/blog/scalable-vector-graphic-css-styling/
   stroke: #888888;
   stroke-width: 0.025;
 }
+.marker path {
+  fill: #FFFFFF;
+  stroke-width: 0.01;
+}
 .obstacle {
 	fill: #ff0000;
 	stroke: #aa0000;
