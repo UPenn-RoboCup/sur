@@ -32,7 +32,11 @@ http://www.hongkiat.com/blog/scalable-vector-graphic-css-styling/
   stroke: #aa0000;
   stroke-width: 0.01;
 }
-
+.arc {
+  fill: none;
+  stroke: #888888;
+  stroke-width: 0.025;
+}
 .obstacle {
 	fill: #ff0000;
 	stroke: #aa0000;

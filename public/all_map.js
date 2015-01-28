@@ -16,43 +16,57 @@
 		human = [],
 		polys = [];
 	var polyF = d3.svg.line().x(function (d) { return d.x; }).y(function (d) { return d.y; }).interpolate("linear-closed");
+	var arcF = d3.svg.line().x(function (d) { return d[0]; }).y(function (d) { return d[1]; }).interpolate("linear");
 
-	function local2global(v){ return [v[0]+this[0], v[1]+this[1]]; }
-	// wrap within [lower, upper]
-	function wrap(v){
-		v = v >= this.upper ? v - this.upper + this.lower : v;
-		v = v < this.lower ? v - this.lower + this.upper : v;
-		return v;
+	function local2global(v){ return [v.x+this[0], v.y+this[1]]; }
+	function get_wrapped_indices(start, stop, max){
+		var indices = [];
+		for(var i=start; i<=stop; i+=1){
+			if(i<0){
+				indices.push(max+i);
+			} else if(i>=max) {
+				indices.push(i-max);
+			} else {
+				indices.push(i);
+			}
+		}
+		return indices;
 	}
 
 	var add_graph = {
 		h: function(params){
-			// Half plane angle
-			var nChunks = params.projected.xy.length, PI = Math.PI;
-			console.log('nChunks', nChunks);
-
-			var angle_to_poly = polys
-			.map(function(v){
-				return Math.atan2(v.center[1]-this[1], v.center[0]-this[0]);
-			}, params.projected.root);
-			console.log('Degrees',RAD_TO_DEG*angle_to_poly);
-			var angleIdx = angle_to_poly.map(function(angle){
-				return Math.floor(angle*nChunks/(2*PI)+nChunks/2);
-			});
-			console.log('Center angle', angleIdx);
-			var lowerIndices = angleIdx.map(function(angleIdx){
-				return angleIdx - nChunks/4;
-			});
-			console.log('lower',lowerIndices);
-			var upperIndices = angleIdx.map(function(angleIdx){
-				return angleIdx + nChunks/4;
-			});
-			console.log('upper',upperIndices);
-			lowerIndices = lowerIndices.map(wrap, {upper:params.projected.length, lower:0});
-			upperIndices = upperIndices.map(wrap, {upper:params.projected.length, lower:0});
-			console.log(lowerIndices);
-			console.log(upperIndices);
 			var perimeterNodes = params.projected.xy.map(local2global, params.projected.root);
+			// Half plane angle
+			var halfplane_indices = polys.map(function(v){
+				var nChunks = this.xy.length;
+				//var my_angle = Math.atan2(this.root[1]-v.center[1], v.center[0]-this.root[0]);
+				var my_angle = Math.atan2(v.center[1]-this.root[1], v.center[0]-this.root[0]);
+				var my_idx = Math.floor(my_angle*nChunks/(2*Math.PI)
+				+nChunks/4
+				//-nChunks/4
+				);
+				var their_angle = my_angle > 0 ? my_angle-Math.PI : my_angle + Math.PI;
+				var their_idx = Math.floor(their_angle*nChunks/(2*Math.PI)
+					//+nChunks/2
+					+nChunks/4
+				);
+				//return [my_idx, their_idx];
+				return [
+					get_wrapped_indices(my_idx-nChunks/4, my_idx+nChunks/4, nChunks),
+					get_wrapped_indices(their_idx-nChunks/4, their_idx+nChunks/4, nChunks)
+				];
+			}, params.projected);
+			polys.forEach(function(poly, i){
+				var my_arc = halfplane_indices[i][0].map(function(idx){ return perimeterNodes[idx];});
+				overlay.append("path").attr('class','arc').attr("d", arcF(my_arc));
+				var their_arc = halfplane_indices[i][1].map(function(idx){ return poly.perimeter[idx];});
+				overlay.append("path").attr('class','arc').attr("d", arcF(their_arc));
+			});
+
+
+
+			// Push the added one
+
 			polys.push({
 				center : params.projected.root,
 				perimeter: perimeterNodes
