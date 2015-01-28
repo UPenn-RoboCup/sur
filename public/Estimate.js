@@ -459,20 +459,19 @@
     find_poly: function(params){
       var root = params.root,
         nChunks = 20,
-				chunkSz = 2*PI / nChunks;
-      var points = params.points.map(function(p){
-        return [p[0] - root[0], p[1] - root[1], p[2] - root[2]];
-      }).map(function(p){return p.concat(norm2(p));});
+				rhoThreshold = 100,
+				points = params.points.map(function(p){
+					var p0 = [p[0] - root[0], p[1] - root[1], p[2] - root[2]]
+	        return p0.concat(norm2(p0));
+	      });
 			// Sort in ascending radius
       points.sort(function(p1, p2){ return p1[3] - p2[3]; });
 			var rhoDist = [], xy = [];
-			points.map(function(p){
-				var angle = atan2(p[0], p[2]);
-				//return p.concat(angle, floor(angle*nChunks/(2*PI)+nChunks/2));
-				return p.concat(angle, floor((angle/PI+1)*(nChunks/2));
-			}).forEach(function(p){
-				var idx = p[p.length-1]==nChunks ? 0 : p[p.length-1];
-				if (!rhoDist[idx] || (p[3] - rhoDist[idx]) < 100) {
+			points.forEach(function(p){
+				var angle = atan2(p[0], p[2]),
+					angleIdx = floor((angle/PI+1)*(nChunks/2)),
+					idx = angleIdx==nChunks ? 0 : angleIdx;
+				if (!rhoDist[idx] || (p[3] - rhoDist[idx]) < rhoThreshold) {
 					rhoDist[idx] = p[3];
 					xy[idx] = [p[2], p[0]];
 				}

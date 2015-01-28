@@ -7,7 +7,7 @@
 		RAD_TO_DEG = ctx.util.RAD_TO_DEG,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1422400990852',
+		logname = 'hmap1422419825327',
     peer,
     p_conn,
     overlay,
