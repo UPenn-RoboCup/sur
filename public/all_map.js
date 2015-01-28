@@ -7,7 +7,7 @@
 		RAD_TO_DEG = ctx.util.RAD_TO_DEG,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1422419825327',
+		logname = 'hmap1422420624071',//'hmap1422420587688',//'hmap1422420624071',
     peer,
     p_conn,
     overlay,
@@ -39,13 +39,15 @@
 			// Half plane angle
 			var halfplane_indices = polys.map(function(v){
 				var nChunks = this.xy.length;
-				var my_angle = Math.atan2(v.center[1]-this.root[1], v.center[0]-this.root[0]);
-				var my_idx = Math.floor(my_angle*nChunks/(2*Math.PI)+nChunks/4);
+				var my_angle = Math.atan2(-v.center[0]+this.root[0], -v.center[1]+this.root[1]);
+				var my_idx = Math.floor(my_angle*nChunks/(2*Math.PI)+nChunks/2);
 				var their_angle = my_angle > 0 ? my_angle-Math.PI : my_angle + Math.PI;
-				var their_idx = Math.floor(their_angle*nChunks/(2*Math.PI)+nChunks/4);
+				var their_idx = Math.floor(their_angle*nChunks/(2*Math.PI)+nChunks/2);
 				return [
 					get_wrapped_indices(my_idx-nChunks/4, my_idx+nChunks/4, nChunks),
 					get_wrapped_indices(their_idx-nChunks/4, their_idx+nChunks/4, nChunks)
+					//[my_idx],
+					//[their_idx]
 				];
 			}, params.projected);
 			polys.forEach(function(poly, i){
@@ -176,9 +178,9 @@
 		// Draw the robot icon
 		window.setTimeout(draw_pose, 0);
 		// Connect with the peer
-		//window.setTimeout(setup_rtc, 0);
+		window.setTimeout(setup_rtc, 0);
 		// Open logs
-		window.setTimeout(open, 0);
+		//window.setTimeout(open, 0);
   }
 
 	// Handle resizing

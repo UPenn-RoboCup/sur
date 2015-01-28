@@ -461,7 +461,7 @@
         nChunks = 20,
 				rhoThreshold = 100,
 				points = params.points.map(function(p){
-					var p0 = [p[0] - root[0], p[1] - root[1], p[2] - root[2]]
+					var p0 = [p[0] - root[0], p[1] - root[1], p[2] - root[2]];
 	        return p0.concat(norm2(p0));
 	      });
 			// Sort in ascending radius
