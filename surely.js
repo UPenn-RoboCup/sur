@@ -57,7 +57,7 @@ rpc_skt.http_responses = [];
 // This means one node.js per robot rpc server!
 rpc_skt.on('message', function (msg) {
 	"use strict";
-	this.http_responses.shift().json(JSON.stringify(mp.unpack(msg)));
+	this.http_responses.shift().json(200, mp.unpack(msg));
 });
 
 /* Standard forwarding pattern to rpc */
