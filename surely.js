@@ -49,7 +49,7 @@ if (Config.net.use_wireless) {
 	robot_ip = Config.net.robot.wired;
 }
 
-//rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
+rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
 // For localhost, use this instead:
 rpc_skt.connect('ipc:///tmp/'+rpc.uds);
 rpc_skt.http_responses = [];
@@ -252,10 +252,9 @@ for (var w in streams) {
 	// Add TCP
 	if (b.tcp !== undefined) {
 		var zmq_recv_skt = zmq.socket('sub');
-		//zmq_recv_skt.connect('tcp://'+robot_ip+':'+b.tcp);
-    //zmq_recv_skt.subscribe('');
-    zmq_recv_skt.subscribe('');
-    zmq_recv_skt.bind('tcp://*:'+b.tcp);
+		zmq_recv_skt.subscribe('');
+		zmq_recv_skt.connect('tcp://'+robot_ip+':'+b.tcp);
+		zmq_recv_skt.subscribe('');
 		zmq_recv_skt.on('message', zmq_message);
 		zmq_recv_skt.sur_stream = b;
 	}
