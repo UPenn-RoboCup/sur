@@ -61,11 +61,47 @@
 			in_poly1 = my_arc.map(contains, poly1),
 			in_poly0 = their_arc.map(contains, poly0);
 
+		var links = [];
+
+		my_arc.forEach(function(p0, i0){
+			if(in_poly1[i0]){links.push([poly1.center, p0]);}
+		});
+		their_arc.forEach(function(p1, i1){
+			if(in_poly0[i1]){links.push([poly0.center, p1]);}
+		});
+
+		// TODO: Assume the order of the indices in the arcs is increasing?
+		// NOTE: I think endpoint to endpoint order is valid...
+		// Check each pair
+		my_arc.forEach(function(p0, i0){
+			// If point not already in the other poly
+			if (!in_poly1[i0]) {
+				var iguess = their_arc.length-1-i0;
+				if(!in_poly0[iguess]){
+					var pguess = their_arc[iguess];
+					links.push([p0, pguess]);
+				}
+				// Below is more thorough;
+				/*
+				their_arc.forEach(function(p1, i1){
+					if (!in_poly0[i1]) {
+						var entire = dist(p0, p1),
+							guess = dist(p0, pguess);
+						if(1.2*entire < guess){
+							console.log(i0, 'oops', guess, entire, iguess, i1);
+						}
+					}
+				});
+				*/
+			}
+		});
+
 		return {
 			arc0: my_arc,
 			arc1: their_arc,
 			in1: in_poly1,
 			in0: in_poly0,
+			links: links,
 		};
 
 /*

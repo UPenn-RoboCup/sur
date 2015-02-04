@@ -73,6 +73,9 @@
 				var intersects = Classify.match(poly0, poly, ind0, ind1);
 				plot_intersections(intersects.arc0.filter(function(v,i){return this[i]}, intersects.in1));
 				plot_intersections(intersects.arc1.filter(function(v,i){return this[i]}, intersects.in0));
+				intersects.links.forEach(function(l){
+					overlay.append("path").attr('class','arc').attr("d", arcF(l));
+				});
 			});
 
 			// Push the added one
