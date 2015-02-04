@@ -33,6 +33,14 @@
 		return indices;
 	}
 
+	function plot_intersections(points) {
+		overlay.append('g').attr('class', 'marker').selectAll('path')
+		.data(points).enter()
+		.append("path").attr('class', 'arc')
+		.attr("d", d3.svg.symbol().type("circle").size(0.002))
+		.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
+	}
+
 	var add_graph = {
 		h: function(params){
 			var perimeterNodes = params.projected.xy.map(local2global, params.projected.root);
@@ -50,32 +58,25 @@
 					//[their_idx]
 				];
 			}, params.projected);
-			// Draw it
+
+			var poly0 = {
+				center : params.projected.root,
+				perimeter: perimeterNodes,
+				rho: params.poly.rhoDist,
+			}
+
+			// Match the indices
 			polys.forEach(function(poly, i){
-				var my_arc = halfplane_indices[i][0].map(function(idx){ return perimeterNodes[idx];});
-				var their_arc = halfplane_indices[i][1].map(function(idx){ return poly.perimeter[idx];});
-				//overlay.append("path").attr('class','arc').attr("d", arcF(my_arc));
-				overlay.append('g').attr('class', 'marker').selectAll('path')
-				.data(my_arc).enter()
-				.append("path").attr('class', 'arc')
-				.attr("d", d3.svg.symbol().type("circle").size(0.002))
-				.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
-				//overlay.append("path").attr('class','arc').attr("d", arcF(their_arc));
-				overlay.append('g').attr('class', 'marker').selectAll('path')
-				.data(their_arc).enter()
-				.append("path").attr('class', 'arc')
-				.attr("d", d3.svg.symbol().type("circle").size(0.002))
-				.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
+				var hp_ind = halfplane_indices[i],
+					ind0 = hp_ind[0],
+					ind1 = hp_ind[1];
+				var intersects = Classify.match(poly0, poly, ind0, ind1);
+				plot_intersections(intersects.arc0.filter(function(v,i){return this[i]}, intersects.in1));
+				plot_intersections(intersects.arc1.filter(function(v,i){return this[i]}, intersects.in0));
 			});
-
-
 
 			// Push the added one
-
-			polys.push({
-				center : params.projected.root,
-				perimeter: perimeterNodes
-			});
+			polys.push(poly0);
 		}
 	};
 
@@ -189,7 +190,8 @@
     overlay.attr('width', map_c.clientWidth).attr('height', map_c.clientHeight);
 	}, false);
 
-	// Load the Styling
+	// Load resources
+	util.ljs('/Classify.js');
 	ctx.util.lcss('/css/gh-buttons.css');
 	ctx.util.lcss('/css/all_map.css', function () {
 		d3.html('/view/all_map.html', function (error, view) {

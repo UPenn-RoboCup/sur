@@ -461,10 +461,11 @@
         nChunks = 20,
 				rhoThreshold = 100,
 				points = params.points.map(function(p){
-					var p0 = [p[0] - root[0], p[1] - root[1], p[2] - root[2]];
+					var p0 = [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
 	        return p0.concat(norm2(p0));
-	      });
+	      }, root);
 			// Sort in ascending radius
+			// TODO: can be faster if not using the actual square root to sort!
       points.sort(function(p1, p2){ return p1[3] - p2[3]; });
 			var rhoDist = [], xy = [];
 			points.forEach(function(p){
