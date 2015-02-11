@@ -205,6 +205,7 @@
 		}
 		// Grab the first intersection object and the intersection point
 		obj0 = intersections[0];
+		if(obj0.name==='ground' && intersections[1]){ obj0 = intersections[1]; }
 		p0 = obj0.point;
     mesh0 = obj0.object;
     // Solve for the transform from the robot frame to the point

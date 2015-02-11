@@ -9,6 +9,7 @@
     sqrt = Math.sqrt,
     exp = Math.exp,
     min = Math.min,
+		max = Math.max,
     PI = Math.PI,
 		TWO_PI = 2*PI,
     atan = Math.atan,
@@ -16,42 +17,110 @@
     sin = Math.sin,
     cos = Math.cos,
     floor = Math.floor,
-		ceil = Math.ceil;
+		ceil = Math.ceil,
+		round = Math.round;
 
-    /*
-    var eigs = numeric.eig(params.cov);
-    console.log(eigs.lambda);
-    console.log(eigs.E);
-    var c_eigs = numeric.eig(c_cov);
-    console.log(c_eigs.lambda);
-    console.log(c_eigs.E);
-    console.log('color inv', numeric.inv(c_cov));
-    console.log('c_u', c_u);
-    console.log('c_cov', c_cov);
-    */
+		/*
+		var eigs = numeric.eig(params.cov);
+		console.log(eigs.lambda);
+		console.log(eigs.E);
+		var c_eigs = numeric.eig(c_cov);
+		console.log(c_eigs.lambda);
+		console.log(c_eigs.E);
+		console.log('color inv', numeric.inv(c_cov));
+		console.log('c_u', c_u);
+		console.log('c_cov', c_cov);
+		*/
 
 	function lookup(i) { return this[i]; }
 	function smaller(m, cur){ return m < cur ? m : cur; }
-	function dist(p1, p2){
-		return sqrt(pow(p1[0] - p2[0], 2) + pow(p1[1] - p2[1], 2));
+	// dist between this and a point
+	function dist(p){
+		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
 	}
 	function angle(p1, p2){
 		return atan2(p1[0]-p2[0], p1[1]-p2[1]);
 	}
+	function angle_idx(a, nChunks){
+		return (a/PI+1)*(nChunks/2);
+	}
+
+	function get_wrapped_indices(start, stop, max){
+		var indices = [], i = start;
+		while (i != stop) {
+			indices.push(i);
+			i += 1;
+			i = (i==max) ? 0 : i;
+		}
+		indices.push(i);
+		return indices;
+	}
+
+	// Find the indices to check for breakage for this poly
+	// This can be thorough or not.
+	// Yes: all points
+	// No: Just the closest one
+	function cone(e){
+		var nChunks = this.rho.length,
+			a0 = angle(this.center, e[0]),
+			a1 = angle(this.center, e[1]),
+			a0i = min(round(angle_idx(a0, nChunks)), nChunks-1),
+			a1i = min(round(angle_idx(a1, nChunks)), nChunks-1),
+			is_inverted = a0i > a1i,
+			is_obtuse = abs(a1i - a0i) > nChunks/2,
+			indices_to_check;
+		if (is_obtuse) {
+			if (is_inverted) {
+				indices_to_check = get_wrapped_indices(a0i, a1i, nChunks);
+			} else {
+				indices_to_check = get_wrapped_indices(a1i, a0i, nChunks);
+			}
+		} else {
+			if (is_inverted) {
+				indices_to_check = get_wrapped_indices(a1i, a0i, nChunks);
+			} else {
+				indices_to_check = get_wrapped_indices(a0i, a1i, nChunks);
+			}
+		}
+		//console.log(a0i, a1i, indices_to_check, nChunks, is_obtuse, is_inverted);
+		return indices_to_check;
+	}
+
+	// If this poly contains point p
 	function contains(p){
 		// this is the polygon
 		// p is the point to test
 		var nChunks = this.rho.length,
-			r = dist(this.center, p),
+			r = dist.call(this.center, p),
 			a = angle(this.center, p),
-			i = (a/PI+1)*(nChunks/2),
+			i = angle_idx(a, nChunks),
 			i0 = floor(i),
 			i1 = ceil(i),
-			r0 = this.rho[i0] / 1000,
-			r1 = this.rho[i1] / 1000;
+			r0 = this.rho[i0],
+			r1 = this.rho[i1];
 		//console.log(i, r, r0, r1);
 		// If less than both, it contains. This is liberal
 		return r<r0 && r<r1;
+	}
+	// Check if this poly breaks edge e
+	function breaks(e){
+		// See if the endpoints are inside our poly
+		if (contains.call(this, e[0])){
+			return true;
+		} else if (contains.call(this, e[1])) {
+			return true;
+		}
+		//console.log(this);
+		var br_cone = cone.call(this, e);
+		var e_rho = e.map(dist, this.center);
+		var cone_rho = br_cone.map(lookup, this.rho);
+		var does_break = cone_rho.map(function(d){
+			return min(e_rho[0]-d, e_rho[1]-d) < 0;
+		}).reduce(function(prev, now){return prev||now;});
+		//console.log(cone_rho);
+		//console.log(e_rho);
+		//console.log(does_break);
+		return does_break;
 	}
 
 	// See which indicies to connect
@@ -134,6 +203,7 @@
 
   ctx.Classify = {
 		match: match,
+		breaks: breaks,
     get_poly_features: function(parameters) {
       console.log('Classify', parameters);
       var feat = pf.map(function(func){ return func(this); }, parameters);

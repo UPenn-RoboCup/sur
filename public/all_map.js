@@ -7,13 +7,14 @@
 		RAD_TO_DEG = ctx.util.RAD_TO_DEG,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
+		logname = 'hmap1423594639334',//'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
     peer,
     p_conn,
     overlay,
 		pose_marker,
     map_c,
 		human = [],
+		links = [],
 		polys = [];
 	var polyF = d3.svg.line().x(function (d) { return d.x; }).y(function (d) { return d.y; }).interpolate("linear-closed");
 	var arcF = d3.svg.line().x(function (d) { return d[0]; }).y(function (d) { return d[1]; }).interpolate("linear");
@@ -44,6 +45,24 @@
 	var add_graph = {
 		h: function(params){
 			var perimeterNodes = params.projected.xy.map(local2global, params.projected.root);
+
+			var poly0 = {
+				center : params.projected.root,
+				perimeter: perimeterNodes,
+				rho: params.poly.rhoDist.map(function(v){return v/1000;}),
+			}
+
+			// First run the breaks
+			if (params.features[0] < 20){
+				console.log(links);
+				var breakage = links.map(Classify.breaks, poly0);
+				links = links.filter(function(v, i){ return !breakage[i]; });
+				links.forEach(function(l){
+					overlay.append("path").attr('class','arc').attr("d", arcF(l));
+				});
+				//polys.push(poly0); return;
+			}
+
 			// Half plane angle
 			var halfplane_indices = polys.map(function(v){
 				var nChunks = this.xy.length;
@@ -59,12 +78,6 @@
 				];
 			}, params.projected);
 
-			var poly0 = {
-				center : params.projected.root,
-				perimeter: perimeterNodes,
-				rho: params.poly.rhoDist,
-			}
-
 			// Match the indices
 			polys.forEach(function(poly, i){
 				var hp_ind = halfplane_indices[i],
@@ -74,10 +87,10 @@
 				plot_intersections(intersects.arc0.filter(function(v,i){return this[i]}, intersects.in1));
 				plot_intersections(intersects.arc1.filter(function(v,i){return this[i]}, intersects.in0));
 				intersects.links.forEach(function(l){
-					overlay.append("path").attr('class','arc').attr("d", arcF(l));
+					// Add to all links
+					links.push(l);
 				});
 			});
-
 			// Push the added one
 			polys.push(poly0);
 		}
@@ -93,12 +106,15 @@
 	}
 
 	function open(){
-		d3.text('/logs/'+logname+'.json').get(function(e,data){
+		d3.text('/logs/'+logname+'.json').get(function(e,jdata){
 			if (e) {
 				console.log('Could not open log',e);
 			} else {
 				debug(['Loaded ' + logname]);
-				JSON.parse(data).forEach(parse_param);
+				var data = JSON.parse(jdata);
+				console.log(data);
+				//data.pop();
+				data.forEach(parse_param);
 			}
 		});
 	}
@@ -106,6 +122,7 @@
 	function save(){
 		var name = 'hmap' + Date.now(), data = JSON.stringify(human);
 		debug(['Saving ' + name, data.length + ' bytes']);
+		console.log(human);
 		d3.text('/log/'+name).post(data, function(e,d){
 			if (e) { console.log('Could not save', e); }
 		});
@@ -183,7 +200,7 @@
 		// Draw the robot icon
 		window.setTimeout(draw_pose, 0);
 		// Connect with the peer
-		window.setTimeout(setup_rtc, 0);
+		//window.setTimeout(setup_rtc, 0);
 		// Open logs
 		window.setTimeout(open, 0);
   }
