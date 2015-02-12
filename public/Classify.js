@@ -125,7 +125,9 @@
 	}
 
 	// See which indicies to connect
-	function match(poly0, poly1, ind0, ind1) {
+	function match(polys, ipoly0, ipoly1, ind0, ind1) {
+		if(ipoly0===ipoly1){return {links:[]};}
+		var poly0 = polys[ipoly0], poly1 = polys[ipoly1];
 		var my_arc = ind0.map(lookup, poly0.perimeter),
 			their_arc = ind1.map(lookup, poly1.perimeter),
 			in_poly1 = my_arc.map(contains, poly1),

@@ -82,7 +82,7 @@
 				a_node = nodes[edge.a];
 			} else {
 				a_node = { cost: 1, edges: [], obj: a_poly_node.obj, obj_idx: l.ind_a};
-				edge.a = a_poly_node.obj_tree[l.ind_a] = a_node.id = nodes.push(a_node);
+				edge.a = a_poly_node.obj_tree[l.ind_a] = a_node.id = nodes.push(a_node) - 1;
 			}
 			if(l.ind_b===-1){
 				b_node = b_poly_node;
@@ -92,7 +92,7 @@
 				b_node = nodes[edge.b];
 			} else {
 				b_node = { cost: 1, edges: [], obj: b_poly_node.obj, obj_idx: l.ind_b};
-				edge.b = b_poly_node.obj_tree[l.ind_a] = b_node.id = nodes.push(b_node);
+				edge.b = b_poly_node.obj_tree[l.ind_a] = b_node.id = nodes.push(b_node) - 1;
 			}
 			// Add the edge to the nodes
 			a_node.edges.push(edge.id);
@@ -115,10 +115,12 @@
 				perimeter: perimeterNodes,
 				rho: params.poly.rhoDist.map(function(v){return v/1000;}),
 			}
+			// Push the added one
+			var ipoly0 = polys.push(poly0) - 1;
 
 			// First run the breaks
 			if (params.features[0] < 20){
-				var breakage = links.map(Classify.breaks, poly0);
+				var breakage = links.map(Classify.breaks, polys[ipoly0]);
 				links = links.filter(function(v, i){ return !breakage[i]; });
 			}
 
@@ -137,17 +139,14 @@
 				];
 			}, params.projected);
 
+
 			// Match the indices
-			polys.forEach(function(poly, i){
-				var hp_ind = halfplane_indices[i],
-					ind0 = hp_ind[0],
-					ind1 = hp_ind[1],
-					intersects = Classify.match(poly0, poly, ind0, ind1);
+			polys.forEach(function(poly1, ipoly1){
+				var hp = halfplane_indices[ipoly1],
+					intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
 				// Add to all links
 				intersects.links.forEach(function(l){ links.push(l); });
 			});
-			// Push the added one
-			polys.push(poly0);
 		}
 	};
 
