@@ -34,12 +34,76 @@
 		return indices;
 	}
 
-	function plot_intersections(points) {
+	function plot_links(links){
+		var intersections = [];
+		links.forEach(function(l){
+			// Plot the arc
+			overlay.append("path").attr('class','arc').attr("d", arcF([l.a, l.b]));
+			// Prepare to plot the intersections
+			if(l.ind_a===-1){	intersections.push(l.b); }
+			if(l.ind_b===-1){ intersections.push(l.a); }
+		});
+		// plot_intersections
 		overlay.append('g').attr('class', 'marker').selectAll('path')
-		.data(points).enter()
-		.append("path").attr('class', 'arc')
-		.attr("d", d3.svg.symbol().type("circle").size(0.002))
-		.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
+			.data(intersections).enter()
+			.append("path").attr('class', 'arc')
+			.attr("d", d3.svg.symbol().type("circle").size(0.002))
+			.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
+	}
+
+	function make_graph(polys, links){
+
+		// Form the poly nodes
+		polys.forEach(function(p, i){ p.id = i; });
+		// Assume always same # of leaves
+		var leaves0 = polys[0].rho.map(function(){return -1;});
+		var nodes = polys.map(function(poly, i){
+			return {
+				cost: 1,
+				edges : [/*IDs of edges*/],
+				id: poly.id,
+				obj: poly,
+				obj_tree : leaves0.slice(),
+			}
+		});
+
+		// Form the inter-poly links
+		var edges = links.map(function(l, i){
+			var edge = {cost: 1, id: i},
+				a_poly_node = nodes[l.poly_a.id],
+				b_poly_node = nodes[l.poly_b.id],
+				a_node,
+				b_node;
+			if(l.ind_a===-1){
+				a_node = a_poly_node;
+				edge.a = a_node.id;
+			} else if(a_poly_node.obj_tree[l.ind_a] !==-1){
+				edge.a = a_poly_node.obj_tree[l.ind_a];
+				a_node = nodes[edge.a];
+			} else {
+				a_node = { cost: 1, edges: [], obj: a_poly_node.obj, obj_idx: l.ind_a};
+				edge.a = a_poly_node.obj_tree[l.ind_a] = a_node.id = nodes.push(a_node);
+			}
+			if(l.ind_b===-1){
+				b_node = b_poly_node;
+				edge.b = b_poly_node.ID;
+			} else if(b_poly_node.obj_tree[l.ind_b] !== -1){
+				edge.b = b_poly_node.obj_tree[l.ind_b];
+				b_node = nodes[edge.b];
+			} else {
+				b_node = { cost: 1, edges: [], obj: b_poly_node.obj, obj_idx: l.ind_b};
+				edge.b = b_poly_node.obj_tree[l.ind_a] = b_node.id = nodes.push(b_node);
+			}
+			// Add the edge to the nodes
+			a_node.edges.push(edge.id);
+			b_node.edges.push(edge.id);
+			return edge;
+		});
+
+		// Now plot
+		plot_links(links);
+
+		return Graph.make(nodes, edges);
 	}
 
 	var add_graph = {
@@ -54,13 +118,8 @@
 
 			// First run the breaks
 			if (params.features[0] < 20){
-				console.log(links);
 				var breakage = links.map(Classify.breaks, poly0);
 				links = links.filter(function(v, i){ return !breakage[i]; });
-				links.forEach(function(l){
-					overlay.append("path").attr('class','arc').attr("d", arcF(l));
-				});
-				//polys.push(poly0); return;
 			}
 
 			// Half plane angle
@@ -82,14 +141,10 @@
 			polys.forEach(function(poly, i){
 				var hp_ind = halfplane_indices[i],
 					ind0 = hp_ind[0],
-					ind1 = hp_ind[1];
-				var intersects = Classify.match(poly0, poly, ind0, ind1);
-				plot_intersections(intersects.arc0.filter(function(v,i){return this[i]}, intersects.in1));
-				plot_intersections(intersects.arc1.filter(function(v,i){return this[i]}, intersects.in0));
-				intersects.links.forEach(function(l){
-					// Add to all links
-					links.push(l);
-				});
+					ind1 = hp_ind[1],
+					intersects = Classify.match(poly0, poly, ind0, ind1);
+				// Add to all links
+				intersects.links.forEach(function(l){ links.push(l); });
 			});
 			// Push the added one
 			polys.push(poly0);
@@ -115,6 +170,8 @@
 				console.log(data);
 				//data.pop();
 				data.forEach(parse_param);
+				// Make the graph
+				make_graph(polys, links);
 			}
 		});
 	}
@@ -212,6 +269,7 @@
 
 	// Load resources
 	util.ljs('/Classify.js');
+	util.ljs('/Graph.js');
 	ctx.util.lcss('/css/gh-buttons.css');
 	ctx.util.lcss('/css/all_map.css', function () {
 		d3.html('/view/all_map.html', function (error, view) {

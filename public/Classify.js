@@ -62,8 +62,8 @@
 	// No: Just the closest one
 	function cone(e){
 		var nChunks = this.rho.length,
-			a0 = angle(this.center, e[0]),
-			a1 = angle(this.center, e[1]),
+			a0 = angle(this.center, e.a),
+			a1 = angle(this.center, e.b),
 			a0i = min(round(angle_idx(a0, nChunks)), nChunks-1),
 			a1i = min(round(angle_idx(a1, nChunks)), nChunks-1),
 			is_inverted = a0i > a1i,
@@ -105,22 +105,23 @@
 	// Check if this poly breaks edge e
 	function breaks(e){
 		// See if the endpoints are inside our poly
-		if (contains.call(this, e[0])){
+		if (contains.call(this, e.a)){
 			return true;
-		} else if (contains.call(this, e[1])) {
+		} else if (contains.call(this, e.b)) {
 			return true;
 		}
 		//console.log(this);
 		var br_cone = cone.call(this, e);
-		var e_rho = e.map(dist, this.center);
+		var a_dist = dist.call(this.center, e.a);
+		var b_dist = dist.call(this.center, e.b);
 		var cone_rho = br_cone.map(lookup, this.rho);
 		var does_break = cone_rho.map(function(d){
-			return min(e_rho[0]-d, e_rho[1]-d) < 0;
+			return min(a_dist-d, b_dist-d) < 0;
 		}).reduce(function(prev, now){return prev||now;});
-		//console.log(cone_rho);
-		//console.log(e_rho);
-		//console.log(does_break);
-		return does_break;
+		if(does_break){ return true; }
+		// TODO: Add distnace from point to line
+		// http://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+		return false;
 	}
 
 	// See which indicies to connect
@@ -133,10 +134,28 @@
 		var links = [];
 
 		my_arc.forEach(function(p0, i0){
-			if(in_poly1[i0]){links.push([poly1.center, p0]);}
+			if(in_poly1[i0]){
+				links.push({
+					a: poly1.center,
+					b: p0,
+					poly_a: poly1,
+					poly_b: poly0,
+					ind_a: -1, // center
+					ind_b: i0
+				});
+			}
 		});
 		their_arc.forEach(function(p1, i1){
-			if(in_poly0[i1]){links.push([poly0.center, p1]);}
+			if(in_poly0[i1]){
+				links.push({
+					a: poly0.center,
+					b: p1,
+					poly_a: poly0,
+					poly_b: poly1,
+					ind_a: -1, // center
+					ind_b: i1
+				});
+			}
 		});
 
 		// TODO: Assume the order of the indices in the arcs is increasing?
@@ -148,7 +167,14 @@
 				var iguess = their_arc.length-1-i0;
 				if(!in_poly0[iguess]){
 					var pguess = their_arc[iguess];
-					links.push([p0, pguess]);
+					links.push({
+						a: pguess,
+						b: p0,
+						poly_a: poly1,
+						poly_b: poly0,
+						ind_a: iguess,
+						ind_b: i0,
+					});
 				}
 				// Below is more thorough;
 				/*
