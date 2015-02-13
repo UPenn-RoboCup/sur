@@ -93,7 +93,7 @@
 				//plot_links(links);
 				// Make the graph
 				var graph = Graph.make(polys, links);
-				Graph.plan(polys, graph, pose, []);
+				Graph.plan(polys, graph, pose, {x:2.5, y: -2.5});
 				Graph.plot(graph, overlay);
 			}
 		});
@@ -193,6 +193,7 @@
 	// Load resources
 	util.ljs('/Classify.js');
 	util.ljs('/Graph.js');
+	util.ljs('/bc/js-priority-queue/priority-queue.min.js');
 	ctx.util.lcss('/css/gh-buttons.css');
 	ctx.util.lcss('/css/all_map.css', function () {
 		d3.html('/view/all_map.html', function (error, view) {

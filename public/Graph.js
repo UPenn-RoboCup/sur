@@ -17,7 +17,20 @@
 		cos = Math.cos,
 		floor = Math.floor,
 		ceil = Math.ceil,
-		round = Math.round;
+		round = Math.round,
+		SEARCH_UNDEFINED = 0,
+		SEARCH_SEARCHING = 1,
+		SEARCH_SUCCESS = 2,
+		SEARCH_FAILED = 3,
+		NODE_OPEN = 0,
+		NODE_CLOSED = 1;
+
+	function get_pos(node){
+		if(typeof node.obj_idx === 'number')
+		{ return node.obj.perimeter[node.obj_idx]; }
+		else if(node.obj_tree) { return node.obj.center; }
+		else { return [node.obj.x, node.obj.y]; }
+	}
 
 	function dist2(p){
 		return pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2);
@@ -25,39 +38,137 @@
 	function smallest(prev, now, inow){
 		return now < prev[0] ? [now, inow] : prev;
 	}
+	var heuristic = function(n, goal){
+		dist2.call(n, goal);
+	}
+
+	function astar_step(graph){
+		var edges = graph.edges,
+			nodes = graph.nodes,
+			openList = graph.openList,
+			searchState = graph.searchState,
+			goal_index = graph.goal_index;
+
+		if (searchState != SEARCH_SEARCHING) {
+			console.log('Not searching!');
+			return searchState;
+		}
+
+		if (openList.length==0) {
+			console.log('Nothing in the list!');
+			searchState = SEARCH_FAILED;
+			return searchState;
+		}
+
+		// Grab the next node to explore
+		// Objects, not addresses, are in the queue
+		var n = openList.dequeue();
+		n.state = NODE_CLOSED;
+
+		// Check for the goal
+		if (n.id == goal_index) {
+			console.log('Done searching!');
+			searchState = SEARCH_SUCCESS;
+			return searchState;
+		}
+
+		// Current node popped from open list is not goal
+		n.edges.forEach(function(e_id){
+			var e = edges[e_id],
+				gnew = e.cost + this.cost,
+				target_index = e.a==n.id ? e.b : e.a,
+				target_node = nodes[target_index];
+			if (target_node.h===undefined) {
+				// Evaluate the heuristic if not done yet
+				target_node.h = dist2.call(this.p, target_node.p);
+				target_node.g = gnew;
+				target_node.f = target_node.g + target_node.h;
+				target_node.parent = this.id;
+				target_node.state = NODE_OPEN;
+				openList.queue(target_node);
+			} else if (gnew < target_node.g) {
+				target_node.g = gnew;
+				target_node.f = target_node.g + target_node.h;
+				target_node.parent = this.id;
+				if (target_node.state == NODE_CLOSED) {
+					target_node.state = NODE_OPEN;
+					openList.queue(target_node);
+				}
+			}	else {
+				// Node changed on open list: need to resort open list
+				openList.priv._heapify();
+			}
+		}, n);
+		searchState = SEARCH_SEARCHING;
+		//console.log('Peek', openList.peek(), openList.length);
+		return searchState;
+	}
 
 	function plan(polys, graph, pose, goal) {
 		// Find the path to each free space
 		// TODO: Check the obstruction
 		// Distances in unknown have distance cost, distances in green have finite small cost
 
-		var pose_xy = [pose.x, pose.y];
-
 		// Add start node
-		var pose_node = { cost: 1, edges : [], obj: pose };
+		var pose_xy = [pose.x, pose.y],
+			pose_node = { cost: 1, edges : [], obj: pose };
 		pose_node.id = graph.nodes.push(pose_node) - 1;
 		// Add to the graph
 		polys.map(function(poly, id){
 			var closest = poly.perimeter.map(dist2, pose_xy).reduce(smallest, [Infinity, -1]),
 				id_close = closest[1],
-				id_node = graph.nodes[id].obj_tree[id_close],
-				closest_node;
-			console.log('Closest',closest);
+				id_node = graph.nodes[id].obj_tree[id_close];
 			if(id_node==-1){
 				var closest_node = graph.nodes[id].obj_tree[id_close] = {
 					cost: 1, edges: [], obj: poly, obj_idx: id_close
 				};
 				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
 			}
-			return {
-				cost: closest[0],
-				a: pose_node.id,
-				b: id_node
-			}
+			return { cost: closest[0], a: pose_node.id, b: id_node };
 		}, graph).forEach(function(e){
 			e.id = graph.edges.push(e) - 1;
+			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
+			n_a.edges.push(e.id);
+			n_b.edges.push(e.id);
 		});
 
+		// Same for goal
+		var goal_xy = [goal.x, goal.y],
+			goal_node = { cost: 1, edges : [], obj: goal };
+		goal_node.id = graph.nodes.push(goal_node) - 1;
+		// Add to the graph
+		polys.map(function(poly, id){
+			var closest = poly.perimeter.map(dist2, goal_xy).reduce(smallest, [Infinity, -1]),
+				id_close = closest[1],
+				id_node = graph.nodes[id].obj_tree[id_close];
+			if(id_node==-1){
+				var closest_node = graph.nodes[id].obj_tree[id_close] = {
+					cost: 1, edges: [], obj: poly, obj_idx: id_close
+				};
+				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
+			}
+			return { cost: closest[0], a: goal_node.id, b: id_node };
+		}, graph).forEach(function(e){
+			console.log('goal edges', e);
+			e.id = graph.edges.push(e) - 1;
+			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
+			n_a.edges.push(e.id);
+			n_b.edges.push(e.id);
+		});
+
+
+		// Set the pqueue
+		graph.searchState = SEARCH_SEARCHING;
+		graph.openList = new PriorityQueue({
+			comparator: function(a, b) { return a.f - b.f; }
+		});
+		graph.openList.queue(pose_node);
+		graph.goal_index = goal_node.id;
+		// Easy access to the heuristic argument
+		graph.nodes.forEach(function(n){ n.p = get_pos(n); });
+		console.log('Begin Search!', graph);
+		for(var i=0; i<100; i+=1)
+			graph.searchState = astar_step(graph);
 	}
 
 	// Node Format:
