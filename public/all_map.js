@@ -8,6 +8,7 @@
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
 		logname = 'hmap1423594639334',//'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
+		pose = {x:0,y:0},
     peer,
     p_conn,
     overlay,
@@ -40,11 +41,9 @@
 
 	var add_graph = {
 		h: function(params){
-			var perimeterNodes = params.projected.xy.map(local2global, params.projected.root);
-
 			var poly0 = {
 				center : params.projected.root,
-				perimeter: perimeterNodes,
+				perimeter: params.projected.xy.map(local2global, params.projected.root),
 				rho: params.poly.rhoDist.map(function(v){return v/1000;}),
 			}
 			// Push the added one
@@ -93,8 +92,9 @@
 				// Plot the links
 				//plot_links(links);
 				// Make the graph
-				var g = Graph.make(polys, links);
-				Graph.plot(g, overlay);
+				var graph = Graph.make(polys, links);
+				Graph.plan(polys, graph, pose, []);
+				Graph.plot(graph, overlay);
 			}
 		});
 	}
