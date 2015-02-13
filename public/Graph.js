@@ -65,10 +65,11 @@
 		// Objects, not addresses, are in the queue
 		var n = openList.dequeue();
 		n.state = NODE_CLOSED;
+		//console.log('Smallest', n.id, n.f, n.g);
 
 		// Check for the goal
 		if (n.id == goal_index) {
-			console.log('Done searching!');
+			console.log('Success searching!');
 			searchState = SEARCH_SUCCESS;
 			return searchState;
 		}
@@ -76,18 +77,19 @@
 		// Current node popped from open list is not goal
 		n.edges.forEach(function(e_id){
 			var e = edges[e_id],
-				gnew = e.cost + this.cost,
-				target_index = e.a==n.id ? e.b : e.a,
-				target_node = nodes[target_index];
-			if(target_node.g) console.log(gnew, target_node.g);
+				target_index = e.a==this.id ? e.b : e.a,
+				target_node = nodes[target_index],
+				gnew = this.g + e.cost;
+				//console.log('Inspect', target_index, gnew);
 			if (target_node.h===undefined) {
 				// Evaluate the heuristic if not done yet
-				target_node.h = dist.call(goal.p, target_node.p);
 				target_node.g = gnew;
+				target_node.h = dist.call(goal.p, target_node.p);
 				target_node.f = target_node.g + target_node.h;
 				target_node.parent = this.id;
 				target_node.state = NODE_OPEN;
 				openList.queue(target_node);
+				//console.log('Enqueue! (Open)', openList.length);
 			} else if (gnew < target_node.g) {
 				target_node.g = gnew;
 				target_node.f = target_node.g + target_node.h;
@@ -95,8 +97,10 @@
 				if (target_node.state == NODE_CLOSED) {
 					target_node.state = NODE_OPEN;
 					openList.queue(target_node);
-				}
+					//console.log('Enqueue! (Reopen)', openList.length);
+				}// else {console.log('No enqueue!', openList.length);}
 			}	else {
+				//console.log('Heapify!', openList.length);
 				// Node changed on open list: need to resort open list
 				openList.priv._heapify();
 				//console.log('openList len', openList.length);
@@ -127,10 +131,17 @@
 				};
 				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
 			}
+
+			// NEED TO CONNECT PERIMETER TO THE CENTER
+			// NOTE: FOR NOW: JUST GO TO THE CENTER
+			var e_poly_direct = {a: pose_node.id, b: id };
+			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
+			graph.nodes[id].edges.push(e_poly_direct.id);
+			graph.nodes[pose_node.id].edges.push(e_poly_direct.id);
+
 			return { /*cost: closest[0],*/ a: pose_node.id, b: id_node };
 		}, graph).forEach(function(e){
 			e.id = graph.edges.push(e) - 1;
-			//console.log('start edges', e);
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
 			n_b.edges.push(e.id);
@@ -138,7 +149,7 @@
 
 		// Same for goal
 		var goal_xy = [goal.x, goal.y],
-			goal_node = { cost: 0, edges : [], obj: goal };
+			goal_node = { edges : [], obj: goal };
 		goal_node.id = graph.nodes.push(goal_node) - 1;
 		// Add to the graph
 		polys.map(function(poly, id){
@@ -151,32 +162,43 @@
 				};
 				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
 			}
+
+			// NEED TO CONNECT PERIMETER TO THE CENTER
+			// NOTE: FOR NOW: JUST GO TO THE CENTER
+			var e_poly_direct = {a: goal_node.id, b: id };
+			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
+			graph.nodes[id].edges.push(e_poly_direct.id);
+			graph.nodes[goal_node.id].edges.push(e_poly_direct.id);
+
 			return { /*cost: closest[0],*/ a: goal_node.id, b: id_node };
 		}, graph).forEach(function(e){
 			e.id = graph.edges.push(e) - 1;
-			//console.log('goal edges', e);
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
 			n_b.edges.push(e.id);
 		});
 
-
 		// Set the pqueue
 		graph.searchState = SEARCH_SEARCHING;
 		graph.openList = new PriorityQueue({
-			comparator: function(a, b) { return a.f - b.f; }
+			comparator: function(a, b) { return b.f - a.f; }
 		});
-		graph.openList.queue(pose_node);
 		graph.goal_index = goal_node.id;
+		graph.start_index = pose_node.id;
 		// Easy access to the heuristic argument
 		graph.nodes.forEach(function(n){
 			n.p = get_pos(n);
-			n.cost = n.cost || dist.call(n.p, goal_xy);
+			//n.cost = n.cost || dist.call(n.p, goal_xy);
 		});
 		// Edge cost
-		graph.edges.forEach(function(e){
-			e.cost = e.cost || 0;
-		});
+		graph.edges.forEach(function(e){ e.cost = e.cost || 0.1; });
+
+		pose_node.g = 0;
+		pose_node.h = dist.call(goal_node.p, pose_node.p);
+		pose_node.f = pose_node.g + pose_node.h;
+		pose_node.parent = 0;
+		pose_node.state = NODE_OPEN;
+		graph.openList.queue(pose_node);
 
 		console.log('Begin Search!', graph);
 		var nSearch = 0, nSearchMax = pow(graph.edges.length, 2);
