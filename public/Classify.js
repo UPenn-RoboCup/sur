@@ -62,8 +62,8 @@
 	// No: Just the closest one
 	function cone(e){
 		var nChunks = this.rho.length,
-			a0 = angle(this.center, e.a),
-			a1 = angle(this.center, e.b),
+			a0 = angle(this.center, e[0]),
+			a1 = angle(this.center, e[1]),
 			a0i = min(round(angle_idx(a0, nChunks)), nChunks-1),
 			a1i = min(round(angle_idx(a1, nChunks)), nChunks-1),
 			is_inverted = a0i > a1i,
@@ -108,18 +108,18 @@
 		return r<r0 && r<r1;
 	}
 	// Check if this poly breaks edge e
-	function breaks(e){
+	function breaks(poly, a, b){
 		// See if the endpoints are inside our poly
-		if (contains.call(this, e.a)){
+		if (contains.call(poly, a)){
 			return true;
-		} else if (contains.call(this, e.b)) {
+		} else if (contains.call(poly, b)) {
 			return true;
 		}
 		//console.log(this);
-		var br_cone = cone.call(this, e);
-		var a_dist = dist.call(this.center, e.a);
-		var b_dist = dist.call(this.center, e.b);
-		var cone_rho = br_cone.map(lookup, this.rho);
+		var br_cone = cone.call(poly, [a,b]);
+		var a_dist = dist.call(poly.center, a);
+		var b_dist = dist.call(poly.center, b);
+		var cone_rho = br_cone.map(lookup, poly.rho);
 		var does_break = cone_rho.map(function(d){
 			return min(a_dist-d, b_dist-d) < 0;
 		}).reduce(function(prev, now){return prev||now;});

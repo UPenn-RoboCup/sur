@@ -51,20 +51,25 @@
 
 			// First run the breaks
 			if (params.features[0] < 20){
-				var breakage = links.map(Classify.breaks, polys[ipoly0]);
+				var breakage = links.map(function(l){
+					var a = polys[l.poly_a].perimeter[l.ind_a] || polys[l.poly_a].center,
+						b = polys[l.poly_b].perimeter[l.ind_b] || polys[l.poly_b].center;
+
+					Classify.breaks(polys[ipoly0], a, b);
+				});
 				links = links.filter(function(v, i){ return !breakage[i]; });
+			} else {
+				// Match the polys together
+				var halfplane_indices = polys.map(Classify.halfplanes, poly0);
+				polys.forEach(function(poly1, ipoly1){
+					var hp = halfplane_indices[ipoly1],
+						intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
+					console.log(intersects);
+					// Add to all links
+					intersects.forEach(function(l){ links.push(l); });
+				});
 			}
 
-			var halfplane_indices = polys.map(Classify.halfplanes, poly0);
-
-			// Match the indices
-			polys.forEach(function(poly1, ipoly1){
-				var hp = halfplane_indices[ipoly1],
-					intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
-				console.log(intersects);
-				// Add to all links
-				intersects.forEach(function(l){ links.push(l); });
-			});
 		}
 	};
 
@@ -86,7 +91,7 @@
 				console.log('Loaded',data);
 
 				// not the last element:
-				data.pop();
+				//data.pop();
 
 				data.forEach(parse_param);
 				// Plot the links

@@ -79,7 +79,7 @@
 			var e = edges[e_id],
 				target_index = e.a==this.id ? e.b : e.a,
 				target_node = nodes[target_index],
-				gnew = this.g + e.cost;
+				gnew = this.g + e.cost + target_node.cost;
 				//console.log('Inspect', target_index, gnew);
 			if (target_node.h===undefined) {
 				// Evaluate the heuristic if not done yet
@@ -188,7 +188,7 @@
 		// Easy access to the heuristic argument
 		graph.nodes.forEach(function(n){
 			n.p = get_pos(n);
-			//n.cost = n.cost || dist.call(n.p, goal_xy);
+			n.cost = n.cost || 1;
 		});
 		// Edge cost
 		graph.edges.forEach(function(e){ e.cost = e.cost || 0.1; });
