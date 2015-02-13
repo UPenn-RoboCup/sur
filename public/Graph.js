@@ -121,7 +121,7 @@
 			pose_node = { edges : [], obj: pose };
 		pose_node.id = graph.nodes.push(pose_node) - 1;
 		// Add to the graph
-		polys.map(function(poly, id){
+		polys.forEach(function(poly, id){
 			var closest = poly.perimeter.map(dist, pose_xy).reduce(smallest, [Infinity, -1]),
 				id_close = closest[1],
 				id_node = graph.nodes[id].obj_tree[id_close];
@@ -132,19 +132,19 @@
 				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
 			}
 
-			// NEED TO CONNECT PERIMETER TO THE CENTER
-			// NOTE: FOR NOW: JUST GO TO THE CENTER
-			var e_poly_direct = {a: pose_node.id, b: id };
-			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
-			graph.nodes[id].edges.push(e_poly_direct.id);
-			graph.nodes[pose_node.id].edges.push(e_poly_direct.id);
-
-			return { /*cost: closest[0],*/ a: pose_node.id, b: id_node };
-		}, graph).forEach(function(e){
+			var e = { /*cost: closest[0],*/ a: pose_node.id, b: id_node };
 			e.id = graph.edges.push(e) - 1;
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
 			n_b.edges.push(e.id);
+
+			// NEED TO CONNECT PERIMETER TO THE CENTER
+			// TODO: Check if this link already exists!
+			var e_poly_direct = {a: id_node, b: id };
+			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
+			graph.nodes[id].edges.push(e_poly_direct.id);
+			graph.nodes[id_node].edges.push(e_poly_direct.id);
+
 		});
 
 		// Same for goal
@@ -152,7 +152,7 @@
 			goal_node = { edges : [], obj: goal };
 		goal_node.id = graph.nodes.push(goal_node) - 1;
 		// Add to the graph
-		polys.map(function(poly, id){
+		polys.forEach(function(poly, id){
 			var closest = poly.perimeter.map(dist, goal_xy).reduce(smallest, [Infinity, -1]),
 				id_close = closest[1],
 				id_node = graph.nodes[id].obj_tree[id_close];
@@ -164,18 +164,18 @@
 			}
 
 			// NEED TO CONNECT PERIMETER TO THE CENTER
-			// NOTE: FOR NOW: JUST GO TO THE CENTER
-			var e_poly_direct = {a: goal_node.id, b: id };
+			// TODO: Check if this link already exists!
+			var e_poly_direct = {a: id_node, b: id };
 			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
 			graph.nodes[id].edges.push(e_poly_direct.id);
-			graph.nodes[goal_node.id].edges.push(e_poly_direct.id);
+			graph.nodes[id_node].edges.push(e_poly_direct.id);
 
-			return { /*cost: closest[0],*/ a: goal_node.id, b: id_node };
-		}, graph).forEach(function(e){
+			var e = { /*cost: closest[0],*/ a: goal_node.id, b: id_node };
 			e.id = graph.edges.push(e) - 1;
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
 			n_b.edges.push(e.id);
+
 		});
 
 		// Set the pqueue
