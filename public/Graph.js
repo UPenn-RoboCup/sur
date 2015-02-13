@@ -32,14 +32,14 @@
 		else { return [node.obj.x, node.obj.y]; }
 	}
 
-	function dist2(p){
-		return pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2);
+	function dist(p){
+		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
 	}
 	function smallest(prev, now, inow){
 		return now < prev[0] ? [now, inow] : prev;
 	}
 	var heuristic = function(n, goal){
-		dist2.call(n, goal);
+		dist.call(n, goal);
 	}
 
 	function astar_step(graph){
@@ -47,7 +47,8 @@
 			nodes = graph.nodes,
 			openList = graph.openList,
 			searchState = graph.searchState,
-			goal_index = graph.goal_index;
+			goal_index = graph.goal_index,
+			goal = nodes[goal_index];
 
 		if (searchState != SEARCH_SEARCHING) {
 			console.log('Not searching!');
@@ -78,9 +79,10 @@
 				gnew = e.cost + this.cost,
 				target_index = e.a==n.id ? e.b : e.a,
 				target_node = nodes[target_index];
+			if(target_node.g) console.log(gnew, target_node.g);
 			if (target_node.h===undefined) {
 				// Evaluate the heuristic if not done yet
-				target_node.h = dist2.call(this.p, target_node.p);
+				target_node.h = dist.call(goal.p, target_node.p);
 				target_node.g = gnew;
 				target_node.f = target_node.g + target_node.h;
 				target_node.parent = this.id;
@@ -97,6 +99,7 @@
 			}	else {
 				// Node changed on open list: need to resort open list
 				openList.priv._heapify();
+				//console.log('openList len', openList.length);
 			}
 		}, n);
 		searchState = SEARCH_SEARCHING;
@@ -111,22 +114,23 @@
 
 		// Add start node
 		var pose_xy = [pose.x, pose.y],
-			pose_node = { cost: 1, edges : [], obj: pose };
+			pose_node = { edges : [], obj: pose };
 		pose_node.id = graph.nodes.push(pose_node) - 1;
 		// Add to the graph
 		polys.map(function(poly, id){
-			var closest = poly.perimeter.map(dist2, pose_xy).reduce(smallest, [Infinity, -1]),
+			var closest = poly.perimeter.map(dist, pose_xy).reduce(smallest, [Infinity, -1]),
 				id_close = closest[1],
 				id_node = graph.nodes[id].obj_tree[id_close];
 			if(id_node==-1){
 				var closest_node = graph.nodes[id].obj_tree[id_close] = {
-					cost: 1, edges: [], obj: poly, obj_idx: id_close
+					edges: [], obj: poly, obj_idx: id_close
 				};
 				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
 			}
-			return { cost: closest[0], a: pose_node.id, b: id_node };
+			return { /*cost: closest[0],*/ a: pose_node.id, b: id_node };
 		}, graph).forEach(function(e){
 			e.id = graph.edges.push(e) - 1;
+			//console.log('start edges', e);
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
 			n_b.edges.push(e.id);
@@ -134,23 +138,23 @@
 
 		// Same for goal
 		var goal_xy = [goal.x, goal.y],
-			goal_node = { cost: 1, edges : [], obj: goal };
+			goal_node = { cost: 0, edges : [], obj: goal };
 		goal_node.id = graph.nodes.push(goal_node) - 1;
 		// Add to the graph
 		polys.map(function(poly, id){
-			var closest = poly.perimeter.map(dist2, goal_xy).reduce(smallest, [Infinity, -1]),
+			var closest = poly.perimeter.map(dist, goal_xy).reduce(smallest, [Infinity, -1]),
 				id_close = closest[1],
 				id_node = graph.nodes[id].obj_tree[id_close];
 			if(id_node==-1){
 				var closest_node = graph.nodes[id].obj_tree[id_close] = {
-					cost: 1, edges: [], obj: poly, obj_idx: id_close
+					edges: [], obj: poly, obj_idx: id_close
 				};
 				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
 			}
-			return { cost: closest[0], a: goal_node.id, b: id_node };
+			return { /*cost: closest[0],*/ a: goal_node.id, b: id_node };
 		}, graph).forEach(function(e){
-			console.log('goal edges', e);
 			e.id = graph.edges.push(e) - 1;
+			//console.log('goal edges', e);
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
 			n_b.edges.push(e.id);
@@ -165,10 +169,23 @@
 		graph.openList.queue(pose_node);
 		graph.goal_index = goal_node.id;
 		// Easy access to the heuristic argument
-		graph.nodes.forEach(function(n){ n.p = get_pos(n); });
+		graph.nodes.forEach(function(n){
+			n.p = get_pos(n);
+			n.cost = n.cost || dist.call(n.p, goal_xy);
+		});
+		// Edge cost
+		graph.edges.forEach(function(e){
+			e.cost = e.cost || 0;
+		});
+
 		console.log('Begin Search!', graph);
-		for(var i=0; i<100; i+=1)
+		var nSearch = 0, nSearchMax = pow(graph.edges.length, 2);
+		do {
 			graph.searchState = astar_step(graph);
+			nSearch += 1;
+			if (nSearch > nSearchMax) break;
+		} while (graph.searchState == SEARCH_SEARCHING);
+		console.log('Done!', nSearch);
 	}
 
 	// Node Format:
@@ -178,7 +195,6 @@
 		// Assume always same # of leaves
 		var nodes = polys.map(function(poly, id){
 			return {
-				cost: 1,
 				edges : [/*IDs of edges*/],
 				id: id,
 				obj: poly,
@@ -197,23 +213,23 @@
 			if(l.ind_a===-1){
 				a_node = a_poly_node;
 				edge.a = a_node.id;
-				edge.cost = 1;
+				//edge.cost = 1;
 			} else if(a_poly_node.obj_tree[l.ind_a] !== -1){
 				edge.a = a_poly_node.obj_tree[l.ind_a];
 				a_node = nodes[edge.a];
 			} else {
-				a_node = { cost: 1, edges: [], obj: a_poly_node.obj, obj_idx: l.ind_a };
+				a_node = { edges: [], obj: a_poly_node.obj, obj_idx: l.ind_a };
 				edge.a = a_poly_node.obj_tree[l.ind_a] = a_node.id = nodes.push(a_node) - 1;
 			}
 			if(l.ind_b===-1){
 				b_node = b_poly_node;
 				edge.b = b_poly_node.ID;
-				edge.cost = 1;
+				//edge.cost = 1;
 			} else if(b_poly_node.obj_tree[l.ind_b] !== -1){
 				edge.b = b_poly_node.obj_tree[l.ind_b];
 				b_node = nodes[edge.b];
 			} else {
-				b_node = { cost: 1, edges: [], obj: b_poly_node.obj, obj_idx: l.ind_b };
+				b_node = { edges: [], obj: b_poly_node.obj, obj_idx: l.ind_b };
 				edge.b = b_poly_node.obj_tree[l.ind_b] = b_node.id = nodes.push(b_node) - 1;
 			}
 			// Add the edge to the nodes
