@@ -45,14 +45,14 @@
 		return (a/PI+1)*(nChunks/2);
 	}
 
+	// Requires: stop>=start
 	function get_wrapped_indices(start, stop, max){
-		var indices = [], i = start;
-		while (i != stop) {
-			indices.push(i);
-			i += 1;
-			i = (i==max) ? 0 : i;
+		var indices = [], i, v;
+		for (i=start; i <= stop; i+=1) {
+			if (i<0)         { indices.push(i + max); }
+			else if (i>=max) { indices.push(i - max); }
+			else             { indices.push(i); }
 		}
-		indices.push(i);
 		return indices;
 	}
 
@@ -68,21 +68,26 @@
 			a1i = min(round(angle_idx(a1, nChunks)), nChunks-1),
 			is_inverted = a0i > a1i,
 			is_obtuse = abs(a1i - a0i) > nChunks/2,
-			indices_to_check;
+			i0, i1, indices_to_check;
 		if (is_obtuse) {
 			if (is_inverted) {
-				indices_to_check = get_wrapped_indices(a0i, a1i, nChunks);
+				i0 = a0i;
+				i1 = a1i + nChunks;
 			} else {
-				indices_to_check = get_wrapped_indices(a1i, a0i, nChunks);
+				i0 = a1i;
+				i1 = a0i + nChunks;
 			}
 		} else {
 			if (is_inverted) {
-				indices_to_check = get_wrapped_indices(a1i, a0i, nChunks);
+				i0 = a1i;
+				i1 = a0i;
 			} else {
-				indices_to_check = get_wrapped_indices(a0i, a1i, nChunks);
+				i0 = a0i;
+				i1 = a1i;
 			}
 		}
-		//console.log(a0i, a1i, indices_to_check, nChunks, is_obtuse, is_inverted);
+		indices_to_check = get_wrapped_indices(i0, i1, nChunks);
+		//console.log(a0i, a1i, indices_to_check, i0, i1, nChunks, is_obtuse, is_inverted);
 		return indices_to_check;
 	}
 
@@ -126,36 +131,28 @@
 
 	// See which indicies to connect
 	function match(polys, ipoly0, ipoly1, ind0, ind1) {
-		if(ipoly0===ipoly1){return {links:[]};}
-		var poly0 = polys[ipoly0], poly1 = polys[ipoly1];
-		var my_arc = ind0.map(lookup, poly0.perimeter),
-			their_arc = ind1.map(lookup, poly1.perimeter),
-			in_poly1 = my_arc.map(contains, poly1),
-			in_poly0 = their_arc.map(contains, poly0);
+		var poly0 = polys[ipoly0], poly1 = polys[ipoly1], links = [];
+		if(ipoly0===ipoly1){ return links; }
 
-		var links = [];
-
-		my_arc.forEach(function(p0, i0){
-			if(in_poly1[i0]){
+		ind0.forEach(function(i){
+			var p = poly0.perimeter[i];
+			if(contains.call(poly1, p)){
 				links.push({
-					a: poly1.center,
-					b: p0,
-					poly_a: poly1,
-					poly_b: poly0,
+					poly_a: ipoly1,
+					poly_b: ipoly0,
 					ind_a: -1, // center
-					ind_b: i0
+					ind_b: i
 				});
 			}
 		});
-		their_arc.forEach(function(p1, i1){
-			if(in_poly0[i1]){
+		ind1.forEach(function(i){
+			var p = poly1.perimeter[i];
+			if(contains.call(poly0, p)){
 				links.push({
-					a: poly0.center,
-					b: p1,
-					poly_a: poly0,
-					poly_b: poly1,
+					poly_a: ipoly0,
+					poly_b: ipoly1,
 					ind_a: -1, // center
-					ind_b: i1
+					ind_b: i
 				});
 			}
 		});
@@ -163,17 +160,18 @@
 		// TODO: Assume the order of the indices in the arcs is increasing?
 		// NOTE: I think endpoint to endpoint order is valid...
 		// Check each pair
-		my_arc.forEach(function(p0, i0){
+		ind0.forEach(function(i0, ii){
+			var p0 = poly0.perimeter[i0],
+				p0inPoly1 = contains.call(poly1, p0);
 			// If point not already in the other poly
-			if (!in_poly1[i0]) {
-				var iguess = their_arc.length-1-i0;
-				if(!in_poly0[iguess]){
-					var pguess = their_arc[iguess];
+			if (!p0inPoly1) {
+				var iguess = ind1.length-1-ii,
+					pguess = poly1.perimeter[iguess],
+					pGuessinPoly0 = contains.call(poly0, pguess);
+				if(!pGuessinPoly0){
 					links.push({
-						a: pguess,
-						b: p0,
-						poly_a: poly1,
-						poly_b: poly0,
+						poly_a: ipoly1,
+						poly_b: ipoly0,
 						ind_a: iguess,
 						ind_b: i0,
 					});
@@ -193,13 +191,7 @@
 			}
 		});
 
-		return {
-			arc0: my_arc,
-			arc1: their_arc,
-			in1: in_poly1,
-			in0: in_poly0,
-			links: links,
-		};
+		return links;
 
 /*
 		ind0.map(lookup, poly0.perimeter).forEach(function(p0){
@@ -208,6 +200,16 @@
 			});
 		});
 */
+	}
+
+	// this: poly to compare against
+	function halfplanes(poly){
+		var nChunks = this.rho.length,
+			a = angle(this.center, poly.center),
+			i = round(angle_idx(a, nChunks)),
+			my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
+			their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks);
+		return [my_indices, their_indices];
 	}
 
   // Hold all the classifiers
@@ -239,6 +241,7 @@
       return feat;
     },
     poly_features: poly_features,
+		halfplanes: halfplanes,
   };
 
 }(this));

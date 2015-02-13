@@ -20,19 +20,6 @@
 	var arcF = d3.svg.line().x(function (d) { return d[0]; }).y(function (d) { return d[1]; }).interpolate("linear");
 
 	function local2global(v){ return [v.x+this[0], v.y+this[1]]; }
-	function get_wrapped_indices(start, stop, max){
-		var indices = [];
-		for(var i=start; i<=stop; i+=1){
-			if(i<0){
-				indices.push(max+i);
-			} else if(i>=max) {
-				indices.push(i-max);
-			} else {
-				indices.push(i);
-			}
-		}
-		return indices;
-	}
 
 	function plot_links(links){
 		var intersections = [];
@@ -49,61 +36,6 @@
 			.append("path").attr('class', 'arc')
 			.attr("d", d3.svg.symbol().type("circle").size(0.002))
 			.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
-	}
-
-	function make_graph(polys, links){
-
-		// Form the poly nodes
-		polys.forEach(function(p, i){ p.id = i; });
-		// Assume always same # of leaves
-		var leaves0 = polys[0].rho.map(function(){return -1;});
-		var nodes = polys.map(function(poly, i){
-			return {
-				cost: 1,
-				edges : [/*IDs of edges*/],
-				id: poly.id,
-				obj: poly,
-				obj_tree : leaves0.slice(),
-			}
-		});
-
-		// Form the inter-poly links
-		var edges = links.map(function(l, i){
-			var edge = {cost: 1, id: i},
-				a_poly_node = nodes[l.poly_a.id],
-				b_poly_node = nodes[l.poly_b.id],
-				a_node,
-				b_node;
-			if(l.ind_a===-1){
-				a_node = a_poly_node;
-				edge.a = a_node.id;
-			} else if(a_poly_node.obj_tree[l.ind_a] !==-1){
-				edge.a = a_poly_node.obj_tree[l.ind_a];
-				a_node = nodes[edge.a];
-			} else {
-				a_node = { cost: 1, edges: [], obj: a_poly_node.obj, obj_idx: l.ind_a};
-				edge.a = a_poly_node.obj_tree[l.ind_a] = a_node.id = nodes.push(a_node) - 1;
-			}
-			if(l.ind_b===-1){
-				b_node = b_poly_node;
-				edge.b = b_poly_node.ID;
-			} else if(b_poly_node.obj_tree[l.ind_b] !== -1){
-				edge.b = b_poly_node.obj_tree[l.ind_b];
-				b_node = nodes[edge.b];
-			} else {
-				b_node = { cost: 1, edges: [], obj: b_poly_node.obj, obj_idx: l.ind_b};
-				edge.b = b_poly_node.obj_tree[l.ind_a] = b_node.id = nodes.push(b_node) - 1;
-			}
-			// Add the edge to the nodes
-			a_node.edges.push(edge.id);
-			b_node.edges.push(edge.id);
-			return edge;
-		});
-
-		// Now plot
-		plot_links(links);
-
-		return Graph.make(nodes, edges);
 	}
 
 	var add_graph = {
@@ -124,34 +56,20 @@
 				links = links.filter(function(v, i){ return !breakage[i]; });
 			}
 
-			// Half plane angle
-			var halfplane_indices = polys.map(function(v){
-				var nChunks = this.xy.length;
-				var my_angle = Math.atan2(-v.center[0]+this.root[0], -v.center[1]+this.root[1]);
-				var my_idx = Math.floor(my_angle*nChunks/(2*Math.PI)+nChunks/2);
-				var their_angle = my_angle > 0 ? my_angle-Math.PI : my_angle + Math.PI;
-				var their_idx = Math.floor(their_angle*nChunks/(2*Math.PI)+nChunks/2);
-				return [
-					get_wrapped_indices(my_idx-nChunks/4, my_idx+nChunks/4, nChunks),
-					get_wrapped_indices(their_idx-nChunks/4, their_idx+nChunks/4, nChunks)
-					//[my_idx],
-					//[their_idx]
-				];
-			}, params.projected);
-
+			var halfplane_indices = polys.map(Classify.halfplanes, poly0);
 
 			// Match the indices
 			polys.forEach(function(poly1, ipoly1){
 				var hp = halfplane_indices[ipoly1],
 					intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
+				console.log(intersects);
 				// Add to all links
-				intersects.links.forEach(function(l){ links.push(l); });
+				intersects.forEach(function(l){ links.push(l); });
 			});
 		}
 	};
 
 	function parse_param(data){
-		console.log(data);
 		var f_map = add_map[data.id], f_graph = add_graph[data.id];
 		if(typeof f_map === 'function'){ f_map(data); }
 		if(typeof f_graph === 'function'){ f_graph(data); }
@@ -166,11 +84,17 @@
 			} else {
 				debug(['Loaded ' + logname]);
 				var data = JSON.parse(jdata);
-				console.log(data);
-				//data.pop();
+				console.log('Loaded',data);
+
+				// not the last element:
+				data.pop();
+
 				data.forEach(parse_param);
+				// Plot the links
+				//plot_links(links);
 				// Make the graph
-				make_graph(polys, links);
+				var g = Graph.make(polys, links);
+				Graph.plot(g, overlay);
 			}
 		});
 	}
