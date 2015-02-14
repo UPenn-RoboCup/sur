@@ -196,18 +196,28 @@
 		pose_node.g = 0;
 		pose_node.h = dist.call(goal_node.p, pose_node.p);
 		pose_node.f = pose_node.g + pose_node.h;
-		pose_node.parent = 0;
+		//pose_node.parent = 0;
 		pose_node.state = NODE_OPEN;
 		graph.openList.queue(pose_node);
 
-		console.log('Begin Search!', graph);
+		//console.log('Begin Search!', graph);
 		var nSearch = 0, nSearchMax = pow(graph.edges.length, 2);
 		do {
 			graph.searchState = astar_step(graph);
 			nSearch += 1;
 			if (nSearch > nSearchMax) break;
 		} while (graph.searchState == SEARCH_SEARCHING);
-		console.log('Done!', nSearch);
+		//console.log('Done!', nSearch);
+
+		var n = goal_node, path = [];
+		while (n!==undefined) {
+			path.push(n);
+			n = graph.nodes[n.parent];
+		}
+		console.log('path', path);
+
+		var path_points = path.map(function(p){return p.p;})
+		return path_points;
 	}
 
 	// Node Format:

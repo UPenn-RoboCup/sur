@@ -22,23 +22,6 @@
 
 	function local2global(v){ return [v.x+this[0], v.y+this[1]]; }
 
-	function plot_links(links){
-		var intersections = [];
-		links.forEach(function(l){
-			// Plot the arc
-			overlay.append("path").attr('class','arc').attr("d", arcF([l.a, l.b]));
-			// Prepare to plot the intersections
-			if(l.ind_a===-1){	intersections.push(l.b); }
-			if(l.ind_b===-1){ intersections.push(l.a); }
-		});
-		// plot_intersections
-		overlay.append('g').attr('class', 'marker').selectAll('path')
-			.data(intersections).enter()
-			.append("path").attr('class', 'arc')
-			.attr("d", d3.svg.symbol().type("circle").size(0.002))
-			.attr("transform", function(d) { return "translate(" + d[0] + "," + d[1] + ")"; });
-	}
-
 	var add_graph = {
 		h: function(params){
 			var poly0 = {
@@ -94,12 +77,12 @@
 				//data.pop();
 
 				data.forEach(parse_param);
-				// Plot the links
-				//plot_links(links);
 				// Make the graph
 				var graph = Graph.make(polys, links);
-				Graph.plan(polys, graph, pose, {x:2.5, y: -2.5});
-				Graph.plot(graph, overlay);
+				//Graph.plot(graph, overlay);
+				var path_points = Graph.plan(polys, graph, pose, {x:2.5, y: -2.5});
+				console.log(path_points);
+				overlay.append("path").attr('class','arc').attr("d", arcF(path_points));
 			}
 		});
 	}
