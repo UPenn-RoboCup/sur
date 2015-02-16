@@ -212,6 +212,26 @@
 		return [my_indices, their_indices];
 	}
 
+	function add_true_path(path, polys){
+		console.log('Path', path, polys);
+		// Find the points in the polys
+		var features = path.map(function(p){
+			for(var i=0; i<polys.length; i+=1 ){
+				var poly = polys[i], pc = poly.center, pp;
+				if(pc[0]==p[0] && pc[1]==p[1]){
+					return get_pf(poly.parameters);
+				}
+				for(var j=0, per = poly.perimeter; j<per.length; j+=1 ){
+					pp = per[j];
+					if(pp[0]==p[0] && pp[1]==p[1]){
+						return [1,1,1];
+					}
+				}
+			}
+		});
+		console.log(features);
+	}
+
   // Hold all the classifiers
   var classifiers = {
     ground: function(p){
@@ -231,17 +251,17 @@
   // Quickly compute the features from the functions in the correct order
   var pf = poly_features.map(function(n){ return this[n]; }, classifiers);
 
+	function get_pf(parameters) {
+		return pf.map(function(func){ return func(this); }, parameters);
+	}
+
   ctx.Classify = {
 		match: match,
 		breaks: breaks,
-    get_poly_features: function(parameters) {
-      console.log('Classify', parameters);
-      var feat = pf.map(function(func){ return func(this); }, parameters);
-      console.log('Features', feat);
-      return feat;
-    },
+    get_poly_features: get_pf,
     poly_features: poly_features,
 		halfplanes: halfplanes,
+		add_true_path: add_true_path,
   };
 
 }(this));

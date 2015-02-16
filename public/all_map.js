@@ -3,24 +3,72 @@
 	// Private variables
 	var d3 = ctx.d3,
 		debug = ctx.util.debug,
-		DEG_TO_RAD = ctx.util.DEG_TO_RAD,
-		RAD_TO_DEG = ctx.util.RAD_TO_DEG,
+		peer,
+		p_conn,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1423594639334',//'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
+		logname = 'hmap1423594639334',
+		//'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
 		pose = {x:0,y:0},
-    peer,
-    p_conn,
     overlay,
 		pose_marker,
     map_c,
 		human = [],
 		links = [],
-		polys = [];
-	var polyF = d3.svg.line().x(function (d) { return d.x; }).y(function (d) { return d.y; }).interpolate("linear-closed");
-	var arcF = d3.svg.line().x(function (d) { return d[0]; }).y(function (d) { return d[1]; }).interpolate("linear");
+		polys = [],
+		all_points = [],
+		pow = Math.pow, sqrt = Math.sqrt,
+		polyF = d3.svg.line()
+			.x(function (d) { return d.x; })
+			.y(function (d) { return d.y; })
+			.interpolate("linear-closed"),
+		arcF = d3.svg.line()
+			.x(function (d) { return d[0]; })
+			.y(function (d) { return d[1]; })
+			.interpolate("linear");
 
-	function local2global(v){ return [v.x+this[0], v.y+this[1]]; }
+	function local2global(v){
+		return [v.x+this[0], v.y+this[1]];
+	}
+	function dist(p){
+		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
+	}
+	function smallest(prev, now, inow){
+		return now < prev[0] ? [now, inow] : prev;
+	}
+
+	var add_map = {
+		cyl: function (params){
+			overlay.append("circle")
+				.attr("cx", params.xc / -1000)
+				.attr("cy", params.zc / -1000)
+				.attr("r", params.r / 1000)
+				.attr('class', 'obstacle');
+		},
+		// horiz plane
+		h: function (params){
+			var patch = overlay.append("path")
+				.attr("d", polyF(params.projected.xy))
+				.attr("transform", "translate("+params.projected.root.join(',')+")");
+			// Color correctly
+			if (params.features[0] > 20){
+				patch.attr('class', 'flat');
+			} else {
+				patch.attr('class', 'step');
+			}
+			overlay.append("circle")
+				.attr("cx", params.projected.root[0])
+				.attr("cy", params.projected.root[1])
+				.attr("r", 0.02);
+		},
+		// vertical plane
+		v: function (params){
+			overlay.append("path")
+				.attr("d", polyF(params.endpoints))
+				.attr("transform", "translate(" + 0 + "," + 0 + ")")
+				.attr('class', 'wall');
+		},
+	};
 
 	var add_graph = {
 		h: function(params){
@@ -28,6 +76,7 @@
 				center : params.projected.root,
 				perimeter: params.projected.xy.map(local2global, params.projected.root),
 				rho: params.poly.rhoDist.map(function(v){return v/1000;}),
+				parameters: params
 			}
 			// Push the added one
 			var ipoly0 = polys.push(poly0) - 1;
@@ -56,10 +105,45 @@
 		}
 	};
 
+	// Keep track of the mouse trail
+	var trail = [], onTrail = false;
+	function mclick(){
+		onTrail = !onTrail;
+		if (!onTrail) {
+			Classify.add_true_path(trail.map(function(t){
+				return all_points[t.pop()].concat(t);
+			}), polys);
+			trail = [];
+		}
+	}
+	function mmove(){
+		if (!onTrail) { return; }
+		// Find the closest point
+		//, confidence = Math.exp(-closest[0]);
+		var coord = d3.mouse(this),
+			closest = all_points.map(dist, coord).reduce(smallest, [Infinity, -1]),
+			p = all_points[closest[1]],
+			back = trail.pop();
+		if(!back){
+			trail.push(closest);
+		} else if (back[1] != closest[1]){
+			trail.push(back);
+			trail.push(closest);
+		} else if (back[0] > closest[0]) {
+			trail.push(closest);
+		} else {
+			trail.push(back);
+		}
+	}
+
+	// Take in human input and process it. Save it in an array for logging
 	function parse_param(data){
-		var f_map = add_map[data.id], f_graph = add_graph[data.id];
-		if(typeof f_map === 'function'){ f_map(data); }
-		if(typeof f_graph === 'function'){ f_graph(data); }
+		if(typeof add_map[data.id] === 'function') {
+			add_map[data.id](data);
+		}
+		if(typeof add_graph[data.id] === 'function') {
+			add_graph[data.id](data);
+		}
 		// Save the data we received
 		human.push(data);
 	}
@@ -79,9 +163,18 @@
 				data.forEach(parse_param);
 				// Make the graph
 				var graph = Graph.make(polys, links);
-				//Graph.plot(graph, overlay);
+				// Draw the links
+				/*
+				var links = Graph.plot(graph);
+				links.forEach(function(l){
+					overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));
+				});
+				*/
+				all_points = polys.reduce(function(prev, p){
+					prev.push(p.center);
+					return prev.concat(p.perimeter);
+				}, []);
 				var path_points = Graph.plan(polys, graph, pose, {x:2.5, y: -2.5});
-				console.log(path_points);
 				overlay.append("path").attr('class','arc').attr("d", arcF(path_points));
 			}
 		});
@@ -95,39 +188,6 @@
 			if (e) { console.log('Could not save', e); }
 		});
 	}
-
-  var add_map = {
-    cyl: function (params){
-    	overlay.append("circle")
-    		.attr("cx", params.xc / -1000)
-    		.attr("cy", params.zc / -1000)
-        .attr("r", params.r / 1000)
-        .attr('class', 'obstacle');
-    },
-    // horiz plane
-    h: function (params){
-      var patch = overlay.append("path")
-    		.attr("d", polyF(params.projected.xy))
-        .attr("transform", "translate(" + params.projected.root[0] + "," + params.projected.root[1] + ")");
-      // Color correctly
-      if (params.features[0] > 20){
-        patch.attr('class', 'flat');
-      } else {
-        patch.attr('class', 'step');
-      }
-			overlay.append("circle")
-				.attr("cx", params.projected.root[0])
-				.attr("cy", params.projected.root[1])
-				.attr("r", 0.02);
-    },
-    // vertical plane
-    v: function (params){
-      overlay.append("path")
-    		.attr("d", polyF(params.endpoints))
-        .attr("transform", "translate(" + 0 + "," + 0 + ")")
-        .attr('class', 'wall');
-    },
-  };
 
   function setup_rtc (){
     peer = new Peer(peer_id, {host: 'localhost', port: 9000});
@@ -161,7 +221,9 @@
   	// Add the overlay
   	overlay = d3.select("#map_container").append("svg").attr('class', 'overlay')
 	    .attr('viewBox', "-3 -3 6 6").attr('preserveAspectRatio', "none")
-	    .attr('width', map_c.clientWidth).attr('height', map_c.clientHeight);
+	    .attr('width', map_c.clientWidth).attr('height', map_c.clientHeight)
+			.on('mousemove', mmove)
+			.on('click', mclick);
 		// Allow saving
 		d3.select('button#save').on('click', save);
 		d3.select('button#open').on('click', open);

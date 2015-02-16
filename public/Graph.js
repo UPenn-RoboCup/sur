@@ -279,7 +279,7 @@
 	}
 
 	// Needs d3 for now
-	function plot(graph, group){
+	function plot(graph){
 		var nodes = graph.nodes, edges = graph.edges;
 		// return the link
 		var links = edges.map(function(edge){
@@ -299,10 +299,6 @@
 			else { p_b = [node_b.obj.x, node_b.obj.y]; }
 
 			return [p_a, p_b];
-		});
-		// Draw the links
-		links.forEach(function(l){
-			group.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));
 		});
 		return links;
 	}
