@@ -83,7 +83,7 @@
 				//console.log('Inspect', target_index, gnew);
 			if (target_node.h===undefined) {
 				// Evaluate the heuristic if not done yet
-				target_node.g = gnew;
+				target_node.g = gnew + target_node.cost;
 				target_node.h = dist.call(goal.p, target_node.p);
 				target_node.f = target_node.g + target_node.h;
 				target_node.parent = this.id;

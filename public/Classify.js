@@ -38,7 +38,7 @@
 	function larger(m, cur){ return m > cur ? m : cur; }
 	// dist between this and a point
 	function dist(p){
-		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
+		return sqrt(pow(this[1] - p[1], 2) + pow(p[1]-this[1], 2));
 	}
 	function angle(p1, p2){
 		return atan2(p1[0]-p2[0], p1[1]-p2[1]);
