@@ -56,6 +56,9 @@
 			} else {
 				patch.attr('class', 'step');
 			}
+
+			patch.attr('style','fill:rgb('+params.colors.mean.map(Math.floor).join(',')+')');
+
 			overlay.append("circle")
 				.attr("cx", params.projected.root[0])
 				.attr("cy", params.projected.root[1])

@@ -33,7 +33,9 @@
 		*/
 
 	function lookup(i) { return this[i]; }
+	function apply(func){ return func(this); }
 	function smaller(m, cur){ return m < cur ? m : cur; }
+	function larger(m, cur){ return m > cur ? m : cur; }
 	// dist between this and a point
 	function dist(p){
 		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
@@ -224,7 +226,7 @@
 				for(var j=0, per = poly.perimeter; j<per.length; j+=1 ){
 					pp = per[j];
 					if(pp[0]==p[0] && pp[1]==p[1]){
-						return [1,1,1];
+						return get_ppf({ p: pp, poly: poly, idx: j });
 					}
 				}
 			}
@@ -233,7 +235,7 @@
 	}
 
   // Hold all the classifiers
-  var classifiers = {
+  var poly_classifiers = {
     ground: function(p){
       // Larger it is, then more ground-y it is
       return numeric.dotVV(p.normal, [0,1,0]) * (1 + 1/abs(p.root[1]/1000));
@@ -242,18 +244,36 @@
       // Just the smallest radius. Technically not correct, but OK for now
       return p.poly.rhoDist.reduce(smaller);
     },
-
+		roughness: function(p){
+			return p.roughness;
+		},
   };
   // Order of the features
   var poly_features = [
-    'ground', 'inscribedCircle',
+    'ground', 'inscribedCircle', 'roughness'
   ];
   // Quickly compute the features from the functions in the correct order
-  var pf = poly_features.map(function(n){ return this[n]; }, classifiers);
+  var pf = poly_features.map(lookup, poly_classifiers);
+	function get_pf(parameters) { return pf.map(apply, parameters); }
 
-	function get_pf(parameters) {
-		return pf.map(function(func){ return func(this); }, parameters);
-	}
+	// Hold all the classifiers
+	// Just the reduced poly?
+	var perim_classifiers = {
+		neighbor: function(obj){
+			var p = obj.p, poly = obj.poly, i = obj.idx;
+			return get_wrapped_indices(i-1, i+1, poly.rho.length
+				.map(lookup, poly.rho)
+				.map(function(pn){ return abs(pn - this); }, poly.rho[i])
+				d.reduce(larger, 0);
+		}
+	};
+	// Order of the features
+	var perim_features = [
+		'neighbor'
+	];
+	// Quickly compute the features from the functions in the correct order
+	var ppf = perim_features.map(lookup, perim_classifiers);
+	function get_ppf(parameters) { return ppf.map(apply, parameters); }
 
   ctx.Classify = {
 		match: match,
