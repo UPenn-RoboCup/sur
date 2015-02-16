@@ -7,7 +7,7 @@
 		p_conn,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1423594639334',
+		logname = 'hmap1424122374133',//'hmap1423594639334',
 		//'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
 		pose = {x:0,y:0},
     overlay,
@@ -80,30 +80,17 @@
 				perimeter: params.projected.xy.map(local2global, params.projected.root),
 				rho: params.poly.rhoDist.map(function(v){return v/1000;}),
 				parameters: params
-			}
-			// Push the added one
-			var ipoly0 = polys.push(poly0) - 1;
+			}, ipoly0 = polys.push(poly0) - 1;
 
-			// First run the breaks
-			if (params.features[0] < 20){
-				var breakage = links.map(function(l){
-					var a = polys[l.poly_a].perimeter[l.ind_a] || polys[l.poly_a].center,
-						b = polys[l.poly_b].perimeter[l.ind_b] || polys[l.poly_b].center;
-
-					Classify.breaks(polys[ipoly0], a, b);
-				});
-				links = links.filter(function(v, i){ return !breakage[i]; });
-			} else {
-				// Match the polys together
-				var halfplane_indices = polys.map(Classify.halfplanes, poly0);
-				polys.forEach(function(poly1, ipoly1){
-					var hp = halfplane_indices[ipoly1],
-						intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
-					console.log(intersects);
-					// Add to all links
-					intersects.forEach(function(l){ links.push(l); });
-				});
-			}
+			// Match the polys together
+			var halfplane_indices = polys.map(Classify.halfplanes, poly0);
+			polys.forEach(function(poly1, ipoly1){
+				var hp = halfplane_indices[ipoly1],
+					intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
+				//console.log(intersects);
+				// Add to all links
+				intersects.forEach(function(l){ links.push(l); });
+			});
 
 		}
 	};
@@ -139,6 +126,34 @@
 		}
 	}
 
+	function graph(){
+
+		polys.forEach(function(poly, ipoly){
+			console.log(poly)
+			if(poly.parameters.features[0]>20) {return;}
+			// Break links if needed
+			var breakage = links.map(function(l){
+				var a = polys[l.poly_a].perimeter[l.ind_a] || polys[l.poly_a].center,
+					b = polys[l.poly_b].perimeter[l.ind_b] || polys[l.poly_b].center,
+					does_break = Classify.breaks(poly, a, b);
+				return does_break;
+			});
+			links = links.filter(function(v, i){ return !breakage[i]; });
+		});
+
+
+		// Make the graph
+		var graph = Graph.make(polys, links);
+		// Draw the links
+		Graph.plot(graph).forEach(function(l){ overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]])); });
+		all_points = polys.reduce(function(prev, p){
+			prev.push(p.center);
+			return prev.concat(p.perimeter);
+		}, []);
+		var path_points = Graph.plan(polys, graph, pose, {x:2.5, y: -2.5});
+		overlay.append("path").attr('class','arc').attr("d", arcF(path_points));
+	}
+
 	// Take in human input and process it. Save it in an array for logging
 	function parse_param(data){
 		if(typeof add_map[data.id] === 'function') {
@@ -159,26 +174,9 @@
 				debug(['Loaded ' + logname]);
 				var data = JSON.parse(jdata);
 				console.log('Loaded',data);
-
 				// not the last element:
 				//data.pop();
-
 				data.forEach(parse_param);
-				// Make the graph
-				var graph = Graph.make(polys, links);
-				// Draw the links
-				/*
-				var links = Graph.plot(graph);
-				links.forEach(function(l){
-					overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));
-				});
-				*/
-				all_points = polys.reduce(function(prev, p){
-					prev.push(p.center);
-					return prev.concat(p.perimeter);
-				}, []);
-				var path_points = Graph.plan(polys, graph, pose, {x:2.5, y: -2.5});
-				overlay.append("path").attr('class','arc').attr("d", arcF(path_points));
 			}
 		});
 	}
@@ -230,6 +228,7 @@
 		// Allow saving
 		d3.select('button#save').on('click', save);
 		d3.select('button#open').on('click', open);
+		d3.select('button#graph').on('click', graph);
 		// Draw the robot icon
 		window.setTimeout(draw_pose, 0);
 		// Connect with the peer

@@ -261,10 +261,10 @@
 	var perim_classifiers = {
 		neighbor: function(obj){
 			var p = obj.p, poly = obj.poly, i = obj.idx;
-			return get_wrapped_indices(i-1, i+1, poly.rho.length
+			return get_wrapped_indices(i-1, i+1, poly.rho.length)
 				.map(lookup, poly.rho)
 				.map(function(pn){ return abs(pn - this); }, poly.rho[i])
-				d.reduce(larger, 0);
+				.reduce(larger, 0);
 		}
 	};
 	// Order of the features
@@ -275,6 +275,22 @@
 	var ppf = perim_features.map(lookup, perim_classifiers);
 	function get_ppf(parameters) { return ppf.map(apply, parameters); }
 
+	// Edge classification
+	var edge_classifiers = {
+		elevation: function(obj){
+			return 0;
+		},
+	};
+	// Order of the features
+	var edge_features = [
+		'elevation'
+	];
+	// Quickly compute the features from the functions in the correct order
+	var ef = edge_features.map(lookup, edge_classifiers);
+	function get_ef(parameters) { return ef.map(apply, parameters); }
+
+
+	// Export
   ctx.Classify = {
 		match: match,
 		breaks: breaks,
