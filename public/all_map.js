@@ -3,15 +3,17 @@
 	// Private variables
 	var d3 = ctx.d3,
 		debug = ctx.util.debug,
+		overlay,
 		peer,
 		p_conn,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
 		logname = 'hmap1424122374133',//'hmap1423594639334',
 		//'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
-		pose = {x:0,y:0},
-    overlay,
+		pose = {x:0, y:0},
+		goal = {x:2, y: -1.5},
 		pose_marker,
+		goal_marker,
     map_c,
 		human = [],
 		links = [],
@@ -19,16 +21,16 @@
 		all_points = [],
 		pow = Math.pow, sqrt = Math.sqrt,
 		polyF = d3.svg.line()
-			.x(function (d) { return d.x; })
-			.y(function (d) { return d.y; })
+			.x(function (d) { return -d[1]; })
+			.y(function (d) { return -d[0]; })
 			.interpolate("linear-closed"),
 		arcF = d3.svg.line()
-			.x(function (d) { return d[0]; })
-			.y(function (d) { return d[1]; })
+			.x(function (d) { return -d[1]; })
+			.y(function (d) { return -d[0]; })
 			.interpolate("linear");
 
 	function local2global(v){
-		return [v.x+this[0], v.y+this[1]];
+		return [v[0] + this[0], v[1] + this[1]];
 	}
 	function dist(p){
 		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
@@ -40,16 +42,17 @@
 	var add_map = {
 		cyl: function (params){
 			overlay.append("circle")
-				.attr("cx", params.xc / -1000)
-				.attr("cy", params.zc / -1000)
-				.attr("r", params.r / 1000)
+				.attr("cx", params.xc / -1e3)
+				.attr("cy", params.zc / -1e3)
+				.attr("r", params.r / 1e3)
 				.attr('class', 'obstacle');
 		},
 		// horiz plane
 		h: function (params){
-			var patch = overlay.append("path")
+			var view_root = [-params.projected.root[1], -params.projected.root[0]],
+			patch = overlay.append("path")
 				.attr("d", polyF(params.projected.xy))
-				.attr("transform", "translate("+params.projected.root.join(',')+")");
+				.attr("transform", "translate("+view_root.join(',')+")");
 			// Color correctly
 			if (params.features[0] > 20){
 				patch.attr('class', 'flat');
@@ -60,8 +63,8 @@
 			patch.attr('style','fill:rgb('+params.colors.mean.map(Math.floor).join(',')+')');
 
 			overlay.append("circle")
-				.attr("cx", params.projected.root[0])
-				.attr("cy", params.projected.root[1])
+				.attr("cx", view_root[0])
+				.attr("cy", view_root[1])
 				.attr("r", 0.02);
 		},
 		// vertical plane
@@ -78,7 +81,7 @@
 			var poly0 = {
 				center : params.projected.root,
 				perimeter: params.projected.xy.map(local2global, params.projected.root),
-				rho: params.poly.rhoDist.map(function(v){return v/1000;}),
+				rho: params.poly.rhoDist.map(function(v){return v/1e3;}),
 				parameters: params
 			}, ipoly0 = polys.push(poly0) - 1;
 
@@ -100,10 +103,10 @@
 	function mclick(){
 		onTrail = !onTrail;
 		if (!onTrail) {
-			Classify.add_true_path(trail.map(function(t){
-				return all_points[t.pop()].concat(t);
-			}), polys);
+			var hpoints = trail.map(function(t){ return all_points[t.pop()].concat(t); });
 			trail = [];
+			Classify.add_true_path(hpoints, polys);
+			overlay.append("path").attr('class','humanpath').attr("d", arcF(hpoints));
 		}
 	}
 	function mmove(){
@@ -127,7 +130,7 @@
 	}
 
 	function graph(){
-
+		// Check for breakage from non-ground
 		polys.forEach(function(poly, ipoly){
 			console.log(poly)
 			if(poly.parameters.features[0]>20) {return;}
@@ -140,18 +143,20 @@
 			});
 			links = links.filter(function(v, i){ return !breakage[i]; });
 		});
-
-
-		// Make the graph
-		var graph = Graph.make(polys, links);
-		// Draw the links
-		Graph.plot(graph).forEach(function(l){ overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]])); });
+		// All points for the move to move amongst
 		all_points = polys.reduce(function(prev, p){
 			prev.push(p.center);
 			return prev.concat(p.perimeter);
 		}, []);
-		var path_points = Graph.plan(polys, graph, pose, {x:2.5, y: -2.5});
-		overlay.append("path").attr('class','arc').attr("d", arcF(path_points));
+		// Make the graph
+		var graph = Graph.make(polys, links);
+		// Draw the links
+		Graph.plot(graph).forEach(function(l){
+			overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));
+		});
+		// Plan in the graph
+		var path_points = Graph.plan(polys, graph, pose, goal);
+		overlay.append("path").attr('class','autopath').attr("d", arcF(path_points));
 	}
 
 	// Take in human input and process it. Save it in an array for logging
@@ -203,18 +208,26 @@
   }
 
 	// Add the robot marker
-	function draw_pose(pose){
-		if(pose_marker===undefined){
-			pose_marker = overlay.append("path")
+	function draw_pose(){
+		if(pose_marker===undefined) {
+			var data = [[0, 0], [-0.25, 0.05], [-0.25, -0.05]];
+			pose_marker = overlay
+				.append('path')
 				.attr('id', 'pose')
-				.attr("d", polyF([
-					{'x':0,'y':0}, // tip of the triangle
-					{'x':-0.05,'y':0.25},
-					{'x':0.05,'y':0.25}])
-				);
-		} else {
-			pose_marker.attr("transform", "translate(" + -pose.y + "," + -pose.x + ")");
+				.attr("d", polyF(data));
 		}
+		pose_marker.attr("transform", "translate(" + -pose.y + "," + -pose.x + ")");
+	}
+
+	function draw_goal(){
+		if(goal_marker===undefined) {
+			var data = [[0, 0], [0.1, 0], [0, 0.1], [-0.1, 0], [0, -0.1], [0.1, 0]];
+			goal_marker = overlay
+				.append('path')
+				.attr('id', 'pose')
+				.attr("d", polyF(data));
+		}
+		goal_marker.attr("transform", "translate(" + -goal.y + "," + -goal.x + ")");
 	}
 
   function setup_dom(){
@@ -231,10 +244,12 @@
 		d3.select('button#graph').on('click', graph);
 		// Draw the robot icon
 		window.setTimeout(draw_pose, 0);
+		// Draw the robot goal
+		window.setTimeout(draw_goal, 0);
 		// Connect with the peer
-		//window.setTimeout(setup_rtc, 0);
+		window.setTimeout(setup_rtc, 0);
 		// Open logs
-		window.setTimeout(open, 0);
+		//window.setTimeout(open, 0);
   }
 
 	// Handle resizing

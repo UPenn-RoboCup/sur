@@ -134,7 +134,7 @@
 	// See which indicies to connect
 	function match(polys, ipoly0, ipoly1, ind0, ind1) {
 		var poly0 = polys[ipoly0], poly1 = polys[ipoly1], links = [];
-		if(ipoly0===ipoly1){ return links; }
+		if (ipoly0===ipoly1){ return links; }
 
 		ind0.forEach(function(i){
 			var p = poly0.perimeter[i];
@@ -238,7 +238,7 @@
   var poly_classifiers = {
     ground: function(p){
       // Larger it is, then more ground-y it is
-      return numeric.dotVV(p.normal, [0,1,0]) * (1 + 1/abs(p.root[1]/1000));
+      return numeric.dotVV(p.normal, [0,1,0]) * (1 + 1/abs(p.root[1]/1e3));
     },
     inscribedCircle: function(p){
       // Just the smallest radius. Technically not correct, but OK for now

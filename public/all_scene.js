@@ -149,9 +149,10 @@
           conn.send(parameters);
         });
       } else if(parameters.id==='h'){
+				// Into 2D
 				parameters.projected = {
-					root : [parameters.root[0] / -1e3, parameters.root[2]/-1e3],
-					xy : geometry.vertices.map(function(p){return {x: p.x/-1e3, y: p.z/-1e3};}),
+					root : [parameters.root[2]/1e3, parameters.root[0]/1e3],
+					xy : geometry.vertices.map(function(p){return [p.z/1e3, p.x/1e3];}),
 					resolution : parameters.poly.resolution
 				};
         delete parameters.points;
