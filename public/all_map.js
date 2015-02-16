@@ -8,10 +8,9 @@
 		p_conn,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1424122374133',//'hmap1423594639334',
-		//'hmap1422420587688',//'hmap1422420587688',//'hmap1422420624071',
+		logname = 'hmap1424128107208',
 		pose = {x:0, y:0},
-		goal = {x:2, y: -1.5},
+		goal = {x:2.5, y: -2.5},
 		pose_marker,
 		goal_marker,
     map_c,
@@ -132,7 +131,6 @@
 	function graph(){
 		// Check for breakage from non-ground
 		polys.forEach(function(poly, ipoly){
-			console.log(poly)
 			if(poly.parameters.features[0]>20) {return;}
 			// Break links if needed
 			var breakage = links.map(function(l){
@@ -150,12 +148,12 @@
 		}, []);
 		// Make the graph
 		var graph = Graph.make(polys, links);
+		// Plan in the graph
+		var path_points = Graph.plan(polys, graph, pose, goal);
 		// Draw the links
 		Graph.plot(graph).forEach(function(l){
 			overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));
 		});
-		// Plan in the graph
-		var path_points = Graph.plan(polys, graph, pose, goal);
 		overlay.append("path").attr('class','autopath').attr("d", arcF(path_points));
 	}
 
@@ -247,9 +245,9 @@
 		// Draw the robot goal
 		window.setTimeout(draw_goal, 0);
 		// Connect with the peer
-		window.setTimeout(setup_rtc, 0);
+		//window.setTimeout(setup_rtc, 0);
 		// Open logs
-		//window.setTimeout(open, 0);
+		window.setTimeout(open, 0);
   }
 
 	// Handle resizing

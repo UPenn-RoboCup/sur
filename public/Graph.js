@@ -38,9 +38,6 @@
 	function smallest(prev, now, inow){
 		return now < prev[0] ? [now, inow] : prev;
 	}
-	var heuristic = function(n, goal){
-		dist.call(n, goal);
-	}
 
 	function astar_step(graph){
 		var edges = graph.edges,
@@ -69,7 +66,7 @@
 
 		// Check for the goal
 		if (n.id == goal_index) {
-			console.log('Success searching!');
+			//console.log('Success searching!');
 			searchState = SEARCH_SUCCESS;
 			return searchState;
 		}
@@ -80,7 +77,7 @@
 				target_index = e.a==this.id ? e.b : e.a,
 				target_node = nodes[target_index],
 				gnew = this.g + e.cost + target_node.cost;
-				//console.log('Inspect', target_index, gnew);
+				//console.log('Inspect', target_index, gnew, this.g, e.cost, target_node.cost);
 			if (target_node.h===undefined) {
 				// Evaluate the heuristic if not done yet
 				target_node.g = gnew + target_node.cost;
@@ -132,7 +129,7 @@
 				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
 			}
 
-			var e = { /*cost: closest[0],*/ a: pose_node.id, b: id_node };
+			var e = { cost: closest[0], a: pose_node.id, b: id_node };
 			e.id = graph.edges.push(e) - 1;
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
@@ -140,7 +137,7 @@
 
 			// NEED TO CONNECT PERIMETER TO THE CENTER
 			// TODO: Check if this link already exists!
-			var e_poly_direct = {a: id_node, b: id };
+			var e_poly_direct = {a: id_node, b: id, cost: 0 };
 			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
 			graph.nodes[id].edges.push(e_poly_direct.id);
 			graph.nodes[id_node].edges.push(e_poly_direct.id);
@@ -165,12 +162,12 @@
 
 			// NEED TO CONNECT PERIMETER TO THE CENTER
 			// TODO: Check if this link already exists!
-			var e_poly_direct = {a: id_node, b: id };
+			var e_poly_direct = {a: id_node, b: id, cost: 0 };
 			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
 			graph.nodes[id].edges.push(e_poly_direct.id);
 			graph.nodes[id_node].edges.push(e_poly_direct.id);
 
-			var e = { /*cost: closest[0],*/ a: goal_node.id, b: id_node };
+			var e = { cost: closest[0], a: goal_node.id, b: id_node };
 			e.id = graph.edges.push(e) - 1;
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
@@ -181,17 +178,23 @@
 		// Set the pqueue
 		graph.searchState = SEARCH_SEARCHING;
 		graph.openList = new PriorityQueue({
-			comparator: function(a, b) { return b.f - a.f; }
+			comparator: function(a, b) { return a.f - b.f; }
 		});
 		graph.goal_index = goal_node.id;
 		graph.start_index = pose_node.id;
 		// Easy access to the heuristic argument
 		graph.nodes.forEach(function(n){
 			n.p = get_pos(n);
-			n.cost = n.cost || 1;
+			if(n.cost===undefined){
+				n.cost = 1;
+			}
 		});
 		// Edge cost
-		graph.edges.forEach(function(e){ e.cost = e.cost || 0.1; });
+		graph.edges.forEach(function(e){
+			if(typeof e.cost!=='number'){
+				e.cost = dist.call(graph.nodes[e.a].p, graph.nodes[e.b].p);
+			}
+		});
 
 		pose_node.g = 0;
 		pose_node.h = dist.call(goal_node.p, pose_node.p);
@@ -214,7 +217,7 @@
 			path.push(n);
 			n = graph.nodes[n.parent];
 		}
-		console.log('path', path);
+		//console.log('path', path);
 
 		var path_points = path.map(function(p){return p.p;})
 		return path_points;
@@ -274,7 +277,7 @@
 			nodes: nodes,
 			edges: edges,
 		};
-		console.log('Graph', graph);
+		//console.log('Graph', graph);
 		return graph;
 	}
 
@@ -297,7 +300,6 @@
 			}
 			else if(node_b.obj_tree) { p_b = node_b.obj.center; }
 			else { p_b = [node_b.obj.x, node_b.obj.y]; }
-
 			return [p_a, p_b];
 		});
 		return links;
