@@ -25,11 +25,16 @@
 		NODE_OPEN = 0,
 		NODE_CLOSED = 1;
 
-	function get_pos(node){
-		if(typeof node.obj_idx === 'number')
-		{ return node.obj.perimeter[node.obj_idx]; }
-		else if(node.obj_tree) { return node.obj.center; }
-		else { return [node.obj.x, node.obj.y]; }
+		// Returns: [x, y, poly idx, perimeter index]
+	function node2point(node){
+		if(typeof node.obj_idx === 'number'){
+			return node.obj.perimeter[node.obj_idx].concat([node.obj.id, node.obj_idx]);
+		} else if(node.obj_tree) {
+			return node.obj.center.concat([node.obj.id, -1]);
+		} else {
+			// Start or goal... TBD
+			return [node.obj.x, node.obj.y, -1, -1];
+		}
 	}
 
 	function dist(p){
@@ -184,7 +189,7 @@
 		graph.start_index = pose_node.id;
 		// Easy access to the heuristic argument
 		graph.nodes.forEach(function(n){
-			n.p = get_pos(n);
+			n.p = node2point(n);
 			if(n.cost===undefined){
 				n.cost = 1;
 			}
@@ -217,10 +222,10 @@
 			path.push(n);
 			n = graph.nodes[n.parent];
 		}
-		//console.log('path', path);
+		//console.log('Path', path);
 
-		var path_points = path.map(function(p){return p.p;})
-		return path_points;
+		// Path from the start
+		return path.map(function(p){return p.p;}).reverse();
 	}
 
 	// Node Format:
@@ -283,26 +288,9 @@
 
 	// Needs d3 for now
 	function plot(graph){
-		var nodes = graph.nodes, edges = graph.edges;
-		// return the link
-		var links = edges.map(function(edge){
-			var node_a = nodes[edge.a], node_b = nodes[edge.b],
-				p_a, p_b;
-
-			if(typeof node_a.obj_idx === 'number'){
-				p_a = node_a.obj.perimeter[node_a.obj_idx];
-			}
-			else if(node_a.obj_tree) { p_a = node_a.obj.center; }
-			else { p_a = [node_a.obj.x, node_a.obj.y]; }
-
-			if(typeof node_b.obj_idx === 'number'){
-				p_b = node_b.obj.perimeter[node_b.obj_idx];
-			}
-			else if(node_b.obj_tree) { p_b = node_b.obj.center; }
-			else { p_b = [node_b.obj.x, node_b.obj.y]; }
-			return [p_a, p_b];
-		});
-		return links;
+		return graph.edges.map(function(edge){
+			return [node2point(this[edge.a]), node2point(this[edge.b])];
+		}, graph.nodes);
 	}
 
   ctx.Graph = {

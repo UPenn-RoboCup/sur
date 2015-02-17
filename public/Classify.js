@@ -214,24 +214,18 @@
 		return [my_indices, their_indices];
 	}
 
-	function add_true_path(path, polys){
-		console.log('Path', path, polys);
+	// Trail entries: [x, y, dist, all_points index]
+	// all_points entries: [x, y, poly index, perimeter index]
+	function add_true_path(trail, all_points, polys){
+		//console.log('add_true_path', trail, all_points, polys);
 		// Find the points in the polys
-		var features = path.map(function(p){
-			for(var i=0; i<polys.length; i+=1 ){
-				var poly = polys[i], pc = poly.center, pp;
-				if(pc[0]==p[0] && pc[1]==p[1]){
-					return get_pf(poly.parameters);
-				}
-				for(var j=0, per = poly.perimeter; j<per.length; j+=1 ){
-					pp = per[j];
-					if(pp[0]==p[0] && pp[1]==p[1]){
-						return get_ppf({ p: pp, poly: poly, idx: j });
-					}
-				}
-			}
+		var features = trail.map(function(t){
+			var ap = all_points[t[3]],
+				poly = polys[ap[2]];
+			if(ap[3]==-1){return get_pf(poly.parameters);}
+			return get_ppf({ p: poly.perimeter[ap[3]], poly: poly, idx: ap[3] })
 		});
-		console.log(features);
+		console.log('True Features', features);
 	}
 
   // Hold all the classifiers

@@ -83,29 +83,27 @@
 				rho: params.poly.rhoDist.map(function(v){return v/1e3;}),
 				parameters: params
 			}, ipoly0 = polys.push(poly0) - 1;
+			poly0.id = ipoly0;
 
 			// Match the polys together
 			var halfplane_indices = polys.map(Classify.halfplanes, poly0);
 			polys.forEach(function(poly1, ipoly1){
 				var hp = halfplane_indices[ipoly1],
 					intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
-				//console.log(intersects);
 				// Add to all links
 				intersects.forEach(function(l){ links.push(l); });
 			});
-
 		}
 	};
 
 	// Keep track of the mouse trail
+	// Trail entries: [x, y, dist, all_points index]
 	var trail = [], onTrail = false;
 	function mclick(){
 		onTrail = !onTrail;
 		if (!onTrail) {
-			//var hpoints = trail.map(function(t){ return all_points[t.pop()].concat(t); });
-			Classify.add_true_path(trail, polys);
+			Classify.add_true_path(trail, all_points, polys);
 			overlay.append("path").attr('class','humanpath').attr("d", arcF(trail));
-			console.log(trail);
 			trail = [];
 		}
 	}
@@ -144,14 +142,18 @@
 			links = links.filter(function(v, i){ return !breakage[i]; });
 		});
 		// All points for the move to move amongst
-		all_points = polys.reduce(function(prev, p){
-			prev.push(p.center);
-			return prev.concat(p.perimeter);
+		// all_points entries: [x, y, poly index, perimeter index]
+		all_points = polys.reduce(function(prev, p, i){
+			prev.push(p.center.concat([i, -1]));// -1 means center
+			return prev.concat(p.perimeter.map(function(pp, ii){
+				return pp.concat([i, ii]);
+			}));
 		}, []);
 		// Make the graph
 		var graph = Graph.make(polys, links);
 		// Plan in the graph
 		var path_points = Graph.plan(polys, graph, pose, goal);
+		console.log('path_points', path_points);
 		// Draw the links
 		Graph.plot(graph).forEach(function(l){
 			overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));
