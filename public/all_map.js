@@ -102,10 +102,11 @@
 	function mclick(){
 		onTrail = !onTrail;
 		if (!onTrail) {
-			var hpoints = trail.map(function(t){ return all_points[t.pop()].concat(t); });
+			//var hpoints = trail.map(function(t){ return all_points[t.pop()].concat(t); });
+			Classify.add_true_path(trail, polys);
+			overlay.append("path").attr('class','humanpath').attr("d", arcF(trail));
+			console.log(trail);
 			trail = [];
-			Classify.add_true_path(hpoints, polys);
-			overlay.append("path").attr('class','humanpath').attr("d", arcF(hpoints));
 		}
 	}
 	function mmove(){
@@ -113,16 +114,17 @@
 		// Find the closest point
 		//, confidence = Math.exp(-closest[0]);
 		var coord = d3.mouse(this),
-			closest = all_points.map(dist, coord).reduce(smallest, [Infinity, -1]),
-			p = all_points[closest[1]],
-			back = trail.pop();
+			coord_real = [-coord[1], -coord[0]],
+			closest = all_points.map(dist, coord_real).reduce(smallest, [Infinity, -1]),
+			back = trail.pop(),
+			nearby = coord_real.concat(closest);
 		if(!back){
-			trail.push(closest);
-		} else if (back[1] != closest[1]){
+			trail.push(nearby);
+		} else if (back[3] != nearby[3]){
 			trail.push(back);
-			trail.push(closest);
-		} else if (back[0] > closest[0]) {
-			trail.push(closest);
+			trail.push(nearby);
+		} else if (back[2] > nearby[2]) {
+			trail.push(nearby);
 		} else {
 			trail.push(back);
 		}
