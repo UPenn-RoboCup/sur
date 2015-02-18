@@ -112,9 +112,9 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       if(x > 4500 || x < 200){
         return;
       }
-      x = x / 1000;
-      var local = [x, 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR];
-      var rFrame = mat_times_vec(tK2, local);
+      x = x / 1e3;
+      var local = [x, 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR],
+        rFrame = mat_times_vec(tK2, local);
       destination[0] = rFrame[1]*1000;
       destination[1] = rFrame[2]*1000;
       destination[2] = rFrame[0]*1000;
@@ -123,7 +123,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     chestLidar: function (u, v, w, width, height, robot, destination) {
     	'use strict';
       // Saturation
-      if (w === 0 || w === 255) {return;}
+      if (w == 0 || w == 255) {return;}
     	var bodyRoll = 0;
       var bodyTilt = 0;
     	var h_angle0 = hfov[1] - u * (hfov[1] - hfov[0]) / width,
@@ -166,25 +166,32 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     }
   },
   SENSOR_COLOR = {
-    mesh: function (i, j, xyz, img, destination) {
+    mesh: function (i, j, xyz, img, destination, width, height) {
 			// JET colormap. Colors range from 0.0 to 1.0
       var fourValue = 4 - (4 * max(0, min(1, xyz[1] / 1000)));
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
     },
-    kinectV2: function (i, j, xyz, img, destination) {
+    kinectV2: function (i, j, xyz, img, destination, width, height) {
 			// Colors range from 0.0 to 1.0
       var j2 = floor(2.65 * j) - 6;
       //var j2 = floor(1080 * (0.48 - (0.85)*atan(xyz[2]/xyz[0])));
       //var j2 = floor(1080 * (0.44 - (0.7)*atan(xyz[2]/xyz[0])));
-      if (j2 < 0 || j2 >= 1080) { return; }
-      var i2 = 1920 * (0.5 - (0.57)*atan((-xyz[1] - 0.05)/xyz[0]));
-      if (i2 < 0 || i2 >= 1920) { return; }
-      var idx = 4 * floor(i2 + j2 * 1920);
+      if (j2 < 0 || j2 >= height) { return; }
+      var i2 = width * (0.5 - (0.57)*atan((-xyz[1] - 0.05)/xyz[0]));
+      if (i2 < 0 || i2 >= width) { return; }
+      var idx = 4 * floor(i2 + j2 * width);
 			destination[0] = img[idx] / 255;
 			destination[1] = img[idx + 1] / 255;
 			destination[2] = img[idx + 2] / 255;
+    },
+    kinectV2webots: function (i, j, xyz, img, destination, width, height) {
+      // Colors range from 0.0 to 1.0
+      var idx = 4 * floor(i + j * width);
+      destination[0] = img[idx] / 255;
+      destination[1] = img[idx + 1] / 255;
+      destination[2] = img[idx + 2] / 255;
     },
 
   };
@@ -237,6 +244,7 @@ this.addEventListener('message', function (e) {
     get_xyz = SENSOR_XYZ.kinectV2,
     // Color formation function
     get_color = SENSOR_COLOR.kinectV2,
+    get_color = SENSOR_COLOR.kinectV2webots,
     // Loop counters
     i, j,
     // Position of the point
@@ -268,7 +276,7 @@ this.addEventListener('message', function (e) {
       }
       // Set the color of this pixel
       get_color(
-        i, j, point_local, rgb, colors.subarray(position_idx, position_idx + 3)
+        i, j, point_local, rgb, colors.subarray(position_idx, position_idx + 3), width, height
       );
       // TODO: Set the normal...
 			// Update the particle count, since it is valid
