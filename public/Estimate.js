@@ -327,25 +327,28 @@
   }
 
 	function angle_idx(a, nChunks){
-		return round(a/PI+1)*(nChunks/2);
+		return round((a/PI+1)*(nChunks/2));
 	}
 
-	function get_fill_rate(it, params){
-		var p, n_tot=0, n_in=0, n_on = 0, err_r, dx, dz, ang, angles = [], nA, r_close = params.r/10;
+	function get_cyl_rates(it, params){
+		var p, n_tot=0, n_in=0, n_on = 0, err_r, dx, dz, ang, angles = [], nA = 10, r_close = params.r/10;
 		for(var i = 0; i<nA; i+=1){angles[i]=0};
 		for (var a of it){
 			p = a[1];
 			dx = p[0] - params.xc;
 			dz = p[2] - params.zc;
 			err_r = params.r - sqrt(pow(dx, 2) +  pow(dz, 2));
-			ang = angle_idx(atan2(dz, dx), 10);
 			if (err_r > r_close) { n_in += 1; }
 			if (abs(err_r)<=r_close){ n_on += 1; }
+			ang = angle_idx(atan2(dz, dx), nA);
 			angles[ang] = 1;
 			n_tot += 1;
 		}
-		console.log(n_in, n_tot, n_in / n_tot, angles);
-		return n_in / n_tot;
+		//console.log(n_in, n_tot, n_in / n_tot, angle_ratio, angles);
+		return {
+			fill_rate: n_in / n_tot,
+			angle_rate: angles.reduce(function(prev, now){return prev+now}) / nA,
+		};
 	}
 
   // Grow a cylinder from a parameter set
@@ -361,7 +364,7 @@
 
     for (var a of it){
       p = a[1];
-      err_r = sqrt(pow(p[0] - params.xc, 2) +  pow(p[2] - params.zc, 2)) - params.r;
+      err_r = abs(sqrt(pow(p[0] - params.xc, 2) +  pow(p[2] - params.zc, 2)) - params.r);
       if (err_r < 8) {
         sublevels.push(p);
         total_err += err_r;
@@ -420,16 +423,18 @@
           return abs(vertex[1] - py) < 30 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
         });
       var params = estimate_cylinder(it, root);
-
-			console.log('Cylinder',params);
-
 			// Check the fill - an estimate of the error.
-			var fill_rate = get_fill_rate(new Point_cloud_entries(mesh0, function(vertex) {
+			var rates = get_cyl_rates(new Point_cloud_entries(mesh0, function(vertex) {
 				return abs(vertex[1] - py) < 30 && sqrt(pow(vertex[0] - params.xc, 2) +  pow(vertex[2] - params.zc, 2)) <= params.r;
 			}), params);
 
-			if(fill_rate>0.20){
-				console.log('Bad Cyl Fill Rate', fill_rate);
+			console.log('Cylinder',params, rates);
+
+			if(rates.fill_rate>0.20){
+				console.log('Bad Cyl Fill Rate', rates.fill_rate);
+				return false;
+			} else if (rates.angle_rate<=0.3){
+				console.log('Bad Cyl Angle Rate', rates.angle_rate);
 				return false;
 			}
 
