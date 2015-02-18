@@ -154,10 +154,8 @@
 		// Plan in the graph
 		var path_points = Graph.plan(polys, graph, pose, goal);
 		console.log('path_points', path_points);
-		// Draw the links
-		Graph.plot(graph).forEach(function(l){
-			overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));
-		});
+		// Draw the edges
+		//Graph.getEdgePairs(graph).forEach(function(l){overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));});
 		overlay.append("path").attr('class','autopath').attr("d", arcF(path_points));
 	}
 
@@ -249,9 +247,9 @@
 		// Draw the robot goal
 		window.setTimeout(draw_goal, 0);
 		// Connect with the peer
-		//window.setTimeout(setup_rtc, 0);
+		window.setTimeout(setup_rtc, 0);
 		// Open logs
-		window.setTimeout(open, 0);
+		//window.setTimeout(open, 0);
   }
 
 	// Handle resizing

@@ -36,12 +36,17 @@
 			return [node.obj.x, node.obj.y, -1, -1];
 		}
 	}
-
 	function dist(p){
 		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
 	}
 	function smallest(prev, now, inow){
 		return now < prev[0] ? [now, inow] : prev;
+	}
+	// Needs d3 for now
+	function getEdgePairs(graph){
+		return graph.edges.map(function(edge){
+			return [node2point(this[edge.a]), node2point(this[edge.b])];
+		}, graph.nodes);
 	}
 
 	function astar_step(graph){
@@ -53,12 +58,10 @@
 			goal = nodes[goal_index];
 
 		if (searchState != SEARCH_SEARCHING) {
-			console.log('Not searching!');
 			return searchState;
 		}
 
 		if (openList.length==0) {
-			console.log('Nothing in the list!');
 			searchState = SEARCH_FAILED;
 			return searchState;
 		}
@@ -67,11 +70,9 @@
 		// Objects, not addresses, are in the queue
 		var n = openList.dequeue();
 		n.state = NODE_CLOSED;
-		//console.log('Smallest', n.id, n.f, n.g);
 
 		// Check for the goal
 		if (n.id == goal_index) {
-			//console.log('Success searching!');
 			searchState = SEARCH_SUCCESS;
 			return searchState;
 		}
@@ -82,7 +83,6 @@
 				target_index = e.a==this.id ? e.b : e.a,
 				target_node = nodes[target_index],
 				gnew = this.g + e.cost + target_node.cost;
-				//console.log('Inspect', target_index, gnew, this.g, e.cost, target_node.cost);
 			if (target_node.h===undefined) {
 				// Evaluate the heuristic if not done yet
 				target_node.g = gnew + target_node.cost;
@@ -91,7 +91,6 @@
 				target_node.parent = this.id;
 				target_node.state = NODE_OPEN;
 				openList.queue(target_node);
-				//console.log('Enqueue! (Open)', openList.length);
 			} else if (gnew < target_node.g) {
 				target_node.g = gnew;
 				target_node.f = target_node.g + target_node.h;
@@ -99,17 +98,13 @@
 				if (target_node.state == NODE_CLOSED) {
 					target_node.state = NODE_OPEN;
 					openList.queue(target_node);
-					//console.log('Enqueue! (Reopen)', openList.length);
-				}// else {console.log('No enqueue!', openList.length);}
+				}
 			}	else {
-				//console.log('Heapify!', openList.length);
-				// Node changed on open list: need to resort open list
+				// Node changed on open list: need to sort open list again
 				openList.priv._heapify();
-				//console.log('openList len', openList.length);
 			}
 		}, n);
 		searchState = SEARCH_SEARCHING;
-		//console.log('Peek', openList.peek(), openList.length);
 		return searchState;
 	}
 
@@ -286,17 +281,10 @@
 		return graph;
 	}
 
-	// Needs d3 for now
-	function plot(graph){
-		return graph.edges.map(function(edge){
-			return [node2point(this[edge.a]), node2point(this[edge.b])];
-		}, graph.nodes);
-	}
-
   ctx.Graph = {
 		make : make,
 		plan : plan,
-		plot : plot,
+		getEdgePairs : getEdgePairs,
   };
 
 }(this));

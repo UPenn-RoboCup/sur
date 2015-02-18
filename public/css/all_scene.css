@@ -24,3 +24,39 @@ select {
 #info {
   font-size: 10pt;
 }
+/*
+.overlay {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+*/
+#topic2 {
+  position: absolute;
+  cursor: default;
+}
+#topic2 ul {
+  border: 1px;
+  border-style: solid;
+  border-color: black;
+  margin: 0px;
+  padding: 0px;
+  background-color: white;
+  list-style-type:none
+}
+#topic2 hr{
+  margin: 0px;
+}
+#topic2 li {
+  padding-left: 2px;
+  padding-right: 1px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+#topic2 li:hover {
+  background-color: lightgreen;
+}
+
+.hidden{
+  visibility: hidden;
+}

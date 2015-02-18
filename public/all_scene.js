@@ -31,31 +31,11 @@
     p_conn,
     peer_id = 'all_scene',
     peer_map_id = 'all_map',
-    map_peers = [];
+    map_peers = [],
+		last_intersection = {t:0};
 
   function minDotI(maxI, curDot, i, arr){
     return (curDot > arr[maxI]) ? i : maxI;
-  }
-
-  function setup_rtc (){
-    peer = new Peer(peer_id, {host: 'localhost', port: 9000});
-    peer.on('open', function(id) {
-      console.log('My peer ID is: ' + id);
-    });
-    peer.on('disconnected', function(conn) { console.log('disconnected'); });
-    peer.on('error', function(e) { console.log('error', e); });
-    peer.on('close', function() { console.log('close'); });
-    peer.on('connection', function(conn) {
-      map_peers.push(conn);
-      conn.on('data', function(data){
-        console.log('map data',data);
-      });
-      conn.on('close', function(){
-        // remove from map_peers
-        map_peers.shift();
-        console.log('closed conn');
-      });
-    });
   }
 
   var describe = {
@@ -184,42 +164,70 @@
     }
   };
 
+	function estimate_selection(){
+		// Run the descriptor
+		describe.plane(last_intersection.mesh, last_intersection.p);
+	}
+
+	// Refocus the camera
+	function focus_object(e){
+		// Only on the left click
+		if (e.button != 0) { return; }
+		// Not moving around
+		if (!controls.enabled) { return; }
+		// Not a short click refocus
+		//console.log(e.timeStamp - last_intersection.t);
+		if(e.timeStamp - last_intersection.t>90){return;}
+		// Set the new target look
+		controls.target = last_intersection.p;
+		return;
+	}
+
 	// Select an object to rotate around, or general selection for other stuff
 	// TODO: Should work for right or left click...?
+	// Only Right click...?
 	function select_object(e) {
+		//console.log('e', e);
+
 		// find the mouse position (use NDC coordinates, per documentation)
-		var mouse_vector = new THREE.Vector3((e.offsetX / CANVAS_WIDTH) * 2 - 1, 1 - (e.offsetY / CANVAS_HEIGHT) * 2).unproject(camera),
-			T_point = new THREE.Matrix4(),
-			T_inv = new THREE.Matrix4(),
-			T_offset = new THREE.Matrix4(),
-			intersections,
-			obj0,
-			p0,
-      mesh0;
+		var mouse_vector = new THREE.Vector3((e.offsetX / CANVAS_WIDTH) * 2 - 1, 1 - (e.offsetY / CANVAS_HEIGHT) * 2).unproject(camera);
     // Form the raycaster for the camera's current position
     raycaster.ray.set(camera.position, mouse_vector.sub( camera.position ).normalize());
     // Find the intersections with the various meshes in the scene
-    intersections = raycaster.intersectObjects(items.concat(meshes).concat(robot.meshes));
+    var intersections = raycaster.intersectObjects(items.concat(meshes).concat(robot.meshes));
 		// Return if no intersections
-		if (intersections.length === 0) {
+		if (intersections.length == 0) {
 			return;
 		}
 		// Grab the first intersection object and the intersection point
-		obj0 = intersections[0];
-		if(obj0.name==='ground' && intersections[1]){ obj0 = intersections[1]; }
-		p0 = obj0.point;
-    mesh0 = obj0.object;
+		var obj0 = intersections[0];
+		if(obj0.name==='ground' && intersections[1]){
+			obj0 = intersections[1];
+		}
+		var p0 = obj0.point, mesh0 = obj0.object;
+
+		// Save the intersection for a mouseup refocus
+		last_intersection.p = p0
+		last_intersection.mesh = mesh0
+		last_intersection.t = e.timeStamp;
+
+		// Default gives a text cursor
+		if (e.button != 2) { return; }
+		e.preventDefault();
+
+		// If not the mesh, then don't worry
+		if(mesh0.name === 'kinectV2'){
+			window.setTimeout(estimate_selection, 0);
+		}
+
     // Solve for the transform from the robot frame to the point
 		/*
     T_? * T_Robot = T_point
     T_? = T_point * T_Robot ^ -1
     */
-		T_point.makeTranslation(p0.x, p0.y, p0.z);
-		T_inv.getInverse(robot.object.matrix);
-		T_offset.multiplyMatrices(
-			T_point,
-			T_inv
-		);
+		var T_point = new THREE.Matrix4().makeTranslation(p0.x, p0.y, p0.z),
+			T_inv = new THREE.Matrix4().getInverse(robot.object.matrix),
+			T_offset = new THREE.Matrix4().multiplyMatrices(T_point, T_inv);
 
     // Debugging
     sprintf.apply({},['%0.2f %f', 1,2, 55]);
@@ -232,26 +240,6 @@
       sprintf.apply(null, offset_msg),
       sprintf.apply(null, global_msg)
     ]);
-
-    // TODO: Right click behavior
-		if (e.button === 2) {
-			// Right click
-			return;
-		} else {
-			// Left click: Update the orbit target
-			// TODO: make smooth transition via a setInterval interpolation to the target
-      if (controls.enabled) {
-        controls.target = p0;
-      } else {
-        // Default gives a text cursor
-        e.preventDefault();
-        if(mesh0.name !== 'kinectV2'){
-          return;
-        }
-        var f_describe = describe[selection.value];
-        if(typeof f_describe === 'function'){ f_describe(mesh0, p0); }
-      }
-		}
 	}
 	// Constantly animate the scene
 	function animate() {
@@ -427,6 +415,7 @@
 		container.appendChild(renderer.domElement);
 		// Object selection
 		container.addEventListener('mousedown', select_object, false);
+		container.addEventListener('mouseup', focus_object, false);
 		camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
     //camera = new THREE.OrthographicCamera( CANVAS_WIDTH / - 2, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_HEIGHT / - 2, 1, 1000 );
 		camera.position.copy(new THREE.Vector3(500, 2000, -500));
@@ -464,16 +453,31 @@
   			});
   		});
     });
-    // User interactions
-		selection = d3.select('select#objects').node();
-    d3.select('button#look').on('click', function(){
-      controls.enabled = true;
-    });
-    d3.select('button#draw').on('click', function(){
-      controls.enabled = false;
-    });
-    // ReatTime Comms to other windows
-    setup_rtc();
+
+    // RealTime Comms to other windows
+    window.setTimeout(setup_rtc, 0);
+
+	}
+
+	function setup_rtc (){
+		peer = new Peer(peer_id, {host: 'localhost', port: 9000});
+		peer.on('open', function(id) {
+			console.log('My peer ID is: ' + id);
+		});
+		peer.on('disconnected', function(conn) { console.log('disconnected'); });
+		peer.on('error', function(e) { console.log('error', e); });
+		peer.on('close', function() { console.log('close'); });
+		peer.on('connection', function(conn) {
+			map_peers.push(conn);
+			conn.on('data', function(data){
+				console.log('map data',data);
+			});
+			conn.on('close', function(){
+				// remove from map_peers
+				map_peers.shift();
+				console.log('closed conn');
+			});
+		});
 	}
 
   ctx.util.ljs('/Estimate.js', function(){
@@ -492,6 +496,29 @@
 			// Just see the scene
 			document.body.appendChild(view);
       ctx.util.ljs('/bc/threejs/build/three.js', setup3d);
+			// Menu
+			d3.select("body").on('contextmenu',function (e) {
+				//d3.event.preventDefault();
+				var coord = d3.mouse(this),
+					el = document.getElementById('topic2');
+				el.classList.toggle('hidden');
+				el.style.left = coord[0]+'px';
+				el.style.top = coord[1]+'px';
+			});
+			/*
+			// User interactions
+			selection = d3.select('select#objects').node();
+			d3.select('button#look').on('click', function(){
+				controls.enabled = true;
+			});
+			d3.select('button#draw').on('click', function(){
+				controls.enabled = false;
+			});
+			*/
+			d3.selectAll('#topic2 li').on('click', function(){
+				document.getElementById('topic2').classList.add('hidden');
+				var action = this.getAttribute('data-action');
+			});
 		});
 	});
 
