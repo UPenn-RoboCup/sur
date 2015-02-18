@@ -110,7 +110,8 @@
       zzSum = 0,
       xySum = 0,
       xzSum = 0,
-      yzSum = 0;
+      yzSum = 0,
+			c_episilon = 0.1;
     for (var a of it) {
       p = a[1];
       // Go to 0-255
@@ -137,9 +138,9 @@
     function divN(v){return v / (nClose + 1);}
     // diagonal entries
     var d = [
-      xxSum - pow(xSum,2)/nClose,
-      yySum - pow(ySum,2)/nClose,
-      zzSum - pow(zSum,2)/nClose,
+      xxSum - pow(xSum,2)/nClose + c_episilon,
+      yySum - pow(ySum,2)/nClose + c_episilon,
+      zzSum - pow(zSum,2)/nClose + c_episilon,
     ].map(divN);
     // off diagonals: xz, xy, zy
     var of = 1 / nClose,//2 / nClose + nClose,
@@ -153,6 +154,7 @@
       [o[0],d[1],o[2]],
       [o[1],o[2],d[2]]
     ];
+		console.log('Colors', cov, nClose)
     return {
       mean: [xSum, ySum, zSum].map(function(v,i){return v/nClose;}),
       cov: cov,
@@ -199,11 +201,14 @@
       points.push(p);
     }
 
-    var A_plane_inv = numeric.inv([
+		var A_plane = [
       [zzSum, xzSum, zSum],
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
-    ]);
+    ];
+		console.log(A_plane);
+
+    var A_plane_inv = numeric.inv(A_plane);
     var sol_plane = numeric.dot(A_plane_inv, [zySum, xySum, ySum]);
     var normal = normalize([-sol_plane[0], -sol_plane[1], 1]);
 
@@ -484,7 +489,7 @@
       	e_v = get_plane_error(vert_params.points.entries(), vert_params);
 
 			var params;
-			if(e_h.n_points<100 && e_v.n_points<100){
+			if(e_h.n_points<25 && e_v.n_points<25){
 				params = null
 			} else if(e_v.n_points>3*e_h.n_points){
 				params = vert_params;
@@ -498,6 +503,7 @@
 
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
+			console.log('Colors w/ params', params)
       params.points = grow_plane(new Point_cloud_entries(mesh0), params);
 
       // Update the roughness

@@ -102,7 +102,8 @@ get_config(["kinect","mountOffset"], function(val){
 // robot: pose (px,py,pa element) and bodyTilt elements
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
-  MIN_CONNECTIVITY = 40,//50, //25.4, // points within MIN_CONNECTIVITY of each other are connected
+  // points within MIN_CONNECTIVITY of each other are connected
+  MIN_CONNECTIVITY = 75, //40 /*real*/, //75 /*webots*/,
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, robot, destination) {
@@ -112,6 +113,22 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       if(x > 4500 || x < 200){
         return;
       }
+      x = x / 1e3;
+      var local = [x, 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR],
+        rFrame = mat_times_vec(tK2, local);
+      destination[0] = rFrame[1]*1000;
+      destination[1] = rFrame[2]*1000;
+      destination[2] = rFrame[0]*1000;
+      return local;
+    },
+    kinectV2webots: function (u, v, x, width, height, robot, destination) {
+      // The range value is directly our x coordinate
+      'use strict';
+      // 4.5 meters away is too far to render
+      if(x >= 4500 || x < 200){
+        return;
+      }
+      //console.log(x);
       x = x / 1e3;
       var local = [x, 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR],
         rFrame = mat_times_vec(tK2, local);
@@ -241,9 +258,10 @@ this.addEventListener('message', function (e) {
 			row: 0
 		}],
     // Cartesian coordinate formation function
-    get_xyz = SENSOR_XYZ.kinectV2,
+    //get_xyz = SENSOR_XYZ.kinectV2,
+    get_xyz = SENSOR_XYZ.kinectV2webots,
     // Color formation function
-    get_color = SENSOR_COLOR.kinectV2,
+    //get_color = SENSOR_COLOR.kinectV2,
     get_color = SENSOR_COLOR.kinectV2webots,
     // Loop counters
     i, j,
