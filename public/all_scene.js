@@ -122,17 +122,17 @@
         var maxPoint1 = geometry.vertices[
           geometry.vertices.map(makeDot, dir1).reduce(minDotI, 0)
         ];
-        parameters.endpoints.push({
-          x: (maxPoint1.x + parameters.root[0])/-1e3,
-          y: (maxPoint1.z + parameters.root[2])/-1e3
-        });
+        parameters.endpoints.push([
+          (maxPoint1.z + parameters.root[2])/1e3,
+					(maxPoint1.x + parameters.root[0])/1e3
+        ]);
         var maxPoint2 = geometry.vertices[
           geometry.vertices.map(makeDot, dir2).reduce(minDotI, 0)
         ];
-        parameters.endpoints.push({
-          x: (maxPoint2.x + parameters.root[0])/-1e3,
-          y: (maxPoint2.z + parameters.root[2])/-1e3
-        });
+        parameters.endpoints.push([
+					(maxPoint2.z + parameters.root[2])/1e3,
+          (maxPoint2.x + parameters.root[0])/1e3
+        ]);
       } else if(parameters.id==='h'){
 				// Vertices here
 				geometry.vertices = poly.xy.map(function(p){
@@ -483,7 +483,7 @@
     });
 
     // RealTime Comms to other windows
-    window.setTimeout(setup_rtc, 0);
+    setup_rtc();
 
 	}
 
@@ -557,6 +557,7 @@
 				}
 				// Remove the complicated object before sending to peers
 				delete last_selected_parameters.points;
+				console.log('Sending', last_selected_parameters);
 				map_peers.forEach(function(conn){ conn.send(this); }, last_selected_parameters);
 				// Reset the parameters
 				last_selected_parameters = null;

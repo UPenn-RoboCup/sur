@@ -161,6 +161,7 @@
 
 	// Take in human input and process it. Save it in an array for logging
 	function parse_param(data){
+		console.log('Loaded', data);
 		if(typeof add_map[data.id] === 'function') {
 			add_map[data.id](data);
 		}
@@ -178,7 +179,6 @@
 			} else {
 				debug(['Loaded ' + logname]);
 				var data = JSON.parse(jdata);
-				console.log('Loaded',data);
 				// not the last element:
 				//data.pop();
 				data.forEach(parse_param);

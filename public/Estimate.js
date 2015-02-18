@@ -435,6 +435,7 @@
       var params = estimate_cylinder(it, root);
 			if(params.r>500||params.r<40){
 				console.log('Bad Cyl Radius Rate', params);
+				return false;
 			}
 			// Check the fill - an estimate of the error.
 			var rates = get_cyl_rates(new Point_cloud_entries(mesh0, function(vertex) {
