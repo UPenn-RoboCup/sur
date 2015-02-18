@@ -48,12 +48,14 @@
   function minDotI(maxI, curDot, i, arr){
     return (curDot > arr[maxI]) ? i : maxI;
   }
+	function angle_idx_inv(idx, nChunks){
+		return Math.PI*(2*idx/nChunks-1);
+	}
 
   var describe = {
     cylinder: function(mesh0, p0){
 			var parameters = E.cylinder(mesh0, p0);
 			if(!parameters){return};
-			//if(true){ return; }
       // Cylinder
       var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20),
       	material = new THREE.MeshBasicMaterial({color: 0xffff00}),
@@ -61,20 +63,14 @@
       cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
 			items.push(cylinder);
       scene.add(cylinder);
-
-      map_peers.forEach(function(conn){
-        delete parameters.points;
-        conn.send(parameters);
-      });
+			parameters.points = cylinder;
+			return parameters;
     },
     plane: function(mesh0, p0){
 
-			if(true){
-				E.plane(mesh0, p0);
-				return;
-			}
+			var parameters = E.plane(mesh0, p0);
 
-      var parameters = E.plane(mesh0, p0);
+			if(!parameters){return;}
 
       var quat_rot = (new THREE.Quaternion()).setFromUnitVectors(
         new THREE.Vector3(0,1,0),
@@ -95,7 +91,6 @@
 				return [v[0],v[1],v[2],v[3]];
 			});
 
-
       var poly = E.find_poly(parameters);
       parameters.poly = poly;
       // Classify:
@@ -108,12 +103,18 @@
         linewidth: 20
       });
       var geometry = new THREE.Geometry();
-      geometry.vertices = poly.xy.map(function(p){
-        return (new THREE.Vector3(p[1], 10, p[0])).applyQuaternion(quat_rot);
-      });
+
 
       // Send to the map
       if(parameters.id==='v'){
+				// TODO: Tweak
+				geometry.vertices = poly.rhoDist.map(function(r, idx, arr){
+					var a = angle_idx_inv(idx, arr.length),
+						x = Math.sin(a)*r,
+						z = -Math.cos(a)*r;
+					return (new THREE.Vector3(x, 0, z)).applyQuaternion(quat_rot);
+				});
+
         var makeDot = function(p){ return numeric.dot([p.x, p.z], this); };
         var dir1 = [-parameters.normal[2], parameters.normal[0]];
         var dir2 = [parameters.normal[2], -parameters.normal[0]];
@@ -132,31 +133,27 @@
           x: (maxPoint2.x + parameters.root[0])/-1e3,
           y: (maxPoint2.z + parameters.root[2])/-1e3
         });
-
-        delete parameters.points;
-        map_peers.forEach(function(conn){
-          conn.send(parameters);
-        });
       } else if(parameters.id==='h'){
+				// Vertices here
+				geometry.vertices = poly.xy.map(function(p){
+					return (new THREE.Vector3(p[1], 10, p[0])).applyQuaternion(quat_rot);
+				});
 				// Into 2D
 				parameters.projected = {
 					root : [parameters.root[2]/1e3, parameters.root[0]/1e3],
 					xy : geometry.vertices.map(function(p){return [p.z/1e3, p.x/1e3];}),
 					resolution : parameters.poly.resolution
 				};
-        delete parameters.points;
-        map_peers.forEach(function(conn){conn.send(parameters);});
+
       }
 
 			// close the loop
-			geometry.vertices.push(
-				(new THREE.Vector3(poly.xy[0][1], 10, poly.xy[0][0]))
-				.applyQuaternion(quat_rot)
-			);
+			geometry.vertices.push(geometry.vertices[geometry.vertices.length-1]);
 			var line = new THREE.Line( geometry, material );
 			line.position.fromArray(parameters.root);
 			scene.add(line);
 
+			parameters.points = line;
 
       /*
       var geometry = new THREE.SphereGeometry( 50, 16, 16 );
@@ -169,14 +166,25 @@
       E.paint(parameters);
       mesh0.geometry.getAttribute('color').needsUpdate = true;
       */
-
+			return parameters;
     }
   };
 
+	var last_selected_parameters = null;
+
 	function estimate_selection(){
 		// Run the descriptor
-		describe.plane(last_intersection.mesh, last_intersection.p);
-		describe.cylinder(last_intersection.mesh, last_intersection.p);
+		var cyl, pl;
+		cyl = describe.cylinder(last_intersection.mesh, last_intersection.p);
+		if(cyl){
+			last_selected_parameters = cyl;
+			return;
+		}
+		pl = describe.plane(last_intersection.mesh, last_intersection.p);
+		if(pl){
+			last_selected_parameters = pl;
+			return;
+		}
 	}
 
 	// Refocus the camera
@@ -191,6 +199,7 @@
 			// Left click
 			if(!menu.classList.contains('hidden')){
 				menu.classList.add('hidden');
+				last_selected_parameters = null;
 				return;
 			}
 			// Not moving around
@@ -245,6 +254,7 @@
     T_? * T_Robot = T_point
     T_? = T_point * T_Robot ^ -1
     */
+		/*
 		var T_point = new THREE.Matrix4().makeTranslation(p0.x, p0.y, p0.z),
 			T_inv = new THREE.Matrix4().getInverse(robot.object.matrix),
 			T_offset = new THREE.Matrix4().multiplyMatrices(T_point, T_inv);
@@ -255,11 +265,13 @@
     offset_msg.unshift('Offset: %0.2f %0.2f %0.2f');
     var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray();
     global_msg.unshift('Global: %0.2f %0.2f %0.2f');
+
     debug([
       obj0.object.name,
       sprintf.apply(null, offset_msg),
       sprintf.apply(null, global_msg)
     ]);
+		*/
 	}
 	// Constantly animate the scene
 	function animate() {
@@ -517,11 +529,7 @@
 				//d3.event.preventDefault();
 
 			});
-			//var _container = d3.select("#world_container");
-			//container = _container.node();
 			container = document.getElementById('world_container');
-			//_container.on('mousedown', select_object);
-			//_container.on('mouseup', focus_object);
 			// Object selection
 			container.addEventListener('mousedown', select_object, false);
 			container.addEventListener('mouseup', focus_object, false);
@@ -539,6 +547,19 @@
 			d3.selectAll('#topic2 li').on('click', function(){
 				document.getElementById('topic2').classList.add('hidden');
 				var action = this.getAttribute('data-action');
+				// Need parameters
+				if(!last_selected_parameters){ return; }
+				console.log('Action', action);
+				switch(action){
+					case 'clear':
+						scene.remove(last_selected_parameters.points);
+						break;
+				}
+				// Remove the complicated object before sending to peers
+				delete last_selected_parameters.points;
+				map_peers.forEach(function(conn){ conn.send(this); }, last_selected_parameters);
+				// Reset the parameters
+				last_selected_parameters = null;
 			});
 		});
 	});

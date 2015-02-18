@@ -78,18 +78,25 @@
 		}
   }
 
-  function get_plane_error_rate(it, params){
-    var total_err = 0,
+  function get_plane_error(it, params){
+    var total_err = 0, err,
+			n_big_err = 0,
       cnt = 0,
       p0 = params.root,
       n = params.normal,
       p;
     for (var a of it){
       p = a[1];
-      total_err += abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
+			err = abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
+			if(err>15){ n_big_err += 1; }
+      total_err += err;
       cnt += 1;
     }
-    return total_err / cnt;
+    return {
+			error_rate: total_err / cnt,
+			big_error_ratio: n_big_err / cnt,
+			n_points: cnt
+		};
   }
 
   function estimate_colors(it){
@@ -348,6 +355,8 @@
 		return {
 			fill_rate: n_in / n_tot,
 			angle_rate: angles.reduce(function(prev, now){return prev+now}) / nA,
+			on_rate: n_on / n_tot,
+			on_in_ratio: n_on / n_in,
 		};
 	}
 
@@ -357,7 +366,8 @@
     var p,
       sublevels = [],
       err_r,
-      total_err = 0;
+      total_err = 0,
+			r_close = params.r/12;
 
     // Find the valid sublevels based on how well the radius agrees
     // TODO: Use some probablity thing, maybe
@@ -365,7 +375,7 @@
     for (var a of it){
       p = a[1];
       err_r = abs(sqrt(pow(p[0] - params.xc, 2) +  pow(p[2] - params.zc, 2)) - params.r);
-      if (err_r < 8) {
+      if (err_r < r_close) {
         sublevels.push(p);
         total_err += err_r;
       }
@@ -423,26 +433,28 @@
           return abs(vertex[1] - py) < 30 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
         });
       var params = estimate_cylinder(it, root);
+			if(params.r>500||params.r<40){
+				console.log('Bad Cyl Radius Rate', params);
+			}
 			// Check the fill - an estimate of the error.
 			var rates = get_cyl_rates(new Point_cloud_entries(mesh0, function(vertex) {
 				return abs(vertex[1] - py) < 30 && sqrt(pow(vertex[0] - params.xc, 2) +  pow(vertex[2] - params.zc, 2)) <= params.r;
 			}), params);
 
-			console.log('Cylinder',params, rates);
-
 			if(rates.fill_rate>0.20){
-				console.log('Bad Cyl Fill Rate', rates.fill_rate);
+				console.log('Bad Cyl Fill Rate', rates);
 				return false;
 			} else if (rates.angle_rate<=0.3){
-				console.log('Bad Cyl Angle Rate', rates.angle_rate);
+				console.log('Bad Cyl Angle Rate', rates);
 				return false;
 			}
-
 
       // Grow to update
 			params = grow_cylinder(new Point_cloud_entries(mesh0), params);
 			params.id = 'cyl';
       //console.log(parameters);
+
+			console.log('Cylinder', params, rates);
 
       return params;
     },
@@ -460,29 +472,28 @@
 
       var horiz_params = estimate_plane(horizontal_it, root);
       horiz_params.id = 'h';
-      //console.log('horiz', horiz_params);
 
       var vert_params = estimate_plane(vertical_it, root);
       vert_params.id = 'v';
       vert_params.normal[1] = 0;
       vert_params.normal = normalize(vert_params.normal);
-      //console.log('vert', vert_params);
 
-      var e_h = get_plane_error_rate(horiz_params.points.entries(), horiz_params),
-        n_h = horiz_params.points.length;
-      var e_v = get_plane_error_rate(vert_params.points.entries(), vert_params),
-        n_v = vert_params.points.length;
+			// Choose if vertical or horizontal
+      var e_h = get_plane_error(horiz_params.points.entries(), horiz_params),
+      	e_v = get_plane_error(vert_params.points.entries(), vert_params);
 
-      console.log('horiz',e_h, e_v);
-      console.log('vert',n_h, n_v);
+			var params;
+			if(e_h.n_points<100 && e_v.n_points<100){
+				params = null
+			} else if(e_v.n_points>3*e_h.n_points){
+				params = vert_params;
+			} else if(e_v.big_error_ratio>0.25){
+				params = horiz_params;
+			}
 
-      // Choose if vertical or horizontal
-      var params;
-      if (e_h < e_v) {
-        params = horiz_params;
-      } else {
-        params = vert_params;
-      }
+			console.log('H Error', e_h, horiz_params);
+			console.log('V Error', e_v, vert_params);
+			if(!params){return false;}
 
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
@@ -493,6 +504,8 @@
       params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
       // e_val = eigs.lambda.x[2] * 1e6, // 1e3 * 1e3, since covariance is a squared dependence
       // e_vec = [eigs.E.x[0][2],eigs.E.x[1][2],eigs.E.x[2][2]];
+
+			console.log(params.id+' Plane', params);
 
       return params;
     },

@@ -46,6 +46,9 @@
 	function angle_idx(a, nChunks){
 		return (a/PI+1)*(nChunks/2);
 	}
+	function angle_idx_inv(idx, nChunks){
+		return PI*(2*idx/nChunks-1);
+	}
 
 	// Requires: stop>=start
 	function get_wrapped_indices(start, stop, max){
@@ -272,6 +275,9 @@
 	// Edge classification
 	var edge_classifiers = {
 		elevation: function(obj){
+			return 0;
+		},
+		dist2obstacle: function(obj){
 			return 0;
 		},
 	};
