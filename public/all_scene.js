@@ -34,37 +34,46 @@
     map_peers = [],
 		last_intersection = {t:0};
 
+		/*
+		// [x center, y center, z center, radius, height]
+		d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
+			parameters.zc / 1000,
+			parameters.xc / 1000,
+			parameters.yc / 1000,
+			parameters.r / 1000,
+			parameters.h / 1000,
+		]));
+		*/
+
   function minDotI(maxI, curDot, i, arr){
     return (curDot > arr[maxI]) ? i : maxI;
   }
 
   var describe = {
     cylinder: function(mesh0, p0){
+			var parameters = E.cylinder(mesh0, p0);
+			if(!parameters){return};
+			//if(true){ return; }
       // Cylinder
-      var parameters = E.cylinder(mesh0, p0);
-      var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20);
-      var material = new THREE.MeshBasicMaterial({color: 0xffff00});
-      var cylinder = new THREE.Mesh(geometry, material);
+      var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20),
+      	material = new THREE.MeshBasicMaterial({color: 0xffff00}),
+      	cylinder = new THREE.Mesh(geometry, material);
       cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
+			items.push(cylinder);
       scene.add(cylinder);
-      items.push(cylinder);
+
       map_peers.forEach(function(conn){
         delete parameters.points;
         conn.send(parameters);
       });
-      // TODO: add uncertainty
-      /*
-      // [x center, y center, z center, radius, height]
-      d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
-        parameters.zc / 1000,
-        parameters.xc / 1000,
-        parameters.yc / 1000,
-        parameters.r / 1000,
-        parameters.h / 1000,
-      ]));
-      */
     },
     plane: function(mesh0, p0){
+
+			if(true){
+				E.plane(mesh0, p0);
+				return;
+			}
+
       var parameters = E.plane(mesh0, p0);
 
       var quat_rot = (new THREE.Quaternion()).setFromUnitVectors(
@@ -167,27 +176,43 @@
 	function estimate_selection(){
 		// Run the descriptor
 		describe.plane(last_intersection.mesh, last_intersection.p);
+		describe.cylinder(last_intersection.mesh, last_intersection.p);
 	}
 
 	// Refocus the camera
 	function focus_object(e){
-		// Only on the left click
-		if (e.button != 0) { return; }
-		// Not moving around
-		if (!controls.enabled) { return; }
 		// Not a short click refocus
 		//console.log(e.timeStamp - last_intersection.t);
-		if(e.timeStamp - last_intersection.t>90){return;}
-		// Set the new target look
-		controls.target = last_intersection.p;
-		return;
+		if(e.timeStamp - last_intersection.t>90){
+			return;
+		}
+		var menu = document.getElementById('topic2');
+		if (e.button == 0) {
+			// Left click
+			if(!menu.classList.contains('hidden')){
+				menu.classList.add('hidden');
+				return;
+			}
+			// Not moving around
+			if (!controls.enabled) { return; }
+			// Set the new target look
+			controls.target = last_intersection.p;
+		} else {
+			// Right click
+			menu.classList.toggle('hidden');
+			menu.style.left = e.offsetX+'px';
+			menu.style.top = e.offsetY+'px';
+			// If clicked the mesh, run the processing
+			if(last_intersection.mesh.name === 'kinectV2'){
+				window.setTimeout(estimate_selection, 0);
+			}
+		}
 	}
 
 	// Select an object to rotate around, or general selection for other stuff
 	// TODO: Should work for right or left click...?
 	// Only Right click...?
 	function select_object(e) {
-		//console.log('e', e);
 
 		// find the mouse position (use NDC coordinates, per documentation)
 		var mouse_vector = new THREE.Vector3((e.offsetX / CANVAS_WIDTH) * 2 - 1, 1 - (e.offsetY / CANVAS_HEIGHT) * 2).unproject(camera);
@@ -214,11 +239,6 @@
 		// Default gives a text cursor
 		if (e.button != 2) { return; }
 		e.preventDefault();
-
-		// If not the mesh, then don't worry
-		if(mesh0.name === 'kinectV2'){
-			window.setTimeout(estimate_selection, 0);
-		}
 
     // Solve for the transform from the robot frame to the point
 		/*
@@ -404,7 +424,6 @@
 					color: 0x7F5217
 				})
 			);
-		container = document.getElementById('world_container');
 		CANVAS_WIDTH = container.clientWidth;
 		CANVAS_HEIGHT = container.clientHeight;
 		renderer = new THREE.WebGLRenderer({
@@ -413,9 +432,6 @@
 		renderer.setClearColor(0x80CCFF, 1);
 		renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		container.appendChild(renderer.domElement);
-		// Object selection
-		container.addEventListener('mousedown', select_object, false);
-		container.addEventListener('mouseup', focus_object, false);
 		camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
     //camera = new THREE.OrthographicCamera( CANVAS_WIDTH / - 2, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_HEIGHT / - 2, 1, 1000 );
 		camera.position.copy(new THREE.Vector3(500, 2000, -500));
@@ -499,12 +515,17 @@
 			// Menu
 			d3.select("body").on('contextmenu',function (e) {
 				//d3.event.preventDefault();
-				var coord = d3.mouse(this),
-					el = document.getElementById('topic2');
-				el.classList.toggle('hidden');
-				el.style.left = coord[0]+'px';
-				el.style.top = coord[1]+'px';
+
 			});
+			//var _container = d3.select("#world_container");
+			//container = _container.node();
+			container = document.getElementById('world_container');
+			//_container.on('mousedown', select_object);
+			//_container.on('mouseup', focus_object);
+			// Object selection
+			container.addEventListener('mousedown', select_object, false);
+			container.addEventListener('mouseup', focus_object, false);
+
 			/*
 			// User interactions
 			selection = d3.select('select#objects').node();
