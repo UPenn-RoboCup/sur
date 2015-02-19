@@ -8,9 +8,9 @@
 		p_conn,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1424128107208',
+		logname = 'hmap1424285273981',
 		pose = {x:0, y:0},
-		goal = {x:2.5, y: -2.5},
+		goal = {x:4, y: 0},
 		pose_marker,
 		goal_marker,
     map_c,
@@ -50,7 +50,7 @@
 		h: function (params){
 			var view_root = [-params.projected.root[1], -params.projected.root[0]],
 			patch = overlay.append("path")
-				.attr("d", polyF(params.projected.xy))
+				.attr("d", arcF(params.projected.xy))
 				.attr("transform", "translate("+view_root.join(',')+")");
 			// Color correctly
 			if (params.features[0] > 20){
@@ -86,9 +86,11 @@
 			poly0.id = ipoly0;
 
 			// Match the polys together
-			var halfplane_indices = polys.map(Classify.halfplanes, poly0);
 			polys.forEach(function(poly1, ipoly1){
-				var hp = halfplane_indices[ipoly1],
+				if (ipoly0 == ipoly1) {
+					return;
+				}
+				var hp = Classify.halfplanes.call(poly0, poly1),
 					intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
 				// Add to all links
 				intersects.forEach(function(l){ links.push(l); });
@@ -131,11 +133,13 @@
 	function graph(){
 		// Check for breakage from non-ground
 		polys.forEach(function(poly, ipoly){
-			if(poly.parameters.features[0]>20) {return;}
+			//if(poly.parameters.features[0]>20) {return;}
 			// Break links if needed
 			var breakage = links.map(function(l){
-				var a = polys[l.poly_a].perimeter[l.ind_a] || polys[l.poly_a].center,
-					b = polys[l.poly_b].perimeter[l.ind_b] || polys[l.poly_b].center,
+				if(ipoly==l.poly_a || ipoly==l.poly_b){return false;}
+				var p_a = polys[l.poly_a], p_b = polys[l.poly_b],
+					a = p_a.perimeter[l.ind_a] || p_a.center,
+					b = p_a.perimeter[l.ind_b] || p_a.center,
 					does_break = Classify.breaks(poly, a, b);
 				return does_break;
 			});
@@ -152,11 +156,13 @@
 		// Make the graph
 		var graph = Graph.make(polys, links);
 		// Plan in the graph
+		/*
 		var path_points = Graph.plan(polys, graph, pose, goal);
 		console.log('path_points', path_points);
-		// Draw the edges
-		//Graph.getEdgePairs(graph).forEach(function(l){overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));});
 		overlay.append("path").attr('class','autopath').attr("d", arcF(path_points));
+		*/
+		// Draw the edges
+		Graph.getEdgePairs(graph).forEach(function(l){overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));});
 	}
 
 	// Take in human input and process it. Save it in an array for logging
@@ -180,6 +186,11 @@
 				debug(['Loaded ' + logname]);
 				var data = JSON.parse(jdata);
 				// not the last element:
+				data.pop();
+				data.pop();
+				data.unshift(data.pop());
+				//data.pop();
+				//data.pop();
 				//data.pop();
 				data.forEach(parse_param);
 			}
@@ -234,7 +245,7 @@
     map_c = d3.select('#map_container').node();
   	// Add the overlay
   	overlay = d3.select("#map_container").append("svg").attr('class', 'overlay')
-	    .attr('viewBox', "-3 -3 6 6").attr('preserveAspectRatio', "none")
+	    .attr('viewBox', "-3 -5 6 6").attr('preserveAspectRatio', "none")
 	    .attr('width', map_c.clientWidth).attr('height', map_c.clientHeight)
 			.on('mousemove', mmove)
 			.on('click', mclick);
@@ -247,9 +258,9 @@
 		// Draw the robot goal
 		window.setTimeout(draw_goal, 0);
 		// Connect with the peer
-		window.setTimeout(setup_rtc, 0);
+		//window.setTimeout(setup_rtc, 0);
 		// Open logs
-		//window.setTimeout(open, 0);
+		window.setTimeout(open, 0);
   }
 
 	// Handle resizing

@@ -40,8 +40,8 @@
 	function dist(p){
 		return sqrt(pow(this[1] - p[1], 2) + pow(p[1]-this[1], 2));
 	}
-	function angle(p1, p2){
-		return atan2(p1[0]-p2[0], p1[1]-p2[1]);
+	function angle(p){
+		return atan2(p[1]-this[1], p[0]-this[0]);
 	}
 	function angle_idx(a, nChunks){
 		return (a/PI+1)*(nChunks/2);
@@ -67,8 +67,8 @@
 	// No: Just the closest one
 	function cone(e){
 		var nChunks = this.rho.length,
-			a0 = angle(this.center, e[0]),
-			a1 = angle(this.center, e[1]),
+			a0 = angle.call(this.center, e[0]),
+			a1 = angle.call(this.center, e[1]),
 			a0i = min(round(angle_idx(a0, nChunks)), nChunks-1),
 			a1i = min(round(angle_idx(a1, nChunks)), nChunks-1),
 			is_inverted = a0i > a1i,
@@ -101,16 +101,18 @@
 		// this is the polygon
 		// p is the point to test
 		var nChunks = this.rho.length,
-			r = dist.call(this.center, p),
-			a = angle(this.center, p),
-			i = angle_idx(a, nChunks),
-			i0 = floor(i),
-			i1 = ceil(i),
-			r0 = this.rho[i0],
-			r1 = this.rho[i1];
-		//console.log(i, r, r0, r1);
+			rp = dist.call(this.center, p),
+			a = angle.call(this.center, p),
+			i = round(angle_idx(a, nChunks)),
+			r = this.rho[i];
+
+		if(rp<r){
+			console.log('Contains this', this.center, 'point', p);
+			console.log('Degrees', a*180/PI, i, r);
+		}
 		// If less than both, it contains. This is liberal
-		return r<r0 && r<r1;
+		//return rp<r;
+		return false;
 	}
 	// Check if this poly breaks edge e
 	function breaks(poly, a, b){
@@ -136,20 +138,11 @@
 
 	// See which indicies to connect
 	function match(polys, ipoly0, ipoly1, ind0, ind1) {
-		var poly0 = polys[ipoly0], poly1 = polys[ipoly1], links = [];
-		if (ipoly0===ipoly1){ return links; }
+		var poly0 = polys[ipoly0], poly1 = polys[ipoly1];//, links = [];
 
-		ind0.forEach(function(i){
-			var p = poly0.perimeter[i];
-			if(contains.call(poly1, p)){
-				links.push({
-					poly_a: ipoly1,
-					poly_b: ipoly0,
-					ind_a: -1, // center
-					ind_b: i
-				});
-			}
-		});
+		console.log('Ind0', ind0);
+		console.log('Ind1', ind1);
+		/*
 		ind1.forEach(function(i){
 			var p = poly1.perimeter[i];
 			if(contains.call(poly0, p)){
@@ -162,14 +155,41 @@
 			}
 		});
 
+		ind0.forEach(function(i){
+			var p = poly0.perimeter[i];
+			if(contains.call(poly1, p)){
+				links.push({
+					poly_a: ipoly1,
+					poly_b: ipoly0,
+					ind_a: -1, // center
+					ind_b: i
+				});
+			}
+		});
+		if(links.length>0){console.log('Contains-links', links);}
+		*/
+
+		var links = ind0.map(function(i0, ii){
+			var p0 = poly0.perimeter[i0],
+				i1 = ind1[ii],
+				p1 = poly0.perimeter[i1[ii]];
+			return {
+				poly_a: ipoly0,
+				poly_b: ipoly1,
+				ind_a: i0,
+				ind_b: i1,
+			}
+		});
+
 		// TODO: Assume the order of the indices in the arcs is increasing?
 		// NOTE: I think endpoint to endpoint order is valid...
 		// Check each pair
+		/*
 		ind0.forEach(function(i0, ii){
 			var p0 = poly0.perimeter[i0],
 				p0inPoly1 = contains.call(poly1, p0);
 			// If point not already in the other poly
-			if (!p0inPoly1) {
+			//if (!p0inPoly1) {
 				var iguess = ind1.length-1-ii,
 					pguess = poly1.perimeter[iguess],
 					pGuessinPoly0 = contains.call(poly0, pguess);
@@ -180,9 +200,8 @@
 						ind_a: iguess,
 						ind_b: i0,
 					});
-				}
+				//}
 				// Below is more thorough;
-				/*
 				their_arc.forEach(function(p1, i1){
 					if (!in_poly0[i1]) {
 						var entire = dist(p0, p1),
@@ -192,9 +211,9 @@
 						}
 					}
 				});
-				*/
 			}
 		});
+		*/
 
 		return links;
 
@@ -210,11 +229,21 @@
 	// this: poly to compare against
 	function halfplanes(poly){
 		var nChunks = this.rho.length,
-			a = angle(this.center, poly.center),
+			a = angle.call(this.center, poly.center),
 			i = round(angle_idx(a, nChunks)),
-			my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
-			their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks);
+			my_indices = get_wrapped_indices(i-1, i+1, nChunks),
+			their_indices = get_wrapped_indices(i+nChunks/2-1, i+nChunks/2+1, nChunks).reverse();
+			//my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
+			//their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks);
+
+		console.log('this', this.center, 'poly', poly.center);
+		console.log('Diff', numeric.sub(poly.center,this.center))
+		console.log('Degrees:',a*180/PI, 'Index', i);
+		console.log('this Indices', my_indices);
+		console.log('poly Indices', their_indices);
+
 		return [my_indices, their_indices];
+		//return [[i], [(i>nChunks/2) ? (i+nChunks/2):(i-nChunks/2)]];
 	}
 
 	// Trail entries: [x, y, dist, all_points index]
