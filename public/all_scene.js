@@ -190,7 +190,7 @@
 	// Refocus the camera
 	function focus_object(e){
 		// Not a short click refocus
-		//console.log(e.timeStamp - last_intersection.t);
+		console.log(e.timeStamp - last_intersection.t);
 		if(e.timeStamp - last_intersection.t>90){
 			return;
 		}
@@ -211,6 +211,7 @@
 			menu.classList.toggle('hidden');
 			menu.style.left = e.offsetX+'px';
 			menu.style.top = e.offsetY+'px';
+			console.log('clicked name',last_intersection.mesh.name);
 			// If clicked the mesh, run the processing
 			if(last_intersection.mesh.name === 'kinectV2'){
 				window.setTimeout(estimate_selection, 0);
@@ -454,6 +455,7 @@
 		});
 		// Load the ground
 		ground.rotation.x = -Math.PI / 2;
+		ground.position.y = -100;
 		ground.name = 'GROUND';
 		scene.add(ground);
 		items.push(ground);
@@ -533,6 +535,11 @@
 			// Object selection
 			container.addEventListener('mousedown', select_object, false);
 			container.addEventListener('mouseup', focus_object, false);
+
+			d3.select('button#reset').on('click', function(){
+				// [x center, y center, z center, radius, height]
+				d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
+			});
 
 			/*
 			// User interactions

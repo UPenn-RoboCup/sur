@@ -8,7 +8,8 @@
 		p_conn,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1424285273981',
+		logname = 'hmap1424380220892',// Real: close
+		//logname = 'hmap1424285273981', // Webots
 		pose = {x:0, y:0},
 		goal = {x:4, y: 0},
 		pose_marker,
@@ -139,8 +140,10 @@
 				if(ipoly==l.poly_a || ipoly==l.poly_b){return false;}
 				var p_a = polys[l.poly_a], p_b = polys[l.poly_b],
 					a = p_a.perimeter[l.ind_a] || p_a.center,
-					b = p_a.perimeter[l.ind_b] || p_a.center,
-					does_break = Classify.breaks(poly, a, b);
+					b = p_b.perimeter[l.ind_b] || p_b.center;
+				console.log('ipoly', ipoly, polys[ipoly].center)
+				console.log('a', a, 'b', b);
+				var does_break = Classify.breaks.call(poly, a, b);
 				return does_break;
 			});
 			links = links.filter(function(v, i){ return !breakage[i]; });
@@ -190,8 +193,11 @@
 				data.pop();
 				data.unshift(data.pop());
 				//data.pop();
+
+
 				//data.pop();
 				//data.pop();
+
 				data.forEach(parse_param);
 			}
 		});

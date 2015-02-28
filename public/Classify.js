@@ -49,6 +49,16 @@
 	function angle_idx_inv(idx, nChunks){
 		return PI*(2*idx/nChunks-1);
 	}
+	// this point to line defined by p0, p1
+	function dist2line(p0, p1){
+		return abs( this[0]*(p1[1] - p0[1]) - this[1]*(p1[0] - p0[0]) + p1[0]*p0[1] - p1[1]*p0[0] ) / dist.call(p0, p1);
+	}
+	// Project this onto b
+	/*
+	function project(b){
+		angle.call(this, b);
+	}
+	*/
 
 	// Requires: stop>=start
 	function get_wrapped_indices(start, stop, max){
@@ -114,15 +124,58 @@
 		//return rp<r;
 		return false;
 	}
-	// Check if this poly breaks edge e
-	function breaks(poly, a, b){
+
+	function sign(v){
+		return v>=0 && 1 || -1;
+	}
+	// Check if this this poly breaks edge e (a, b)
+	function breaks(a, b){
+
+		var nChunks = this.rho.length;
 		// See if the endpoints are inside our poly
-		if (contains.call(poly, a)){
+		/*
+		if (contains.call(this, a)){
 			return true;
-		} else if (contains.call(poly, b)) {
+		} else if (contains.call(this, b)) {
 			return true;
 		}
-		//console.log(this);
+		*/
+
+		// c is the closest point along (a,b) to this
+		/*
+		var a_dist = dist.call(this.center, a);
+		angle.call(this, b);
+		*/
+		var crossDist = dist2line.call(this.center, a, b),
+			angA = angle.call(this.center, a),
+			angB = angle.call(this.center, b),
+			dAng = angB - angA;
+
+		var a2center = numeric.sub(this.center, a),
+			a2b = numeric.sub(this.center, b),
+			angBC = abs(angle.call(a2center, a2b)),
+			angThis = angA - (PI/2 - angBC),
+			iAngThis = round(angle_idx(angThis, nChunks)),
+			r = this.rho[iAngThis],
+			dAngThis = angThis - angA;
+
+		if (crossDist<r){
+			/*
+			console.log('angBC',angBC*180/PI);
+			console.log('angThis',angThis*180/PI);
+			console.log('angA',angA*180/PI);
+			console.log('angB',angB*180/PI);
+			console.log('r', r);
+			console.log('crossDist', crossDist);
+			console.log('dAng', dAng*180/PI, dAngThis*180/PI);
+			console.log('\n');
+			*/
+			if(abs(dAngThis)<abs(dAng)){
+				return true;
+			}
+		}
+
+/*
 		var br_cone = cone.call(poly, [a,b]);
 		var a_dist = dist.call(poly.center, a);
 		var b_dist = dist.call(poly.center, b);
@@ -131,45 +184,15 @@
 			return min(a_dist-d, b_dist-d) < 0;
 		}).reduce(function(prev, now){return prev||now;});
 		if(does_break){ return true; }
-		// TODO: Add distnace from point to line
-		// http://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+*/
 		return false;
 	}
 
 	// See which indicies to connect
 	function match(polys, ipoly0, ipoly1, ind0, ind1) {
-		var poly0 = polys[ipoly0], poly1 = polys[ipoly1];//, links = [];
-
-		console.log('Ind0', ind0);
-		console.log('Ind1', ind1);
-		/*
-		ind1.forEach(function(i){
-			var p = poly1.perimeter[i];
-			if(contains.call(poly0, p)){
-				links.push({
-					poly_a: ipoly0,
-					poly_b: ipoly1,
-					ind_a: -1, // center
-					ind_b: i
-				});
-			}
-		});
-
-		ind0.forEach(function(i){
-			var p = poly0.perimeter[i];
-			if(contains.call(poly1, p)){
-				links.push({
-					poly_a: ipoly1,
-					poly_b: ipoly0,
-					ind_a: -1, // center
-					ind_b: i
-				});
-			}
-		});
-		if(links.length>0){console.log('Contains-links', links);}
-		*/
-
-		var links = ind0.map(function(i0, ii){
+		var poly0 = polys[ipoly0],
+			poly1 = polys[ipoly1];
+		return ind0.map(function(i0, ii){
 			var p0 = poly0.perimeter[i0],
 				i1 = ind1[ii],
 				p1 = poly0.perimeter[i1[ii]];
@@ -180,50 +203,6 @@
 				ind_b: i1,
 			}
 		});
-
-		// TODO: Assume the order of the indices in the arcs is increasing?
-		// NOTE: I think endpoint to endpoint order is valid...
-		// Check each pair
-		/*
-		ind0.forEach(function(i0, ii){
-			var p0 = poly0.perimeter[i0],
-				p0inPoly1 = contains.call(poly1, p0);
-			// If point not already in the other poly
-			//if (!p0inPoly1) {
-				var iguess = ind1.length-1-ii,
-					pguess = poly1.perimeter[iguess],
-					pGuessinPoly0 = contains.call(poly0, pguess);
-				if(!pGuessinPoly0){
-					links.push({
-						poly_a: ipoly1,
-						poly_b: ipoly0,
-						ind_a: iguess,
-						ind_b: i0,
-					});
-				//}
-				// Below is more thorough;
-				their_arc.forEach(function(p1, i1){
-					if (!in_poly0[i1]) {
-						var entire = dist(p0, p1),
-							guess = dist(p0, pguess);
-						if(1.2*entire < guess){
-							console.log(i0, 'oops', guess, entire, iguess, i1);
-						}
-					}
-				});
-			}
-		});
-		*/
-
-		return links;
-
-/*
-		ind0.map(lookup, poly0.perimeter).forEach(function(p0){
-			ind1.map(lookup, poly1.perimeter).forEach(function(p1){
-
-			});
-		});
-*/
 	}
 
 	// this: poly to compare against
@@ -231,16 +210,19 @@
 		var nChunks = this.rho.length,
 			a = angle.call(this.center, poly.center),
 			i = round(angle_idx(a, nChunks)),
-			my_indices = get_wrapped_indices(i-1, i+1, nChunks),
-			their_indices = get_wrapped_indices(i+nChunks/2-1, i+nChunks/2+1, nChunks).reverse();
-			//my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
-			//their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks);
+			my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
+			their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks).reverse();
 
+			var n = 0; //1
+			my_indices = get_wrapped_indices(i-n, i+n, nChunks),
+			their_indices = get_wrapped_indices(i+nChunks/2-n, i+nChunks/2+n, nChunks).reverse();
+/*
 		console.log('this', this.center, 'poly', poly.center);
 		console.log('Diff', numeric.sub(poly.center,this.center))
 		console.log('Degrees:',a*180/PI, 'Index', i);
 		console.log('this Indices', my_indices);
 		console.log('poly Indices', their_indices);
+*/
 
 		return [my_indices, their_indices];
 		//return [[i], [(i>nChunks/2) ? (i+nChunks/2):(i-nChunks/2)]];
