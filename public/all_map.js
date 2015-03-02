@@ -8,8 +8,7 @@
 		p_conn,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'hmap1424380220892',// Real: close
-		//logname = 'hmap1424285273981', // Webots
+		logname = 'experiment/config0',
 		pose = {x:0, y:0},
 		goal = {x:4, y: 0},
 		pose_marker,
@@ -189,9 +188,9 @@
 				debug(['Loaded ' + logname]);
 				var data = JSON.parse(jdata);
 				// not the last element:
-				data.pop();
-				data.pop();
-				data.unshift(data.pop());
+				//data.pop();
+				//data.pop();
+				//data.unshift(data.pop());
 				//data.pop();
 
 
@@ -266,7 +265,7 @@
 		// Connect with the peer
 		window.setTimeout(setup_rtc, 0);
 		// Open logs
-		//window.setTimeout(open, 0);
+		window.setTimeout(open, 0);
   }
 
 	// Handle resizing
