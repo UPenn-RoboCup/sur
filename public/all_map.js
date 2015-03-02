@@ -53,11 +53,13 @@
 				.attr("d", arcF(params.projected.xy))
 				.attr("transform", "translate("+view_root.join(',')+")");
 			// Color correctly
+			/*
 			if (params.features[0] > 20){
 				patch.attr('class', 'flat');
 			} else {
 				patch.attr('class', 'step');
 			}
+			*/
 
 			patch.attr('style','fill:rgb('+params.colors.mean.map(Math.floor).join(',')+')');
 
