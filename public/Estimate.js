@@ -206,7 +206,7 @@
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
     ];
-		console.log(A_plane);
+		//console.log(A_plane);
 
     var A_plane_inv = numeric.inv(A_plane);
     var sol_plane = numeric.dot(A_plane_inv, [zySum, xySum, ySum]);
@@ -503,7 +503,7 @@
 
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
-			console.log('Colors w/ params', params)
+			console.log('Colors w/ params', params);
       params.points = grow_plane(new Point_cloud_entries(mesh0), params);
 
       // Update the roughness
@@ -519,7 +519,7 @@
     find_poly: function(params){
       var root = params.root,
         nChunks = 20,
-				rhoThreshold = 100,
+				rhoThreshold = 20,
 				points = params.points.map(function(p){
 					var p0 = [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
 	        return p0.concat(norm2(p0));
@@ -528,19 +528,26 @@
 			// TODO: can be faster if not using the actual square root to sort!
       points.sort(function(p1, p2){ return p1[3] - p2[3]; });
 			var rhoDist = [], xy = [];
+			for(var i=0;i<nChunks;i+=1){
+				rhoDist[i] = 0;
+				xy[i] = [0,0];
+			}
 			points.forEach(function(p){
 				var angle = atan2(p[0], p[2]),
 					angleIdx = floor((angle/PI+1)*(nChunks/2)),
 					idx = angleIdx==nChunks ? 0 : angleIdx;
-				if (!rhoDist[idx] || (p[3] - rhoDist[idx]) < rhoThreshold) {
-					rhoDist[idx] = p[3];
-					xy[idx] = [p[2], p[0]];
-				}
+				rhoDist[idx] = rhoDist[idx]==0 ? p[3] : rhoDist[idx];
+				if(p[3] - rhoDist[idx] > rhoThreshold){ return; }
+				if(rhoDist[idx] > 500) { return; }
+				rhoDist[idx] = p[3];
+				xy[idx] = [p[2], p[0]];
       });
-      return {
+			var poly = {
         xy: xy,
         rhoDist: rhoDist
-      };
+      }
+			console.log('poly',poly);
+      return poly;
     },
   };
 

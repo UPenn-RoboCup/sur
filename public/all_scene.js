@@ -98,12 +98,16 @@
       var pf = Classify.get_poly_features(parameters);
       parameters.features = pf;
 
+/*
       var material = new THREE.LineBasicMaterial({
       	color: pf[poly_features.indexOf('ground')] > 20 ? 0x00ff00 : 0xFF9900,
         linewidth: 20
       });
+*/
+			var material = new THREE.LineBasicMaterial({
+				color: 0x00ff00, linewidth: 20
+			});
       var geometry = new THREE.Geometry();
-
 
       // Send to the map
       if(parameters.id==='v'){
@@ -560,12 +564,15 @@
 				switch(action){
 					case 'clear':
 						scene.remove(last_selected_parameters.points);
+						delete last_selected_parameters.points;
+						break;
+					default:
+						delete last_selected_parameters.points;
+						last_selected_parameters.type = action;
+						map_peers.forEach(function(conn){ conn.send(this); }, last_selected_parameters);
+						console.log('Sending', last_selected_parameters);
 						break;
 				}
-				// Remove the complicated object before sending to peers
-				delete last_selected_parameters.points;
-				console.log('Sending', last_selected_parameters);
-				map_peers.forEach(function(conn){ conn.send(this); }, last_selected_parameters);
 				// Reset the parameters
 				last_selected_parameters = null;
 			});
