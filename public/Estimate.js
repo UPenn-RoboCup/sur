@@ -519,7 +519,7 @@
     find_poly: function(params){
       var root = params.root,
         nChunks = 20,
-				rhoThreshold = 20,
+				rhoThreshold = 50,
 				points = params.points.map(function(p){
 					var p0 = [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
 	        return p0.concat(norm2(p0));
