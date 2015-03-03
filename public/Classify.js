@@ -115,16 +115,18 @@
 	}
 	// Check if this this poly breaks edge e (a, b)
 	function breaks(a, b){
-
 		var nChunks = this.rho.length;
+		
+		// If the edge is too long, break it
+		var dAB = dist.call(a, b);
+		if(dAB>0.5){return true;}
+		
 		// See if the endpoints are inside our poly
-		/*
 		if (contains.call(this, a)){
 			return true;
 		} else if (contains.call(this, b)) {
 			return true;
 		}
-		*/
 
 		// c is the closest point along (a,b) to this
 		/*
@@ -144,7 +146,7 @@
 			r = this.rho[iAngThis],
 			dAngThis = angThis - angA;
 
-		if (crossDist<r){
+		if (crossDist < r){
 			/*
 			console.log('angBC',angBC*180/PI);
 			console.log('angThis',angThis*180/PI);
@@ -225,7 +227,7 @@
 			my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
 			their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks).reverse();
 
-			var n = 0;
+			var n = 3;
 			my_indices = get_wrapped_indices(i-n, i+n, nChunks),
 			their_indices = get_wrapped_indices(i+nChunks/2-n, i+nChunks/2+n, nChunks).reverse();
 /*

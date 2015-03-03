@@ -10,7 +10,7 @@
     peer_scene_id = 'all_scene',
 		logname = 'experiment/config0',
 		pose = {x:0, y:0},
-		goal = {x:4, y: 0},
+		goal = {x:4.5, y: 0},
 		pose_marker,
 		goal_marker,
     map_c,
@@ -52,7 +52,8 @@
 			patch = overlay.append("path")
 				.attr("d", arcF(params.projected.xy))
 				.attr("transform", "translate("+view_root.join(',')+")")
-				.attr('class','human');
+				.attr('class','human')
+				.attr('id', 'h'+human.length);
 			// Color correctly
 			/*
 			if (params.features[0] > 20){
@@ -171,9 +172,12 @@
 	}
 
 	// Take in human input and process it. Save it in an array for logging
+	var nParse = 0;
 	function parse_param(data){
-		if(data.type!='reactive'){return;}
-		if(human.length>=3){return;}
+		nParse += 1;
+		//if(data.type!='reactive'){return;}
+		//if(nParse<=4||nParse>7){return;}
+		//if(human.length>=3){return;}
 		console.log('Loaded '+(data.type||'Unknown'), data);
 		if(typeof add_map[data.id] === 'function') {
 			add_map[data.id](data);
