@@ -117,10 +117,6 @@
 	function breaks(a, b){
 		var nChunks = this.rho.length;
 		
-		// If the edge is too long, break it
-		var dAB = dist.call(a, b);
-		if(dAB>0.5){return true;}
-		
 		// See if the endpoints are inside our poly
 		if (contains.call(this, a)){
 			return true;

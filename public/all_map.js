@@ -10,7 +10,7 @@
     peer_scene_id = 'all_scene',
 		logname = 'experiment/config0',
 		pose = {x:0, y:0},
-		goal = {x:4.5, y: 0},
+		goal = {x:5, y: 0},
 		pose_marker,
 		goal_marker,
     map_c,
@@ -37,6 +37,7 @@
 	function smallest(prev, now, inow){
 		return now < prev[0] ? [now, inow] : prev;
 	}
+	
 
 	var add_map = {
 		cyl: function (params){
@@ -143,6 +144,9 @@
 				var p_a = polys[l.poly_a], p_b = polys[l.poly_b],
 					a = p_a.perimeter[l.ind_a] || p_a.center,
 					b = p_b.perimeter[l.ind_b] || p_b.center;
+						// If the edge is too long, break it
+				var dAB = dist.call(a, b);
+				if(dAB>0.5){ return true; }
 				//console.log('ipoly', ipoly, polys[ipoly].center)
 				//console.log('a', a, 'b', b);
 				var does_break = Classify.breaks.call(poly, a, b);
@@ -161,14 +165,12 @@
 		// Make the graph
 		var graph = Graph.make(polys, links);
 		// Plan in the graph
-		/*
 		var path_points = Graph.plan(polys, graph, pose, goal);
 		console.log('path_points', path_points);
-		overlay.append("path").attr('class','autopath').attr("d", arcF(path_points));
-		*/
 		// Draw the edges
 		console.log(graph);
 		Graph.getEdgePairs(graph).forEach(function(l){overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));});
+		overlay.append("path").attr('class','autopath').attr("d", arcF(path_points));
 	}
 
 	// Take in human input and process it. Save it in an array for logging
@@ -176,6 +178,7 @@
 	function parse_param(data){
 		nParse += 1;
 		//if(data.type!='reactive'){return;}
+		//if(nParse>4){return;}
 		//if(nParse<=4||nParse>7){return;}
 		//if(human.length>=3){return;}
 		console.log('Loaded '+(data.type||'Unknown'), data);

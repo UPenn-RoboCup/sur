@@ -122,7 +122,23 @@
 			var closest = poly.perimeter.map(dist, pose_xy).reduce(smallest, [Infinity, -1]),
 				id_close = closest[1],
 				id_node = graph.nodes[id].obj_tree[id_close];
+			// Check for breakage
+			var is_broken = polys.map(function(polyO, ipolyO){
+				if(ipolyO==id){return false;}
+				var a = pose_xy, b = poly.perimeter[id_close];
+				var dAB = dist.call(a, b);
+				
+				if(dAB>1){ return true; }
+				console.log(dAB);
+				var does_break = Classify.breaks.call(polyO, a, b);
+				//console.log(id, ipolyO, polyO, poly.perimeter[id_close], pose_xy);
+				return does_break;
+			}).reduce(function(prev, now){return prev || now});
+			// dont add
+			if(is_broken){ return; }
+			
 			if(id_node==-1){
+				// node does not exist yet
 				var closest_node = graph.nodes[id].obj_tree[id_close] = {
 					edges: [], obj: poly, obj_idx: id_close
 				};
