@@ -51,7 +51,8 @@
 			var view_root = [-params.projected.root[1], -params.projected.root[0]],
 			patch = overlay.append("path")
 				.attr("d", arcF(params.projected.xy))
-				.attr("transform", "translate("+view_root.join(',')+")");
+				.attr("transform", "translate("+view_root.join(',')+")")
+				.attr('class','human');
 			// Color correctly
 			/*
 			if (params.features[0] > 20){
@@ -135,15 +136,14 @@
 	function graph(){
 		// Check for breakage from non-ground
 		polys.forEach(function(poly, ipoly){
-			//if(poly.parameters.features[0]>20) {return;}
 			// Break links if needed
 			var breakage = links.map(function(l){
 				if(ipoly==l.poly_a || ipoly==l.poly_b){return false;}
 				var p_a = polys[l.poly_a], p_b = polys[l.poly_b],
 					a = p_a.perimeter[l.ind_a] || p_a.center,
 					b = p_b.perimeter[l.ind_b] || p_b.center;
-				console.log('ipoly', ipoly, polys[ipoly].center)
-				console.log('a', a, 'b', b);
+				//console.log('ipoly', ipoly, polys[ipoly].center)
+				//console.log('a', a, 'b', b);
 				var does_break = Classify.breaks.call(poly, a, b);
 				return does_break;
 			});
@@ -166,12 +166,15 @@
 		overlay.append("path").attr('class','autopath').attr("d", arcF(path_points));
 		*/
 		// Draw the edges
+		console.log(graph);
 		Graph.getEdgePairs(graph).forEach(function(l){overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));});
 	}
 
 	// Take in human input and process it. Save it in an array for logging
 	function parse_param(data){
-		console.log('Loaded', data);
+		if(data.type!='reactive'){return;}
+		if(human.length>=2){return;}
+		console.log('Loaded '+(data.type||'Unknown'), data);
 		if(typeof add_map[data.id] === 'function') {
 			add_map[data.id](data);
 		}
@@ -188,18 +191,7 @@
 				console.log('Could not open log',e);
 			} else {
 				debug(['Loaded ' + logname]);
-				var data = JSON.parse(jdata);
-				// not the last element:
-				//data.pop();
-				//data.pop();
-				//data.unshift(data.pop());
-				//data.pop();
-
-
-				//data.pop();
-				//data.pop();
-
-				data.forEach(parse_param);
+				JSON.parse(jdata).forEach(parse_param);
 			}
 		});
 	}

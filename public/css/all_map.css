@@ -62,6 +62,12 @@ http://www.hongkiat.com/blog/scalable-vector-graphic-css-styling/
   stroke: #000000;
   stroke-width: 0.025;
 }
+.human {
+  stroke: #000;
+  stroke-width: 0.02;
+  fill-opacity: 50%;
+}
+
 .flat {
   fill: #00ff00;
   stroke: #00aa00;

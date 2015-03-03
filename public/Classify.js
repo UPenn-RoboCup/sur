@@ -11,7 +11,7 @@
     min = Math.min,
 		max = Math.max,
     PI = Math.PI,
-		TWO_PI = 2*PI,
+		TWO_PI = 2 * PI,
     atan = Math.atan,
     atan2 = Math.atan2,
     sin = Math.sin,
@@ -33,20 +33,20 @@
 		*/
 
 	function lookup(i) { return this[i]; }
-	function apply(func){ return func(this); }
-	function smaller(m, cur){ return m < cur ? m : cur; }
-	function larger(m, cur){ return m > cur ? m : cur; }
+	function apply(func) { return func(this); }
+	function smaller(m, cur) { return m < cur ? m : cur; }
+	function larger(m, cur) { return m > cur ? m : cur; }
 	// dist between this and a point
-	function dist(p){
-		return sqrt(pow(this[1] - p[1], 2) + pow(p[1]-this[1], 2));
+	function dist(p) {
+		return sqrt(pow(this[1] - p[1], 2) + pow(p[1] - this[1], 2));
 	}
-	function angle(p){
-		return atan2(p[1]-this[1], p[0]-this[0]);
+	function angle(p) {
+		return atan2(p[1] - this[1], p[0] - this[0]);
 	}
-	function angle_idx(a, nChunks){
+	function angle_idx(a, nChunks) {
 		return (a/PI+1)*(nChunks/2);
 	}
-	function angle_idx_inv(idx, nChunks){
+	function angle_idx_inv(idx, nChunks) {
 		return PI*(2*idx/nChunks-1);
 	}
 	// this point to line defined by p0, p1
@@ -64,9 +64,13 @@
 	function get_wrapped_indices(start, stop, max){
 		var indices = [], i, v;
 		for (i=start; i <= stop; i+=1) {
-			if (i<0)         { indices.push(i + max); }
-			else if (i>=max) { indices.push(i - max); }
-			else             { indices.push(i); }
+			if (i<0){
+				indices.push(i + max);
+			} else if (i >= max) {
+				indices.push(i - max);
+			} else {
+				indices.push(i);
+			}
 		}
 		return indices;
 	}
@@ -104,25 +108,6 @@
 		indices_to_check = get_wrapped_indices(i0, i1, nChunks);
 		//console.log(a0i, a1i, indices_to_check, i0, i1, nChunks, is_obtuse, is_inverted);
 		return indices_to_check;
-	}
-
-	// If this poly contains point p
-	function contains(p){
-		// this is the polygon
-		// p is the point to test
-		var nChunks = this.rho.length,
-			rp = dist.call(this.center, p),
-			a = angle.call(this.center, p),
-			i = round(angle_idx(a, nChunks)),
-			r = this.rho[i];
-
-		if(rp<r){
-			console.log('Contains this', this.center, 'point', p);
-			console.log('Degrees', a*180/PI, i, r);
-		}
-		// If less than both, it contains. This is liberal
-		//return rp<r;
-		return false;
 	}
 
 	function sign(v){
@@ -187,6 +172,27 @@
 */
 		return false;
 	}
+	
+		// If this poly contains point p
+	function contains(p){
+		// this is the polygon
+		// p is the point to test
+		var nChunks = this.rho.length,
+			rp = dist.call(this.center, p),
+			a = angle.call(this.center, p),
+			i = round(angle_idx(a, nChunks)),
+			r = this.rho[i];
+
+		if(rp<r){
+			//console.log('Contains this', this.center, 'point', p);
+			//console.log('Degrees', a*180/PI, i, r);
+			return true;
+		}
+
+		// If less than both, it contains. This is liberal
+		//return rp<r;
+		return false;
+	}
 
 	// See which indicies to connect
 	function match(polys, ipoly0, ipoly1, ind0, ind1) {
@@ -196,6 +202,11 @@
 			var p0 = poly0.perimeter[i0],
 				i1 = ind1[ii],
 				p1 = poly0.perimeter[i1[ii]];
+			
+			if(contains.call(poly1, p0)){
+				i1 = -1;
+			}
+			
 			return {
 				poly_a: ipoly0,
 				poly_b: ipoly1,
@@ -213,7 +224,7 @@
 			my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
 			their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks).reverse();
 
-			var n = 0; //1
+			var n = 1;
 			my_indices = get_wrapped_indices(i-n, i+n, nChunks),
 			their_indices = get_wrapped_indices(i+nChunks/2-n, i+nChunks/2+n, nChunks).reverse();
 /*

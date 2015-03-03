@@ -258,7 +258,7 @@
 			}
 			if(l.ind_b===-1){
 				b_node = b_poly_node;
-				edge.b = b_poly_node.ID;
+				edge.b = b_node.id;
 				//edge.cost = 1;
 			} else if(b_poly_node.obj_tree[l.ind_b] !== -1){
 				edge.b = b_poly_node.obj_tree[l.ind_b];
