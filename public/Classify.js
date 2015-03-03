@@ -38,7 +38,7 @@
 	function larger(m, cur) { return m > cur ? m : cur; }
 	// dist between this and a point
 	function dist(p) {
-		return sqrt(pow(this[1] - p[1], 2) + pow(p[1] - this[1], 2));
+		return sqrt(pow(this[0] - p[0], 2) + pow(p[1] - this[1], 2));
 	}
 	function angle(p) {
 		return atan2(p[1] - this[1], p[0] - this[0]);
@@ -184,8 +184,9 @@
 			r = this.rho[i];
 
 		if(rp<r){
-			//console.log('Contains this', this.center, 'point', p);
-			//console.log('Degrees', a*180/PI, i, r);
+//			console.log('\nContains this', this.center, 'point', p);
+//			console.log('diff', numeric.sub(p, this.center), rp);
+//			console.log('Degrees', a*180/PI, i, r);
 			return true;
 		}
 
@@ -224,7 +225,7 @@
 			my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
 			their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks).reverse();
 
-			var n = 1;
+			var n = 0;
 			my_indices = get_wrapped_indices(i-n, i+n, nChunks),
 			their_indices = get_wrapped_indices(i+nChunks/2-n, i+nChunks/2+n, nChunks).reverse();
 /*

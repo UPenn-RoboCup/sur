@@ -173,7 +173,7 @@
 	// Take in human input and process it. Save it in an array for logging
 	function parse_param(data){
 		if(data.type!='reactive'){return;}
-		if(human.length>=2){return;}
+		if(human.length>=3){return;}
 		console.log('Loaded '+(data.type||'Unknown'), data);
 		if(typeof add_map[data.id] === 'function') {
 			add_map[data.id](data);
