@@ -201,11 +201,7 @@
 			var p0 = poly0.perimeter[i0],
 				i1 = ind1[ii],
 				p1 = poly0.perimeter[i1[ii]];
-			
-			if(contains.call(poly1, p0)){
-				i1 = -1;
-			}
-			
+			if(contains.call(poly1, p0)){ i1 = -1; }
 			return {
 				poly_a: ipoly0,
 				poly_b: ipoly1,

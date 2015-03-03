@@ -92,9 +92,7 @@
 
 			// Match the polys together
 			polys.forEach(function(poly1, ipoly1){
-				if (ipoly0 == ipoly1) {
-					return;
-				}
+				if (ipoly0 == ipoly1) { return; }
 				var hp = Classify.halfplanes.call(poly0, poly1),
 					intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
 				// Add to all links
@@ -146,7 +144,7 @@
 					b = p_b.perimeter[l.ind_b] || p_b.center;
 						// If the edge is too long, break it
 				var dAB = dist.call(a, b);
-				if(dAB>0.5){ return true; }
+				if(dAB>0.4){ return true; }
 				//console.log('ipoly', ipoly, polys[ipoly].center)
 				//console.log('a', a, 'b', b);
 				var does_break = Classify.breaks.call(poly, a, b);
@@ -251,7 +249,7 @@
     map_c = d3.select('#map_container').node();
   	// Add the overlay
   	overlay = d3.select("#map_container").append("svg").attr('class', 'overlay')
-	    .attr('viewBox', "-3 -5 6 6").attr('preserveAspectRatio', "none")
+	    .attr('viewBox', "-2 -5 4 6").attr('preserveAspectRatio', "none")
 	    .attr('width', map_c.clientWidth).attr('height', map_c.clientHeight)
 			.on('mousemove', mmove)
 			.on('click', mclick);

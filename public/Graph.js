@@ -1,8 +1,6 @@
 (function (ctx) {
 	'use strict';
 
-	var arcF = d3.svg.line().x(function (d) { return d[0]; }).y(function (d) { return d[1]; }).interpolate("linear");
-
 	var pow = Math.pow,
 		abs = Math.abs,
 		sqrt = Math.sqrt,
@@ -10,7 +8,7 @@
 		min = Math.min,
 		max = Math.max,
 		PI = Math.PI,
-		TWO_PI = 2*PI,
+		TWO_PI = 2 * PI,
 		atan = Math.atan,
 		atan2 = Math.atan2,
 		sin = Math.sin,
@@ -296,6 +294,21 @@
 			return edge;
 		});
 
+		polys.forEach(function(poly, ipoly){
+			nodes[ipoly].obj_tree.forEach(function(node_id, iperim){
+				if(node_id==-1){return;}
+				var edge = {
+					id: edges.length,
+					a: ipoly,
+					b: node_id,
+				}
+				edges.push(edge);
+				// Add the edge to the nodes
+				nodes[edge.a].edges.push(edge.id);
+				nodes[edge.b].edges.push(edge.id);
+			});
+		});
+		
 		var graph = {
 			nodes: nodes,
 			edges: edges,
