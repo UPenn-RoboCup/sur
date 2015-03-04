@@ -542,11 +542,31 @@
 				rhoDist[idx] = p[3];
 				xy[idx] = [p[2], p[0]];
       });
+			/*
+			var running = true;
+			while(running){
+				rhoDist = rhoDist.map(function(v, i, arr){
+					if(v>=30){return v;}
+					var va = arr[i-1] || arr[arr.length-1];
+					var vb = arr[i+1] || arr[0];
+					if(va<vb){
+						this[i] = this[i-1] || this[this.length-1];
+						return va;
+					} else {
+						this[i] = this[i+1] || this[0];
+						return vb;
+					}
+				}, xy);
+				running = rhoDist.filter(function(v){return v<30;}).length>0;
+			}
+			console.log(rhoDist);
+			console.log(xy);
+			*/
 			var poly = {
         xy: xy,
         rhoDist: rhoDist
       }
-			console.log('poly',poly);
+			//console.log('poly',poly);
       return poly;
     },
   };

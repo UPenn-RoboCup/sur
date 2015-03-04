@@ -1,5 +1,6 @@
 (function (ctx) {
 	'use strict';
+	var nlog = 10; // start around 5 :)
 	// Private variables
 	var d3 = ctx.d3,
 		debug = ctx.util.debug,
@@ -8,7 +9,7 @@
 		p_conn,
     peer_id = 'all_map',
     peer_scene_id = 'all_scene',
-		logname = 'experiment/config0',
+		logname = 'experiment/config'+nlog,
 		pose = {x:0, y:0},
 		goal = {x:5, y: 0},
 		pose_marker,
@@ -37,7 +38,6 @@
 	function smallest(prev, now, inow){
 		return now < prev[0] ? [now, inow] : prev;
 	}
-	
 
 	var add_map = {
 		cyl: function (params){
@@ -54,17 +54,8 @@
 				.attr("d", arcF(params.projected.xy))
 				.attr("transform", "translate("+view_root.join(',')+")")
 				.attr('class','human')
-				.attr('id', 'h'+human.length);
-			// Color correctly
-			/*
-			if (params.features[0] > 20){
-				patch.attr('class', 'flat');
-			} else {
-				patch.attr('class', 'step');
-			}
-			*/
-
-			patch.attr('style','fill:rgb('+params.colors.mean.map(Math.floor).join(',')+')');
+				.attr('id', 'h'+human.length)
+				.attr('style','fill:rgb('+params.colors.mean.map(Math.floor).join(',')+')');
 
 			overlay.append("circle")
 				.attr("cx", view_root[0])
@@ -109,6 +100,7 @@
 		if (!onTrail) {
 			Classify.add_true_path(trail, all_points, polys);
 			overlay.append("path").attr('class','humanpath').attr("d", arcF(trail));
+			savepath(trail);
 			trail = [];
 		}
 	}
@@ -144,7 +136,7 @@
 					b = p_b.perimeter[l.ind_b] || p_b.center;
 						// If the edge is too long, break it
 				var dAB = dist.call(a, b);
-				if(dAB>0.4){ return true; }
+				if(dAB>0.6){ return true; }
 				//console.log('ipoly', ipoly, polys[ipoly].center)
 				//console.log('a', a, 'b', b);
 				var does_break = Classify.breaks.call(poly, a, b);
@@ -209,6 +201,15 @@
 			if (e) { console.log('Could not save', e); }
 		});
 	}
+	
+	function savepath(trail){
+		var name = 'hpath_' + logname.replace('experiment/',''), data = JSON.stringify(trail);
+		debug(['Saving ' + name, data.length + ' bytes']);
+		console.log('saving...',name);
+		d3.text('/log/'+name).post(data, function(e,d){
+			if (e) { console.log('Could not save', e); }
+		});
+	}
 
   function setup_rtc (){
     peer = new Peer(peer_id, {host: 'localhost', port: 9000});
@@ -257,12 +258,13 @@
 		d3.select('button#save').on('click', save);
 		d3.select('button#open').on('click', open);
 		d3.select('button#graph').on('click', graph);
+		
 		// Draw the robot icon
 		window.setTimeout(draw_pose, 0);
 		// Draw the robot goal
 		window.setTimeout(draw_goal, 0);
 		// Connect with the peer
-		window.setTimeout(setup_rtc, 0);
+		//window.setTimeout(setup_rtc, 0);
 		// Open logs
 		window.setTimeout(open, 0);
   }

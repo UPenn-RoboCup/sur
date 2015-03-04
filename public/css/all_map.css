@@ -3,6 +3,7 @@ html, body {
   height: 100%;
   margin: 0px;
   overflow: hidden;
+	background-color: grey;
 }
 #map_container {
   height: 100%;
@@ -45,7 +46,7 @@ http://www.hongkiat.com/blog/scalable-vector-graphic-css-styling/
 }
 .arc {
   fill: none;
-  stroke: #888888;
+  stroke: white;
   stroke-width: 0.025;
 }
 .marker path {

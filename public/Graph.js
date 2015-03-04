@@ -122,12 +122,14 @@
 				id_node = graph.nodes[id].obj_tree[id_close];
 			
 			// Check for breakage
+			var a = pose_xy, b = poly.perimeter[id_close], dAB = dist.call(a, b);
+			if(dAB>1){return;}
+			console.log('\n***');
 			var is_broken = polys.map(function(polyO, ipolyO){
 				if(ipolyO==id){return false;}
-				var a = pose_xy, b = poly.perimeter[id_close], dAB = dist.call(a, b);
-				if(dAB>1){ return true; }
 				return Classify.breaks.call(polyO, a, b);
 			}).reduce(function(prev, now){return prev || now});
+			console.log('dAB',dAB, is_broken);
 			// dont add
 			if(is_broken){ return; }
 			
@@ -294,6 +296,7 @@
 			return edge;
 		});
 
+		// Intra polygon edges
 		polys.forEach(function(poly, ipoly){
 			nodes[ipoly].obj_tree.forEach(function(node_id, iperim){
 				if(node_id==-1){return;}

@@ -116,7 +116,6 @@
 	// Check if this this poly breaks edge e (a, b)
 	function breaks(a, b){
 		var nChunks = this.rho.length;
-		
 		// See if the endpoints are inside our poly
 		if (contains.call(this, a)){
 			return true;
@@ -143,7 +142,9 @@
 			dAngThis = angThis - angA;
 
 		if (crossDist < r){
-			/*
+			if(dAng>1.7*PI){dAng=2*PI-dAng}
+			if(abs(dAngThis)<abs(dAng)){
+				/*
 			console.log('angBC',angBC*180/PI);
 			console.log('angThis',angThis*180/PI);
 			console.log('angA',angA*180/PI);
@@ -153,7 +154,6 @@
 			console.log('dAng', dAng*180/PI, dAngThis*180/PI);
 			console.log('\n');
 			*/
-			if(abs(dAngThis)<abs(dAng)){
 				return true;
 			}
 		}

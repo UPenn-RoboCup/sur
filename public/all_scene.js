@@ -105,7 +105,7 @@
       });
 */
 			var material = new THREE.LineBasicMaterial({
-				color: 0x00ff00, linewidth: 20
+				color: 0x000000, linewidth: 20
 			});
       var geometry = new THREE.Geometry();
 
