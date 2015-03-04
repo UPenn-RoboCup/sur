@@ -264,9 +264,9 @@
 		// Draw the robot goal
 		window.setTimeout(draw_goal, 0);
 		// Connect with the peer
-		//window.setTimeout(setup_rtc, 0);
+		window.setTimeout(setup_rtc, 0);
 		// Open logs
-		window.setTimeout(open, 0);
+		//window.setTimeout(open, 0);
   }
 
 	// Handle resizing
