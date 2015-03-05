@@ -1,4 +1,5 @@
 {
   "esnext": true,
-	validthis: true
+	"validthis": true,
+	"browser": true
 }

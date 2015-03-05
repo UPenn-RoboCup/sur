@@ -154,7 +154,6 @@
       [o[0],d[1],o[2]],
       [o[1],o[2],d[2]]
     ];
-		console.log('Colors', cov, nClose)
     return {
       mean: [xSum, ySum, zSum].map(function(v,i){return v/nClose;}),
       cov: cov,
@@ -344,7 +343,7 @@
 
 	function get_cyl_rates(it, params){
 		var p, n_tot=0, n_in=0, n_on = 0, err_r, dx, dz, ang, angles = [], nA = 10, r_close = params.r/10;
-		for(var i = 0; i<nA; i+=1){angles[i]=0};
+		for(var i = 0; i<nA; i+=1){angles[i]=0;}
 		for (var a of it){
 			p = a[1];
 			dx = p[0] - params.xc;
@@ -359,7 +358,7 @@
 		//console.log(n_in, n_tot, n_in / n_tot, angle_ratio, angles);
 		return {
 			fill_rate: n_in / n_tot,
-			angle_rate: angles.reduce(function(prev, now){return prev+now}) / nA,
+			angle_rate: angles.reduce(function(prev, now){return prev+now;}) / nA,
 			on_rate: n_on / n_tot,
 			on_in_ratio: n_on / n_in,
 		};
@@ -490,7 +489,7 @@
 
 			var params;
 			if(e_h.n_points<25 && e_v.n_points<25){
-				params = null
+				params = null;
 			} else if(e_v.n_points>3*e_h.n_points){
 				params = vert_params;
 			} else if(e_v.big_error_ratio>0.25){
@@ -536,7 +535,7 @@
 				var angle = atan2(p[0], p[2]),
 					angleIdx = floor((angle/PI+1)*(nChunks/2)),
 					idx = angleIdx==nChunks ? 0 : angleIdx;
-				rhoDist[idx] = rhoDist[idx]==0 ? p[3] : rhoDist[idx];
+				rhoDist[idx] = rhoDist[idx]===0 ? p[3] : rhoDist[idx];
 				if(p[3] - rhoDist[idx] > rhoThreshold){ return; }
 				if(rhoDist[idx] > 500) { return; }
 				rhoDist[idx] = p[3];
@@ -565,7 +564,7 @@
 			var poly = {
         xy: xy,
         rhoDist: rhoDist
-      }
+      };
 			//console.log('poly',poly);
       return poly;
     },

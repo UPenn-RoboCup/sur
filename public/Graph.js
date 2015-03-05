@@ -1,7 +1,8 @@
 (function (ctx) {
 	'use strict';
 
-	var pow = Math.pow,
+	var numeric = ctx.numeric,
+		pow = Math.pow,
 		abs = Math.abs,
 		sqrt = Math.sqrt,
 		exp = Math.exp,
@@ -24,66 +25,69 @@
 		NODE_CLOSED = 1;
 
 		// Returns: [x, y, poly idx, perimeter index]
-	function node2point(node){
-		if(typeof node.obj_idx === 'number'){
+	function node2point(node) {
+		if (typeof node.obj_idx === 'number') {
 			return node.obj.perimeter[node.obj_idx].concat([node.obj.id, node.obj_idx]);
-		} else if(node.obj_tree) {
+		} else if (node.obj_tree) {
 			return node.obj.center.concat([node.obj.id, -1]);
 		} else {
 			// Start or goal... TBD
 			return [node.obj.x, node.obj.y, -1, -1];
 		}
 	}
-	function dist(p){
+	function dist(p) {
 		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
 	}
-	function smallest(prev, now, inow){
+	function smallest(prev, now, inow) {
 		return now < prev[0] ? [now, inow] : prev;
 	}
 	// Needs d3 for now
-	function getEdgePairs(graph){
-		return graph.edges.map(function(edge){
+	function getEdgePairs(graph) {
+		return graph.edges.map(function (edge) {
 			return [node2point(this[edge.a]), node2point(this[edge.b])];
 		}, graph.nodes);
 	}
 
-	function astar_step(graph){
+	function astar_step(graph) {
 		var edges = graph.edges,
 			nodes = graph.nodes,
 			openList = graph.openList,
 			searchState = graph.searchState,
 			goal_index = graph.goal_index,
-			goal = nodes[goal_index];
+			goal = nodes[goal_index],
+			n;
 
-		if (searchState != SEARCH_SEARCHING) {
+		if (searchState !== SEARCH_SEARCHING) {
 			return searchState;
 		}
 
-		if (openList.length==0) {
+		if (openList.length === 0) {
 			searchState = SEARCH_FAILED;
 			return searchState;
 		}
 
 		// Grab the next node to explore
 		// Objects, not addresses, are in the queue
-		var n = openList.dequeue();
+		n = openList.dequeue();
 		n.state = NODE_CLOSED;
 
 		// Check for the goal
-		if (n.id == goal_index) {
+		if (n.id === goal_index) {
 			searchState = SEARCH_SUCCESS;
 			return searchState;
 		}
 
 		// Current node popped from open list is not goal
-		n.edges.forEach(function(e_id){
+		n.edges.forEach(function (e_id) {
 			var e = edges[e_id],
-				target_index = e.a==this.id ? e.b : e.a,
+				target_index = (e.a === this.id) ? e.b : e.a,
 				target_node = nodes[target_index],
-				gnew = this.g + e.cost + target_node.cost;
-			if (target_node.h===undefined) {
+				outbound_cost = numeric.dot(n.wb, e.f),
+				inbound_cost = numeric.dot(target_node.wa, e.f),
+				gnew = this.g + Math.exp(target_node.cost + outbound_cost + inbound_cost);
+			if (target_node.h === undefined) {
 				// Evaluate the heuristic if not done yet
-				target_node.g = gnew + target_node.cost;
+				target_node.g = gnew;
 				target_node.h = dist.call(goal.p, target_node.p);
 				target_node.f = target_node.g + target_node.h;
 				target_node.parent = this.id;
@@ -93,11 +97,11 @@
 				target_node.g = gnew;
 				target_node.f = target_node.g + target_node.h;
 				target_node.parent = this.id;
-				if (target_node.state == NODE_CLOSED) {
+				if (target_node.state === NODE_CLOSED) {
 					target_node.state = NODE_OPEN;
 					openList.queue(target_node);
 				}
-			}	else {
+			} else {
 				// Node changed on open list: need to sort open list again
 				openList.priv._heapify();
 			}
@@ -116,20 +120,23 @@
 			pose_node = { edges : [], obj: pose };
 		pose_node.id = graph.nodes.push(pose_node) - 1;
 		// Add to the graph
-		polys.forEach(function(poly, id){
+		polys.forEach(function (poly, id) {
 			var closest = poly.perimeter.map(dist, pose_xy).reduce(smallest, [Infinity, -1]),
 				id_close = closest[1],
-				id_node = graph.nodes[id].obj_tree[id_close];
+				id_node = graph.nodes[id].obj_tree[id_close],
+				a = pose_xy, b = poly.perimeter[id_close], dAB = dist.call(a, b);
 			
-			// Check for breakage
-			var a = pose_xy, b = poly.perimeter[id_close], dAB = dist.call(a, b);
+			// If link too long
 			if(dAB>1){return;}
-			console.log('\n***');
+			//console.log('\n***');
+			// Check for breakage
 			var is_broken = polys.map(function(polyO, ipolyO){
 				if(ipolyO==id){return false;}
 				return Classify.breaks.call(polyO, a, b);
-			}).reduce(function(prev, now){return prev || now});
-			console.log('dAB',dAB, is_broken);
+			}).reduce(function(prev, now){
+				return prev || now;
+			});
+			//console.log('dAB',dAB, is_broken);
 			// dont add
 			if(is_broken){ return; }
 			
@@ -141,7 +148,7 @@
 				id_node = closest_node.id = graph.nodes.push(closest_node) - 1;
 			}
 
-			var e = { cost: closest[0], a: pose_node.id, b: id_node };
+			var e = { f: [closest[0],0], a: pose_node.id, b: id_node };
 			e.id = graph.edges.push(e) - 1;
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
@@ -149,7 +156,7 @@
 
 			// NEED TO CONNECT PERIMETER TO THE CENTER
 			// TODO: Check if this link already exists!
-			var e_poly_direct = {a: id_node, b: id, cost: 0 };
+			var e_poly_direct = {a: id_node, b: id, f: 0 };
 			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
 			graph.nodes[id].edges.push(e_poly_direct.id);
 			graph.nodes[id_node].edges.push(e_poly_direct.id);
@@ -172,7 +179,9 @@
 				var a = goal_xy, b = poly.perimeter[id_close], dAB = dist.call(a, b);
 				if(dAB>1){ return true; }
 				return Classify.breaks.call(polyO, a, b);
-			}).reduce(function(prev, now){return prev || now});
+			}).reduce(function (prev, now) {
+				return prev || now;
+			});
 			// dont add
 			if(is_broken){ return; }
 			
@@ -185,12 +194,12 @@
 
 			// NEED TO CONNECT PERIMETER TO THE CENTER
 			// TODO: Check if this link already exists!
-			var e_poly_direct = {a: id_node, b: id, cost: 0 };
+			var e_poly_direct = {a: id_node, b: id, f: 0 };
 			e_poly_direct.id = graph.edges.push(e_poly_direct) - 1;
 			graph.nodes[id].edges.push(e_poly_direct.id);
 			graph.nodes[id_node].edges.push(e_poly_direct.id);
 
-			var e = { cost: closest[0], a: goal_node.id, b: id_node };
+			var e = { f: [closest[0],0], a: goal_node.id, b: id_node };
 			e.id = graph.edges.push(e) - 1;
 			var n_a = graph.nodes[e.a], n_b = graph.nodes[e.b];
 			n_a.edges.push(e.id);
@@ -208,14 +217,34 @@
 		// Easy access to the heuristic argument
 		graph.nodes.forEach(function(n){
 			n.p = node2point(n);
+			n.w  = [0,0,0];
+			n.wa = [0,0];
+			n.wb = [0,0];
 			if(n.cost===undefined){
-				n.cost = 1;
+				// Add cost for leaf nodes
+				if(n.obj_idx){
+					//console.log(n.obj);
+					n.cost = numeric.dot(n.obj.parameters.features, n.w);
+				} else {
+					// No cost for the center node
+					n.cost = 1;
+				}
 			}
 		});
 		// Edge cost
 		graph.edges.forEach(function(e){
 			if(typeof e.cost!=='number'){
-				e.cost = dist.call(graph.nodes[e.a].p, graph.nodes[e.b].p);
+				var na, nb;
+				na = graph.nodes[e.a];
+				nb = graph.nodes[e.b];
+				// symmetric edge features, so weight order doesn't matter
+				var d = dist.call(na.p, nb.p);
+				var ha = na.obj.parameters ? na.obj.parameters.root[1] : 0;
+				var hb = nb.obj.parameters ? nb.obj.parameters.root[1] : 0;
+				var hd = Math.abs(hb-ha);
+				var f = [d, hd];
+				e.f = f;
+				//e.cost = Math.exp( numeric.dot(f, [0,0]) + numeric.dot(f, [0,0]) );
 			}
 		});
 
@@ -243,7 +272,7 @@
 		//console.log('Path', path);
 
 		// Path from the start
-		return path.map(function(p){return p.p;}).reverse();
+		return path.reverse();
 	}
 
 	// Node Format:
@@ -252,12 +281,13 @@
 		// Form the poly nodes
 		// Assume always same # of leaves
 		var nodes = polys.map(function(poly, id){
+			//console.log(poly.parameters);
 			return {
 				edges : [/*IDs of edges*/],
 				id: id,
 				obj: poly,
 				obj_tree : this.slice(),
-			}
+			};
 		}, polys[0].rho.map(function(){return -1;}));
 
 		// Form the inter-poly links
@@ -304,7 +334,7 @@
 					id: edges.length,
 					a: ipoly,
 					b: node_id,
-				}
+				};
 				edges.push(edge);
 				// Add the edge to the nodes
 				nodes[edge.a].edges.push(edge.id);
@@ -320,10 +350,54 @@
 		return graph;
 	}
 
+	function compare_expert_path(graph, traile, trailp, polys){
+		console.log(trailp);
+		console.log(traile);
+		var good_ids = traile.map(function(t){return t[4];}),
+			bad_ids = trailp.map(function(t){return t.id;});
+		//console.log(good_ids);
+//		/console.log(bad_ids);
+		/*
+		var minus1 = [];
+		var plus1 = bad_ids.filter(function(id){
+			if(good_ids.reduce(function(prev,now){return now===id||prev;}, false)){
+				return true;
+			};
+			minus1.push(id);
+			return false;
+		});
+		console.log(plus1, minus1);
+		*/
+		//avg good feature
+		var good = good_ids.reduce(function(prev, id, arr){
+			var n = graph.nodes[id];
+			var f = n.obj.parameters ? n.obj.parameters.features : [0,0,0];
+			return numeric.add( f, prev);
+		}, [0,0,0]);
+		numeric.div(good, good_ids.length);
+		console.log(good);
+
+		//avg bad feature
+		var bad = bad_ids.reduce(function(prev, id, arr){
+			var n = graph.nodes[id];
+			var f = n.obj.parameters ? n.obj.parameters.features : [0,0,0];
+			return numeric.add( f, prev);
+		}, [0,0,0]);
+		numeric.div(bad, bad_ids.length);
+		console.log(bad);
+
+		var alpha = 0.5; // learning rate
+		var dir = numeric.sub(good, bad);
+		var nm = numeric.norm(dir);
+		var nw = numeric.div(dir, nm) * alpha;
+
+	}
+
   ctx.Graph = {
 		make : make,
 		plan : plan,
 		getEdgePairs : getEdgePairs,
+		compare_expert_path: compare_expert_path,
   };
 
 }(this));

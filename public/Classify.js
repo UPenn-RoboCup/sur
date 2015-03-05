@@ -142,7 +142,7 @@
 			dAngThis = angThis - angA;
 
 		if (crossDist < r){
-			if(dAng>1.7*PI){dAng=2*PI-dAng}
+			if(dAng>1.7*PI){dAng=2*PI-dAng;}
 			if(abs(dAngThis)<abs(dAng)){
 				/*
 			console.log('angBC',angBC*180/PI);
@@ -207,7 +207,7 @@
 				poly_b: ipoly1,
 				ind_a: i0,
 				ind_b: i1,
-			}
+			};
 		});
 	}
 
@@ -220,7 +220,7 @@
 			their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks).reverse();
 
 			var n = 3;
-			my_indices = get_wrapped_indices(i-n, i+n, nChunks),
+			my_indices = get_wrapped_indices(i-n, i+n, nChunks);
 			their_indices = get_wrapped_indices(i+nChunks/2-n, i+nChunks/2+n, nChunks).reverse();
 /*
 		console.log('this', this.center, 'poly', poly.center);
@@ -243,7 +243,7 @@
 			var ap = all_points[t[3]],
 				poly = polys[ap[2]];
 			if(ap[3]==-1){return get_pf(poly.parameters);}
-			return get_ppf({ p: poly.perimeter[ap[3]], poly: poly, idx: ap[3] })
+			return get_ppf({ p: poly.perimeter[ap[3]], poly: poly, idx: ap[3] });
 		});
 		console.log('True Features', features);
 	}

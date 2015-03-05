@@ -15,6 +15,7 @@
 		pose_marker,
 		goal_marker,
     map_c,
+		graph, path,
 		human = [],
 		links = [],
 		polys = [],
@@ -98,9 +99,10 @@
 	function mclick(){
 		onTrail = !onTrail;
 		if (!onTrail) {
-			Classify.add_true_path(trail, all_points, polys);
+			console.log(trail);
 			overlay.append("path").attr('class','humanpath').attr("d", arcF(trail));
 			savepath(trail);
+			Graph.compare_expert_path(graph, trail, path, polys);
 			trail = [];
 		}
 	}
@@ -112,20 +114,24 @@
 			coord_real = [-coord[1], -coord[0]],
 			closest = all_points.map(dist, coord_real).reduce(smallest, [Infinity, -1]),
 			back = trail.pop(),
-			nearby = coord_real.concat(closest);
-		if(!back){
-			trail.push(nearby);
-		} else if (back[3] != nearby[3]){
-			trail.push(back);
-			trail.push(nearby);
-		} else if (back[2] > nearby[2]) {
-			trail.push(nearby);
-		} else {
-			trail.push(back);
-		}
+			//nearby = coord_real.concat(closest);
+			nearby = all_points[closest[1]].slice().concat(closest[0]);
+
+		if(!back){ trail.push(nearby); }
+
+		//else if (all_points[back[3]][2] !== all_points[nearby[3]][2])
+		else if (back[2] !== nearby[2])
+		{ trail.push(back); trail.push(nearby); }
+
+		//else if (all_points[back[3]][3] !== all_points[nearby[3]][3])
+		else if (back[3] !== nearby[3])
+		{ trail.push(back); trail.push(nearby); }
+
+		else if (back[6] > nearby[6]) { trail.push(nearby); }
+		else { trail.push(back); }
 	}
 
-	function graph(){
+	function makegraph(){
 		// Check for breakage from non-ground
 		polys.forEach(function(poly, ipoly){
 			// Break links if needed
@@ -144,23 +150,33 @@
 			});
 			links = links.filter(function(v, i){ return !breakage[i]; });
 		});
-		// All points for the move to move amongst
-		// all_points entries: [x, y, poly index, perimeter index]
-		all_points = polys.reduce(function(prev, p, i){
-			prev.push(p.center.concat([i, -1]));// -1 means center
-			return prev.concat(p.perimeter.map(function(pp, ii){
-				return pp.concat([i, ii]);
-			}));
-		}, []);
 		// Make the graph
-		var graph = Graph.make(polys, links);
+		graph = Graph.make(polys, links);
 		// Plan in the graph
-		var path_points = Graph.plan(polys, graph, pose, goal);
+		path = Graph.plan(polys, graph, pose, goal);
+		var path_points = path.map(function(p){return p.p;});
 		console.log('path_points', path_points);
 		// Draw the edges
 		console.log(graph);
 		Graph.getEdgePairs(graph).forEach(function(l){overlay.append("path").attr('class','arc').attr("d", arcF([l[0], l[1]]));});
 		overlay.append("path").attr('class','autopath').attr("d", arcF(path_points));
+
+		// All points for the move to move amongst
+		// all_points entries: [x, y, poly index, perimeter index]
+		all_points = [];
+		graph.nodes.forEach(function(n, i){
+			var poly = n.obj;
+			if(!poly.id){return;}
+			if(n.obj_idx){
+				var per = poly.perimeter[n.obj_idx];
+				all_points.push(per.concat([poly.id, n.obj_idx, i]));// -1 means center
+			} else {
+				all_points.push(poly.center.concat([poly.id, -1, i]));// -1 means center
+			}
+
+		});
+		console.log(all_points);
+
 	}
 
 	// Take in human input and process it. Save it in an array for logging
@@ -257,16 +273,16 @@
 		// Allow saving
 		d3.select('button#save').on('click', save);
 		d3.select('button#open').on('click', open);
-		d3.select('button#graph').on('click', graph);
+		d3.select('button#graph').on('click', makegraph);
 		
 		// Draw the robot icon
 		window.setTimeout(draw_pose, 0);
 		// Draw the robot goal
 		window.setTimeout(draw_goal, 0);
 		// Connect with the peer
-		window.setTimeout(setup_rtc, 0);
+		//window.setTimeout(setup_rtc, 0);
 		// Open logs
-		//window.setTimeout(open, 0);
+		window.setTimeout(open, 0);
   }
 
 	// Handle resizing
