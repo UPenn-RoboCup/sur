@@ -3,7 +3,9 @@
 	var nlog = 10; // start around 5 :)
 	// Private variables
 	var d3 = ctx.d3,
+		util = ctx.util,
 		debug = ctx.util.debug,
+		mapFuncs = util.mapFuncs,
 		overlay,
 		peer,
 		p_conn,
@@ -20,7 +22,6 @@
 		links = [],
 		polys = [],
 		all_points = [],
-		pow = Math.pow, sqrt = Math.sqrt,
 		polyF = d3.svg.line()
 			.x(function (d) { return -d[1]; })
 			.y(function (d) { return -d[0]; })
@@ -33,12 +34,6 @@
 	function local2global(v){
 		return [v[0] + this[0], v[1] + this[1]];
 	}
-	function dist(p){
-		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
-	}
-	function smallest(prev, now, inow){
-		return now < prev[0] ? [now, inow] : prev;
-	}
 
 	var add_map = {
 		cyl: function (params){
@@ -50,14 +45,18 @@
 		},
 		// horiz plane
 		h: function (params){
-			var view_root = [-params.projected.root[1], -params.projected.root[0]],
+			var view_root = [
+				-params.projected.root[1],
+				-params.projected.root[0]
+			],
 			patch = overlay.append("path")
 				.attr("d", arcF(params.projected.xy))
 				.attr("transform", "translate("+view_root.join(',')+")")
 				.attr('class','human')
 				.attr('id', 'h'+human.length)
-				.attr('style','fill:rgb('+params.colors.mean.map(Math.floor).join(',')+')');
-
+				.attr('style',
+					'fill:rgb('+params.colors.mean.map(Math.floor).join(',')+')'
+				);
 			overlay.append("circle")
 				.attr("cx", view_root[0])
 				.attr("cy", view_root[1])
@@ -84,7 +83,7 @@
 
 			// Match the polys together
 			polys.forEach(function(poly1, ipoly1){
-				if (ipoly0 == ipoly1) { return; }
+				if (ipoly0 === ipoly1) { return; }
 				var hp = Classify.halfplanes.call(poly0, poly1),
 					intersects = Classify.match(polys, ipoly0, ipoly1, hp[0], hp[1]);
 				// Add to all links
@@ -112,7 +111,7 @@
 		//, confidence = Math.exp(-closest[0]);
 		var coord = d3.mouse(this),
 			coord_real = [-coord[1], -coord[0]],
-			closest = all_points.map(dist, coord_real).reduce(smallest, [Infinity, -1]),
+			closest = all_points.map(mapFuncs.dist, coord_real).reduce(mapFuncs.smallest, [Infinity, -1]),
 			back = trail.pop(),
 			//nearby = coord_real.concat(closest);
 			nearby = all_points[closest[1]].slice().concat(closest[0]);
@@ -136,7 +135,7 @@
 		polys.forEach(function(poly, ipoly){
 			// Break links if needed
 			var breakage = links.map(function(l){
-				if(ipoly==l.poly_a || ipoly==l.poly_b){return false;}
+				if(ipoly===l.poly_a || ipoly===l.poly_b){return false;}
 				var p_a = polys[l.poly_a], p_b = polys[l.poly_b],
 					a = p_a.perimeter[l.ind_a] || p_a.center,
 					b = p_b.perimeter[l.ind_b] || p_b.center;

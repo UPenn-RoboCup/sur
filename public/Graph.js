@@ -2,21 +2,10 @@
 	'use strict';
 
 	var numeric = ctx.numeric,
-		pow = Math.pow,
+		mf = ctx.util.mapFuncs,
 		abs = Math.abs,
 		sqrt = Math.sqrt,
 		exp = Math.exp,
-		min = Math.min,
-		max = Math.max,
-		PI = Math.PI,
-		TWO_PI = 2 * PI,
-		atan = Math.atan,
-		atan2 = Math.atan2,
-		sin = Math.sin,
-		cos = Math.cos,
-		floor = Math.floor,
-		ceil = Math.ceil,
-		round = Math.round,
 		SEARCH_UNDEFINED = 0,
 		SEARCH_SEARCHING = 1,
 		SEARCH_SUCCESS = 2,
@@ -27,20 +16,16 @@
 		// Returns: [x, y, poly idx, perimeter index]
 	function node2point(node) {
 		if (typeof node.obj_idx === 'number') {
-			return node.obj.perimeter[node.obj_idx].concat([node.obj.id, node.obj_idx]);
+			return node.obj.perimeter[node.obj_idx]
+				.concat(node.obj.id, node.obj_idx);
 		} else if (node.obj_tree) {
-			return node.obj.center.concat([node.obj.id, -1]);
+			return node.obj.center.concat(node.obj.id, -1);
 		} else {
 			// Start or goal... TBD
 			return [node.obj.x, node.obj.y, -1, -1];
 		}
 	}
-	function dist(p) {
-		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
-	}
-	function smallest(prev, now, inow) {
-		return now < prev[0] ? [now, inow] : prev;
-	}
+
 	// Needs d3 for now
 	function getEdgePairs(graph) {
 		return graph.edges.map(function (edge) {
@@ -88,7 +73,7 @@
 			if (target_node.h === undefined) {
 				// Evaluate the heuristic if not done yet
 				target_node.g = gnew;
-				target_node.h = dist.call(goal.p, target_node.p);
+				target_node.h = mf.dist.call(goal.p, target_node.p);
 				target_node.f = target_node.g + target_node.h;
 				target_node.parent = this.id;
 				target_node.state = NODE_OPEN;
@@ -121,17 +106,17 @@
 		pose_node.id = graph.nodes.push(pose_node) - 1;
 		// Add to the graph
 		polys.forEach(function (poly, id) {
-			var closest = poly.perimeter.map(dist, pose_xy).reduce(smallest, [Infinity, -1]),
+			var closest = poly.perimeter.map(mf.dist, pose_xy).reduce(mf.smallest, [Infinity, -1]),
 				id_close = closest[1],
 				id_node = graph.nodes[id].obj_tree[id_close],
-				a = pose_xy, b = poly.perimeter[id_close], dAB = dist.call(a, b);
+				a = pose_xy, b = poly.perimeter[id_close], dAB = mf.dist.call(a, b);
 			
 			// If link too long
 			if(dAB>1){return;}
 			//console.log('\n***');
 			// Check for breakage
 			var is_broken = polys.map(function(polyO, ipolyO){
-				if(ipolyO==id){return false;}
+				if(ipolyO===id){return false;}
 				return Classify.breaks.call(polyO, a, b);
 			}).reduce(function(prev, now){
 				return prev || now;
@@ -140,7 +125,7 @@
 			// dont add
 			if(is_broken){ return; }
 			
-			if(id_node==-1){
+			if(id_node===-1){
 				// node does not exist yet
 				var closest_node = graph.nodes[id].obj_tree[id_close] = {
 					edges: [], obj: poly, obj_idx: id_close
@@ -169,14 +154,14 @@
 		goal_node.id = graph.nodes.push(goal_node) - 1;
 		// Add to the graph
 		polys.forEach(function(poly, id){
-			var closest = poly.perimeter.map(dist, goal_xy).reduce(smallest, [Infinity, -1]),
+			var closest = poly.perimeter.map(mf.dist, goal_xy).reduce(mf.smallest, [Infinity, -1]),
 				id_close = closest[1],
 				id_node = graph.nodes[id].obj_tree[id_close];
 			
 			// Check for breakage
 			var is_broken = polys.map(function(polyO, ipolyO){
-				if(ipolyO==id){return false;}
-				var a = goal_xy, b = poly.perimeter[id_close], dAB = dist.call(a, b);
+				if(ipolyO===id){return false;}
+				var a = goal_xy, b = poly.perimeter[id_close], dAB = mf.dist.call(a, b);
 				if(dAB>1){ return true; }
 				return Classify.breaks.call(polyO, a, b);
 			}).reduce(function (prev, now) {
@@ -185,7 +170,7 @@
 			// dont add
 			if(is_broken){ return; }
 			
-			if(id_node==-1){
+			if(id_node===-1){
 				var closest_node = graph.nodes[id].obj_tree[id_close] = {
 					edges: [], obj: poly, obj_idx: id_close
 				};
@@ -238,7 +223,7 @@
 				na = graph.nodes[e.a];
 				nb = graph.nodes[e.b];
 				// symmetric edge features, so weight order doesn't matter
-				var d = dist.call(na.p, nb.p);
+				var d = mf.dist.call(na.p, nb.p);
 				var ha = na.obj.parameters ? na.obj.parameters.root[1] : 0;
 				var hb = nb.obj.parameters ? nb.obj.parameters.root[1] : 0;
 				var hd = Math.abs(hb-ha);
@@ -249,19 +234,19 @@
 		});
 
 		pose_node.g = 0;
-		pose_node.h = dist.call(goal_node.p, pose_node.p);
+		pose_node.h = mf.dist.call(goal_node.p, pose_node.p);
 		pose_node.f = pose_node.g + pose_node.h;
 		//pose_node.parent = 0;
 		pose_node.state = NODE_OPEN;
 		graph.openList.queue(pose_node);
 
 		//console.log('Begin Search!', graph);
-		var nSearch = 0, nSearchMax = pow(graph.edges.length, 2);
+		var nSearch = 0, nSearchMax = Math.pow(graph.edges.length, 2);
 		do {
 			graph.searchState = astar_step(graph);
 			nSearch += 1;
-			if (nSearch > nSearchMax) break;
-		} while (graph.searchState == SEARCH_SEARCHING);
+			if (nSearch > nSearchMax) { break; }
+		} while (graph.searchState === SEARCH_SEARCHING);
 		//console.log('Done!', nSearch);
 
 		var n = goal_node, path = [];
@@ -329,7 +314,7 @@
 		// Intra polygon edges
 		polys.forEach(function(poly, ipoly){
 			nodes[ipoly].obj_tree.forEach(function(node_id, iperim){
-				if(node_id==-1){return;}
+				if(node_id===-1){return;}
 				var edge = {
 					id: edges.length,
 					a: ipoly,

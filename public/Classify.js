@@ -1,64 +1,17 @@
 (function (ctx) {
 	'use strict';
 
+	var numeric = ctx.numeric,
+		mf = ctx.util.mapFuncs,
+		dist = mf.dist;
+
   // Load the Matrix library
   //ctx.util.ljs('/js/numeric-1.2.6.min.js');
 
-	var pow = Math.pow,
-    abs = Math.abs,
-    sqrt = Math.sqrt,
-    exp = Math.exp,
+	var abs = Math.abs,
     min = Math.min,
-		max = Math.max,
     PI = Math.PI,
-		TWO_PI = 2 * PI,
-    atan = Math.atan,
-    atan2 = Math.atan2,
-    sin = Math.sin,
-    cos = Math.cos,
-    floor = Math.floor,
-		ceil = Math.ceil,
 		round = Math.round;
-
-		/*
-		var eigs = numeric.eig(params.cov);
-		console.log(eigs.lambda);
-		console.log(eigs.E);
-		var c_eigs = numeric.eig(c_cov);
-		console.log(c_eigs.lambda);
-		console.log(c_eigs.E);
-		console.log('color inv', numeric.inv(c_cov));
-		console.log('c_u', c_u);
-		console.log('c_cov', c_cov);
-		*/
-
-	function lookup(i) { return this[i]; }
-	function apply(func) { return func(this); }
-	function smaller(m, cur) { return m < cur ? m : cur; }
-	function larger(m, cur) { return m > cur ? m : cur; }
-	// dist between this and a point
-	function dist(p) {
-		return sqrt(pow(this[0] - p[0], 2) + pow(p[1] - this[1], 2));
-	}
-	function angle(p) {
-		return atan2(p[1] - this[1], p[0] - this[0]);
-	}
-	function angle_idx(a, nChunks) {
-		return (a/PI+1)*(nChunks/2);
-	}
-	function angle_idx_inv(idx, nChunks) {
-		return PI*(2*idx/nChunks-1);
-	}
-	// this point to line defined by p0, p1
-	function dist2line(p0, p1){
-		return abs( this[0]*(p1[1] - p0[1]) - this[1]*(p1[0] - p0[0]) + p1[0]*p0[1] - p1[1]*p0[0] ) / dist.call(p0, p1);
-	}
-	// Project this onto b
-	/*
-	function project(b){
-		angle.call(this, b);
-	}
-	*/
 
 	// Requires: stop>=start
 	function get_wrapped_indices(start, stop, max){
@@ -110,9 +63,7 @@
 		return indices_to_check;
 	}
 
-	function sign(v){
-		return v>=0 && 1 || -1;
-	}
+
 	// Check if this this poly breaks edge e (a, b)
 	function breaks(a, b){
 		var nChunks = this.rho.length;
@@ -128,7 +79,7 @@
 		var a_dist = dist.call(this.center, a);
 		angle.call(this, b);
 		*/
-		var crossDist = dist2line.call(this.center, a, b),
+		var crossDist = mf.dist2line.call(this.center, a, b),
 			angA = angle.call(this.center, a),
 			angB = angle.call(this.center, b),
 			dAng = angB - angA;
@@ -162,7 +113,7 @@
 		var br_cone = cone.call(poly, [a,b]);
 		var a_dist = dist.call(poly.center, a);
 		var b_dist = dist.call(poly.center, b);
-		var cone_rho = br_cone.map(lookup, poly.rho);
+		var cone_rho = br_cone.map(mf.lookup, poly.rho);
 		var does_break = cone_rho.map(function(d){
 			return min(a_dist-d, b_dist-d) < 0;
 		}).reduce(function(prev, now){return prev||now;});
@@ -242,7 +193,7 @@
 		var features = trail.map(function(t){
 			var ap = all_points[t[3]],
 				poly = polys[ap[2]];
-			if(ap[3]==-1){return get_pf(poly.parameters);}
+			if(ap[3]===-1){return get_pf(poly.parameters);}
 			return get_ppf({ p: poly.perimeter[ap[3]], poly: poly, idx: ap[3] });
 		});
 		console.log('True Features', features);
@@ -256,7 +207,7 @@
     },
     inscribedCircle: function(p){
       // Just the smallest radius. Technically not correct, but OK for now
-      return p.poly.rhoDist.reduce(smaller);
+      return p.poly.rhoDist.reduce(min);
     },
 		roughness: function(p){
 			return p.roughness;
@@ -267,7 +218,7 @@
     'ground', 'inscribedCircle', 'roughness'
   ];
   // Quickly compute the features from the functions in the correct order
-  var pf = poly_features.map(lookup, poly_classifiers);
+  var pf = poly_features.map(mf.lookup, poly_classifiers);
 	function get_pf(parameters) { return pf.map(apply, parameters); }
 
 	// Hold all the classifiers
@@ -276,9 +227,9 @@
 		neighbor: function(obj){
 			var p = obj.p, poly = obj.poly, i = obj.idx;
 			return get_wrapped_indices(i-1, i+1, poly.rho.length)
-				.map(lookup, poly.rho)
+				.map(mf.lookup, poly.rho)
 				.map(function(pn){ return abs(pn - this); }, poly.rho[i])
-				.reduce(larger, 0);
+				.reduce(Math.max, 0);
 		}
 	};
 	// Order of the features
@@ -286,7 +237,7 @@
 		'neighbor'
 	];
 	// Quickly compute the features from the functions in the correct order
-	var ppf = perim_features.map(lookup, perim_classifiers);
+	var ppf = perim_features.map(mf.lookup, perim_classifiers);
 	function get_ppf(parameters) { return ppf.map(apply, parameters); }
 
 	// Edge classification
@@ -303,7 +254,7 @@
 		'elevation'
 	];
 	// Quickly compute the features from the functions in the correct order
-	var ef = edge_features.map(lookup, edge_classifiers);
+	var ef = edge_features.map(mf.lookup, edge_classifiers);
 	function get_ef(parameters) { return ef.map(apply, parameters); }
 
 

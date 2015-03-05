@@ -1,5 +1,9 @@
 {
   "esnext": true,
 	"validthis": true,
-	"browser": true
+	"browser": true,
+	"strict": true,
+	"bitwise": true,
+	"curly": true,
+	"eqeqeq": true
 }

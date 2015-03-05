@@ -16,6 +16,7 @@ var PI = Math.PI,
   tK2;
 
 function flat2mat(flat){
+	'use strict';
   return [
     flat.slice(0,4),
     flat.slice(4,8),
@@ -25,6 +26,7 @@ function flat2mat(flat){
 }
 
 function mat_times_vec(m, v){
+	'use strict';
   var t = [];
   for(var i = 0; i<3; i+=1){
     t[i] = m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2] + m[i][3] * (v[3] || 1);
@@ -33,6 +35,7 @@ function mat_times_vec(m, v){
 }
 
 function rpy_trans(r,v){
+	'use strict';
   var alpha = r[0],
     beta = r[1],
     gamma = r[2];
@@ -140,7 +143,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     chestLidar: function (u, v, w, width, height, robot, destination) {
     	'use strict';
       // Saturation
-      if (w == 0 || w == 255) {return;}
+      if (w === 0 || w === 255) {return;}
     	var bodyRoll = 0;
       var bodyTilt = 0;
     	var h_angle0 = hfov[1] - u * (hfov[1] - hfov[0]) / width,
@@ -184,6 +187,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   },
   SENSOR_COLOR = {
     mesh: function (i, j, xyz, img, destination, width, height) {
+			'use strict';
 			// JET colormap. Colors range from 0.0 to 1.0
       var fourValue = 4 - (4 * max(0, min(1, xyz[1] / 1000)));
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
@@ -191,6 +195,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
     },
     kinectV2: function (i, j, xyz, img, destination, width, height) {
+			'use strict';
 			// Colors range from 0.0 to 1.0
       //var j2 = floor(2.65 * j) - 6;
 			var j2 = floor(2.5 * j) - 16;
@@ -206,6 +211,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			destination[2] = img[idx + 2] / 255;
     },
     kinectV2webots: function (i, j, xyz, img, destination, width, height) {
+			'use strict';
       // Colors range from 0.0 to 1.0
       var idx = 4 * floor(i + j * width);
       destination[0] = img[idx] / 255;

@@ -1,40 +1,12 @@
 (function (ctx) {
 	'use strict';
 
-	var pow = Math.pow,
+	var mf = ctx.util.mapFuncs,
+		numeric = ctx.numeric,
+		pow = Math.pow,
     abs = Math.abs,
     sqrt = Math.sqrt,
-    exp = Math.exp,
-    min = Math.min,
-    PI = Math.PI,
-    atan = Math.atan,
-    atan2 = Math.atan2,
-    sin = Math.sin,
-    cos = Math.cos,
-    floor = Math.floor,
-    norm2 = numeric.norm2,
-		round = Math.round;
-
-    /*
-    var eigs = numeric.eig(params.cov);
-    console.log(eigs.lambda);
-    console.log(eigs.E);
-    var c_eigs = numeric.eig(c_cov);
-    console.log(c_eigs.lambda);
-    console.log(c_eigs.E);
-    console.log('color inv', numeric.inv(c_cov));
-    console.log('c_u', c_u);
-    console.log('c_cov', c_cov);
-    */
-  function div(v) {
-		return v / this;
-	}
-  function normalize(n) {
-		return n.map(div, norm2(n));
-	}
-	function always(p){
-		return true;
-	}
+    atan2 = Math.atan2;
 
   /*
   function* face_entries(mesh, filter){
@@ -64,17 +36,14 @@
   function* Point_cloud_entries(mesh, filter){
     var positions = mesh.geometry.getAttribute('position').array,
       colors = mesh.geometry.getAttribute('color').array,
-      n = 3*mesh.n_el,
+      n = 3 * mesh.n_el,
       data;
-		if(typeof filter !== 'function'){
-			filter = always;
-		}
 		for (var pidx = 0; pidx < n; pidx += 3) {
       data = [
         positions[pidx], positions[pidx + 1], positions[pidx + 2],
         colors[pidx], colors[pidx + 1], colors[pidx + 2],
       ];
-      if (filter(data)) { yield [pidx, data]; }
+      if (typeof filter !== 'function' || filter(data)) { yield [pidx, data]; }
 		}
   }
 
@@ -87,7 +56,9 @@
       p;
     for (var a of it){
       p = a[1];
-			err = abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
+			err = abs(
+				n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2])
+			);
 			if(err>15){ n_big_err += 1; }
       total_err += err;
       cnt += 1;
@@ -135,27 +106,27 @@
     }
 
     // TODO: Add the standard deviation
-    function divN(v){return v / (nClose + 1);}
+
     // diagonal entries
-    var d = [
+    var d = numeric.div([
       xxSum - pow(xSum,2)/nClose + c_episilon,
       yySum - pow(ySum,2)/nClose + c_episilon,
       zzSum - pow(zSum,2)/nClose + c_episilon,
-    ].map(divN);
+    ], nClose + 1);
     // off diagonals: xz, xy, zy
     var of = 1 / nClose,//2 / nClose + nClose,
-      o = [
+      o = numeric.div([
       xySum - of*xSum*ySum,
       xzSum - of*xSum*zSum,
       yzSum - of*ySum*zSum
-    ].map(divN);
+    ], nClose + 1);
     var cov = [
       [d[0],o[0],o[1]],
       [o[0],d[1],o[2]],
       [o[1],o[2],d[2]]
     ];
     return {
-      mean: [xSum, ySum, zSum].map(function(v,i){return v/nClose;}),
+      mean: numeric.div([xSum, ySum, zSum], nClose),
       cov: cov,
     };
 
@@ -209,23 +180,23 @@
 
     var A_plane_inv = numeric.inv(A_plane);
     var sol_plane = numeric.dot(A_plane_inv, [zySum, xySum, ySum]);
-    var normal = normalize([-sol_plane[0], -sol_plane[1], 1]);
+    var normal0 = [-sol_plane[0], -sol_plane[1], 1];
+		var normal = numeric.div(normal0, numeric.norm2(normal0));
 
     // TODO: Add the standard deviation
-    function divN(v){return v / (nClose + 1);}
     // diagonal entries
-    var d = [
+    var d = numeric.div([
       xxSum - pow(xSum,2)/nClose,
       zzSum - pow(zSum,2)/nClose,
       yySum - pow(ySum,2)/nClose
-    ].map(divN);
+    ], nClose + 1);
     // off diagonals: xz, xy, zy
     var of = 1 / nClose,//2 / nClose + nClose,
-      o = [
+      o = numeric.div([
       xzSum - of*xSum*zSum,
       xySum - of*xSum*ySum,
       zySum - of*zSum*ySum
-    ].map(divN);
+    ], nClose + 1);
     var cov = [
       [d[0],o[0],o[1]],
       [o[0],d[1],o[2]],
@@ -337,10 +308,6 @@
     };
   }
 
-	function angle_idx(a, nChunks){
-		return round((a/PI+1)*(nChunks/2));
-	}
-
 	function get_cyl_rates(it, params){
 		var p, n_tot=0, n_in=0, n_on = 0, err_r, dx, dz, ang, angles = [], nA = 10, r_close = params.r/10;
 		for(var i = 0; i<nA; i+=1){angles[i]=0;}
@@ -351,7 +318,7 @@
 			err_r = params.r - sqrt(pow(dx, 2) +  pow(dz, 2));
 			if (err_r > r_close) { n_in += 1; }
 			if (abs(err_r)<=r_close){ n_on += 1; }
-			ang = angle_idx(atan2(dz, dx), nA);
+			ang = mf.iangle.call(nA, atan2(dz, dx));
 			angles[ang] = 1;
 			n_tot += 1;
 		}
@@ -481,7 +448,10 @@
       var vert_params = estimate_plane(vertical_it, root);
       vert_params.id = 'v';
       vert_params.normal[1] = 0;
-      vert_params.normal = normalize(vert_params.normal);
+      vert_params.normal = numeric.div(
+				vert_params.normal,
+				numeric.norm2(vert_params.normal)
+			);
 
 			// Choose if vertical or horizontal
       var e_h = get_plane_error(horiz_params.points.entries(), horiz_params),
@@ -533,8 +503,7 @@
 			}
 			points.forEach(function(p){
 				var angle = atan2(p[0], p[2]),
-					angleIdx = floor((angle/PI+1)*(nChunks/2)),
-					idx = angleIdx==nChunks ? 0 : angleIdx;
+					idx = mf.iangle.call(nChunks, angle);
 				rhoDist[idx] = rhoDist[idx]===0 ? p[3] : rhoDist[idx];
 				if(p[3] - rhoDist[idx] > rhoThreshold){ return; }
 				if(rhoDist[idx] > 500) { return; }

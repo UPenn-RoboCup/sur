@@ -70,6 +70,61 @@
 		document.getElementById('info').innerHTML = arr.join('<br/>');
 	}
 
+	var pow = Math.pow,
+    abs = Math.abs,
+    sqrt = Math.sqrt,
+    exp = Math.exp,
+    min = Math.min,
+		max = Math.max,
+    PI = Math.PI,
+		HALF_PI = PI / 2,
+		TWO_PI = 2 * PI,
+    atan = Math.atan,
+    atan2 = Math.atan2,
+    sin = Math.sin,
+    cos = Math.cos,
+    floor = Math.floor,
+		ceil = Math.ceil,
+		round = Math.round;
+
+	var mapFuncs = {
+		dist: function(p){
+		return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
+	},
+		smallest: function(prev, now, inow, arr) {
+			return now < prev[0] ? [now, inow] : prev;
+		},
+		lookup: function(i) { return this[i]; },
+		apply: function apply(f) { return f(this); },
+		angle: function(p) {
+			return atan2(p[1] - this[1], p[0] - this[0]);
+		},
+		iangle: function(a) {
+			// this: nChunks
+			return (a / TWO_PI + 0.5) * this;
+		},
+		iangle_valid: function(a) {
+			// Integer from [0, this-1]
+			return min( round((a / TWO_PI + 0.5) * this), this - 1);
+		},
+		iangle_inv: function(i){
+			// this: nChunks
+			return (TWO_PI / this) * i - PI;
+		},
+		dist2line(p0, p1){
+			return abs(
+				this[0] * (p1[1] - p0[1]) -
+				this[1] * (p1[0] - p0[0]) +
+				p1[0] * p0[1] -
+				p1[1] * p0[0]
+			) / sqrt(pow(p0[0] - p1[0], 2) + pow(p0[1] - p1[1], 2));
+		},
+		sign: function (v) {
+			if(v===0){ return 0; }
+			return (v > 0) ? 1 : -1;
+		}
+	};
+
 	// Exports
 	// TODO: Pollute global namespace, or call these utils?
 	ctx.util = {
@@ -78,6 +133,7 @@
 		lcss: lcss,
 		DEG_TO_RAD: Math.PI / 180,
 		RAD_TO_DEG: 180 / Math.PI,
+		mapFuncs: mapFuncs,
 		jointNames: [
 			"Neck", "Head",
 			"ShoulderL", "ArmUpperL", "LeftShoulderYaw",
