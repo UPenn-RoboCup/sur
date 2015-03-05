@@ -13,7 +13,7 @@
 		NODE_OPEN = 0,
 		NODE_CLOSED = 1;
 
-		// Returns: [x, y, poly idx, perimeter index]
+	// Returns: [x, y, poly idx, perimeter index]
 	function node2point(node) {
 		if (typeof node.obj_idx === 'number') {
 			return node.obj.perimeter[node.obj_idx]
@@ -24,13 +24,6 @@
 			// Start or goal... TBD
 			return [node.obj.x, node.obj.y, -1, -1];
 		}
-	}
-
-	// Needs d3 for now
-	function getEdgePairs(graph) {
-		return graph.edges.map(function (edge) {
-			return [node2point(this[edge.a]), node2point(this[edge.b])];
-		}, graph.nodes);
 	}
 
 	function astar_step(graph) {
@@ -47,8 +40,8 @@
 		}
 
 		if (openList.length === 0) {
-			searchState = SEARCH_FAILED;
-			return searchState;
+			graph.searchState = SEARCH_FAILED;
+			return SEARCH_FAILED;
 		}
 
 		// Grab the next node to explore
@@ -58,7 +51,7 @@
 
 		// Check for the goal
 		if (n.id === goal_index) {
-			searchState = SEARCH_SUCCESS;
+			graph.searchState = SEARCH_SUCCESS;
 			return searchState;
 		}
 
@@ -354,7 +347,7 @@
 		console.log(plus1, minus1);
 		*/
 		//avg good feature
-		var good = good_ids.reduce(function(prev, id, arr){
+		var good = good_ids.reduce(function(prev, id){
 			var n = graph.nodes[id];
 			var f = n.obj.parameters ? n.obj.parameters.features : [0,0,0];
 			return numeric.add( f, prev);
@@ -363,7 +356,7 @@
 		console.log(good);
 
 		//avg bad feature
-		var bad = bad_ids.reduce(function(prev, id, arr){
+		var bad = bad_ids.reduce(function(prev, id){
 			var n = graph.nodes[id];
 			var f = n.obj.parameters ? n.obj.parameters.features : [0,0,0];
 			return numeric.add( f, prev);
@@ -376,6 +369,12 @@
 		var nm = numeric.norm(dir);
 		var nw = numeric.div(dir, nm) * alpha;
 
+	}
+
+	function getEdgePairs(graph) {
+		return graph.edges.map(function (edge) {
+			return [node2point(this[edge.a]), node2point(this[edge.b])];
+		}, graph.nodes);
 	}
 
   ctx.Graph = {

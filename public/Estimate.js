@@ -378,7 +378,7 @@
     }
 
     // Filter to only the points we want
-    var valid_cyl_points = goodlevels.filter(function(value, index, arr){
+    var valid_cyl_points = goodlevels.filter(function(value, index){
       return index>=i_lower && index<i_upper;
     });
 
@@ -491,7 +491,7 @@
 				rhoThreshold = 50,
 				points = params.points.map(function(p){
 					var p0 = [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
-	        return p0.concat(norm2(p0));
+	        return p0.concat(numeric.norm2(p0));
 	      }, root);
 			// Sort in ascending radius
 			// TODO: can be faster if not using the actual square root to sort!

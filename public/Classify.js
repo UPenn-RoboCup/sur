@@ -2,16 +2,14 @@
 	'use strict';
 
 	var numeric = ctx.numeric,
-		mf = ctx.util.mapFuncs,
-		dist = mf.dist;
+		mf = ctx.util.mapFuncs;
 
   // Load the Matrix library
   //ctx.util.ljs('/js/numeric-1.2.6.min.js');
 
 	var abs = Math.abs,
     min = Math.min,
-    PI = Math.PI,
-		round = Math.round;
+    PI = Math.PI;
 
 	// Requires: stop>=start
 	function get_wrapped_indices(start, stop, max){
@@ -34,10 +32,10 @@
 	// No: Just the closest one
 	function cone(e){
 		var nChunks = this.rho.length,
-			a0 = angle.call(this.center, e[0]),
-			a1 = angle.call(this.center, e[1]),
-			a0i = min(round(angle_idx(a0, nChunks)), nChunks-1),
-			a1i = min(round(angle_idx(a1, nChunks)), nChunks-1),
+			a0 = mf.angle.call(this.center, e[0]),
+			a1 = mf.angle.call(this.center, e[1]),
+			a0i = mf.iangle_valid.call(nChunks, a0),
+			a1i = mf.iangle_valid.call(nChunks, a0),
 			is_inverted = a0i > a1i,
 			is_obtuse = abs(a1i - a0i) > nChunks/2,
 			i0, i1, indices_to_check;
@@ -80,15 +78,15 @@
 		angle.call(this, b);
 		*/
 		var crossDist = mf.dist2line.call(this.center, a, b),
-			angA = angle.call(this.center, a),
-			angB = angle.call(this.center, b),
+			angA = mf.angle.call(this.center, a),
+			angB = mf.angle.call(this.center, b),
 			dAng = angB - angA;
 
 		var a2center = numeric.sub(this.center, a),
 			a2b = numeric.sub(this.center, b),
-			angBC = abs(angle.call(a2center, a2b)),
+			angBC = abs(mf.angle.call(a2center, a2b)),
 			angThis = angA - (PI/2 - angBC),
-			iAngThis = round(angle_idx(angThis, nChunks)),
+			iAngThis = mf.iangle_valid.call(nChunks, angThis),
 			r = this.rho[iAngThis],
 			dAngThis = angThis - angA;
 
@@ -127,9 +125,9 @@
 		// this is the polygon
 		// p is the point to test
 		var nChunks = this.rho.length,
-			rp = dist.call(this.center, p),
-			a = angle.call(this.center, p),
-			i = round(angle_idx(a, nChunks)),
+			rp = mf.dist.call(this.center, p),
+			a = mf.angle.call(this.center, p),
+			i = mf.iangle_valid(nChunks, a),
 			r = this.rho[i];
 
 		if(rp<r){
@@ -165,8 +163,8 @@
 	// this: poly to compare against
 	function halfplanes(poly){
 		var nChunks = this.rho.length,
-			a = angle.call(this.center, poly.center),
-			i = round(angle_idx(a, nChunks)),
+			a = mf.angle.call(this.center, poly.center),
+			i = mf.iangle_valid.call(nChunks, a),
 			my_indices = get_wrapped_indices(i-nChunks/4, i+nChunks/4, nChunks),
 			their_indices = get_wrapped_indices(i+nChunks/4, i+3*nChunks/4, nChunks).reverse();
 
@@ -196,14 +194,14 @@
 			if(ap[3]===-1){return get_pf(poly.parameters);}
 			return get_ppf({ p: poly.perimeter[ap[3]], poly: poly, idx: ap[3] });
 		});
-		console.log('True Features', features);
+		//console.log('True Features', features);
 	}
 
   // Hold all the classifiers
   var poly_classifiers = {
     ground: function(p){
       // Larger it is, then more ground-y it is
-      return numeric.dotVV(p.normal, [0,1,0]) * (1 + 1/abs(p.root[1]/1e3));
+      return numeric.dot(p.normal, [0,1,0]) * (1 + 1/abs(p.root[1]/1e3));
     },
     inscribedCircle: function(p){
       // Just the smallest radius. Technically not correct, but OK for now
@@ -219,7 +217,7 @@
   ];
   // Quickly compute the features from the functions in the correct order
   var pf = poly_features.map(mf.lookup, poly_classifiers);
-	function get_pf(parameters) { return pf.map(apply, parameters); }
+	function get_pf(parameters) { return pf.map(mf.apply, parameters); }
 
 	// Hold all the classifiers
 	// Just the reduced poly?
@@ -238,7 +236,7 @@
 	];
 	// Quickly compute the features from the functions in the correct order
 	var ppf = perim_features.map(mf.lookup, perim_classifiers);
-	function get_ppf(parameters) { return ppf.map(apply, parameters); }
+	function get_ppf(parameters) { return ppf.map(mf.apply, parameters); }
 
 	// Edge classification
 	var edge_classifiers = {
@@ -255,13 +253,14 @@
 	];
 	// Quickly compute the features from the functions in the correct order
 	var ef = edge_features.map(mf.lookup, edge_classifiers);
-	function get_ef(parameters) { return ef.map(apply, parameters); }
+	function get_ef(parameters) { return ef.map(mf.apply, parameters); }
 
 
 	// Export
   ctx.Classify = {
 		match: match,
 		breaks: breaks,
+		cone: cone,
     get_poly_features: get_pf,
     poly_features: poly_features,
 		halfplanes: halfplanes,

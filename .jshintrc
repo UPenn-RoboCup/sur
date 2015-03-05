@@ -5,5 +5,7 @@
 	"strict": true,
 	"bitwise": true,
 	"curly": true,
-	"eqeqeq": true
+	"eqeqeq": true,
+	"undef": true,
+	"unused": true
 }

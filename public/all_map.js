@@ -5,7 +5,8 @@
 	var d3 = ctx.d3,
 		util = ctx.util,
 		debug = ctx.util.debug,
-		mapFuncs = util.mapFuncs,
+		mf = util.mapFuncs,
+		console = window.console,
 		overlay,
 		peer,
 		p_conn,
@@ -48,8 +49,8 @@
 			var view_root = [
 				-params.projected.root[1],
 				-params.projected.root[0]
-			],
-			patch = overlay.append("path")
+			];
+			overlay.append("path")
 				.attr("d", arcF(params.projected.xy))
 				.attr("transform", "translate("+view_root.join(',')+")")
 				.attr('class','human')
@@ -111,7 +112,7 @@
 		//, confidence = Math.exp(-closest[0]);
 		var coord = d3.mouse(this),
 			coord_real = [-coord[1], -coord[0]],
-			closest = all_points.map(mapFuncs.dist, coord_real).reduce(mapFuncs.smallest, [Infinity, -1]),
+			closest = all_points.map(mf.dist, coord_real).reduce(mf.smallest, [Infinity, -1]),
 			back = trail.pop(),
 			//nearby = coord_real.concat(closest);
 			nearby = all_points[closest[1]].slice().concat(closest[0]);
@@ -140,7 +141,7 @@
 					a = p_a.perimeter[l.ind_a] || p_a.center,
 					b = p_b.perimeter[l.ind_b] || p_b.center;
 						// If the edge is too long, break it
-				var dAB = dist.call(a, b);
+				var dAB = mf.dist.call(a, b);
 				if(dAB>0.6){ return true; }
 				//console.log('ipoly', ipoly, polys[ipoly].center)
 				//console.log('a', a, 'b', b);
@@ -212,7 +213,7 @@
 		var name = 'hmap' + Date.now(), data = JSON.stringify(human);
 		debug(['Saving ' + name, data.length + ' bytes']);
 		console.log(human);
-		d3.text('/log/'+name).post(data, function(e,d){
+		d3.text('/log/'+name).post(data, function(e){
 			if (e) { console.log('Could not save', e); }
 		});
 	}
@@ -221,7 +222,7 @@
 		var name = 'hpath_' + logname.replace('experiment/',''), data = JSON.stringify(trail);
 		debug(['Saving ' + name, data.length + ' bytes']);
 		console.log('saving...',name);
-		d3.text('/log/'+name).post(data, function(e,d){
+		d3.text('/log/'+name).post(data, function(e){
 			if (e) { console.log('Could not save', e); }
 		});
 	}
@@ -247,18 +248,22 @@
 				.attr('id', 'pose')
 				.attr("d", polyF(data));
 		}
-		pose_marker.attr("transform", "translate(" + -pose.y + "," + -pose.x + ")");
+		pose_marker.attr("transform",
+										 "translate(" + -pose.y + "," + -pose.x + ")");
 	}
 
 	function draw_goal(){
 		if(goal_marker===undefined) {
-			var data = [[0, 0], [0.1, 0], [0, 0.1], [-0.1, 0], [0, -0.1], [0.1, 0]];
+			var data = [
+				[0, 0], [0.1, 0], [0, 0.1], [-0.1, 0], [0, -0.1], [0.1, 0]
+			];
 			goal_marker = overlay
 				.append('path')
 				.attr('id', 'pose')
 				.attr("d", polyF(data));
 		}
-		goal_marker.attr("transform", "translate(" + -goal.y + "," + -goal.x + ")");
+		goal_marker.attr("transform",
+										 "translate(" + -goal.y + "," + -goal.x + ")");
 	}
 
   function setup_dom(){
@@ -286,7 +291,8 @@
 
 	// Handle resizing
 	window.addEventListener('resize', function () {
-    overlay.attr('width', map_c.clientWidth).attr('height', map_c.clientHeight);
+    overlay.attr('width', map_c.clientWidth)
+			.attr('height', map_c.clientHeight);
 	}, false);
 
 	// Load resources
