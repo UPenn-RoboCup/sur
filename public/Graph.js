@@ -2,10 +2,9 @@
 	'use strict';
 
 	var numeric = ctx.numeric,
+		PriorityQueue = ctx.PriorityQueue,
 		mf = ctx.util.mapFuncs,
-		abs = Math.abs,
-		sqrt = Math.sqrt,
-		exp = Math.exp,
+		console = window.console,
 		SEARCH_UNDEFINED = 0,
 		SEARCH_SEARCHING = 1,
 		SEARCH_SUCCESS = 2,
@@ -306,7 +305,7 @@
 
 		// Intra polygon edges
 		polys.forEach(function(poly, ipoly){
-			nodes[ipoly].obj_tree.forEach(function(node_id, iperim){
+			nodes[ipoly].obj_tree.forEach(function(node_id){
 				if(node_id===-1){return;}
 				var edge = {
 					id: edges.length,
@@ -371,17 +370,15 @@
 
 	}
 
-	function getEdgePairs(graph) {
-		return graph.edges.map(function (edge) {
-			return [node2point(this[edge.a]), node2point(this[edge.b])];
-		}, graph.nodes);
-	}
-
   ctx.Graph = {
 		make : make,
 		plan : plan,
-		getEdgePairs : getEdgePairs,
 		compare_expert_path: compare_expert_path,
+		getEdgePairs : function (graph) {
+			return graph.edges.map(function (edge) {
+				return [node2point(this[edge.a]), node2point(this[edge.b])];
+			}, graph.nodes);
+		},
   };
 
 }(this));
