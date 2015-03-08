@@ -55,7 +55,7 @@
   var describe = {
     cylinder: function(mesh0, p0){
 			var parameters = E.cylinder(mesh0, p0);
-			if(!parameters){return};
+			if(!parameters){return;}
       // Cylinder
       var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20),
       	material = new THREE.MeshBasicMaterial({color: 0xffff00}),
@@ -199,7 +199,7 @@
 			return;
 		}
 		var menu = document.getElementById('topic2');
-		if (e.button == 0) {
+		if (e.button === 0) {
 			// Left click
 			if(!menu.classList.contains('hidden')){
 				menu.classList.add('hidden');
@@ -235,7 +235,7 @@
     // Find the intersections with the various meshes in the scene
     var intersections = raycaster.intersectObjects(items.concat(meshes).concat(robot.meshes));
 		// Return if no intersections
-		if (intersections.length == 0) {
+		if (intersections.length === 0) {
 			return;
 		}
 		// Grab the first intersection object and the intersection point
@@ -246,12 +246,12 @@
 		var p0 = obj0.point, mesh0 = obj0.object;
 
 		// Save the intersection for a mouseup refocus
-		last_intersection.p = p0
-		last_intersection.mesh = mesh0
+		last_intersection.p = p0;
+		last_intersection.mesh = mesh0;
 		last_intersection.t = e.timeStamp;
 
 		// Default gives a text cursor
-		if (e.button != 2) { return; }
+		if (e.button !== 2) { return; }
 		e.preventDefault();
 
     // Solve for the transform from the robot frame to the point
@@ -301,6 +301,9 @@
         // ambient: 0xaaaaaa, specular: 0xffffff, shininess: 250,
 			}),
 			mesh;
+
+		console.log(mesh_obj);
+
     // Custom attributes required for rendering the BufferGeometry
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
 		geometry.addAttribute('position', new THREE.BufferAttribute(mesh_obj.pos, 3));
@@ -332,16 +335,15 @@
 
 	// Process the frame, which is always the chest lidar
 	function process_mesh_frame() {
-    if (is_processing) {
-      return;
-    }
+    if (is_processing) { return; }
 		var canvas = mesh_feed.canvas,
 			metadata = canvas.metadata,
 			width = canvas.width,
 			height = canvas.height,
 			npix = width * height,
-			pixels = mesh_feed.context2d.getImageData(1, 1, width, height).data,
-			mesh_obj = {
+			pixels = mesh_feed.context2d.getImageData(0, 0, width, height).data;
+
+		var mesh_obj = {
         id: 'mesh',
 				width: width,
 				height: height,
@@ -353,12 +355,13 @@
 				roll: metadata.roll,
 				// Make the max allocations
 				// TODO: Can we reuse these?
-        index: new window.Uint16Array(npix * 6),
-				positions: new window.Float32Array(npix * 3),
-				colors: new window.Float32Array(npix * 3),
+        index: new Uint16Array(npix * 6),
+				positions: new Float32Array(npix * 3),
+				colors: new Float32Array(npix * 3),
         pixels: pixels,
-        pixdex: new window.Uint32Array(pixels.buffer),
+        pixdex: new Uint32Array(pixels.buffer),
 			};
+
     depth_worker.postMessage(mesh_obj, [
       mesh_obj.index.buffer,
       mesh_obj.positions.buffer,
@@ -367,6 +370,7 @@
     ]);
     // Don't post to the depth worker until done
     is_processing = true;
+
 	}
 
 

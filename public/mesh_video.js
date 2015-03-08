@@ -8,6 +8,7 @@
 	/* The Mesh Video feed should display in the JET colormap */
 	function to_jet() {
 		var ctx = feed.context2d,
+			metadata = feed.canvas.metadata,
 			img_data = ctx.getImageData(0, 0, feed.canvas.width, feed.canvas.height),
 			data = img_data.data,
 			len = data.length,
@@ -20,6 +21,7 @@
 			data[i + 2] = 255 * min(fourValue + 0.5, 2.5 - fourValue);
 		}
 		ctx.putImageData(img_data, 0, 0);
+		window.console.log(metadata);
 	}
 
 	// Add the camera view and append
@@ -28,13 +30,15 @@
 		d3.select("div#landing").remove();
 		document.body.appendChild(view);
 		// Add the video feed. There is a 90 degree offset for the chest mesh
-		d3.json('/streams/mesh', function (error, port) {
-			feed = new ctx.VideoFeed({
-        port: port,
-        fr_callback: to_jet,
-				cw90: true
+		util.ljs("/VideoFeed.js",function(){
+			d3.json('/streams/mesh', function (error, port) {
+				feed = new ctx.VideoFeed({
+					port: port,
+					fr_callback: to_jet,
+					cw90: true
+				});
+				document.getElementById('camera_container').appendChild(feed.canvas);
 			});
-			document.getElementById('camera_container').appendChild(feed.canvas);
 		});
 		// Animate the buttons
 		d3.selectAll('button').on('click', function () {

@@ -34,6 +34,7 @@ function mat_times_vec(m, v){
   return t;
 }
 
+/*
 function rpy_trans(r,v){
 	'use strict';
   var alpha = r[0],
@@ -46,6 +47,7 @@ function rpy_trans(r,v){
     [0, 0, 0, 1]
   ];
 }
+*/
 
 /*
 this.importScripts('/js/sylvester-min.js');
@@ -109,30 +111,30 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   MIN_CONNECTIVITY = 100,//75, //40 /*real*/, //75 /*webots*/,
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
-    kinectV2: function (u, v, x, width, height, robot, destination) {
+    kinectV2: function (u, v, x, width, height, mesh, destination) {
       // The range value is directly our x coordinate
     	'use strict';
       // 4.5 meters away is too far to render
-      if(x > 6000 || x < 200){
-        return;
-      }
-      x = x / 1e3;
-      var local = [x, 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR],
+      if(x > 6000 || x < 200){ return; }
+      x /= 1e3;
+      var local = [
+				x,
+				2 * x * (u / width - 0.5) * K2_HFOV_FACTOR,
+				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR
+			],
         rFrame = mat_times_vec(tK2, local);
       destination[0] = rFrame[1]*1e3;
       destination[1] = rFrame[2]*1e3;
       destination[2] = rFrame[0]*1e3;
       return local;
     },
-    kinectV2webots: function (u, v, x, width, height, robot, destination) {
+    kinectV2webots: function (u, v, x, width, height, mesh, destination) {
       // The range value is directly our x coordinate
       'use strict';
       // 4.5 meters away is too far to render
-      if(x >= 6000 || x < 200){
-        return;
-      }
+      if(x >= 6000 || x < 200){ return; }
       //console.log(x);
-      x = x / 1e3;
+      x /= 1e3;
       var local = [x, 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR],
         rFrame = mat_times_vec(tK2, local);
       destination[0] = rFrame[1]*1000;
@@ -140,27 +142,28 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       destination[2] = rFrame[0]*1000;
       return local;
     },
-    chestLidar: function (u, v, w, width, height, robot, destination) {
+    mesh: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
       // Saturation
       if (w === 0 || w === 255) {return;}
-    	var bodyRoll = 0;
-      var bodyTilt = 0;
-    	var h_angle0 = hfov[1] - u * (hfov[1] - hfov[0]) / width,
-    		v_angle = -1 * (v * (vfov[1] - vfov[0]) / height + vfov[0]),
-    		h_angle = -a,
+    	var bodyRoll = 0,
+      	bodyTilt = 0,
+					h_angle0 = mesh.hfov[1] - u * (mesh.hfov[1] - mesh.hfov[0]) / width,
+    		v_angle = -1 * (v * (mesh.vfov[1] - mesh.vfov[0]) / height + mesh.vfov[0]),
+    		h_angle = -mesh.a[u],
     		ch = cos(h_angle),
     		sh = sin(h_angle),
     		cv = cos(v_angle),
     		sv = sin(v_angle),
     		// Convert w of 0-255 to actual meters value
+				near = mesh.dynrange[0],
+				far = mesh.dynrange[1],
     		// Rotates a *bit* off axis
-    		r = w * (far - near) / 255 + near + chest_off_axis,
+    		r = w * (far - near) / 255 + near + 0.05, //chest_off_axis
     		// Place in the frame of the torso
-    		//x = (r * cv + chest_offset_x) * ch + chest_joint_x,
-    		x = r * cv * ch + chest_joint_x,
+    		x = r * cv * ch + 0.10, //chest_joint_x
     		y = r * cv * sh,
-    		z = r * sv + chest_height,
+    		z = r * sv + 0.10,//chest_height
     		cp = cos(bodyTilt),
     		sp = sin(bodyTilt),
     		cr = cos(bodyRoll),
@@ -178,18 +181,22 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		sa = sin(pa),
     		tx = robot.px + ca * xx - sa * yy,
     		ty = robot.py + sa * xx + ca * yy,
-    		tz = zz + bodyHeight + bH_to_chest;
+    		tz = zz + 0.93 + 0.1;
     	// Return in mm, since THREEjs uses that
     	// Return also the position
     	// Also, swap the coordinates
-    	return [ty * 1000, tz * 1000, tx * 1000, xx, yy, zz];
+    	destination[0] = ty * 1000;
+			destination[1] = tz * 1000;
+			destination[2] = tx * 1000;
+			return [xx, yy, zz];
     }
   },
   SENSOR_COLOR = {
     mesh: function (i, j, xyz, img, destination, width, height) {
 			'use strict';
+			//console.log(xyz);
 			// JET colormap. Colors range from 0.0 to 1.0
-      var fourValue = 4 - (4 * max(0, min(1, xyz[1] / 1000)));
+      var fourValue = 4 - (4 * max(0, min(1, (xyz[2]+1)/2)));
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
@@ -265,30 +272,37 @@ this.addEventListener('message', function (e) {
 			count: 0,
 			row: 0
 		}],
-    // Cartesian coordinate formation function
-    get_xyz = SENSOR_XYZ.kinectV2,
-    //get_xyz = SENSOR_XYZ.kinectV2webots,
-    // Color formation function
-    get_color = SENSOR_COLOR.kinectV2,
-    //get_color = SENSOR_COLOR.kinectV2webots,
     // Loop counters
-    i, j,
+    i, j, inc = 1,
     // Position of the point
-    point_xyz;
+    point_xyz, point_local,
+		// Plot points depending on the sensor
+		get_xyz, get_color;
 
-    //console.log(mesh);
-    if (mesh.id==='k2_depth'){
-      //tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
-      tK2 = flat2mat(mesh.tr);
-    }
-    var point_local;
+	//console.log('Initial Mesh', mesh);
+	if (mesh.id==='k2_depth'){
+		//tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
+		tK2 = flat2mat(mesh.tr);
+		// Cartesian coordinate formation function
+		get_xyz = SENSOR_XYZ.kinectV2;
+		//get_xyz = SENSOR_XYZ.kinectV2webots;
+		// Color formation function
+		get_color = SENSOR_COLOR.kinectV2;
+		//get_color = SENSOR_COLOR.kinectV2webots;
+	} else {
+		get_xyz = SENSOR_XYZ.mesh;
+		get_color = SENSOR_COLOR.mesh;
+		inc = 4;
+	}
+
 	for (j = 0; j < height; j += 1) {
 		for (i = 0; i < width; i += 1) {
 			// Compute and set the xyz positions
 			point_xyz = positions.subarray(position_idx, position_idx + 3);
       point_local = get_xyz(
-        i, j, pixels[pixel_idx], width, height, {}, point_xyz
+        i, j, pixels[pixel_idx], width, height, mesh, point_xyz
       );
+
       // Check if we are given a valid point
       if (point_local === undefined) {
 				// Saturation check
@@ -297,7 +311,7 @@ this.addEventListener('message', function (e) {
   			// next float32 in the image. += 4 if RGBA image to get each R of the greyscale, for instance
   			pixdex_idx += 1;
   			// move on to the next pixel (RGBA) for next time
-  			pixel_idx += 1;
+  			pixel_idx += inc;
 				continue;
       }
       // Set the color of this pixel
@@ -316,7 +330,7 @@ this.addEventListener('message', function (e) {
 			// next float32 in the image. += 4 if RGBA image to get each R of the greyscale, for instance
 			pixdex_idx += 1;
 			// move on to the next pixel (RGBA) for next time
-			pixel_idx += 1;
+			pixel_idx += inc;
 		} // for i in width
 
     // Use a heurstic for splitting into a new chunk
@@ -453,4 +467,7 @@ this.addEventListener('message', function (e) {
   mesh.col = colors.subarray(0, 3 * n_el);
   mesh.n_el = n_el;
 	this.postMessage(mesh, [mesh.idx.buffer, mesh.pos.buffer, mesh.col.buffer]);
+
+	//console.log('Final Mesh',mesh);
+
 }, false);
