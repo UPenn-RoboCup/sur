@@ -302,7 +302,7 @@
 			}),
 			mesh;
 
-		console.log(mesh_obj);
+//		console.log(mesh_obj);
 
     // Custom attributes required for rendering the BufferGeometry
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));

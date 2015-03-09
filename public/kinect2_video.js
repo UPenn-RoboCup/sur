@@ -113,23 +113,25 @@
 		label_worker.onmessage = recv_labelA;
 		// Add the video rgb_feed
 		d3.json('/streams/kinect2_color', function (error, port) {
-			rgb_feed = new ctx.VideoFeed({
-				id: 'kinect2_color',
-				port: port,
-				extra_cb: function (obj) {
-					if (obj.id === 'labelA') {
-						ask_labelA(obj);
-					} else if (obj.id === 'detect') {
+			util.ljs("/VideoFeed.js",function(){
+				rgb_feed = new ctx.VideoFeed({
+					id: 'kinect2_color',
+					port: port,
+					extra_cb: function (obj) {
+						if (obj.id === 'labelA') {
+							ask_labelA(obj);
+						} else if (obj.id === 'detect') {
 
+						}
 					}
-				}
+				});
+				rgb_canvas = rgb_feed.canvas;
+				// Show the images on the page
+				document.getElementById('camera_container').appendChild(rgb_canvas);
+				document.getElementById('camera_container').appendChild(lA_canvas);
+				depth_canvas.classList.add('nodisplay');
+				lA_canvas.classList.add('nodisplay');
 			});
-			rgb_canvas = rgb_feed.canvas;
-			// Show the images on the page
-			document.getElementById('camera_container').appendChild(rgb_canvas);
-			document.getElementById('camera_container').appendChild(lA_canvas);
-			depth_canvas.classList.add('nodisplay');
-			lA_canvas.classList.add('nodisplay');
 		});
 		// Add the depth rgb_feed
 		d3.json('/streams/kinect2_depth', function (error, port) {
