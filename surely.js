@@ -49,10 +49,10 @@ if (Config.net.use_wireless) {
 	robot_ip = Config.net.robot.wired;
 }
 
-//rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
+rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
 // For localhost, use this instead:
-rpc_skt.connect('ipc:///tmp/'+rpc.uds);
-console.log(rpc_skt);
+//rpc_skt.connect('ipc:///tmp/'+rpc.uds);
+//console.log(rpc_skt);
 rpc_skt.http_responses = [];
 // Since a REP/REQ pattern, we can use a queue and know we are OK
 // This means one node.js per robot rpc server!
@@ -238,12 +238,14 @@ for (var w in streams) {
 	b.wss = wss;
 	wss.sur_stream = b;
 	// Add UDP listening
+	/*
 	if (b.udp !== undefined) {
 		var udp_recv_skt = dgram.createSocket("udp4");
 		udp_recv_skt.bind(b.udp);
 		udp_recv_skt.on("message", udp_message);
 		udp_recv_skt.sur_stream = b;
 	}
+	*/
 	// Add PUB/SUB
 	if (b.sub !== undefined) {
 		var zmq_recv_skt = zmq.socket('sub');
