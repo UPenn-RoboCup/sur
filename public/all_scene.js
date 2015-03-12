@@ -250,16 +250,14 @@
 		last_intersection.mesh = mesh0;
 		last_intersection.t = e.timeStamp;
 
-		// Default gives a text cursor
-		if (e.button !== 2) { return; }
-		e.preventDefault();
+
 
     // Solve for the transform from the robot frame to the point
 		/*
     T_? * T_Robot = T_point
     T_? = T_point * T_Robot ^ -1
     */
-		/*
+
 		var T_point = new THREE.Matrix4().makeTranslation(p0.x, p0.y, p0.z),
 			T_inv = new THREE.Matrix4().getInverse(robot.object.matrix),
 			T_offset = new THREE.Matrix4().multiplyMatrices(T_point, T_inv);
@@ -267,16 +265,21 @@
     // Debugging
     sprintf.apply({},['%0.2f %f', 1,2, 55]);
     var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1000).toArray();
-    offset_msg.unshift('Offset: %0.2f %0.2f %0.2f');
+    //offset_msg.unshift('Offset: %0.2f %0.2f %0.2f');
     var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray();
     global_msg.unshift('Global: %0.2f %0.2f %0.2f');
-
+console.log(offset_msg);
     debug([
       obj0.object.name,
-      sprintf.apply(null, offset_msg),
-      sprintf.apply(null, global_msg)
+			sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
+      //sprintf.apply(null, offset_msg),
+      //sprintf.apply(null, global_msg)
     ]);
-		*/
+
+		// Default gives a text cursor
+		if (e.button !== 2) { return; }
+		e.preventDefault();
+
 	}
 	// Constantly animate the scene
 	function animate() {

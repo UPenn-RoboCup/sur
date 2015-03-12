@@ -108,7 +108,7 @@ get_config(["kinect","mountOffset"], function(val){
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
   // points within MIN_CONNECTIVITY of each other are connected
-  MIN_CONNECTIVITY = 100,//75, //40 /*real*/, //75 /*webots*/,
+  MIN_CONNECTIVITY = 75,//100,//75, //40 /*real*/, //75 /*webots*/,
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, mesh, destination) {
@@ -159,11 +159,11 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 				near = mesh.dynrange[0],
 				far = mesh.dynrange[1],
     		// Rotates a *bit* off axis
-    		r = w * (far - near) / 255 + near + 0.05, //chest_off_axis
+    		r = w * (far - near) / 255 + near + 0.02, //chest_off_axis
     		// Place in the frame of the torso
-    		x = r * cv * ch + 0.10, //chest_joint_x
+    		x = r * cv * ch + 0.05, //chest_joint_x
     		y = r * cv * sh,
-    		z = r * sv + 0.10,//chest_height
+    		z = r * sv + 0.09,//chest_height
     		cp = cos(bodyTilt),
     		sp = sin(bodyTilt),
     		cr = cos(bodyRoll),
@@ -181,7 +181,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		sa = sin(pa),
     		tx = robot.px + ca * xx - sa * yy,
     		ty = robot.py + sa * xx + ca * yy,
-    		tz = zz + 0.93 + 0.1;
+    		tz = zz + 0.93;
     	// Return in mm, since THREEjs uses that
     	// Return also the position
     	// Also, swap the coordinates
