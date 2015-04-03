@@ -356,6 +356,7 @@ console.log(offset_msg);
 				a: metadata.a,
 				pitch: metadata.pitch,
 				roll: metadata.roll,
+				uComp: metadata.uComp,
 				// Make the max allocations
 				// TODO: Can we reuse these?
         index: new Uint16Array(npix * 6),

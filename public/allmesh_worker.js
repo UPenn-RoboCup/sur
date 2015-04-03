@@ -8,11 +8,6 @@ var PI = Math.PI,
 	min = Math.min,
   max = Math.max,
 	abs = Math.abs,
-  robot = {
-  	px: 0,
-  	py: 0,
-  	pa: 0
-  },
   tK2;
 
 function flat2mat(flat){
@@ -104,7 +99,6 @@ get_config(["kinect","mountOffset"], function(val){
 	pa = mesh.posez[i];
 	*/
 // x, y, z in the torso (upper body) frame
-// robot: pose (px,py,pa element) and bodyTilt elements
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
   // points within MIN_CONNECTIVITY of each other are connected
@@ -146,8 +140,10 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     	'use strict';
       // Saturation
       if (w === 0 || w === 255) {return;}
+			//console.log(mesh)
     	var bodyRoll = 0,
       	bodyTilt = 0,
+				uComp = mesh.uComp[u],
 					h_angle0 = mesh.hfov[1] - u * (mesh.hfov[1] - mesh.hfov[0]) / width,
     		v_angle = -1 * (v * (mesh.vfov[1] - mesh.vfov[0]) / height + mesh.vfov[0]),
     		h_angle = -mesh.a[u],
@@ -156,10 +152,8 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		cv = cos(v_angle),
     		sv = sin(v_angle),
     		// Convert w of 0-255 to actual meters value
-				near = mesh.dynrange[0],
-				far = mesh.dynrange[1],
     		// Rotates a *bit* off axis
-    		r = w * (far - near) / 255 + near + 0.02, //chest_off_axis
+    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0] + 0.02, //chest_off_axis
     		// Place in the frame of the torso
     		x = r * cv * ch + 0.05, //chest_joint_x
     		y = r * cv * sh,
@@ -173,15 +167,28 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		yy = (cr * y) - (sr * z),
     		zz = (-sp * x) + (cp * sr * y) + (cp * cr * z),
 
-    		// TODO: supportX?
-
     		// Place into global pose THREE coords
+					/*
     		pa = robot.pa,
     		ca = cos(pa),
     		sa = sin(pa),
     		tx = robot.px + ca * xx - sa * yy,
     		ty = robot.py + sa * xx + ca * yy,
     		tz = zz + 0.93;
+				*/
+/*
+    		pa = 0,
+    		ca = cos(pa),
+    		sa = sin(pa),
+    		tx = mesh.uComp[0] + ca * xx - sa * yy,
+    		ty = mesh.uComp[1] + sa * xx + ca * yy,
+    		tz = zz + 0.93;
+			*/
+					// Add the torso offset and the bodyHeight
+    		tx = uComp[0] + xx,
+    		ty = uComp[1] + yy,
+    		tz = uComp[2] + zz;
+
     	// Return in mm, since THREEjs uses that
     	// Return also the position
     	// Also, swap the coordinates
