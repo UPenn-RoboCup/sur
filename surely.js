@@ -42,12 +42,8 @@ console.log(streams);
 /* Connect to the RPC server */
 var rpc = Config.net.rpc;
 var rpc_skt = zmq.socket('req');
-var robot_ip;
-if (Config.net.use_wireless) {
-	robot_ip = Config.net.robot.wireless;
-} else {
-	robot_ip = Config.net.robot.wired;
-}
+var robot_ip = Config.net.robot.wireless;
+//var robot_ip = Config.net.robot.wired;
 
 rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
 // For localhost, use this instead:
