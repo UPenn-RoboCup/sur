@@ -8,15 +8,13 @@
 		d3.select("div#landing").remove();
 		document.body.appendChild(view);
 		// Add the video feed
-		d3.json('/streams/camera1', function (error, port) {
-  		feed = new ctx.VideoFeed({
-        port: port,
-  		});
-			document.getElementById('camera_container').appendChild(feed.canvas);
-		});
-		// Animate the buttons
-		d3.selectAll('button').on('click', function () {
-			// 'this' variable is the button node
+		util.ljs('/VideoFeed.js',function(){
+			d3.json('/streams/camera1', function (error, port) {
+				feed = new ctx.VideoFeed({
+					port: port,
+				});
+				document.getElementById('camera_container').appendChild(feed.canvas);
+			});
 		});
 	});
 	// Load the CSS that we need for our app
