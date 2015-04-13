@@ -199,16 +199,16 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     }
   },
   SENSOR_COLOR = {
-    mesh: function (i, j, xyz, img, destination, width, height) {
+    mesh: function (i, j, xyz, img, r, destination, width, height) {
 			'use strict';
-			//console.log(xyz);
+			//console.log(r);
 			// JET colormap. Colors range from 0.0 to 1.0
-      var fourValue = 4 - (4 * max(0, min(1, (xyz[2]+1)/2)));
+      var fourValue = 4 - (4 * max(0, min(1, r/255)));
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
     },
-    kinectV2: function (i, j, xyz, img, destination, width, height) {
+    kinectV2: function (i, j, xyz, img, r, destination, width, height) {
 			'use strict';
 			// Colors range from 0.0 to 1.0
       //var j2 = floor(2.65 * j) - 6;
@@ -224,7 +224,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			destination[1] = img[idx + 1] / 255;
 			destination[2] = img[idx + 2] / 255;
     },
-    kinectV2webots: function (i, j, xyz, img, destination, width, height) {
+    kinectV2webots: function (i, j, xyz, img, r, destination, width, height) {
 			'use strict';
       // Colors range from 0.0 to 1.0
       var idx = 4 * floor(i + j * width);
@@ -323,7 +323,7 @@ this.addEventListener('message', function (e) {
       }
       // Set the color of this pixel
       get_color(
-        i, j, point_local, rgb, colors.subarray(position_idx, position_idx + 3), width, height
+        i, j, point_local, rgb, pixels[pixel_idx], colors.subarray(position_idx, position_idx + 3), width, height
       );
       // TODO: Set the normal...
 			// Update the particle count, since it is valid

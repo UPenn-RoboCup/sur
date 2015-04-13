@@ -291,17 +291,18 @@ console.log(offset_msg);
 	}
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(e) {
+		// mesh should be phong, kinect basic...
 		var mesh_obj = e.data,
       geometry = new THREE.BufferGeometry(),
-			//material = new THREE.MeshPhongMaterial({
-      material = new THREE.MeshBasicMaterial({
+			material = new THREE.MeshPhongMaterial({
+      //material = new THREE.MeshBasicMaterial({
 				side: THREE.DoubleSide,
         // Enable all color channels. Super important for vertex colors!
 				color: 0xFFFFFF,
         // Fill the color channels with the colors attribute through the vertex shader
         vertexColors: THREE.VertexColors,
         // TODO: Check the extra Phong parameters
-        // ambient: 0xaaaaaa, specular: 0xffffff, shininess: 250,
+        ambient: 0xffffff, specular: 0x000, shininess: 100,
 			}),
 			mesh;
 
