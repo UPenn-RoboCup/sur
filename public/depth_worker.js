@@ -1,7 +1,7 @@
 var postMessage = this.postMessage;
 // Range in meters (or centimeters...)
-var MAX = 2000,//8000, //8,
-	MIN = 700, //0.2,
+var MAX = 6000,
+	MIN = 200,
 	RANGE = MAX - MIN,
 	fourValue,
 	min = Math.min;

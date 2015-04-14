@@ -22,11 +22,9 @@ function flat2mat(flat){
 
 function mat_times_vec(m, v){
 	'use strict';
-  var t = [];
-  for(var i = 0; i<3; i+=1){
-    t[i] = m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2] + m[i][3] * (v[3] || 1);
-  }
-  return t;
+	return m.map(function(r){
+		return r[0]*this[0] + r[1]*this[1] + r[2]*this[2] + r[3];
+	}, v);
 }
 
 /*
@@ -113,7 +111,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       x /= 1e3;
       var local = [
 				x,
-				2 * x * (u / width - 0.5) * K2_HFOV_FACTOR,
+				2 * x * ( u / width - 0.5) * K2_HFOV_FACTOR,
 				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR
 			],
         rFrame = mat_times_vec(tK2, local);
@@ -129,7 +127,11 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       if(x >= 6000 || x < 200){ return; }
       //console.log(x);
       x /= 1e3;
-      var local = [x, 2 * x * (u / width - 0.5) * K2_HFOV_FACTOR, -2 * x * (v / height - 0.5) * K2_VFOV_FACTOR],
+      var local = [
+				x,
+				-2 * x * (u / width - 0.5) * K2_HFOV_FACTOR,
+				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR
+			],
         rFrame = mat_times_vec(tK2, local);
       destination[0] = rFrame[1]*1000;
       destination[1] = rFrame[2]*1000;
@@ -287,11 +289,11 @@ this.addEventListener('message', function (e) {
 		//tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
 		tK2 = flat2mat(mesh.tr);
 		// Cartesian coordinate formation function
-		get_xyz = SENSOR_XYZ.kinectV2;
-		//get_xyz = SENSOR_XYZ.kinectV2webots;
+		//get_xyz = SENSOR_XYZ.kinectV2;
+		get_xyz = SENSOR_XYZ.kinectV2webots;
 		// Color formation function
-		get_color = SENSOR_COLOR.kinectV2;
-		//get_color = SENSOR_COLOR.kinectV2webots;
+		//get_color = SENSOR_COLOR.kinectV2;
+		get_color = SENSOR_COLOR.kinectV2webots;
 	} else {
 		get_xyz = SENSOR_XYZ.mesh;
 		get_color = SENSOR_COLOR.mesh;

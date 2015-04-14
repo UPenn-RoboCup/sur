@@ -19,11 +19,11 @@
 		valve_colors = ['cyan', 'magenta', 'yellow'];
 
 	// Constant for the Kinect2
-	depth_canvas.width = 512;
-	depth_canvas.height = 424;
+	//depth_canvas.width = 512;
+	//depth_canvas.height = 424;
 	// Webots
-	//depth_canvas.width = 256;
-	//depth_canvas.height = 212;
+	depth_canvas.width = 256;
+	depth_canvas.height = 212;
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
 	function toggle() {
