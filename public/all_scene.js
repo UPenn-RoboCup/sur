@@ -35,21 +35,20 @@
     map_peers = [],
 		last_intersection = {t:0};
 
-	function mat_times_vec(m, v){
+	function mat3_times_vec(m, v){
 		'use strict';
 		return m.map(function(r){
-			return r[0]*this[0] + r[1]*this[1] + r[2]*this[2] + r[3];
-		}, v).slice(0, 3);
+			return r[0]*this[0] + r[1]*this[1] + r[2]*this[2];
+		}, v);
 	}
 
-	function get_THREE_mat4(tm){
+	function get_THREE_mat3(tm){
 		return [
-			tm.elements.subarray(0,4),
-			tm.elements.subarray(4,8),
-			tm.elements.subarray(8,12),
-			tm.elements.subarray(12,16),
+			tm.elements.subarray(0, 4),
+			tm.elements.subarray(4, 8),
+			tm.elements.subarray(8, 12)
 		].map(function(v){
-			return [v[0],v[1],v[2],v[3]];
+			return [v[0],v[1],v[2]];
 		});
 	}
 
@@ -93,15 +92,15 @@
 				return [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
 			}, parameters.root);
 			var points0inv = points0.map(function(v){
-				return mat_times_vec(this, v);
-			}, get_THREE_mat4(matNormalInv));
+				return mat3_times_vec(this, v);
+			}, get_THREE_mat3(matNormalInv));
 			// Find perimeter in flat space
 			var perimInv = E.find_poly(points0inv);
 			// Place back into the original space
 			var rho = perimInv.map(function(p){ return p.pop(); });
 			var perim = perimInv.map(function(v){
-				return mat_times_vec(this, v);
-			}, get_THREE_mat4(matNormal));
+				return mat3_times_vec(this, v);
+			}, get_THREE_mat3(matNormal));
 
 			// Add the vertices for the line
 			var geometry = new THREE.Geometry();
@@ -119,11 +118,20 @@
 			scene.add(line);
 
 
-			// Append to the parameters
-			parameters.mesh = line;
-			parameters.perimeter = perim;
+			// Append Robot Frame parameters
+			parameters.perimeter = perim.map(function(p){
+				return [p[2], p[0], p[1]].map(function(v){return v/1e3;});
+			});
 			parameters.rho = rho;
-			parameters.rot = get_THREE_mat4(matNormalRobot);
+			parameters.rot = get_THREE_mat3(matNormalRobot);
+			parameters.normal = normalRobot.toArray();
+			parameters.root = [parameters.root[2], parameters.root[0], parameters.root[1]]
+				.map(function(v){return v/1e3;});
+			// NOTE: cov is still in THREE coordinates
+
+			// Deal with the raw points and GUI mesh
+			parameters.mesh = line;
+			delete parameters.points;
 
 			console.log(parameters);
 
