@@ -194,7 +194,7 @@
 	// Refocus the camera
 	function focus_object(e){
 		// Not a short click refocus
-		console.log(e.timeStamp - last_intersection.t);
+		//console.log(e.timeStamp - last_intersection.t);
 		if(e.timeStamp - last_intersection.t>90){
 			return;
 		}
@@ -268,7 +268,7 @@
     //offset_msg.unshift('Offset: %0.2f %0.2f %0.2f');
     var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray();
     global_msg.unshift('Global: %0.2f %0.2f %0.2f');
-console.log(offset_msg);
+		//console.log(offset_msg);
     debug([
       obj0.object.name,
 			sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
@@ -355,9 +355,7 @@ console.log(offset_msg);
 				vfov: metadata.rfov,
 				dynrange: metadata.dr,
 				a: metadata.a,
-				pitch: metadata.pitch,
-				roll: metadata.roll,
-				uComp: metadata.uComp,
+				torso: metadata.torso,
 				// Make the max allocations
 				// TODO: Can we reuse these?
         index: new Uint16Array(npix * 6),

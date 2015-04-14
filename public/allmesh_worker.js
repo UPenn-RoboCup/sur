@@ -138,56 +138,49 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     },
     mesh: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
+			//console.log(width, u, height, v, mesh.a.length);
       // Saturation
       if (w === 0 || w === 255) {return;}
 			//console.log(mesh)
-    	var bodyRoll = 0,
-      	bodyTilt = 0,
-				uComp = mesh.uComp[u],
+			console.assert(mesh.a.length===width, 'bad width');
+			console.assert(u>=0, 'bad u0');
+			console.assert(u<width, 'bad u1');
+    	var torso = mesh.torso[width - u - 1],
 					h_angle0 = mesh.hfov[1] - u * (mesh.hfov[1] - mesh.hfov[0]) / width,
-    		v_angle = -1 * (v * (mesh.vfov[1] - mesh.vfov[0]) / height + mesh.vfov[0]),
-    		h_angle = -mesh.a[u],
+    		v_angle = ((height-v-1) * (mesh.vfov[1] - mesh.vfov[0]) / height - mesh.vfov[1]),
+    		h_angle = mesh.a[width - u - 1],
     		ch = cos(h_angle),
     		sh = sin(h_angle),
     		cv = cos(v_angle),
     		sv = sin(v_angle),
     		// Convert w of 0-255 to actual meters value
     		// Rotates a *bit* off axis
-    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0] + 0.02, //chest_off_axis
+    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0]
+					+ 0.02, //chest_off_axis
     		// Place in the frame of the torso
     		x = r * cv * ch + 0.05, //chest_joint_x
     		y = r * cv * sh,
     		z = r * sv + 0.09,//chest_height
-    		cp = cos(bodyTilt),
-    		sp = sin(bodyTilt),
-    		cr = cos(bodyRoll),
-    		sr = sin(bodyRoll),
+    		cp = cos(torso[4]),
+    		sp = sin(torso[4]),
+    		cr = cos(torso[3]),
+    		sr = sin(torso[3]),
     		// Update with pitch/roll
     		xx = (cp * x) + (sr * sp * y) + (sp * cr * z),
     		yy = (cr * y) - (sr * z),
     		zz = (-sp * x) + (cp * sr * y) + (cp * cr * z),
-
     		// Place into global pose THREE coords
+    		ca = cos(torso[5]),
+    		sa = sin(torso[5]),
+    		tx = torso[0] + ca * xx - sa * yy,
+    		ty = torso[1] + sa * xx + ca * yy,
+    		tz = torso[2] + zz;
+				// Add the torso offset and the bodyHeight
 					/*
-    		pa = robot.pa,
-    		ca = cos(pa),
-    		sa = sin(pa),
-    		tx = robot.px + ca * xx - sa * yy,
-    		ty = robot.py + sa * xx + ca * yy,
-    		tz = zz + 0.93;
+    		tx = torso[0] + xx,
+    		ty = torso[1] + yy,
+    		tz = torso[2] + zz;
 				*/
-/*
-    		pa = 0,
-    		ca = cos(pa),
-    		sa = sin(pa),
-    		tx = mesh.uComp[0] + ca * xx - sa * yy,
-    		ty = mesh.uComp[1] + sa * xx + ca * yy,
-    		tz = zz + 0.93;
-			*/
-					// Add the torso offset and the bodyHeight
-    		tx = uComp[0] + xx,
-    		ty = uComp[1] + yy,
-    		tz = uComp[2] + zz;
 
     	// Return in mm, since THREEjs uses that
     	// Return also the position
@@ -195,6 +188,9 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     	destination[0] = ty * 1000;
 			destination[1] = tz * 1000;
 			destination[2] = tx * 1000;
+			console.assert(xx===xx, 'bad xx: '+u);
+			console.assert(yy===yy, 'bad yy: '+u);
+			console.assert(zz===zz, 'bad zz: '+u);
 			return [xx, yy, zz];
     }
   },
