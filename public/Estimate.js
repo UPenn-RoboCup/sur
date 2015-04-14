@@ -3,8 +3,8 @@
 
 	var mf = ctx.util.mapFuncs,
 		numeric = ctx.numeric,
+		abs = Math.abs,
 		pow = Math.pow,
-    abs = Math.abs,
     sqrt = Math.sqrt,
     atan2 = Math.atan2;
 
@@ -405,8 +405,8 @@
           return abs(vertex[1] - py) < 30 && abs(vertex[0] - px) < 300 && abs(vertex[2] - pz) < 300;
         });
       var params = estimate_cylinder(it, root);
-			if(params.r>500||params.r<40){
-				console.log('Bad Cyl Radius Rate', params);
+			if (params.r > 500 || params.r < 40) {
+				//console.log('Bad Cyl Radius Rate', params);
 				return false;
 			}
 			// Check the fill - an estimate of the error.
@@ -414,18 +414,17 @@
 				return abs(vertex[1] - py) < 30 && sqrt(pow(vertex[0] - params.xc, 2) +  pow(vertex[2] - params.zc, 2)) <= params.r;
 			}), params);
 
-			if(rates.fill_rate>0.20){
-				console.log('Bad Cyl Fill Rate', rates);
+			if (rates.fill_rate > 0.20) {
+				//console.log('Bad Cyl Fill Rate', rates);
 				return false;
-			} else if (rates.angle_rate<=0.3){
-				console.log('Bad Cyl Angle Rate', rates);
+			} else if (rates.angle_rate <= 0.3) {
+				//console.log('Bad Cyl Angle Rate', rates);
 				return false;
 			}
 
       // Grow to update
 			params = grow_cylinder(new Point_cloud_entries(mesh0), params);
 			params.id = 'cyl';
-      //console.log(parameters);
 
 			console.log('Cylinder', params, rates);
 
@@ -486,24 +485,22 @@
 
       return params;
     },
-    find_poly: function(params){
-      var root = params.root,
-        nChunks = 20,
-				rhoThreshold = 50,
-				points = params.points.map(function(p){
-					var p0 = [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
-					var nm = numeric.norm2(p0)
-	        return p0.concat(nm);
-	      }, root);
+    find_poly: function(points0){
+      var points0R = points0.map(function(p){
+				var nm0 = sqrt(p.reduce(function(cur, now){ return cur + pow(now, 2); }, 0));
+				return p.concat(nm0);
+			});
 			// Sort in ascending radius
-			// TODO: can be faster if not using the actual square root to sort!
-      points.sort(function(p1, p2){ return p1[3] - p2[3]; });
-			var rhoDist = [], xy = [];
+			// TODO: Descending, can exit when all are populated
+      points0R.sort(function(p1, p2){ return p1[3] - p2[3]; });
+			console.log(points0R);
+
+			var rhoDist = [], xy = [], nChunks = 20, rhoThreshold = 50;
 			for (var i=0; i < nChunks; i+=1) {
 				rhoDist[i] = 0;
 				xy[i] = [0, 0];
 			}
-			points.forEach(function(p){
+			points0R.forEach(function(p){
 				var angle = atan2(p[0], p[2]),
 					idx = mf.iangle_valid.call(nChunks, angle);
 				rhoDist[idx] = rhoDist[idx]===0 ? p[3] : rhoDist[idx];
@@ -513,26 +510,6 @@
 				xy[idx] = [p[2], p[0]];
       });
 
-			/*
-			var running = true;
-			while(running){
-				rhoDist = rhoDist.map(function(v, i, arr){
-					if(v>=30){return v;}
-					var va = arr[i-1] || arr[arr.length-1];
-					var vb = arr[i+1] || arr[0];
-					if(va<vb){
-						this[i] = this[i-1] || this[this.length-1];
-						return va;
-					} else {
-						this[i] = this[i+1] || this[0];
-						return vb;
-					}
-				}, xy);
-				running = rhoDist.filter(function(v){return v<30;}).length>0;
-			}
-			console.log(rhoDist);
-			console.log(xy);
-			*/
 			var poly = {
         xy: xy,
         rhoDist: rhoDist

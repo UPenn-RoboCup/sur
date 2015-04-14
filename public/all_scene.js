@@ -35,6 +35,26 @@
     map_peers = [],
 		last_intersection = {t:0};
 
+	var pow = Math.pow, sqrt = Math.sqrt;
+
+	function mat_times_vec(m, v){
+		'use strict';
+		return m.map(function(r){
+			return r[0]*this[0] + r[1]*this[1] + r[2]*this[2] + r[3];
+		}, v);
+	}
+
+	function get_THREE_mat4(tm){
+		return [
+			tm.elements.subarray(0,4),
+			tm.elements.subarray(4,8),
+			tm.elements.subarray(8,12),
+			tm.elements.subarray(12,16),
+		].map(function(v){
+			return [v[0],v[1],v[2],v[3]];
+		});
+	}
+
 		/*
 		// [x center, y center, z center, radius, height]
 		d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
@@ -68,32 +88,43 @@
 			return parameters;
     },
     plane: function(mesh0, p0){
-
 			var parameters = E.plane(mesh0, p0);
-
 			if(!parameters){return;}
 
-      var quat_rot = (new THREE.Quaternion()).setFromUnitVectors(
-        new THREE.Vector3(0,1,0),
-        (new THREE.Vector3()).fromArray(parameters.normal)
+			var normal_frame = new THREE.Vector3().fromArray(parameters.normal);
+      var quat_rot = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        normal_frame
       );
+			var mat4_frame = new THREE.Matrix4().makeRotationFromQuaternion(quat_rot);
+			var mat4inv_frame = new THREE.Matrix4().getInverse(mat4_frame, true);
+			var invrot = get_THREE_mat4(mat4inv_frame);
 
-      var quat_rot_robot_frame = (new THREE.Quaternion()).setFromUnitVectors(
-        new THREE.Vector3(0,0,1),
-        (new THREE.Vector3()).fromArray([parameters.normal[2],parameters.normal[0],parameters.normal[1]])
+			var norm_robot_frame = new THREE.Vector3().fromArray(
+				[parameters.normal[2], parameters.normal[0], parameters.normal[1]]
+			);
+      var quat_rot_robot_frame = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 0, 1),
+        norm_robot_frame
       );
-      var mat_rot_robot_frame = new THREE.Matrix4().makeRotationFromQuaternion(quat_rot_robot_frame);
-      parameters.rot = [
-        mat_rot_robot_frame.elements.subarray(0,4),
-        mat_rot_robot_frame.elements.subarray(4,8),
-        mat_rot_robot_frame.elements.subarray(8,12),
-        mat_rot_robot_frame.elements.subarray(12,16),
-      ].map(function(v){
-				return [v[0],v[1],v[2],v[3]];
-			});
+			var mat4_robot_frame = new THREE.Matrix4().makeRotationFromQuaternion(quat_rot_robot_frame);
+			parameters.rot = get_THREE_mat4(mat4_robot_frame);
 
-      var poly = E.find_poly(parameters);
+			var points0 = parameters.points.map(function(p){
+				return [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
+			}, parameters.root);
 
+			var points0inv = points0.map(function(v){
+				var vv = mat_times_vec(this, v);
+				vv.pop();
+				return vv;
+			}, invrot);
+
+			//console.log('points0', points0);
+			//console.log('points0inv', points0inv);
+
+			var poly = E.find_poly(points0inv);
+			console.log(poly);
 
       parameters.poly = poly;
       // Classify:
