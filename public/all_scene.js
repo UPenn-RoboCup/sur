@@ -97,6 +97,7 @@
         normal_frame
       );
 			var mat4_frame = new THREE.Matrix4().makeRotationFromQuaternion(quat_rot);
+			var rot = get_THREE_mat4(mat4_frame);
 			var mat4inv_frame = new THREE.Matrix4().getInverse(mat4_frame, true);
 			var invrot = get_THREE_mat4(mat4inv_frame);
 
@@ -120,33 +121,27 @@
 				return vv;
 			}, invrot);
 
-			//console.log('points0', points0);
-			//console.log('points0inv', points0inv);
+			// Put into flat space
+			var perimInv = E.find_poly(points0inv);
+			var rho = perimInv.map(function(p){ return p.pop(); });
 
-			var poly = E.find_poly(points0inv);
-			console.log(poly);
+			var perim = perimInv.map(function(v){
+				var vv = mat_times_vec(this, v);
+				vv.pop();
+				return vv;
+			}, rot);
 
-      parameters.poly = poly;
-      // Classify:
-      var poly_features = Classify.poly_features;
-      var pf = Classify.get_poly_features(parameters);
-      parameters.features = pf;
+      parameters.poly = {
+				xy: perim,
+				rho: rho
+			};
 
-/*
-      var material = new THREE.LineBasicMaterial({
-      	color: pf[poly_features.indexOf('ground')] > 20 ? 0x00ff00 : 0xFF9900,
-        linewidth: 20
-      });
-*/
-			var material = new THREE.LineBasicMaterial({
-				color: 0x000000, linewidth: 20
-			});
       var geometry = new THREE.Geometry();
 
       // Send to the map
       if(parameters.id==='v'){
 				// TODO: Tweak
-				geometry.vertices = poly.rhoDist.map(function(r, idx, arr){
+				geometry.vertices = rho.map(function(r, idx, arr){
 					var a = angle_idx_inv(idx, arr.length),
 						x = Math.sin(a)*r,
 						z = -Math.cos(a)*r;
@@ -173,8 +168,8 @@
         ]);
       } else if(parameters.id==='h'){
 				// Vertices here
-				geometry.vertices = poly.xy.map(function(p){
-					return (new THREE.Vector3(p[1], 10, p[0])).applyQuaternion(quat_rot);
+				geometry.vertices = perim.map(function(p){
+					return (new THREE.Vector3(p[0], p[1] + 10, p[2])).applyQuaternion(quat_rot);
 				});
 				// Into 2D
 				parameters.projected = {
@@ -188,11 +183,22 @@
 			// close the loop
 			geometry.vertices.push(geometry.vertices[geometry.vertices.length-1]);
 
+			var material = new THREE.LineBasicMaterial({
+				color: 0x000000, linewidth: 20
+			});
 			var line = new THREE.Line( geometry, material );
 			line.position.fromArray(parameters.root);
 			scene.add(line);
 
 			parameters.points = line;
+
+			/*
+			// Classify:
+      var poly_features = Classify.poly_features;
+      var pf = Classify.get_poly_features(parameters);
+      parameters.features = pf;
+			*/
+
 
       /*
       var geometry = new THREE.SphereGeometry( 50, 16, 16 );

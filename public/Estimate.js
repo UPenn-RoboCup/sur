@@ -493,29 +493,23 @@
 			// Sort in ascending radius
 			// TODO: Descending, can exit when all are populated
       points0R.sort(function(p1, p2){ return p1[3] - p2[3]; });
-			console.log(points0R);
 
-			var rhoDist = [], xy = [], nChunks = 20, rhoThreshold = 50;
-			for (var i=0; i < nChunks; i+=1) {
-				rhoDist[i] = 0;
-				xy[i] = [0, 0];
-			}
+			var perim = [], nChunks = 20;
+			for (var i=0; i < nChunks; i+=1) { perim[i] = null; }
+
+			var rhoThreshold = 50;
 			points0R.forEach(function(p){
 				var angle = atan2(p[0], p[2]),
 					idx = mf.iangle_valid.call(nChunks, angle);
-				rhoDist[idx] = rhoDist[idx]===0 ? p[3] : rhoDist[idx];
-				if(p[3] - rhoDist[idx] > rhoThreshold){ return; }
-				if(rhoDist[idx] > 500) { return; }
-				rhoDist[idx] = p[3];
-				xy[idx] = [p[2], p[0]];
+				if(!perim[idx]){
+					perim[idx] = p;
+					return;
+				}
+				if(perim[idx][3] > 500) { return; }
+				if(p[3] - perim[idx][3] > rhoThreshold){ return; }
+				perim[idx] = p;
       });
-
-			var poly = {
-        xy: xy,
-        rhoDist: rhoDist
-      };
-			//console.log('poly',poly);
-      return poly;
+      return perim;
     },
   };
 
