@@ -93,6 +93,8 @@
 			});
 
       var poly = E.find_poly(parameters);
+
+
       parameters.poly = poly;
       // Classify:
       var poly_features = Classify.poly_features;
@@ -154,6 +156,7 @@
 
 			// close the loop
 			geometry.vertices.push(geometry.vertices[geometry.vertices.length-1]);
+
 			var line = new THREE.Line( geometry, material );
 			line.position.fromArray(parameters.root);
 			scene.add(line);

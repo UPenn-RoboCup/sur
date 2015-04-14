@@ -146,7 +146,8 @@
       xySum = 0,
       zySum = 0,
       points = [];
-    for (var a of it){
+
+		for (var a of it){
       p = a[1];
       // Avoid overflow
       v = [
@@ -466,13 +467,13 @@
 				params = horiz_params;
 			}
 
-			console.log('H Error', e_h, horiz_params);
-			console.log('V Error', e_v, vert_params);
+			//console.log('H Error', e_h, horiz_params);
+			//console.log('V Error', e_v, vert_params);
 			if(!params){return false;}
 
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
-			console.log('Colors w/ params', params);
+			//console.log('Colors w/ params', params);
       params.points = grow_plane(new Point_cloud_entries(mesh0), params);
 
       // Update the roughness
@@ -481,7 +482,7 @@
       // e_val = eigs.lambda.x[2] * 1e6, // 1e3 * 1e3, since covariance is a squared dependence
       // e_vec = [eigs.E.x[0][2],eigs.E.x[1][2],eigs.E.x[2][2]];
 
-			console.log(params.id+' Plane', params);
+			console.log(params.id + ' Plane', params);
 
       return params;
     },
@@ -491,25 +492,27 @@
 				rhoThreshold = 50,
 				points = params.points.map(function(p){
 					var p0 = [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
-	        return p0.concat(numeric.norm2(p0));
+					var nm = numeric.norm2(p0)
+	        return p0.concat(nm);
 	      }, root);
 			// Sort in ascending radius
 			// TODO: can be faster if not using the actual square root to sort!
       points.sort(function(p1, p2){ return p1[3] - p2[3]; });
 			var rhoDist = [], xy = [];
-			for(var i=0;i<nChunks;i+=1){
+			for (var i=0; i < nChunks; i+=1) {
 				rhoDist[i] = 0;
-				xy[i] = [0,0];
+				xy[i] = [0, 0];
 			}
 			points.forEach(function(p){
 				var angle = atan2(p[0], p[2]),
-					idx = mf.iangle.call(nChunks, angle);
+					idx = mf.iangle_valid.call(nChunks, angle);
 				rhoDist[idx] = rhoDist[idx]===0 ? p[3] : rhoDist[idx];
 				if(p[3] - rhoDist[idx] > rhoThreshold){ return; }
 				if(rhoDist[idx] > 500) { return; }
 				rhoDist[idx] = p[3];
 				xy[idx] = [p[2], p[0]];
       });
+
 			/*
 			var running = true;
 			while(running){
