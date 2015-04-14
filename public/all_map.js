@@ -32,6 +32,12 @@
 			.y(function (d) { return -d[0]; })
 			.interpolate("linear");
 
+	/*
+	function minDotI(maxI, curDot, i, arr){
+    return (curDot > arr[maxI]) ? i : maxI;
+  }
+	*/
+
 	function local2global(v){
 		return [v[0] + this[0], v[1] + this[1]];
 	}
@@ -74,6 +80,39 @@
 
 	var add_graph = {
 		h: function(params){
+
+						/*
+						// TODO: Add here
+      // Send to the map
+      if(parameters.id==='v'){
+        var makeDot = function(p){ return numeric.dot([p.x, p.z], this); };
+        var dir1 = [-parameters.normal[2], parameters.normal[0]];
+        var dir2 = [parameters.normal[2], -parameters.normal[0]];
+        parameters.endpoints = [];
+        var maxPoint1 = geometry.vertices[
+          geometry.vertices.map(makeDot, dir1).reduce(minDotI, 0)
+        ];
+        parameters.endpoints.push([
+          (maxPoint1.z + parameters.root[2])/1e3,
+					(maxPoint1.x + parameters.root[0])/1e3
+        ]);
+        var maxPoint2 = geometry.vertices[
+          geometry.vertices.map(makeDot, dir2).reduce(minDotI, 0)
+        ];
+        parameters.endpoints.push([
+					(maxPoint2.z + parameters.root[2])/1e3,
+          (maxPoint2.x + parameters.root[0])/1e3
+        ]);
+      } else if(parameters.id==='h'){
+				// Into 2D
+				parameters.projected = {
+					root : [parameters.root[2]/1e3, parameters.root[0]/1e3],
+					xy : geometry.vertices.map(function(p){return [p.z/1e3, p.x/1e3];}),
+					resolution : parameters.poly.resolution
+				};
+      }
+			*/
+
 			var poly0 = {
 				center : params.projected.root,
 				perimeter: params.projected.xy.map(local2global, params.projected.root),

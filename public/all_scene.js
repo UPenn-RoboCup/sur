@@ -35,13 +35,11 @@
     map_peers = [],
 		last_intersection = {t:0};
 
-	var pow = Math.pow, sqrt = Math.sqrt;
-
 	function mat_times_vec(m, v){
 		'use strict';
 		return m.map(function(r){
 			return r[0]*this[0] + r[1]*this[1] + r[2]*this[2] + r[3];
-		}, v);
+		}, v).slice(0, 3);
 	}
 
 	function get_THREE_mat4(tm){
@@ -55,133 +53,63 @@
 		});
 	}
 
-		/*
-		// [x center, y center, z center, radius, height]
-		d3.json('/shm/hcm/assist/cylinder').post(JSON.stringify([
-			parameters.zc / 1000,
-			parameters.xc / 1000,
-			parameters.yc / 1000,
-			parameters.r / 1000,
-			parameters.h / 1000,
-		]));
-		*/
-
-  function minDotI(maxI, curDot, i, arr){
-    return (curDot > arr[maxI]) ? i : maxI;
-  }
-	function angle_idx_inv(idx, nChunks){
-		return Math.PI*(2*idx/nChunks-1);
-	}
-
   var describe = {
     cylinder: function(mesh0, p0){
 			var parameters = E.cylinder(mesh0, p0);
 			if(!parameters){return;}
-      // Cylinder
+      // Draw Cylinder
       var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20),
       	material = new THREE.MeshBasicMaterial({color: 0xffff00}),
       	cylinder = new THREE.Mesh(geometry, material);
       cylinder.position.set(parameters.xc, parameters.yc, parameters.zc);
 			items.push(cylinder);
       scene.add(cylinder);
-			parameters.points = cylinder;
+			parameters.mesh = cylinder;
 			return parameters;
     },
     plane: function(mesh0, p0){
 			var parameters = E.plane(mesh0, p0);
 			if(!parameters){return;}
-
-			var normal_frame = new THREE.Vector3().fromArray(parameters.normal);
-      var quat_rot = new THREE.Quaternion().setFromUnitVectors(
+			// THREE frame
+			var normal = new THREE.Vector3().fromArray(parameters.normal);
+      var quatNormal = new THREE.Quaternion().setFromUnitVectors(
         new THREE.Vector3(0, 1, 0),
-        normal_frame
+        normal
       );
-			var mat4_frame = new THREE.Matrix4().makeRotationFromQuaternion(quat_rot);
-			var rot = get_THREE_mat4(mat4_frame);
-			var mat4inv_frame = new THREE.Matrix4().getInverse(mat4_frame, true);
-			var invrot = get_THREE_mat4(mat4inv_frame);
-
-			var norm_robot_frame = new THREE.Vector3().fromArray(
-				[parameters.normal[2], parameters.normal[0], parameters.normal[1]]
+			var matNormal = new THREE.Matrix4().makeRotationFromQuaternion(quatNormal);
+			var matNormalInv = new THREE.Matrix4().getInverse(matNormal, true);
+			// Robot Frame
+			var normalRobot = new THREE.Vector3(
+				parameters.normal[2], parameters.normal[0], parameters.normal[1]
 			);
-      var quat_rot_robot_frame = new THREE.Quaternion().setFromUnitVectors(
+      var quatNormalRobot = new THREE.Quaternion().setFromUnitVectors(
         new THREE.Vector3(0, 0, 1),
-        norm_robot_frame
+        normalRobot
       );
-			var mat4_robot_frame = new THREE.Matrix4().makeRotationFromQuaternion(quat_rot_robot_frame);
-			parameters.rot = get_THREE_mat4(mat4_robot_frame);
+			var matNormalRobot = new THREE.Matrix4().makeRotationFromQuaternion(quatNormalRobot);
 
+			// Place the points into a zero-centered, flat space
 			var points0 = parameters.points.map(function(p){
 				return [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
 			}, parameters.root);
-
 			var points0inv = points0.map(function(v){
-				var vv = mat_times_vec(this, v);
-				vv.pop();
-				return vv;
-			}, invrot);
-
-			// Put into flat space
+				return mat_times_vec(this, v);
+			}, get_THREE_mat4(matNormalInv));
+			// Find perimeter in flat space
 			var perimInv = E.find_poly(points0inv);
+			// Place back into the original space
 			var rho = perimInv.map(function(p){ return p.pop(); });
-
 			var perim = perimInv.map(function(v){
-				var vv = mat_times_vec(this, v);
-				vv.pop();
-				return vv;
-			}, rot);
+				return mat_times_vec(this, v);
+			}, get_THREE_mat4(matNormal));
 
-      parameters.poly = {
-				xy: perim,
-				rho: rho
-			};
-
-      var geometry = new THREE.Geometry();
-
-      // Send to the map
-      if(parameters.id==='v'){
-				// TODO: Tweak
-				geometry.vertices = rho.map(function(r, idx, arr){
-					var a = angle_idx_inv(idx, arr.length),
-						x = Math.sin(a)*r,
-						z = -Math.cos(a)*r;
-					return (new THREE.Vector3(x, 0, z)).applyQuaternion(quat_rot);
-				});
-
-        var makeDot = function(p){ return numeric.dot([p.x, p.z], this); };
-        var dir1 = [-parameters.normal[2], parameters.normal[0]];
-        var dir2 = [parameters.normal[2], -parameters.normal[0]];
-        parameters.endpoints = [];
-        var maxPoint1 = geometry.vertices[
-          geometry.vertices.map(makeDot, dir1).reduce(minDotI, 0)
-        ];
-        parameters.endpoints.push([
-          (maxPoint1.z + parameters.root[2])/1e3,
-					(maxPoint1.x + parameters.root[0])/1e3
-        ]);
-        var maxPoint2 = geometry.vertices[
-          geometry.vertices.map(makeDot, dir2).reduce(minDotI, 0)
-        ];
-        parameters.endpoints.push([
-					(maxPoint2.z + parameters.root[2])/1e3,
-          (maxPoint2.x + parameters.root[0])/1e3
-        ]);
-      } else if(parameters.id==='h'){
-				// Vertices here
-				geometry.vertices = perim.map(function(p){
-					return (new THREE.Vector3(p[0], p[1] + 10, p[2])).applyQuaternion(quat_rot);
-				});
-				// Into 2D
-				parameters.projected = {
-					root : [parameters.root[2]/1e3, parameters.root[0]/1e3],
-					xy : geometry.vertices.map(function(p){return [p.z/1e3, p.x/1e3];}),
-					resolution : parameters.poly.resolution
-				};
-
-      }
-
-			// close the loop
-			geometry.vertices.push(geometry.vertices[geometry.vertices.length-1]);
+			// Add the vertices for the line
+			var geometry = new THREE.Geometry();
+			geometry.vertices = perim.map(function(p){
+				return new THREE.Vector3(p[0], p[1], p[2]);//.applyQuaternion(quatNormal);
+			});
+			// Close the loop
+			geometry.vertices.push(geometry.vertices[0]);
 
 			var material = new THREE.LineBasicMaterial({
 				color: 0x000000, linewidth: 20
@@ -190,7 +118,14 @@
 			line.position.fromArray(parameters.root);
 			scene.add(line);
 
-			parameters.points = line;
+
+			// Append to the parameters
+			parameters.mesh = line;
+			parameters.perimeter = perim;
+			parameters.rho = rho;
+			parameters.rot = get_THREE_mat4(matNormalRobot);
+
+			console.log(parameters);
 
 			/*
 			// Classify:
@@ -199,18 +134,6 @@
       parameters.features = pf;
 			*/
 
-
-      /*
-      var geometry = new THREE.SphereGeometry( 50, 16, 16 );
-      var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-      var marker = new THREE.Mesh(geometry, material);
-      marker.position.fromArray(parameters.root);
-      scene.add(marker);
-      */
-      /*
-      E.paint(parameters);
-      mesh0.geometry.getAttribute('color').needsUpdate = true;
-      */
 			return parameters;
     }
   };
@@ -488,7 +411,8 @@
 				new THREE.PlaneBufferGeometry(100000, 100000),
 				new THREE.MeshBasicMaterial({
 					side: THREE.DoubleSide,
-					color: 0x7F5217
+					color: 0x7F5217,
+					transparent: true, opacity: 0.75
 				})
 			);
 		CANVAS_WIDTH = container.clientWidth;
@@ -509,7 +433,7 @@
 		});
 		// Load the ground
 		ground.rotation.x = -Math.PI / 2;
-		ground.position.y = -100;
+		ground.position.y = 0;
 		ground.name = 'GROUND';
 		scene.add(ground);
 		items.push(ground);
@@ -613,11 +537,11 @@
 				console.log('Action', action);
 				switch(action){
 					case 'clear':
-						scene.remove(last_selected_parameters.points);
-						delete last_selected_parameters.points;
+						scene.remove(last_selected_parameters.mesh);
+						delete last_selected_parameters.mesh;
 						break;
 					default:
-						delete last_selected_parameters.points;
+						delete last_selected_parameters.mesh;
 						last_selected_parameters.type = action;
 						map_peers.forEach(function(conn){ conn.send(this); }, last_selected_parameters);
 						console.log('Sending', last_selected_parameters);

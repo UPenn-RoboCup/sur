@@ -497,15 +497,15 @@
 			var perim = [], nChunks = 20;
 			for (var i=0; i < nChunks; i+=1) { perim[i] = null; }
 
-			var rhoThreshold = 50;
+			var rhoThreshold = 50, maxRho = 500;
 			points0R.forEach(function(p){
 				var angle = atan2(p[0], p[2]),
 					idx = mf.iangle_valid.call(nChunks, angle);
-				if(!perim[idx]){
+				if (!perim[idx]) {
 					perim[idx] = p;
 					return;
 				}
-				if(perim[idx][3] > 500) { return; }
+				if(perim[idx][3] > maxRho) { return; }
 				if(p[3] - perim[idx][3] > rhoThreshold){ return; }
 				perim[idx] = p;
       });
