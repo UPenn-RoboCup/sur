@@ -306,7 +306,7 @@
 			}),
 			mesh;
 
-//		console.log(mesh_obj);
+		console.log(mesh_obj);
 
     // Custom attributes required for rendering the BufferGeometry
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
@@ -596,7 +596,7 @@
   		mesh_feed = new ctx.VideoFeed({
   			port: port,
   			fr_callback: process_mesh_frame,
-  			cw90: true
+  			//cw90: true
   		});
   	});
   	d3.json('/streams/kinect2_color', function (error, port) {

@@ -100,7 +100,7 @@ get_config(["kinect","mountOffset"], function(val){
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
   // points within MIN_CONNECTIVITY of each other are connected
-  MIN_CONNECTIVITY = 75,//100,//75, //40 /*real*/, //75 /*webots*/,
+  MIN_CONNECTIVITY = 85,
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, mesh, destination) {
@@ -140,17 +140,16 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     },
     mesh: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
-			//console.log(width, u, height, v, mesh.a.length);
       // Saturation
       if (w === 0 || w === 255) {return;}
-			//console.log(mesh)
-			console.assert(mesh.a.length===width, 'bad width');
-			console.assert(u>=0, 'bad u0');
-			console.assert(u<width, 'bad u1');
-    	var torso = mesh.torso[width - u - 1],
-					h_angle0 = mesh.hfov[1] - u * (mesh.hfov[1] - mesh.hfov[0]) / width,
-    		v_angle = ((height-v-1) * (mesh.vfov[1] - mesh.vfov[0]) / height - mesh.vfov[1]),
-    		h_angle = mesh.a[width - u - 1],
+
+    	var torso = mesh.torso[v],
+				h_angle = mesh.a[v],
+				v_angle = (mesh.vfov[0] - mesh.vfov[1]) * (u / width) - mesh.vfov[0],
+				// Rotated 90:
+				//torso = mesh.torso[width - u - 1],
+				//v_angle = ((height-v-1) * (mesh.vfov[1] - mesh.vfov[0]) / height - mesh.vfov[1]),
+				//h_angle = mesh.a[width - u - 1],
     		ch = cos(h_angle),
     		sh = sin(h_angle),
     		cv = cos(v_angle),
@@ -178,7 +177,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		ty = torso[1] + sa * xx + ca * yy,
     		tz = torso[2] + zz;
 				// Add the torso offset and the bodyHeight
-					/*
+				/*
     		tx = torso[0] + xx,
     		ty = torso[1] + yy,
     		tz = torso[2] + zz;
@@ -190,9 +189,11 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     	destination[0] = ty * 1000;
 			destination[1] = tz * 1000;
 			destination[2] = tx * 1000;
+			/*
 			console.assert(xx===xx, 'bad xx: '+u);
 			console.assert(yy===yy, 'bad yy: '+u);
 			console.assert(zz===zz, 'bad zz: '+u);
+			*/
 			return [xx, yy, zz];
     }
   },
@@ -412,6 +413,7 @@ this.addEventListener('message', function (e) {
       ) {
 				continue;
 			}
+
 			// We have a valid quad!
 			// Find the quad index offset
       quad_idx_view = index.subarray(quad_idx, quad_idx + 6);
