@@ -8,6 +8,7 @@
 		scene,
     raycaster,
 		meshes = [],
+		N_MESH = 1,
 		items = [],
     is_processing = false,
     depth_worker,
@@ -306,7 +307,7 @@
 			}),
 			mesh;
 
-		console.log(mesh_obj);
+		//console.log(mesh_obj);
 
     // Custom attributes required for rendering the BufferGeometry
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
@@ -321,7 +322,9 @@
 		mesh = new THREE.Mesh(geometry, material);
     mesh.name = 'kinectV2';
     mesh.n_el = mesh_obj.n_el;
-		scene.remove(meshes.shift());
+		if(meshes.length >= N_MESH){
+			scene.remove(meshes.shift());
+		}
 		meshes.push(mesh);
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
