@@ -69,6 +69,7 @@
     plane: function(mesh0, p0){
 			var parameters = E.plane(mesh0, p0);
 			if(!parameters){return;}
+			var root = parameters.root;
 			// THREE frame
 			var normal = new THREE.Vector3().fromArray(parameters.normal);
       var quatNormal = new THREE.Quaternion().setFromUnitVectors(
@@ -90,7 +91,7 @@
 			// Place the points into a zero-centered, flat space
 			var points0 = parameters.points.map(function(p){
 				return [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
-			}, parameters.root);
+			}, root);
 			var points0inv = points0.map(function(v){
 				return mat3_times_vec(this, v);
 			}, get_THREE_mat3(matNormalInv));
@@ -101,22 +102,6 @@
 			var perim = perimInv.map(function(v){
 				return mat3_times_vec(this, v);
 			}, get_THREE_mat3(matNormal));
-
-			// Add the vertices for the line
-			var geometry = new THREE.Geometry();
-			geometry.vertices = perim.map(function(p){
-				return new THREE.Vector3(p[0], p[1], p[2]);//.applyQuaternion(quatNormal);
-			});
-			// Close the loop
-			geometry.vertices.push(geometry.vertices[0]);
-
-			var material = new THREE.LineBasicMaterial({
-				color: 0x000000, linewidth: 20
-			});
-			var line = new THREE.Line( geometry, material );
-			line.position.fromArray(parameters.root);
-			scene.add(line);
-
 
 			// Append Robot Frame parameters
 			parameters.perimeter = perim.map(function(p){
@@ -129,18 +114,26 @@
 				.map(function(v){return v/1e3;});
 			// NOTE: cov is still in THREE coordinates
 
+
+			// Add the vertices for the line
+			var geometry = new THREE.Geometry();
+			geometry.vertices = perim.map(function(p){
+				return new THREE.Vector3(p[0], p[1], p[2]);//.applyQuaternion(quatNormal);
+			});
+			// Close the loop
+			geometry.vertices.push(geometry.vertices[0]);
+			// Form material
+			var material = new THREE.LineBasicMaterial({
+				color: 0x000000, linewidth: 20
+			});
+			// Add to the scene
+			var line = new THREE.Line(geometry, material);
+			line.position.fromArray(root);
+			scene.add(line);
+
 			// Deal with the raw points and GUI mesh
 			parameters.mesh = line;
 			delete parameters.points;
-
-			console.log(parameters);
-
-			/*
-			// Classify:
-      var poly_features = Classify.poly_features;
-      var pf = Classify.get_poly_features(parameters);
-      parameters.features = pf;
-			*/
 
 			return parameters;
     }
