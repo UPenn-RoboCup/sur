@@ -436,14 +436,13 @@
       return params;
     },
     plane: function(mesh0, p0){
-			console.log('Starting Plane finding...');
       var px = p0.x,
         py = p0.y,
         pz = p0.z,
         root = [px,py,pz];
 			var dRoot = numeric.norm2(root) / 1e3;
 			var scale = Math.max(1, dRoot/2);
-			console.log('dRoot', dRoot, 'scale', scale);
+			//console.log('dRoot', dRoot, 'scale', scale);
       var horizontal_it = new Point_cloud_entries(mesh0, function(vertex) {
           return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60*scale && abs(vertex[2] - pz) < 60*scale;
         }),
@@ -456,7 +455,7 @@
       if(horiz_params){
 				horiz_params.id = 'h';
 				e_h = get_plane_error(horiz_params.points.entries(), horiz_params);
-				console.log('horiz_params', horiz_params);
+				//console.log('horiz_params', horiz_params);
 			}
 
       var vert_params = estimate_plane(vertical_it, root);
@@ -468,7 +467,7 @@
 					numeric.norm2(vert_params.normal)
 				);
 				e_v = get_plane_error(vert_params.points.entries(), vert_params);
-				console.log('vert_params', vert_params);
+				//console.log('vert_params', vert_params);
 			}
 
 			// Choose if vertical or horizontal
@@ -486,13 +485,10 @@
 				params = horiz_params;
 			}
 
-			console.log('pre n', params.n);
-
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
 			//console.log('Colors w/ params', params);
       params.points = grow_plane(new Point_cloud_entries(mesh0), params);
-			console.log('grow n', params.points.length);
 
       // Update the roughness
       var p2 = estimate_plane(params.points.entries(), params.root);

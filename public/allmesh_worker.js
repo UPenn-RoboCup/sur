@@ -194,7 +194,6 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			console.assert(yy===yy, 'bad yy: '+u);
 			console.assert(zz===zz, 'bad zz: '+u);
 			*/
-			//return [xx, yy, zz];
 			return [tx, ty, tz];
     }
   },

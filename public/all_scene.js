@@ -180,7 +180,6 @@
 			menu.classList.toggle('hidden');
 			menu.style.left = e.offsetX+'px';
 			menu.style.top = e.offsetY+'px';
-			console.log('clicked name',last_intersection.mesh.name);
 			// If clicked the mesh, run the processing
 			if(last_intersection.mesh.name === 'kinectV2'){
 				window.setTimeout(estimate_selection, 0);
