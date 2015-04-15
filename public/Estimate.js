@@ -43,6 +43,7 @@
         positions[pidx], positions[pidx + 1], positions[pidx + 2],
         colors[pidx], colors[pidx + 1], colors[pidx + 2],
       ];
+			if(mesh.name==='mesh'){ data[3] = data[4] = data[5] = 0; }
       if (typeof filter !== 'function' || filter(data)) { yield [pidx, data]; }
 		}
   }

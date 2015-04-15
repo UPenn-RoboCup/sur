@@ -184,6 +184,8 @@
 			// If clicked the mesh, run the processing
 			if(last_intersection.mesh.name === 'kinectV2'){
 				window.setTimeout(estimate_selection, 0);
+			} else if(last_intersection.mesh.name === 'mesh'){
+				window.setTimeout(estimate_selection, 0);
 			}
 		}
 	}
@@ -214,8 +216,6 @@
 		last_intersection.p = p0;
 		last_intersection.mesh = mesh0;
 		last_intersection.t = e.timeStamp;
-
-
 
     // Solve for the transform from the robot frame to the point
 		/*
