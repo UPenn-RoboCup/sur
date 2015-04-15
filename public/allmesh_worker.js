@@ -100,7 +100,7 @@ get_config(["kinect","mountOffset"], function(val){
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
   // points within MIN_CONNECTIVITY of each other are connected
-  MIN_CONNECTIVITY = 85,
+	MIN_CONNECTIVITY = 90, // 9cm
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, mesh, destination) {

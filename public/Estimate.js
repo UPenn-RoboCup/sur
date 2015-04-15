@@ -173,12 +173,16 @@
       points.push(p);
     }
 
+		if(nClose<=5){
+			console.log('Not enough points');
+			return;
+		}
+
 		var A_plane = [
       [zzSum, xzSum, zSum],
       [xzSum, xxSum, xSum],
       [zSum, xSum, nClose]
     ];
-		//console.log(A_plane);
 
     var A_plane_inv = numeric.inv(A_plane);
     var sol_plane = numeric.dot(A_plane_inv, [zySum, xySum, ySum]);
@@ -233,7 +237,7 @@
       n = params.normal,
       plane_points = [],
       c_inv_cov = numeric.inv(c_cov),
-      surf_thresh = 30,
+      surf_thresh = 50,
       p;
     var c_pr, err_r, cc = [0,0,0];
     for (var a of it){
@@ -432,44 +436,55 @@
       return params;
     },
     plane: function(mesh0, p0){
+			console.log('Starting Plane finding...');
       var px = p0.x,
         py = p0.y,
         pz = p0.z,
-        root = [px,py,pz],
-        horizontal_it = new Point_cloud_entries(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60 && abs(vertex[2] - pz) < 60;
+        root = [px,py,pz];
+			var dRoot = numeric.norm2(root) / 1e3;
+			var scale = Math.max(1, dRoot/2);
+			console.log('dRoot', dRoot, 'scale', scale);
+      var horizontal_it = new Point_cloud_entries(mesh0, function(vertex) {
+          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60*scale && abs(vertex[2] - pz) < 60*scale;
         }),
         vertical_it = new Point_cloud_entries(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 100 && abs(vertex[0] - px) < 50 && abs(vertex[2] - pz) < 50;
+          return abs(vertex[1] - py) < 100 && abs(vertex[0] - px) < 50*scale && abs(vertex[2] - pz) < 50*scale;
         });
 
+			var e_v, e_h, params;
       var horiz_params = estimate_plane(horizontal_it, root);
-      horiz_params.id = 'h';
+      if(horiz_params){
+				horiz_params.id = 'h';
+				e_h = get_plane_error(horiz_params.points.entries(), horiz_params);
+				console.log('horiz_params', horiz_params);
+			}
 
       var vert_params = estimate_plane(vertical_it, root);
-      vert_params.id = 'v';
-      vert_params.normal[1] = 0;
-      vert_params.normal = numeric.div(
-				vert_params.normal,
-				numeric.norm2(vert_params.normal)
-			);
+			if(vert_params){
+				vert_params.id = 'v';
+				vert_params.normal[1] = 0;
+				vert_params.normal = numeric.div(
+					vert_params.normal,
+					numeric.norm2(vert_params.normal)
+				);
+				e_v = get_plane_error(vert_params.points.entries(), vert_params);
+				console.log('vert_params', vert_params);
+			}
 
 			// Choose if vertical or horizontal
-      var e_h = get_plane_error(horiz_params.points.entries(), horiz_params),
-      	e_v = get_plane_error(vert_params.points.entries(), vert_params);
-
-			var params;
-			if(e_h.n_points<25 && e_v.n_points<25){
-				params = null;
+			if(!e_v && !e_v){
+				return false;
+			} else if(!e_v){
+				params = horiz_params;
+			} else if(!e_h){
+				params = vert_params;
+			} else if(e_h.n_points<25 && e_v.n_points<25) {
+				return false;
 			} else if(e_v.n_points>3*e_h.n_points){
 				params = vert_params;
 			} else if(e_v.big_error_ratio>0.25){
 				params = horiz_params;
 			}
-
-			//console.log('H Error', e_h, horiz_params);
-			//console.log('V Error', e_v, vert_params);
-			if(!params){return false;}
 
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
@@ -481,8 +496,6 @@
       params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
       // e_val = eigs.lambda.x[2] * 1e6, // 1e3 * 1e3, since covariance is a squared dependence
       // e_vec = [eigs.E.x[0][2],eigs.E.x[1][2],eigs.E.x[2][2]];
-
-			console.log(params.id + ' Plane', params);
 
       return params;
     },
@@ -498,7 +511,8 @@
 			var perim = [], nChunks = 20;
 			for (var i=0; i < nChunks; i+=1) { perim[i] = null; }
 
-			var rhoThreshold = 50, maxRho = 500;
+			// 7.5cm dist ok
+			var rhoThreshold = 75, maxRho = 500;
 			points0R.forEach(function(p){
 				var angle = atan2(p[0], p[2]),
 					idx = mf.iangle_valid.call(nChunks, angle);
@@ -510,7 +524,17 @@
 				if(p[3] - perim[idx][3] > rhoThreshold){ return; }
 				perim[idx] = p;
       });
-      return perim;
+
+			// Clean up the perimeter in case of holes
+			return perim.map(function(p,i,arr){
+				if(p) return p;
+				var i_minus = i-1, i_plus = i+1;
+				i_minus = i_minus >= 0 ? i_minus : arr.length - 1;
+				i_plus = i_plus < arr.length ? i_plus : 0;
+				var p_minus = arr[i_minus], p_plus = arr[i_plus];
+				if(!p_minus || !p_plus)return [0,0,0,0];
+				return numeric.div(numeric.add(p_minus, p_plus), 2);
+			});
     },
   };
 
