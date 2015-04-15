@@ -256,6 +256,7 @@
 	}
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(e) {
+
 		// mesh should be phong, kinect basic...
 		var mesh_obj = e.data,
       geometry = new THREE.BufferGeometry(),
@@ -284,7 +285,7 @@
     }
 		// Make the new mesh and remove the previous one
 		mesh = new THREE.Mesh(geometry, material);
-    mesh.name = 'kinectV2';
+    mesh.name = mesh_obj.id==='mesh' ? 'mesh' : 'kinectV2';
     mesh.n_el = mesh_obj.n_el;
 		if(meshes.length >= N_MESH){
 			scene.remove(meshes.shift());

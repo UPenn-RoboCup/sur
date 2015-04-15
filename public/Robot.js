@@ -124,8 +124,7 @@
 	function update(obj, feedback) {
 		var i,
 			joints = feedback.p,
-			rpy = feedback.rpy || [0, 0, 0],
-			pose = feedback.pose || [0, 0, 0],
+			torso = feedback.torso,
 			servos = obj.servos;
     if (servos === undefined) {
       return;
@@ -133,10 +132,10 @@
 		for (i = 0; i < servos.length; i += 1) {
 			rotateServo(servos[i], joints[i]);
 		}
-		obj.quaternion.setFromEuler(new THREE.Euler(rpy[1], pose[2], rpy[0], 'ZXY'));
-		obj.position.y = (feedback.bh || 1) * 1e3;
-		obj.position.z = pose[0] * 1e3;
-		obj.position.x = pose[1] * 1e3;
+		obj.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));
+		obj.position.z = torso[0] * 1e3;
+		obj.position.x = torso[1] * 1e3;
+		obj.position.y = torso[2] * 1e3;
 	}
 
 	function Robot(options) {
