@@ -448,7 +448,7 @@
           return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60*scale && abs(vertex[2] - pz) < 60*scale;
         }),
         vertical_it = new Point_cloud_entries(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 100 && abs(vertex[0] - px) < 50*scale && abs(vertex[2] - pz) < 50*scale;
+          return abs(vertex[1] - py) < 120 && abs(vertex[0] - px) < 60*scale && abs(vertex[2] - pz) < 60*scale;
         });
 
 			var e_v, e_h, params;
@@ -486,10 +486,13 @@
 				params = horiz_params;
 			}
 
+			console.log('pre n', params.n);
+
       // Run the colors
       params.colors = estimate_colors(params.points.entries());
 			//console.log('Colors w/ params', params);
       params.points = grow_plane(new Point_cloud_entries(mesh0), params);
+			console.log('grow n', params.points.length);
 
       // Update the roughness
       var p2 = estimate_plane(params.points.entries(), params.root);
@@ -513,14 +516,16 @@
 
 			// 7.5cm dist ok
 			var rhoThreshold = 75, maxRho = 500;
+			// Far things:
+			//rhoThreshold = 150; maxRho = 1000;
 			points0R.forEach(function(p){
 				var angle = atan2(p[0], p[2]),
 					idx = mf.iangle_valid.call(nChunks, angle);
+				if(p[3] > maxRho) { return; }
 				if (!perim[idx]) {
 					perim[idx] = p;
 					return;
 				}
-				if(perim[idx][3] > maxRho) { return; }
 				if(p[3] - perim[idx][3] > rhoThreshold){ return; }
 				perim[idx] = p;
       });
