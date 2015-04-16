@@ -8,7 +8,7 @@
 		scene,
     raycaster,
 		meshes = [],
-		N_MESH = 1,
+		N_MESH = 4,
 		items = [],
     is_processing = false,
     depth_worker,
@@ -48,7 +48,7 @@
 			tm.elements.subarray(4, 8),
 			tm.elements.subarray(8, 12)
 		].map(function(v){
-			return [v[0],v[1],v[2]];
+			return [v[0], v[1], v[2]];
 		});
 	}
 

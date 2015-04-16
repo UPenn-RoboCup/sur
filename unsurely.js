@@ -43,7 +43,7 @@ console.log(streams);
 //////////////////////////////
 // Emulate Blackouts
 var IS_BLACKED_OUT = false;
-var MAX_BLACKOUT = 5;
+var MAX_BLACKOUT = 30;
 var enable_blackout, disable_blackout;
 disable_blackout = function(){
 	IS_BLACKED_OUT = false;
@@ -56,7 +56,7 @@ enable_blackout = function(){
 	setTimeout(disable_blackout, 1e3*BLACKOUT_TIME);
 }
 // Comment this line to kill off the network outages
-enable_blackout();
+//enable_blackout();
 // Pinging for detection
 var ping_skt = zmq.socket('pub');
 ping_skt.bind('tcp://*:' + Config.net.ping.tcp);
@@ -186,7 +186,6 @@ function ws_error(e) {
 function bridge_send_ws(sur_stream, meta, payload) {
 	"use strict";
 	if(IS_BLACKED_OUT && sur_stream.udp > 2048){ return; }
-	if(meta.id!=='fb'){console.log(meta);}
   var str = JSON.stringify(meta),
 		clients = sur_stream.wss.clients,
 		i,
@@ -195,6 +194,7 @@ function bridge_send_ws(sur_stream, meta, payload) {
 		ws = clients[i];
 		// Send the metadata on the websocket connection
 		ws.send(str, ws_error);
+		//console.log('Sending', meta.id);
 		// Follow the metadata with the binary payload (if it exists)
 		if (meta.sz > 0) {
 			ws.send(payload, {binary: true}, ws_error);
