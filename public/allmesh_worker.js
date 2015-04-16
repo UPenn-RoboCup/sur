@@ -114,7 +114,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 				2 * x * ( u / width - 0.5) * K2_HFOV_FACTOR,
 				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR
 			],
-        gFrame = mat_times_vec(tfK2L, vCam),
+        gFrame = mat_times_vec(tfK2G, vCam),
 				lFrame = mat_times_vec(tfK2L, vCam);
       destination[0] = gFrame[1]*1e3;
       destination[1] = gFrame[2]*1e3;
@@ -133,8 +133,8 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 				-2 * x * (u / width - 0.5) * K2_HFOV_FACTOR,
 				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR
 			],
-        gFrame = mat_times_vec(tfK2L, vCam),
-				lFrame = mat_times_vec(tfK2G, vCam);
+        gFrame = mat_times_vec(tfK2G, vCam),
+				lFrame = mat_times_vec(tfK2L, vCam);
       destination[0] = gFrame[1] * 1e3;
       destination[1] = gFrame[2] * 1e3;
       destination[2] = gFrame[0] * 1e3;
