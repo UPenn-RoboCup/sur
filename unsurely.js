@@ -56,16 +56,24 @@ enable_blackout = function(){
 	setTimeout(disable_blackout, 1e3*BLACKOUT_TIME);
 }
 // Comment this line to kill off the network outages
-//enable_blackout();
+enable_blackout();
 // Pinging for detection
 var ping_skt = zmq.socket('pub');
 ping_skt.bind('tcp://*:' + Config.net.ping.tcp);
+var ping_skt2 = zmq.socket('pub');
+ping_skt2.bind('ipc:///tmp/' + Config.net.ping.sub);
+function send_net_ok(){
+	if(IS_BLACKED_OUT){return;}
+	ping_skt.send('go');
+	ping_skt2.send('go');
+}
 var go_skt = dgram.createSocket("udp4");
 go_skt.bind(Config.net.ping.udp);
-go_skt.on("message", function(){
-	if(IS_BLACKED_OUT){return;}
-	ping_skt.send('ok');
-});
+go_skt.on("message", send_net_ok);
+var go_skt2 = zmq.socket('sub');
+go_skt2.connect('ipc:///tmp/' + Config.net.ping.pub);
+go_skt2.subscribe('');
+go_skt2.on('message', send_net_ok);
 //////////////////////////////
 
 /* Connect to the RPC server */
