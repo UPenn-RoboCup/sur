@@ -322,7 +322,8 @@
 				vfov: metadata.rfov,
 				dynrange: metadata.dr,
 				a: metadata.a,
-				torso: metadata.torso,
+				tfL6: metadata.tfL6,
+				tfG6: metadata.tfG6,
 				// Make the max allocations
 				// TODO: Can we reuse these?
         index: new Uint16Array(npix * 6),
@@ -380,8 +381,6 @@
     // Don't post to the depth worker until done
     if (is_processing) { return; }
     is_processing = true;
-
-    //console.log(rgbd_metadata.rgb[0], rgbd_metadata.rgb[1920*4]);
 
     // Allocations
     // TODO: Maintain a fixed set of allocations to avoid penalty on each new data

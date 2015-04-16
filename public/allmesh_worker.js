@@ -8,7 +8,7 @@ var PI = Math.PI,
 	min = Math.min,
   max = Math.max,
 	abs = Math.abs,
-  tK2;
+  tfK2L, tfK2G;
 
 function flat2mat(flat){
 	'use strict';
@@ -100,7 +100,7 @@ get_config(["kinect","mountOffset"], function(val){
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
   // points within MIN_CONNECTIVITY of each other are connected
-	MIN_CONNECTIVITY = 90, // 9cm
+	MIN_CONNECTIVITY = 50, // 5cm
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, mesh, destination) {
@@ -109,16 +109,17 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       // 4.5 meters away is too far to render
       if(x > 6000 || x < 200){ return; }
       x /= 1e3;
-      var local = [
+      var vCam = [
 				x,
 				2 * x * ( u / width - 0.5) * K2_HFOV_FACTOR,
 				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR
 			],
-        rFrame = mat_times_vec(tK2, local);
-      destination[0] = rFrame[1]*1e3;
-      destination[1] = rFrame[2]*1e3;
-      destination[2] = rFrame[0]*1e3;
-      return local;
+        gFrame = mat_times_vec(tfK2L, vCam),
+				lFrame = mat_times_vec(tfK2L, vCam);
+      destination[0] = gFrame[1]*1e3;
+      destination[1] = gFrame[2]*1e3;
+      destination[2] = gFrame[0]*1e3;
+      return gFrame.concat(lFrame);
     },
     kinectV2webots: function (u, v, x, width, height, mesh, destination) {
       // The range value is directly our x coordinate
@@ -127,23 +128,24 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       if(x >= 6000 || x < 200){ return; }
       //console.log(x);
       x /= 1e3;
-      var local = [
+      var vCam = [
 				x,
 				-2 * x * (u / width - 0.5) * K2_HFOV_FACTOR,
 				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR
 			],
-        rFrame = mat_times_vec(tK2, local);
-      destination[0] = rFrame[1]*1000;
-      destination[1] = rFrame[2]*1000;
-      destination[2] = rFrame[0]*1000;
-      return local;
+        gFrame = mat_times_vec(tfK2L, vCam),
+				lFrame = mat_times_vec(tfK2G, vCam);
+      destination[0] = gFrame[1] * 1e3;
+      destination[1] = gFrame[2] * 1e3;
+      destination[2] = gFrame[0] * 1e3;
+      return gFrame.concat(lFrame);
     },
     mesh: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
       // Saturation
       if (w === 0 || w === 255) {return;}
 
-    	var torso = mesh.torso[v],
+    	var tfL6 = mesh.tfL6[v], tfG6 = mesh.tfG6[v],
 				h_angle = mesh.a[v],
 				v_angle = (mesh.vfov[0] - mesh.vfov[1]) * (u / width) - mesh.vfov[0],
 				// Rotated 90:
@@ -167,34 +169,35 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		cr = cos(torso[3]),
     		sr = sin(torso[3]),
     		// Update with pitch/roll
+				// Update with IMU pitch/roll
+    		cp = cos(tfL6[4]),
+    		sp = sin(tfL6[4]),
+    		cr = cos(tfL6[3]),
+    		sr = sin(tfL6[3]),
     		xx = (cp * x) + (sr * sp * y) + (sp * cr * z),
     		yy = (cr * y) - (sr * z),
     		zz = (-sp * x) + (cp * sr * y) + (cp * cr * z),
-    		// Place into global pose THREE coords
-    		ca = cos(torso[5]),
-    		sa = sin(torso[5]),
-    		tx = torso[0] + ca * xx - sa * yy,
-    		ty = torso[1] + sa * xx + ca * yy,
-    		tz = torso[2] + zz;
-				// Add the torso offset and the bodyHeight
-				/*
-    		tx = torso[0] + xx,
-    		ty = torso[1] + yy,
-    		tz = torso[2] + zz;
-				*/
+				// Place into the local pose
+    		caL = cos(tfL6[5]),
+    		saL = sin(tfL6[5]),
+    		txL = tfL6[0] + caL * xx - saL * yy,
+    		tyL = tfL6[1] + saL * xx + caL * yy,
+    		tzL = tfL6[2] + zz,
+    		// Place into global pose
+    		caG = cos(tfG6[5]),
+    		saG = sin(tfG6[5]),
+    		txG = tfG6[0] + caG * xx - saG * yy,
+    		tyG = tfG6[1] + saG * xx + caG * yy,
+    		tzG = tfG6[2] + zz;
 
-    	// Return in mm, since THREEjs uses that
-    	// Return also the position
-    	// Also, swap the coordinates
-    	destination[0] = ty * 1000;
-			destination[1] = tz * 1000;
-			destination[2] = tx * 1000;
-			/*
-			console.assert(xx===xx, 'bad xx: '+u);
-			console.assert(yy===yy, 'bad yy: '+u);
-			console.assert(zz===zz, 'bad zz: '+u);
-			*/
-			return [tx, ty, tz];
+			// Set into the THREE buffer, in its coordinate frame
+    	destination[0] = tyG * 1000;
+			destination[1] = tzG * 1000;
+			destination[2] = txG * 1000;
+
+			// Return robot frames, in its coordinates
+			// [global | local]
+			return [txL, tyL, tzL, txG, tyG, tzG];
     }
   },
   SENSOR_COLOR = {
@@ -287,8 +290,8 @@ this.addEventListener('message', function (e) {
 
 	//console.log('Initial Mesh', mesh);
 	if (mesh.id==='k2_depth'){
-		//tK2 = get_k2_transform(mesh.head_angles, imu_rpy, mesh.body_height);
-		tK2 = flat2mat(mesh.tr);
+		tfK2L = flat2mat(mesh.tfL);
+		tfK2G = flat2mat(mesh.tfG);
 		// Cartesian coordinate formation function
 		//get_xyz = SENSOR_XYZ.kinectV2;
 		get_xyz = SENSOR_XYZ.kinectV2webots;
