@@ -396,7 +396,7 @@
 		servos.push(parts.LEFT_SHOULDER_ROLL);
 		servos.push(parts.LEFT_ARM);
 		servos.push(parts.INTER_LEFT_ELBOW);
-		servos.push(parts.LEFT_WRIST); // placeholder
+		servos.push(parts.LEFT_WRIST);
 		servos.push(null);
 		servos.push(null);
 		// left leg
@@ -418,7 +418,7 @@
 		servos.push(parts.RIGHT_SHOULDER_ROLL);
 		servos.push(parts.RIGHT_ARM);
 		servos.push(parts.INTER_RIGHT_ELBOW);
-		servos.push(parts.RIGHT_WRIST); // placeholder
+		servos.push(parts.RIGHT_WRIST);
 		servos.push(null);
 		servos.push(null);
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 /*
 Next gen version for hosting
 */
@@ -39,12 +40,33 @@ var Config = lua.doFileSync(UPENNDEV_PATH + '/include.lua');
 var streams = Config.net.streams;
 console.log(streams);
 
-// Network detection
+//////////////////////////////
+// Emulate Blackouts
+var IS_BLACKED_OUT = false;
+var MAX_BLACKOUT = 5;
+var enable_blackout, disable_blackout;
+disable_blackout = function(){
+	IS_BLACKED_OUT = false;
+	setTimeout(enable_blackout, 1e3);
+}
+enable_blackout = function(){
+	IS_BLACKED_OUT = true;
+	var BLACKOUT_TIME = Math.floor((Math.random() * MAX_BLACKOUT) + 1);
+	console.log('BLACKOUT_TIME', BLACKOUT_TIME);
+	setTimeout(disable_blackout, 1e3*BLACKOUT_TIME);
+}
+// Comment this line to kill off the network outages
+enable_blackout();
+// Pinging for detection
 var ping_skt = zmq.socket('pub');
 ping_skt.bind('tcp://*:' + Config.net.ping.tcp);
 var go_skt = dgram.createSocket("udp4");
 go_skt.bind(Config.net.ping.udp);
-go_skt.on("message", function(){ ping_skt.send('ok'); });
+go_skt.on("message", function(){
+	if(IS_BLACKED_OUT){return;}
+	ping_skt.send('ok');
+});
+//////////////////////////////
 
 /* Connect to the RPC server */
 var rpc = Config.net.rpc;
@@ -163,6 +185,8 @@ function ws_error(e) {
 //Send data to the websocket defined in sur_stream
 function bridge_send_ws(sur_stream, meta, payload) {
 	"use strict";
+	if(IS_BLACKED_OUT && sur_stream.udp > 2048){ return; }
+	if(meta.id!=='fb'){console.log(meta);}
   var str = JSON.stringify(meta),
 		clients = sur_stream.wss.clients,
 		i,

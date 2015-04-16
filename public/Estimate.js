@@ -492,7 +492,12 @@
 
       // Update the roughness
       var p2 = estimate_plane(params.points.entries(), params.root);
-      params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
+			params.colors = estimate_colors(params.points.entries());
+			params.cov = p2.cov;
+			params.root = p2.root;
+
+			// TODO: Not done here...
+			//params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
       // e_val = eigs.lambda.x[2] * 1e6, // 1e3 * 1e3, since covariance is a squared dependence
       // e_vec = [eigs.E.x[0][2],eigs.E.x[1][2],eigs.E.x[2][2]];
 
