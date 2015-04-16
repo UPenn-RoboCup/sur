@@ -8,7 +8,7 @@
 		scene,
     raycaster,
 		meshes = [],
-		N_MESH = 4,
+		N_MESH = 1,
 		items = [],
     is_processing = false,
     depth_worker,

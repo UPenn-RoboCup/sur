@@ -264,6 +264,20 @@
       rot: new THREE.Quaternion(),//(new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), -Math.PI / 2),
       axel: new THREE.Vector3(0, -1, 0),
 		};
+		parts.RIGHT_WRIST_INTER1 = {
+			parent: 'RIGHT_WRIST',
+			mesh: new THREE.Object3D(),// placeholder
+			tr: new THREE.Vector3(0, 0, 0),
+			rot: new THREE.Quaternion(),
+      axel: new THREE.Vector3(0, 0, -1)
+		};
+		parts.RIGHT_WRIST_1 = {
+			parent: 'RIGHT_WRIST_INTER1',
+			tr: new THREE.Vector3(0, -65, 0),
+			rot: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2),
+      axel: new THREE.Vector3(0, 0, 1)
+		};
+
 		// LArm
 		parts.LEFT_SHOULDER_PITCH = {
 			parent: 'CHEST',
@@ -286,7 +300,7 @@
 		};
 		parts.INTER_LEFT_ELBOW = {
 			parent: 'LEFT_ARM',
-			mesh: new THREE.Object3D(),
+			mesh: new THREE.Object3D(),// placeholder
 			tr: new THREE.Vector3(0, -246 + STL_MOTOR_WIDTH / 2, STL_MOTOR_WIDTH / 2),
 			rot: new THREE.Quaternion(),
 			axel: new THREE.Vector3(1, 0, 0)
@@ -302,6 +316,20 @@
 			rot: new THREE.Quaternion(),//(new THREE.Quaternion()).setFromAxisAngle((new THREE.Vector3(0, 1, 0)), Math.PI / 2),
       axel: new THREE.Vector3(0, -1, 0)
 		};
+		parts.LEFT_WRIST_INTER1 = {
+			parent: 'LEFT_WRIST',
+			mesh: new THREE.Object3D(),// placeholder
+			tr: new THREE.Vector3(0, 0, 0),
+			rot: new THREE.Quaternion(),
+      axel: new THREE.Vector3(0, 0, 1)
+		};
+		parts.LEFT_WRIST_1 = {
+			parent: 'LEFT_WRIST_INTER1',
+			tr: new THREE.Vector3(0, -65, 0),
+			rot: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2),
+      axel: new THREE.Vector3(0, 0, 1)
+		};
+
 		// RLeg
 		parts.RIGHT_HIP_YAW = {
 			parent: 'PELVIS',
@@ -397,7 +425,7 @@
 		servos.push(parts.LEFT_ARM);
 		servos.push(parts.INTER_LEFT_ELBOW);
 		servos.push(parts.LEFT_WRIST);
-		servos.push(null);
+		servos.push(parts.LEFT_WRIST_INTER1);
 		servos.push(null);
 		// left leg
 		servos.push(parts.LEFT_HIP_YAW);
@@ -419,7 +447,7 @@
 		servos.push(parts.RIGHT_ARM);
 		servos.push(parts.INTER_RIGHT_ELBOW);
 		servos.push(parts.RIGHT_WRIST);
-		servos.push(null);
+		servos.push(parts.RIGHT_WRIST_INTER1);
 		servos.push(null);
 
 		// Setup routine
