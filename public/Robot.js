@@ -1,12 +1,17 @@
 (function (ctx) {
 	'use strict';
 
-	var THREE = ctx.THREE,
-    cos = Math.cos,
+	var THREE = ctx.THREE;
+	
+	
+	
+/*
+var cos = Math.cos,
     sin = Math.sin,
     sqrt = Math.sqrt,
     atan = Math.atan,
     DEG_TO_RAD = Math.PI / 180;
+		
   // Arm constants
   var shoulderOffsetX = 0;    
   var shoulderOffsetY = 0.234;
@@ -34,18 +39,23 @@
   var dTibia = sqrt(tibiaLength*tibiaLength+kneeOffsetX*kneeOffsetX);
   var aTibia = atan(kneeOffsetX/tibiaLength);
 
+	function fk_leg0(q){
+		var c1 = cos(q[0]), s1 = sin(q[0]),
+	    c2 = cos(q[1]), s2 = sin(q[1]),
+	    c6 = cos(q[5]), s6 = sin(q[5]),
+	    q3 = q[2], q4 = q[3], q5 = q[4];
+		  	return [
+  		[((-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5))*c6 + s1*s6*c2, -((-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5))*s6 + s1*c2*c6, -(-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5), -dThigh*(s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1) - dTibia*(-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))], 
+  		[(((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5))*c6 - s6*c1*c2, -(((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5))*s6 - c1*c2*c6, ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) - ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5), -dThigh*(s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3)) - dTibia*((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))], 
+  		[((sin(aThigh + q3)*sin(aThigh + aTibia - q4)*c2 + c2*cos(aThigh + q3)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + (-sin(aThigh + q3)*c2*cos(aThigh + aTibia - q4) + sin(aThigh + aTibia - q4)*c2*cos(aThigh + q3))*sin(aTibia + q5))*c6 - s2*s6, -((sin(aThigh + q3)*sin(aThigh + aTibia - q4)*c2 + c2*cos(aThigh + q3)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + (-sin(aThigh + q3)*c2*cos(aThigh + aTibia - q4) + sin(aThigh + aTibia - q4)*c2*cos(aThigh + q3))*sin(aTibia + q5))*s6 - s2*c6, -(sin(aThigh + q3)*sin(aThigh + aTibia - q4)*c2 + c2*cos(aThigh + q3)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + (-sin(aThigh + q3)*c2*cos(aThigh + aTibia - q4) + sin(aThigh + aTibia - q4)*c2*cos(aThigh + q3))*cos(aTibia + q5), -dThigh*c2*cos(aThigh + q3) - dTibia*(sin(aThigh + q3)*sin(aThigh + aTibia - q4)*c2 + c2*cos(aThigh + q3)*cos(aThigh + aTibia - q4))],
+  		[0, 0, 0, 1]];
+	}
+	
   function fk_leg(q){
 	  var c1 = cos(q[0]), s1 = sin(q[0]),
 	    c2 = cos(q[1]), s2 = sin(q[1]),
 	    c6 = cos(q[5]), s6 = sin(q[5]),
 	    q3 = q[2], q4 = q[3], q5 = q[4];
-    /*
-  	return [
-  		[((-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5))*c6 + s1*s6*c2, -((-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5))*s6 + s1*c2*c6, -(-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5), -dThigh*(s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1) - dTibia*(-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))], 
-  		[(((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5))*c6 - s6*c1*c2, -(((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5))*s6 - c1*c2*c6, ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) - ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5), -dThigh*(s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3)) - dTibia*((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))], 
-  		[((sin(aThigh + q3)*sin(aThigh + aTibia - q4)*c2 + c2*cos(aThigh + q3)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + (-sin(aThigh + q3)*c2*cos(aThigh + aTibia - q4) + sin(aThigh + aTibia - q4)*c2*cos(aThigh + q3))*sin(aTibia + q5))*c6 - s2*s6, -((sin(aThigh + q3)*sin(aThigh + aTibia - q4)*c2 + c2*cos(aThigh + q3)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + (-sin(aThigh + q3)*c2*cos(aThigh + aTibia - q4) + sin(aThigh + aTibia - q4)*c2*cos(aThigh + q3))*sin(aTibia + q5))*s6 - s2*c6, -(sin(aThigh + q3)*sin(aThigh + aTibia - q4)*c2 + c2*cos(aThigh + q3)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + (-sin(aThigh + q3)*c2*cos(aThigh + aTibia - q4) + sin(aThigh + aTibia - q4)*c2*cos(aThigh + q3))*cos(aTibia + q5), -dThigh*c2*cos(aThigh + q3) - dTibia*(sin(aThigh + q3)*sin(aThigh + aTibia - q4)*c2 + c2*cos(aThigh + q3)*cos(aThigh + aTibia - q4))],
-  		[0, 0, 0, 1]];
-    */
     return new THREE.Matrix4(
   		((-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5))*c6 + s1*s6*c2, -((-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5))*s6 + s1*c2*c6, -(-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5), -dThigh*(s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1) - dTibia*(-(-s1*s2*sin(aThigh + q3) + c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*s2*cos(aThigh + q3) + sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4)), 
   		(((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5))*c6 - s6*c1*c2, -(((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*sin(aTibia + q5) + ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*cos(aTibia + q5))*s6 - c1*c2*c6, ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*sin(aThigh + aTibia - q4) + (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*cos(aThigh + aTibia - q4))*cos(aTibia + q5) - ((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4))*sin(aTibia + q5), -dThigh*(s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3)) - dTibia*((s1*sin(aThigh + q3) - s2*c1*cos(aThigh + q3))*cos(aThigh + aTibia - q4) - (s1*cos(aThigh + q3) + s2*sin(aThigh + q3)*c1)*sin(aThigh + aTibia - q4)), 
@@ -53,7 +63,23 @@
   		0, 0, 0, 1
     );
   }
+
   
+	function fk_arm0(q){
+		var c1 = cos(q[0]), s1 = sin(q[0]),
+  	  c2 = cos(q[1]), s2 = sin(q[1]),
+  	  c3 = cos(q[2]), s3 = sin(q[2]),
+  	  c4 = cos(q[3]), s4 = sin(q[3]),
+  	  c5 = cos(q[4]), s5 = sin(q[4]),
+  	  c6 = cos(q[5]), s6 = sin(q[5]),
+  	  c7 = cos(q[6]), s7 = sin(q[6]);
+		return [
+  		[(((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*s6 + (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*c6, ((((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*c6 - (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*s6)*c7 + (((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*c5 - (s1*s3 - s2*c1*c3)*s5)*s7, -((((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*c6 - (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*s6)*s7 + (((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*c5 - (s1*s3 - s2*c1*c3)*s5)*c7, -elbowOffsetX*((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2) + elbowOffsetX*(s1*c3 + s2*s3*c1) + lowerArmLength*(-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4) + upperArmLength*c1*c2], 
+  		[((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*s6 + (s2*c4 + s3*s4*c2)*c6, (((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*c6 - (s2*c4 + s3*s4*c2)*s6)*c7 + ((s2*s4 - s3*c2*c4)*c5 - s5*c2*c3)*s7, -(((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*c6 - (s2*c4 + s3*s4*c2)*s6)*s7 + ((s2*s4 - s3*c2*c4)*c5 - s5*c2*c3)*c7, -elbowOffsetX*(s2*s4 - s3*c2*c4) - elbowOffsetX*s3*c2 + lowerArmLength*(s2*c4 + s3*s4*c2) + upperArmLength*s2],
+  		[(((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*s5 + (s1*s2*c3 + s3*c1)*c5)*s6 + (-(-s1*s2*s3 + c1*c3)*s4 - s1*c2*c4)*c6, ((((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*s5 + (s1*s2*c3 + s3*c1)*c5)*c6 - (-(-s1*s2*s3 + c1*c3)*s4 - s1*c2*c4)*s6)*c7 + (((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*c5 - (s1*s2*c3 + s3*c1)*s5)*s7, -((((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*s5 + (s1*s2*c3 + s3*c1)*c5)*c6 - (-(-s1*s2*s3 + c1*c3)*s4 - s1*c2*c4)*s6)*s7 + (((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*c5 - (s1*s2*c3 + s3*c1)*s5)*c7, -elbowOffsetX*((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2) + elbowOffsetX*(-s1*s2*s3 + c1*c3) + lowerArmLength*(-(-s1*s2*s3 + c1*c3)*s4 - s1*c2*c4) - upperArmLength*s1*c2],
+  		[0, 0, 0, 1]];
+	}
+		
   function fk_arm(q){
   	var c1 = cos(q[0]), s1 = sin(q[0]),
   	  c2 = cos(q[1]), s2 = sin(q[1]),
@@ -62,13 +88,6 @@
   	  c5 = cos(q[4]), s5 = sin(q[4]),
   	  c6 = cos(q[5]), s6 = sin(q[5]),
   	  c7 = cos(q[6]), s7 = sin(q[6]);
-    /*
-  	return [
-  		[(((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*s6 + (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*c6, ((((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*c6 - (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*s6)*c7 + (((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*c5 - (s1*s3 - s2*c1*c3)*s5)*s7, -((((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*c6 - (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*s6)*s7 + (((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*c5 - (s1*s3 - s2*c1*c3)*s5)*c7, -elbowOffsetX*((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2) + elbowOffsetX*(s1*c3 + s2*s3*c1) + lowerArmLength*(-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4) + upperArmLength*c1*c2], 
-  		[((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*s6 + (s2*c4 + s3*s4*c2)*c6, (((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*c6 - (s2*c4 + s3*s4*c2)*s6)*c7 + ((s2*s4 - s3*c2*c4)*c5 - s5*c2*c3)*s7, -(((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*c6 - (s2*c4 + s3*s4*c2)*s6)*s7 + ((s2*s4 - s3*c2*c4)*c5 - s5*c2*c3)*c7, -elbowOffsetX*(s2*s4 - s3*c2*c4) - elbowOffsetX*s3*c2 + lowerArmLength*(s2*c4 + s3*s4*c2) + upperArmLength*s2],
-  		[(((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*s5 + (s1*s2*c3 + s3*c1)*c5)*s6 + (-(-s1*s2*s3 + c1*c3)*s4 - s1*c2*c4)*c6, ((((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*s5 + (s1*s2*c3 + s3*c1)*c5)*c6 - (-(-s1*s2*s3 + c1*c3)*s4 - s1*c2*c4)*s6)*c7 + (((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*c5 - (s1*s2*c3 + s3*c1)*s5)*s7, -((((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*s5 + (s1*s2*c3 + s3*c1)*c5)*c6 - (-(-s1*s2*s3 + c1*c3)*s4 - s1*c2*c4)*s6)*s7 + (((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2)*c5 - (s1*s2*c3 + s3*c1)*s5)*c7, -elbowOffsetX*((-s1*s2*s3 + c1*c3)*c4 - s1*s4*c2) + elbowOffsetX*(-s1*s2*s3 + c1*c3) + lowerArmLength*(-(-s1*s2*s3 + c1*c3)*s4 - s1*c2*c4) - upperArmLength*s1*c2],
-  		[0, 0, 0, 1]];
-    */
   	return new THREE.Matrix4(
       (((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*s6 + (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*c6, ((((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*c6 - (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*s6)*c7 + (((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*c5 - (s1*s3 - s2*c1*c3)*s5)*s7, -((((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*s5 + (s1*s3 - s2*c1*c3)*c5)*c6 - (-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4)*s6)*s7 + (((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2)*c5 - (s1*s3 - s2*c1*c3)*s5)*c7, -elbowOffsetX*((s1*c3 + s2*s3*c1)*c4 + s4*c1*c2) + elbowOffsetX*(s1*c3 + s2*s3*c1) + lowerArmLength*(-(s1*c3 + s2*s3*c1)*s4 + c1*c2*c4) + upperArmLength*c1*c2, 
   		((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*s6 + (s2*c4 + s3*s4*c2)*c6, (((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*c6 - (s2*c4 + s3*s4*c2)*s6)*c7 + ((s2*s4 - s3*c2*c4)*c5 - s5*c2*c3)*s7, -(((s2*s4 - s3*c2*c4)*s5 + c2*c3*c5)*c6 - (s2*c4 + s3*s4*c2)*s6)*s7 + ((s2*s4 - s3*c2*c4)*c5 - s5*c2*c3)*c7, -elbowOffsetX*(s2*s4 - s3*c2*c4) - elbowOffsetX*s3*c2 + lowerArmLength*(s2*c4 + s3*s4*c2) + upperArmLength*s2,
@@ -81,13 +100,14 @@
   var preLArm = new THREE.Matrix4().makeTranslation(shoulderOffsetX, shoulderOffsetY, shoulderOffsetZ);
   var postLArm = new THREE.Matrix4().makeTranslation(handOffsetX, -handOffsetY, handOffsetZ);
   function forward_larm (qLArm){
-	  return preLArm * fk_arm(qLArm) * postLArm
+	  return preLArm * fk_arm(qLArm) * postLArm;
   }
   var preRArm = new THREE.Matrix4().makeTranslation(shoulderOffsetX, -shoulderOffsetY, shoulderOffsetZ);
   var postRArm = new THREE.Matrix4().makeTranslation(handOffsetX, handOffsetY, handOffsetZ) * new THREE.Matrix4().makeRotationZ(-45*DEG_TO_RAD);
   function forward_rarm (qRArm){
-  	return preRArm * fk_arm(qRArm) * postRArm
+  	return preRArm * fk_arm(qRArm) * postRArm;
   }
+	*/
 
 	function rotateServo(s, v) {
 		if (!s || !s.mesh || !s.axel) {
@@ -202,7 +222,7 @@
 		object.name = 'ROBOT';
 		// root
 		parts.TORSO_PITCH_SERVO = {
-			tr: new THREE.Vector3(0, -40, 0),
+			tr: new THREE.Vector3(0, -30, 0),
 			rot: new THREE.Quaternion()
 		};
 		parts.PELVIS = {
@@ -210,7 +230,7 @@
 			rot: new THREE.Quaternion()
 		};
 		parts.CHEST = {
-			tr: new THREE.Vector3(0, 170, 0),
+			tr: new THREE.Vector3(0, 180, 0),
 			rot: new THREE.Quaternion()
 		};
 		// Head
@@ -474,8 +494,10 @@
 		this.object = object;
 		this.meshes = meshes;
 		this.parts = parts;
+		/*
     this.forward_larm = forward_larm;
     this.forward_rarm = forward_rarm;
+		*/
 	}
 
 	ctx.Robot = Robot;

@@ -158,16 +158,11 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		sv = sin(v_angle),
     		// Convert w of 0-255 to actual meters value
     		// Rotates a *bit* off axis
-    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0]
-					+ 0.02, //chest_off_axis
+    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0] + 0.02,
     		// Place in the frame of the torso
     		x = r * cv * ch + 0.05, //chest_joint_x
     		y = r * cv * sh,
     		z = r * sv + 0.09,//chest_height
-    		cp = cos(torso[4]),
-    		sp = sin(torso[4]),
-    		cr = cos(torso[3]),
-    		sr = sin(torso[3]),
     		// Update with pitch/roll
 				// Update with IMU pitch/roll
     		cp = cos(tfL6[4]),
@@ -201,7 +196,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     }
   },
   SENSOR_COLOR = {
-    mesh: function (i, j, xyz, img, r, destination, width, height) {
+    mesh: function (i, j, xyz, img, r, destination) {
 			'use strict';
 			//console.log(r);
 			// JET colormap. Colors range from 0.0 to 1.0
@@ -210,7 +205,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
     },
-    kinectV2: function (i, j, xyz, img, r, destination, width, height) {
+    kinectV2: function (i, j, xyz, img, r, destination) {
 			'use strict';
 			// Colors range from 0.0 to 1.0
       //var j2 = floor(2.65 * j) - 6;
@@ -226,7 +221,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			destination[1] = img[idx + 1] / 255;
 			destination[2] = img[idx + 2] / 255;
     },
-    kinectV2webots: function (i, j, xyz, img, r, destination, width, height) {
+    kinectV2webots: function (i, j, xyz, img, r, destination, width) {
 			'use strict';
       // Colors range from 0.0 to 1.0
       var idx = 4 * floor(i + j * width);
