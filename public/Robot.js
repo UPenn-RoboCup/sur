@@ -144,7 +144,7 @@ var cos = Math.cos,
 	function update(obj, feedback) {
 		var i,
 			joints = feedback.p,
-			torso = feedback.torso,
+			torso = feedback.u,
 			servos = obj.servos;
     if (servos === undefined) {
       return;
