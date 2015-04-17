@@ -100,7 +100,7 @@ get_config(["kinect","mountOffset"], function(val){
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
   // points within MIN_CONNECTIVITY of each other are connected
-	MIN_CONNECTIVITY = 50, // 5cm
+	MIN_CONNECTIVITY = 60, // 5cm
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, mesh, destination) {
@@ -282,7 +282,7 @@ this.addEventListener('message', function (e) {
     point_xyz, point_local,
 		// Plot points depending on the sensor
 		get_xyz, get_color;
-
+	
 	//console.log('Initial Mesh', mesh);
 	if (mesh.id==='k2_depth'){
 		tfK2L = flat2mat(mesh.tfL);

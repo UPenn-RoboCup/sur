@@ -491,10 +491,10 @@
       params.points = grow_plane(new Point_cloud_entries(mesh0), params);
 
       // Update the roughness
-      var p2 = estimate_plane(params.points.entries(), params.root);
-			params.colors = estimate_colors(params.points.entries());
-			params.cov = p2.cov;
-			params.root = p2.root;
+      //var p2 = estimate_plane(params.points.entries(), params.root);
+			//params.colors = estimate_colors(params.points.entries());
+			//params.cov = p2.cov;
+			//params.root = p2.root;
 
 			// TODO: Not done here...
 			//params.roughness = sqrt(numeric.eig(p2.cov).lambda.x[2]) * 1e3;
