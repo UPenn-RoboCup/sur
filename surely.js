@@ -40,17 +40,25 @@ var streams = Config.net.streams;
 console.log(streams);
 
 // Network detection
+var NET_OPEN = false;
 var ping_skt = zmq.socket('pub');
 ping_skt.bind('tcp://*:' + Config.net.ping.tcp);
 var go_skt = dgram.createSocket("udp4");
 go_skt.bind(Config.net.ping.udp);
-go_skt.on("message", function(){ ping_skt.send('ok'); });
+go_skt.on("message", function(){
+	if(!NET_OPEN){
+		console.log('Network open');
+		NET_OPEN = true;
+		setTimeout(function(){NET_OPEN=false;console.log('Network closed');}, 1000);
+	}
+	ping_skt.send('ok');
+});
 
 /* Connect to the RPC server */
 var rpc = Config.net.rpc;
 var rpc_skt = zmq.socket('req');
-var robot_ip = Config.net.robot.wireless;
-//var robot_ip = Config.net.robot.wired;
+//var robot_ip = Config.net.robot.wireless;
+var robot_ip = Config.net.robot.wired;
 
 rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
 // For localhost, use this instead:
