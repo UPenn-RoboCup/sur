@@ -31,7 +31,7 @@
 		document.body.appendChild(view);
 		// Add the video feed. There is a 90 degree offset for the chest mesh
 		util.ljs("/VideoFeed.js",function(){
-			d3.json('/streams/mesh', function (error, port) {
+			d3.json('/streams/mesh0', function (error, port) {
 				feed = new ctx.VideoFeed({
 					port: port,
 					fr_callback: to_jet,

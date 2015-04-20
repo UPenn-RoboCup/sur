@@ -140,13 +140,67 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       destination[2] = gFrame[0] * 1e3;
       return gFrame.concat(lFrame);
     },
-    mesh: function (u, v, w, width, height, mesh, destination) {
+    mesh0: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
       // Saturation
       if (w === 0 || w === 255) {return;}
 
     	var tfL6 = mesh.tfL6[v], tfG6 = mesh.tfG6[v],
 				h_angle = mesh.a[v],
+				v_angle = (mesh.vfov[0] - mesh.vfov[1]) * (u / width) - mesh.vfov[0],
+				// Rotated 90:
+				//torso = mesh.torso[width - u - 1],
+				//v_angle = ((height-v-1) * (mesh.vfov[1] - mesh.vfov[0]) / height - mesh.vfov[1]),
+				//h_angle = mesh.a[width - u - 1],
+    		ch = cos(h_angle),
+    		sh = sin(h_angle),
+    		cv = cos(v_angle),
+    		sv = sin(v_angle),
+    		// Convert w of 0-255 to actual meters value
+    		// Rotates a *bit* off axis
+    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0] + 0.02,
+    		// Place in the frame of the torso
+    		x = r * cv * ch + 0.05, //chest_joint_x
+    		y = r * cv * sh,
+    		z = r * sv + 0.09,//chest_height
+    		// Update with pitch/roll
+				// Update with IMU pitch/roll
+    		cp = cos(tfL6[4]),
+    		sp = sin(tfL6[4]),
+    		cr = cos(tfL6[3]),
+    		sr = sin(tfL6[3]),
+    		xx = (cp * x) + (sr * sp * y) + (sp * cr * z),
+    		yy = (cr * y) - (sr * z),
+    		zz = (-sp * x) + (cp * sr * y) + (cp * cr * z),
+				// Place into the local pose
+    		caL = cos(tfL6[5]),
+    		saL = sin(tfL6[5]),
+    		txL = tfL6[0] + caL * xx - saL * yy,
+    		tyL = tfL6[1] + saL * xx + caL * yy,
+    		tzL = tfL6[2] + zz,
+    		// Place into global pose
+    		caG = cos(tfG6[5]),
+    		saG = sin(tfG6[5]),
+    		txG = tfG6[0] + caG * xx - saG * yy,
+    		tyG = tfG6[1] + saG * xx + caG * yy,
+    		tzG = tfG6[2] + zz;
+
+			// Set into the THREE buffer, in its coordinate frame
+    	destination[0] = tyG * 1000;
+			destination[1] = tzG * 1000;
+			destination[2] = txG * 1000;
+
+			// Return robot frames, in its coordinates
+			// [global | local]
+			return [txL, tyL, tzL, txG, tyG, tzG];
+    },
+		mesh1: function (u, v, w, width, height, mesh, destination) {
+    	'use strict';
+      // Saturation
+      if (w === 0 || w === 255) {return;}
+
+    	var tfL6 = mesh.tfL6[v], tfG6 = mesh.tfG6[v],
+				h_angle = mesh.a[v][1] || 0,
 				v_angle = (mesh.vfov[0] - mesh.vfov[1]) * (u / width) - mesh.vfov[0],
 				// Rotated 90:
 				//torso = mesh.torso[width - u - 1],
@@ -284,19 +338,30 @@ this.addEventListener('message', function (e) {
 		get_xyz, get_color;
 	
 	//console.log('Initial Mesh', mesh);
-	if (mesh.id==='k2_depth'){
-		tfK2L = flat2mat(mesh.tfL);
-		tfK2G = flat2mat(mesh.tfG);
-		// Cartesian coordinate formation function
-		//get_xyz = SENSOR_XYZ.kinectV2;
-		get_xyz = SENSOR_XYZ.kinectV2webots;
-		// Color formation function
-		//get_color = SENSOR_COLOR.kinectV2;
-		get_color = SENSOR_COLOR.kinectV2webots;
-	} else {
-		get_xyz = SENSOR_XYZ.mesh;
-		get_color = SENSOR_COLOR.mesh;
-		inc = 4;
+
+	switch(mesh.id){
+		case 'k2_depth':
+			tfK2L = flat2mat(mesh.tfL);
+			tfK2G = flat2mat(mesh.tfG);
+			// Cartesian coordinate formation function
+			//get_xyz = SENSOR_XYZ.kinectV2;
+			get_xyz = SENSOR_XYZ.kinectV2webots;
+			// Color formation function
+			//get_color = SENSOR_COLOR.kinectV2;
+			get_color = SENSOR_COLOR.kinectV2webots;
+			break;
+		case 'mesh0':
+			get_xyz = SENSOR_XYZ.mesh0;
+			get_color = SENSOR_COLOR.mesh;
+			inc = 4;
+			break;
+		case 'mesh1':
+			get_xyz = SENSOR_XYZ.mesh1;
+			get_color = SENSOR_COLOR.mesh;
+			inc = 4;
+			break;
+		default:
+			break;
 	}
 
 	for (j = 0; j < height; j += 1) {

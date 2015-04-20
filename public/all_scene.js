@@ -13,7 +13,8 @@
     is_processing = false,
     depth_worker,
     rgbd_metadata = {},
-		mesh_feed,
+		mesh_feed0,
+		mesh_feed1,
     rgb_ctx,
     rgb_canvas,
     rgb_feed,
@@ -307,15 +308,15 @@
 	// Process the frame, which is always the chest lidar
 	function process_mesh_frame() {
     if (is_processing) { return; }
-		var canvas = mesh_feed.canvas,
+		var canvas = mesh_feed0.canvas,
 			metadata = canvas.metadata,
 			width = canvas.width,
 			height = canvas.height,
 			npix = width * height,
-			pixels = mesh_feed.context2d.getImageData(0, 0, width, height).data;
+			pixels = mesh_feed0.context2d.getImageData(0, 0, width, height).data;
 
 		var mesh_obj = {
-        id: 'mesh',
+        id: metadata.id,
 				width: width,
 				height: height,
 				hfov: metadata.sfov,
@@ -332,6 +333,8 @@
         pixels: pixels,
         pixdex: new Uint32Array(pixels.buffer),
 			};
+		console.log(mesh_obj);
+		console.log(metadata);
 
     depth_worker.postMessage(mesh_obj, [
       mesh_obj.index.buffer,
@@ -559,8 +562,15 @@
 
 	// Begin listening to the feed
   util.ljs("/VideoFeed.js",function(){
-  	d3.json('/streams/mesh', function (error, port) {
-  		mesh_feed = new ctx.VideoFeed({
+  	d3.json('/streams/mesh0', function (error, port) {
+  		mesh_feed0 = new ctx.VideoFeed({
+  			port: port,
+  			fr_callback: process_mesh_frame,
+  			//cw90: true
+  		});
+  	});
+		d3.json('/streams/mesh1', function (error, port) {
+  		mesh_feed1 = new ctx.VideoFeed({
   			port: port,
   			fr_callback: process_mesh_frame,
   			//cw90: true

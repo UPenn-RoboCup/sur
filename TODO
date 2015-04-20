@@ -1,0 +1,6 @@
+* Head mesh scan
+* Manage mesh in Javascript
+* SLAM
+* IK when the waist moves
+* Configs for THOR and THOR2 (i.e. waist)
+* STL files for the robot viewed in JS. Just use the THREE.js editor and files
