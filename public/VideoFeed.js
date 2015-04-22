@@ -1,6 +1,9 @@
 (function (ctx) {
 	'use strict';
 
+	var createObjectURL = window.URL.createObjectURL,
+			revokeObjectURL = window.URL.revokeObjectURL;
+
 	function VideoFeed(options) {
 		options = options || {};
 		// Private variables
@@ -12,19 +15,32 @@
 			fr_img = new Image(),
 			fr_canvas = document.createElement('canvas'),
 			fr_ctx = fr_canvas.getContext('2d'),
-			createObjectURL = window.URL.createObjectURL,
-			revokeObjectURL = window.URL.revokeObjectURL,
 			frames = [],
 			fr_metadata,
 			fr_raw,
 			fr_img_src;
 
 		function animate() {
-			var fr = frames.shift();
+			var fr = frames.pop();
+			if(!fr){return;}
 			fr_img.src = fr_img_src = createObjectURL(fr.data);
 			fr_canvas.metadata = fr;
 			if (frames.length > 0) {
 				window.console.log('VideoFeed: Too many frames!', frames);
+			}
+		}
+
+		function animate_raw() {
+			var fr = frames.pop();
+			if(!fr){return;}
+			fr_canvas.metadata = fr;
+			if (frames.length > 0) {
+				window.console.log('VideoFeed: Too many frames!', frames);
+			}
+			// Run the callback on the next JS loop
+			if (typeof cb === 'function') {
+        fr_canvas.metadata = fr_metadata;
+				setTimeout(cb, 0);
 			}
 		}
 
@@ -73,12 +89,13 @@
 				setTimeout(cb, 0);
 			}
 			// Keep de-queueing if necessary, even if not just animation frames
-			if (frames.length > 0) {
-				animate();
-			}
+			if (frames.length > 0) { animate(); }
 		};
 		// Setup the WebSocket connection
 		ws.onmessage = function (e) {
+			console.log(e);
+			// TODO: If a frame in the queue, then replace it, so as to save memory
+
 			if (typeof e.data === "string") {
 				// Process metadata
 				fr_metadata = JSON.parse(e.data);
@@ -89,6 +106,9 @@
 				if (fr_metadata.c === "jpeg" || fr_metadata.c === "png") {
 					// Image raw data is rendered as image via Blob
 					ws.binaryType = 'blob';
+				} else if (fr_metadata.c==='raw') {
+					// raw image (for mesh)
+					ws.binaryType = 'arraybuffer';
 				} else if (fr_metadata.sz) {
 					// Non-image raw data is arraybuffer
 					ws.binaryType = 'arraybuffer';
@@ -105,6 +125,10 @@
 				fr_metadata.data = e.data.slice(0, e.data.size, 'image/' + fr_metadata.c);
 				frames.push(fr_metadata);
 				window.requestAnimationFrame(animate);
+			} else if (fr_metadata.c === "raw") {
+				fr_metadata.data = e.data;
+				frames.push(fr_metadata);
+				window.requestAnimationFrame(animate_raw);
 			} else if (typeof extra_cb === 'function') {
 				// Run the callback on non video data
 				fr_metadata.data = e.data;

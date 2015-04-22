@@ -148,10 +148,6 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     	var tfL6 = mesh.tfL6[v], tfG6 = mesh.tfG6[v],
 				h_angle = mesh.a[v],
 				v_angle = (mesh.vfov[0] - mesh.vfov[1]) * (u / width) - mesh.vfov[0],
-				// Rotated 90:
-				//torso = mesh.torso[width - u - 1],
-				//v_angle = ((height-v-1) * (mesh.vfov[1] - mesh.vfov[0]) / height - mesh.vfov[1]),
-				//h_angle = mesh.a[width - u - 1],
     		ch = cos(h_angle),
     		sh = sin(h_angle),
     		cv = cos(v_angle),
@@ -198,25 +194,20 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     	'use strict';
       // Saturation
       if (w === 0 || w === 255) {return;}
-
     	var tfL6 = mesh.tfL6[v], tfG6 = mesh.tfG6[v],
 				h_angle = mesh.a[v][1] || 0,
 				v_angle = (mesh.vfov[0] - mesh.vfov[1]) * (u / width) - mesh.vfov[0],
-				// Rotated 90:
-				//torso = mesh.torso[width - u - 1],
-				//v_angle = ((height-v-1) * (mesh.vfov[1] - mesh.vfov[0]) / height - mesh.vfov[1]),
-				//h_angle = mesh.a[width - u - 1],
     		ch = cos(h_angle),
     		sh = sin(h_angle),
     		cv = cos(v_angle),
     		sv = sin(v_angle),
     		// Convert w of 0-255 to actual meters value
     		// Rotates a *bit* off axis
-    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0] + 0.02,
-    		// Place in the frame of the torso
-    		x = r * cv * ch + 0.05, //chest_joint_x
-    		y = r * cv * sh,
-    		z = r * sv + 0.09,//chest_height
+    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0],
+				dx = r * ch,
+    		x = dx + sv * 0.12,
+				y = r * sh,
+				z = -dx * sh + cv * 0.12 + 0.3,
     		// Update with pitch/roll
 				// Update with IMU pitch/roll
     		cp = cos(tfL6[4]),
@@ -375,7 +366,7 @@ this.addEventListener('message', function (e) {
       // Check if we are given a valid point
 			// Kill if ground
 			// NOTE: Should disable if on rough terrain
-      if (!point_local || point_local[2] < 0.0254) {
+      if (!point_local ){//|| point_local[2] < 0.0254) {
 				// Saturation check
 				// NOTE: u32 index. start @1, so we can make things invalid with 0
 				pixdex[pixdex_idx] = 0;

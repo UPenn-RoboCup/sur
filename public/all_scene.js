@@ -306,7 +306,7 @@
 	}
 
 	// Process the frame, which is always the chest lidar
-	function process_mesh_frame() {
+	function process_mesh0_frame() {
     if (is_processing) { return; }
 		var canvas = mesh_feed0.canvas,
 			metadata = canvas.metadata,
@@ -344,9 +344,47 @@
     ]);
     // Don't post to the depth worker until done
     is_processing = true;
-
 	}
 
+	function process_mesh1_frame() {
+    if (is_processing) { return; }
+		var canvas = mesh_feed1.canvas,
+			metadata = canvas.metadata,
+			width = canvas.width,
+			height = canvas.height,
+			npix = width * height,
+			pixels = mesh_feed1.context2d.getImageData(0, 0, width, height).data;
+
+		var mesh_obj = {
+        id: metadata.id,
+				width: width,
+				height: height,
+				hfov: metadata.sfov,
+				vfov: metadata.rfov,
+				dynrange: metadata.dr,
+				a: metadata.a,
+				tfL6: metadata.tfL6,
+				tfG6: metadata.tfG6,
+				// Make the max allocations
+				// TODO: Can we reuse these?
+        index: new Uint16Array(npix * 6),
+				positions: new Float32Array(npix * 3),
+				colors: new Float32Array(npix * 3),
+        pixels: pixels,
+        pixdex: new Uint32Array(pixels.buffer),
+			};
+		//console.log(mesh_obj);
+		//console.log(metadata);
+
+    depth_worker.postMessage(mesh_obj, [
+      mesh_obj.index.buffer,
+      mesh_obj.positions.buffer,
+      mesh_obj.colors.buffer,
+      mesh_obj.pixels.buffer,
+    ]);
+    // Don't post to the depth worker until done
+    is_processing = true;
+	}
 
   function process_kinectV2_color(){
     cur_rgb = rgb_canvas.metadata;
@@ -565,14 +603,14 @@
   	d3.json('/streams/mesh0', function (error, port) {
   		mesh_feed0 = new ctx.VideoFeed({
   			port: port,
-  			fr_callback: process_mesh_frame,
+  			fr_callback: process_mesh0_frame,
   			//cw90: true
   		});
   	});
 		d3.json('/streams/mesh1', function (error, port) {
   		mesh_feed1 = new ctx.VideoFeed({
   			port: port,
-  			fr_callback: process_mesh_frame,
+  			fr_callback: process_mesh1_frame,
   			//cw90: true
   		});
   	});

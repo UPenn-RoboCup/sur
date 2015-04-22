@@ -5,11 +5,22 @@
 		min = Math.min,
 		feed;
 
+	function raw_jet(img){
+		console.log(img);
+	}
+
 	/* The Mesh Video feed should display in the JET colormap */
 	function to_jet() {
 		var ctx = feed.context2d,
-			metadata = feed.canvas.metadata,
-			img_data = ctx.getImageData(0, 0, feed.canvas.width, feed.canvas.height),
+			metadata = feed.canvas.metadata;
+		//window.console.log(metadata);
+
+		if(metadata.c==='raw'){
+			metadata.data = new window.Float32Array(metadata.data);
+			return raw_jet(metadata);
+		}
+
+		var img_data = ctx.getImageData(0, 0, feed.canvas.width, feed.canvas.height),
 			data = img_data.data,
 			len = data.length,
 			fourValue,
@@ -21,7 +32,6 @@
 			data[i + 2] = 255 * min(fourValue + 0.5, 2.5 - fourValue);
 		}
 		ctx.putImageData(img_data, 0, 0);
-		window.console.log(metadata);
 	}
 
 	// Add the camera view and append
@@ -35,7 +45,7 @@
 				feed = new ctx.VideoFeed({
 					port: port,
 					fr_callback: to_jet,
-					cw90: true
+					//cw90: true
 				});
 				document.getElementById('camera_container').appendChild(feed.canvas);
 			});
