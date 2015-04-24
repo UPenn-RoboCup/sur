@@ -119,7 +119,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       destination[0] = gFrame[1]*1e3;
       destination[1] = gFrame[2]*1e3;
       destination[2] = gFrame[0]*1e3;
-      return gFrame.concat(lFrame);
+      return gFrame.concat(lFrame).concat(x);
     },
     kinectV2webots: function (u, v, x, width, height, mesh, destination) {
       // The range value is directly our x coordinate
@@ -138,16 +138,18 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       destination[0] = gFrame[1] * 1e3;
       destination[1] = gFrame[2] * 1e3;
       destination[2] = gFrame[0] * 1e3;
-      return gFrame.concat(lFrame);
+      return gFrame.concat(lFrame).concat(x);
     },
     mesh0: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
       // Saturation
-      if (w === 0 || w === 255) {return;}
+
 			var r;
 			if (mesh.c==='raw'){
 				r = w;
+				if (w === 0 || w > 10) {return;}
 			} else {
+				if (w === 0 || w === 255) {return;}
 				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
 			}
 
@@ -195,7 +197,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 
 			// Return robot frames, in its coordinates
 			// [global | local]
-			return [txL, tyL, tzL, txG, tyG, tzG];
+			return [txL, tyL, tzL, txG, tyG, tzG, r];
     },
 		mesh1: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
@@ -244,15 +246,18 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 
 			// Return robot frames, in its coordinates
 			// [global | local]
-			return [txL, tyL, tzL, txG, tyG, tzG];
+			return [txL, tyL, tzL, txG, tyG, tzG, r];
     }
   },
   SENSOR_COLOR = {
     mesh: function (i, j, xyz, img, r, destination) {
 			'use strict';
 			//console.log(r);
+			var datum;
+				// 4 meters max
+			datum = max(0, min(1, r/4));
 			// JET colormap. Colors range from 0.0 to 1.0
-      var fourValue = 4 - (4 * max(0, min(1, r/255)));
+      var fourValue = 4 - (4 * datum);
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);
@@ -385,7 +390,7 @@ this.addEventListener('message', function (e) {
       }
       // Set the color of this pixel
       get_color(
-        i, j, point_local, rgb, pixels[pixel_idx], colors.subarray(position_idx, position_idx + 3), width, height
+        i, j, point_local, rgb, point_local[6], colors.subarray(position_idx, position_idx + 3), width, height
       );
       // TODO: Set the normal...
 			// Update the particle count, since it is valid

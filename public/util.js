@@ -91,6 +91,9 @@
 		dist: function(p){
 			return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2));
 		},
+		dist3: function(p){
+			return sqrt(pow(this[0] - p[0], 2) + pow(this[1] - p[1], 2) + pow(this[2] - p[2], 2));
+		},
 		smallest: function(prev, now, inow) {
 			return now < prev[0] ? [now, inow] : prev;
 		},

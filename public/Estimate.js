@@ -237,19 +237,27 @@
       n = params.normal,
       plane_points = [],
       c_inv_cov = numeric.inv(c_cov),
-      surf_thresh = 50,
-      p;
+      surf_thresh = 40,
+      p,
+			diff, dist;
     var c_pr, err_r, cc = [0,0,0];
     for (var a of it){
       p = a[1];
-      err_r = abs( n[0]*(p[0] - p0[0]) + n[1]*(p[1] - p0[1]) + n[2]*(p[2] - p0[2]) );
-      if (err_r < surf_thresh) {
-        cc[0] = 255 * p[3] - c_u[0];
-        cc[1] = 255 * p[4] - c_u[1];
-        cc[2] = 255 * p[5] - c_u[2];
-        c_pr = c_prob(cc, c_inv_cov);
-        if (c_pr > -12) { plane_points.push(p); }
-      }
+			diff = [p[0] - p0[0], p[1] - p0[1], p[2] - p0[2]];
+			dist = sqrt(pow(diff[0], 2)+pow(diff[1], 2)+pow(diff[2], 2));
+			// TODO: Play with this groth rate
+			if (dist<120){
+				err_r = abs( n[0]*diff[0] + n[1]*diff[1] + n[2]*diff[2] );
+				if (err_r < surf_thresh) {
+					cc[0] = 255 * p[3] - c_u[0];
+					cc[1] = 255 * p[4] - c_u[1];
+					cc[2] = 255 * p[5] - c_u[2];
+					c_pr = c_prob(cc, c_inv_cov);
+					if (c_pr > -12) {
+						plane_points.push(p);
+					}
+				}
+			}
     }
 
     return plane_points;
