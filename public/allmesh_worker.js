@@ -144,6 +144,12 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     	'use strict';
       // Saturation
       if (w === 0 || w === 255) {return;}
+			var r;
+			if (mesh.c==='raw'){
+				r = w;
+			} else {
+				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
+			}
 
     	var tfL6 = mesh.tfL6[v], tfG6 = mesh.tfG6[v],
 				h_angle = mesh.a[v],
@@ -151,12 +157,13 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
     		ch = cos(h_angle),
     		sh = sin(h_angle),
     		cv = cos(v_angle),
-    		sv = sin(v_angle),
+    		sv = sin(v_angle);
     		// Convert w of 0-255 to actual meters value
     		// Rotates a *bit* off axis
-    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0] + 0.02,
+    		r += 0.02;
+
     		// Place in the frame of the torso
-    		x = r * cv * ch + 0.05, //chest_joint_x
+			var x = r * cv * ch + 0.05, //chest_joint_x
     		y = r * cv * sh,
     		z = r * sv + 0.09,//chest_height
     		// Update with pitch/roll
@@ -344,12 +351,12 @@ this.addEventListener('message', function (e) {
 		case 'mesh0':
 			get_xyz = SENSOR_XYZ.mesh0;
 			get_color = SENSOR_COLOR.mesh;
-			inc = 4;
+			if(mesh.c!=='raw'){inc = 4;}
 			break;
 		case 'mesh1':
 			get_xyz = SENSOR_XYZ.mesh1;
 			get_color = SENSOR_COLOR.mesh;
-			inc = 4;
+			if(mesh.c!=='raw'){inc = 4;}
 			break;
 		default:
 			break;

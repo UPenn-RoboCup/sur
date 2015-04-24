@@ -310,13 +310,22 @@
     if (is_processing) { return; }
 		var canvas = mesh_feed0.canvas,
 			metadata = canvas.metadata,
-			width = canvas.width,
-			height = canvas.height,
-			npix = width * height,
+			pixels, width, height;
+		if(metadata.c === 'raw'){
+			pixels = new window.Float32Array(metadata.data);
+			width = metadata.dim[1];
+			height = metadata.dim[0];
+		} else {
+			width = canvas.width;
+			height = canvas.height;
 			pixels = mesh_feed0.context2d.getImageData(0, 0, width, height).data;
+		}
+
+		var npix = width * height;
 
 		var mesh_obj = {
         id: metadata.id,
+				c: metadata.c,
 				width: width,
 				height: height,
 				hfov: metadata.sfov,

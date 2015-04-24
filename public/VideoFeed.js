@@ -93,7 +93,7 @@
 		};
 		// Setup the WebSocket connection
 		ws.onmessage = function (e) {
-			console.log(e);
+			//console.log(e);
 			// TODO: If a frame in the queue, then replace it, so as to save memory
 
 			if (typeof e.data === "string") {
