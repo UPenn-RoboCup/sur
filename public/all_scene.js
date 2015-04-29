@@ -248,11 +248,10 @@
 		window.requestAnimationFrame(animate);
 	}
 	// Adds THREE buffer geometry from triangulated mesh to the scene
-	function process_mesh(e) {
+	function process_mesh(mesh_obj) {
 
 		// mesh should be phong, kinect basic...
-		var mesh_obj = e.data,
-      geometry = new THREE.BufferGeometry(),
+		var geometry = new THREE.BufferGeometry(),
 			material = new THREE.MeshPhongMaterial({
       //material = new THREE.MeshBasicMaterial({
 				side: THREE.DoubleSide,

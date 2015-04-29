@@ -58,7 +58,9 @@
 
 		// Depth Worker for both mesh and kinect
 		depth_worker = new window.Worker("/allmesh_worker.js");
-		depth_worker.onmessage = callback;
+		depth_worker.onmessage = function(e){
+			callback(e.data);
+		};
 
 		video_feed = new ctx.VideoFeed({
 			port: port,
