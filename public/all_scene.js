@@ -7,12 +7,10 @@
 		THREE,
 		scene,
     raycaster,
-		meshes = [],
-		N_MESH = 1,
 		items = [],
-		mesh0_feed,
-		mesh1_feed,
-    kinect_feed,
+		mesh0_feed, mesh1_feed, kinect_feed,
+		mesh0 = [], mesh1 = [], kinect = [],
+		N_MESH0 = 1, N_MESH1 = 1, N_KINECT = 1,
 		container,
 		renderer,
 		camera,
@@ -47,8 +45,8 @@
 	}
 
   var describe = {
-    cylinder: function(mesh0, p0){
-			var parameters = E.cylinder(mesh0, p0);
+    cylinder: function(mesh, p){
+			var parameters = E.cylinder(mesh, p);
 			if(!parameters){return;}
       // Draw Cylinder
       var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20),
@@ -60,8 +58,8 @@
 			parameters.mesh = cylinder;
 			return parameters;
     },
-    plane: function(mesh0, p0){
-			var parameters = E.plane(mesh0, p0);
+    plane: function(mesh, p){
+			var parameters = E.plane(mesh, p);
 			if(!parameters){return;}
 			var root = parameters.root;
 			// THREE frame
@@ -169,17 +167,15 @@
 			if (!controls.enabled) { return; }
 			// Set the new target look
 			controls.target = last_intersection.p;
-		} else {
-			// Right click
-			menu.classList.toggle('hidden');
-			menu.style.left = e.offsetX+'px';
-			menu.style.top = e.offsetY+'px';
-			// If clicked the mesh, run the processing
-			if(last_intersection.mesh.name === 'kinectV2'){
-				window.setTimeout(estimate_selection, 0);
-			} else if(last_intersection.mesh.name === 'mesh'){
-				window.setTimeout(estimate_selection, 0);
-			}
+			return;
+		}
+		// Right click
+		menu.classList.toggle('hidden');
+		menu.style.left = e.offsetX+'px';
+		menu.style.top = e.offsetY+'px';
+		// If clicked the mesh, run the processing
+		if(last_intersection.mesh.name !== 'GROUND'){
+			window.setTimeout(estimate_selection, 0);
 		}
 	}
 
@@ -193,21 +189,22 @@
     // Form the raycaster for the camera's current position
     raycaster.ray.set(camera.position, mouse_vector.sub( camera.position ).normalize());
     // Find the intersections with the various meshes in the scene
-    var intersections = raycaster.intersectObjects(items.concat(meshes).concat(robot.meshes));
+		var allitems = items.concat(robot.meshes).concat(kinect).concat(mesh0).concat(mesh1);
+    var intersections = raycaster.intersectObjects(allitems);
 		// Return if no intersections
 		if (intersections.length === 0) {
 			return;
 		}
 		// Grab the first intersection object and the intersection point
-		var obj0 = intersections[0];
-		if(obj0.name==='ground' && intersections[1]){
-			obj0 = intersections[1];
+		var obj = intersections[0];
+		if(obj.name==='GROUND' && intersections[1]){
+			obj = intersections[1];
 		}
-		var p0 = obj0.point, mesh0 = obj0.object;
+		var p = obj.point, mesh = obj.object;
 
 		// Save the intersection for a mouseup refocus
-		last_intersection.p = p0;
-		last_intersection.mesh = mesh0;
+		last_intersection.p = p;
+		last_intersection.mesh = mesh;
 		last_intersection.t = e.timeStamp;
 
     // Solve for the transform from the robot frame to the point
@@ -216,7 +213,7 @@
     T_? = T_point * T_Robot ^ -1
     */
 
-		var T_point = new THREE.Matrix4().makeTranslation(p0.x, p0.y, p0.z),
+		var T_point = new THREE.Matrix4().makeTranslation(p.x, p.y, p.z),
 			T_inv = new THREE.Matrix4().getInverse(robot.object.matrix),
 			T_offset = new THREE.Matrix4().multiplyMatrices(T_point, T_inv);
 
@@ -228,7 +225,7 @@
     global_msg.unshift('Global: %0.2f %0.2f %0.2f');
 		//console.log(offset_msg);
     debug([
-      obj0.object.name,
+      mesh.name,
 			sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
       //sprintf.apply(null, offset_msg),
       //sprintf.apply(null, global_msg)
@@ -277,12 +274,8 @@
     }
 		// Make the new mesh and remove the previous one
 		mesh = new THREE.Mesh(geometry, material);
-    mesh.name = mesh_obj.id==='mesh' ? 'mesh' : 'kinectV2';
+    mesh.name = mesh_obj.id;
     mesh.n_el = mesh_obj.n_el;
-		if(meshes.length >= N_MESH){
-			scene.remove(meshes.shift());
-		}
-		meshes.push(mesh);
 		// Dynamic, because we will do raycasting
 		geometry.dynamic = true;
 		// for picking via raycasting
@@ -293,6 +286,18 @@
 		geometry.computeVertexNormals();
     // Add the mesh to the scene
 		scene.add(mesh);
+
+		if(mesh.name==='mesh0'){
+			mesh0.push(mesh);
+			if(mesh0.length > N_MESH0){ scene.remove(mesh0.shift()); }
+		} else if(mesh.name==='mesh1'){
+			mesh1.push(mesh);
+			if(mesh1.length > N_MESH1){ scene.remove(mesh1.shift()); }
+		} else if(mesh.name==='kinect'){
+			kinect.push(mesh);
+			if(kinect.length > N_KINECT){ scene.remove(kinect.shift()); }
+		}
+
 	}
 
 	// Add the camera view and append
