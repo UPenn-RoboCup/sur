@@ -13,31 +13,45 @@
 			// Allocations
 			// TODO: Maintain a fixed set of allocations to avoid penalty on each new data
 			var npix = metadata.height * metadata.width;
-			metadata.index = new window.Uint16Array(npix * 6);
-			metadata.positions = new window.Float32Array(npix * 3);
-			metadata.colors = new window.Float32Array(npix * 3);
-			metadata.pixdex = new window.Uint32Array(metadata.pixels.buffer);
-			depth_worker.postMessage(metadata, [
-				metadata.index.buffer,
-				metadata.positions.buffer,
-				metadata.colors.buffer,
-				metadata.pixels.buffer,
-				metadata.rgb.buffer
+
+			var mesh_obj = {
+				id: 'kinect',
+				tfL16: metadata.tfL16,
+				tfG16: metadata.tfG16,
+				width: metadata.width,
+				height: metadata.height,
+				rgb: metadata.rgb,
+				pixels: metadata.pixels,
+				index: new window.Uint16Array(npix * 6),
+				positions: new window.Float32Array(npix * 3),
+				colors: new window.Float32Array(npix * 3),
+				pixdex: new window.Uint32Array(metadata.pixels.buffer),
+			}
+
+			depth_worker.postMessage(mesh_obj, [
+				mesh_obj.index.buffer,
+				mesh_obj.positions.buffer,
+				mesh_obj.colors.buffer,
+				mesh_obj.pixels.buffer,
+				mesh_obj.rgb.buffer
 			]);
 			metadata = null;
 		}
 
 		function process_color(){
 			if(!metadata){
-				console.log('Color first');
-				metadata = rgb_feed.canvas.metadata;
+				//console.log('Color first', rgb_feed.canvas.metadata);
+				return;
+				//metadata = rgb_feed.canvas.metadata;
 			}
+
 			metadata.rgb = rgb_feed.context2d.getImageData(0, 0, rgb_feed.canvas.width, rgb_feed.canvas.height).data;
 			if(metadata.pixels){ post_rgbd(); }
 		}
 		function process_depth() {
 			if(!metadata){
-				console.log('Depth first');
+				//console.log('Depth first', depth_feed.canvas.metadata);
+				//return;
 				metadata = depth_feed.canvas.metadata;
 			}
 			metadata.width = depth_feed.canvas.metadata.width;
@@ -51,12 +65,12 @@
 		depth_worker.onmessage = callback;
 
 		depth_feed = new ctx.VideoFeed({
-			port: rgb_port,
+			port: depth_port,
 			fr_callback: process_depth,
 		});
 
 		rgb_feed = new ctx.VideoFeed({
-			port: depth_port,
+			port: rgb_port,
 			fr_callback: process_color
 		});
 

@@ -343,9 +343,9 @@ this.addEventListener('message', function (e) {
 	//console.log('Initial Mesh', mesh);
 
 	switch(mesh.id){
-		case 'k2_depth':
-			tfK2L = flat2mat(mesh.tfL);
-			tfK2G = flat2mat(mesh.tfG);
+		case 'kinect':
+			tfK2L = flat2mat(mesh.tfL16);
+			tfK2G = flat2mat(mesh.tfG16);
 			// Cartesian coordinate formation function
 			//get_xyz = SENSOR_XYZ.kinectV2;
 			get_xyz = SENSOR_XYZ.kinectV2webots;
@@ -536,6 +536,7 @@ this.addEventListener('message', function (e) {
 	delete mesh.positions;
   delete mesh.colors;
   delete mesh.index;
+	delete mesh.rgb;
   mesh.drawCalls = quad_offsets;
   mesh.idx = index.subarray(0, quad_point_count_total);
   mesh.pos = positions.subarray(0, 3 * n_el);
