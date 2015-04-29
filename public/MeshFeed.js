@@ -1,0 +1,70 @@
+(function (ctx) {
+	'use strict';
+
+	var createObjectURL = window.URL.createObjectURL,
+			revokeObjectURL = window.URL.revokeObjectURL;
+
+
+	function MeshFeed(port, callback) {
+
+		var depth_worker, video_feed;
+
+		// Process the video frame
+		function process_frame() {
+			var canvas = video_feed.canvas,
+				metadata = canvas.metadata,
+				pixels, width, height;
+			if(metadata.c === 'raw'){
+				pixels = new Float32Array(metadata.data);
+				width = metadata.dim[1];
+				height = metadata.dim[0];
+			} else {
+				width = canvas.width;
+				height = canvas.height;
+				pixels = video_feed.context2d.getImageData(0, 0, width, height).data;
+			}
+
+			var npix = width * height;
+
+			var mesh_obj = {
+					id: metadata.id,
+					c: metadata.c,
+					hfov: metadata.sfov,
+					vfov: metadata.rfov,
+					dynrange: metadata.dr,
+					a: metadata.a,
+					tfL6: metadata.tfL6,
+					tfG6: metadata.tfG6,
+					//
+					width: width,
+					height: height,
+					// Make the max allocations
+					// TODO: Can we reuse these?
+					index: new Uint16Array(npix * 6),
+					positions: new Float32Array(npix * 3),
+					colors: new Float32Array(npix * 3),
+					pixels: pixels,
+					pixdex: new Uint32Array(pixels.buffer),
+				};
+
+			// Now process it
+			depth_worker.postMessage(mesh_obj, [
+				mesh_obj.index.buffer,
+				mesh_obj.positions.buffer,
+				mesh_obj.colors.buffer,
+				mesh_obj.pixels.buffer,
+			]);
+		}
+
+		// Depth Worker for both mesh and kinect
+		depth_worker = new window.Worker("/allmesh_worker.js");
+		depth_worker.onmessage = callback;
+
+		video_feed = new ctx.VideoFeed({
+			port: port,
+			fr_callback: process_frame,
+		});
+
+	}
+	ctx.MeshFeed = MeshFeed;
+}(this));

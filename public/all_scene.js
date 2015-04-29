@@ -10,14 +10,9 @@
 		meshes = [],
 		N_MESH = 1,
 		items = [],
-    is_processing = false,
-    depth_worker,
-    rgbd_metadata = {},
-		mesh_feed0,
-		mesh_feed1,
-    rgb_ctx,
-    rgb_canvas,
-    rgb_feed,
+		mesh0_feed,
+		mesh1_feed,
+    kinect_feed,
 		container,
 		renderer,
 		camera,
@@ -27,8 +22,6 @@
 		robot_preview,
 		CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    cur_rgb,
-    cur_depth,
     peer,
     p_conn,
     peer_id = 'all_scene',
@@ -301,152 +294,7 @@
 		geometry.computeVertexNormals();
     // Add the mesh to the scene
 		scene.add(mesh);
-    // Finished drawing on the screen
-    is_processing = false;
 	}
-
-	// Process the frame, which is always the chest lidar
-	function process_mesh0_frame() {
-    if (is_processing) { return; }
-		var canvas = mesh_feed0.canvas,
-			metadata = canvas.metadata,
-			pixels, width, height;
-		if(metadata.c === 'raw'){
-			pixels = new window.Float32Array(metadata.data);
-			width = metadata.dim[1];
-			height = metadata.dim[0];
-		} else {
-			width = canvas.width;
-			height = canvas.height;
-			pixels = mesh_feed0.context2d.getImageData(0, 0, width, height).data;
-		}
-
-		var npix = width * height;
-
-		var mesh_obj = {
-        id: metadata.id,
-				c: metadata.c,
-				width: width,
-				height: height,
-				hfov: metadata.sfov,
-				vfov: metadata.rfov,
-				dynrange: metadata.dr,
-				a: metadata.a,
-				tfL6: metadata.tfL6,
-				tfG6: metadata.tfG6,
-				// Make the max allocations
-				// TODO: Can we reuse these?
-        index: new Uint16Array(npix * 6),
-				positions: new Float32Array(npix * 3),
-				colors: new Float32Array(npix * 3),
-        pixels: pixels,
-        pixdex: new Uint32Array(pixels.buffer),
-			};
-		console.log(mesh_obj);
-		console.log(metadata);
-
-    depth_worker.postMessage(mesh_obj, [
-      mesh_obj.index.buffer,
-      mesh_obj.positions.buffer,
-      mesh_obj.colors.buffer,
-      mesh_obj.pixels.buffer,
-    ]);
-    // Don't post to the depth worker until done
-    is_processing = true;
-	}
-
-	function process_mesh1_frame() {
-    if (is_processing) { return; }
-		var canvas = mesh_feed1.canvas,
-			metadata = canvas.metadata,
-			width = canvas.width,
-			height = canvas.height,
-			npix = width * height,
-			pixels = mesh_feed1.context2d.getImageData(0, 0, width, height).data;
-
-		var mesh_obj = {
-        id: metadata.id,
-				width: width,
-				height: height,
-				hfov: metadata.sfov,
-				vfov: metadata.rfov,
-				dynrange: metadata.dr,
-				a: metadata.a,
-				tfL6: metadata.tfL6,
-				tfG6: metadata.tfG6,
-				// Make the max allocations
-				// TODO: Can we reuse these?
-        index: new Uint16Array(npix * 6),
-				positions: new Float32Array(npix * 3),
-				colors: new Float32Array(npix * 3),
-        pixels: pixels,
-        pixdex: new Uint32Array(pixels.buffer),
-			};
-		//console.log(mesh_obj);
-		//console.log(metadata);
-
-    depth_worker.postMessage(mesh_obj, [
-      mesh_obj.index.buffer,
-      mesh_obj.positions.buffer,
-      mesh_obj.colors.buffer,
-      mesh_obj.pixels.buffer,
-    ]);
-    // Don't post to the depth worker until done
-    is_processing = true;
-	}
-
-  function process_kinectV2_color(){
-    cur_rgb = rgb_canvas.metadata;
-    //console.log('color', cur_rgb);
-    if (cur_depth) {
-      rgbd_metadata.pixels = cur_depth;
-      rgbd_metadata.rgb = rgb_ctx.getImageData(0, 0, cur_rgb.width, cur_rgb.height).data;
-      cur_rgb = null;
-      cur_depth = null;
-      post_rgbd();
-    }
-  }
-	function process_kinectV2_depth(e) {
-		if (typeof e.data === 'string') {
-			rgbd_metadata = JSON.parse(e.data);
-      //console.log('depth', rgbd_metadata);
-			if (rgbd_metadata.t !== undefined) {
-				// Add latency measure if possible
-				rgbd_metadata.latency = (e.timeStamp / 1e3) - rgbd_metadata.t;
-			}
-		} else {
-		  //rgbd_metadata.pixels = new window.Float32Array(e.data);
-      cur_depth = new window.Float32Array(e.data);
-      if (cur_rgb) {
-        rgbd_metadata.pixels = cur_depth;
-        rgbd_metadata.rgb = rgb_ctx.getImageData(0, 0, cur_rgb.width, cur_rgb.height).data;
-        cur_rgb = null;
-        cur_depth = null;
-        post_rgbd();
-      }
-		}
-	}
-
-  function post_rgbd(){
-    // Don't post to the depth worker until done
-    if (is_processing) { return; }
-    is_processing = true;
-
-    // Allocations
-    // TODO: Maintain a fixed set of allocations to avoid penalty on each new data
-    var npix = rgbd_metadata.height * rgbd_metadata.width;
-    rgbd_metadata.index = new window.Uint16Array(npix * 6);
-		rgbd_metadata.positions = new window.Float32Array(npix * 3);
-    rgbd_metadata.colors = new window.Float32Array(npix * 3);
-    rgbd_metadata.pixdex = new window.Uint32Array(rgbd_metadata.pixels.buffer);
-		depth_worker.postMessage(rgbd_metadata,[
-      rgbd_metadata.index.buffer,
-      rgbd_metadata.positions.buffer,
-      rgbd_metadata.colors.buffer,
-      rgbd_metadata.pixels.buffer,
-      rgbd_metadata.rgb.buffer
-    ]);
-  }
 
 	// Add the camera view and append
 	function setup3d() {
@@ -517,7 +365,7 @@
 
 	}
 
-	function setup_rtc (){
+	function setup_rtc(){
 		peer = new Peer(peer_id, {host: 'localhost', port: 9000});
 		peer.on('open', function(id) {
 			console.log('My peer ID is: ' + id);
@@ -603,42 +451,24 @@
 		});
 	});
 
-	// Depth Worker for both mesh and kinect
-	depth_worker = new window.Worker("/allmesh_worker.js");
-	depth_worker.onmessage = process_mesh;
-
 	// Begin listening to the feed
-  util.ljs("/VideoFeed.js",function(){
+	util.ljs("/VideoFeed.js"); // Needed by other feeds
+  util.ljs("/MeshFeed.js", function(){
   	d3.json('/streams/mesh0', function (error, port) {
-  		mesh_feed0 = new ctx.VideoFeed({
-  			port: port,
-  			fr_callback: process_mesh0_frame,
-  			//cw90: true
-  		});
+  		mesh0_feed = new ctx.MeshFeed(port, process_mesh);
   	});
 		d3.json('/streams/mesh1', function (error, port) {
-  		mesh_feed1 = new ctx.VideoFeed({
-  			port: port,
-  			fr_callback: process_mesh1_frame,
-  			//cw90: true
-  		});
+			mesh1_feed = new ctx.MeshFeed(port, process_mesh);
   	});
-  	d3.json('/streams/kinect2_color', function (error, port) {
-  		rgb_feed = new ctx.VideoFeed({
-  			id: 'kinect2_color',
-  			port: port,
-  			fr_callback: process_kinectV2_color
-  		}
-      );
-  		rgb_ctx = rgb_feed.context2d;
-      rgb_canvas = rgb_feed.canvas;
-  	});
-  });
-	// Add the depth rgb_feed
-	d3.json('/streams/kinect2_depth', function (error, port) {
-		var depth_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
-		depth_ws.binaryType = 'arraybuffer';
-		depth_ws.onmessage = process_kinectV2_depth;
 	});
+	util.ljs("/KinectFeed.js", function(){
+  	d3.json('/streams/kinect2_color', function (error, rgb) {
+  		d3.json('/streams/kinect2_depth', function (error, depth) {
+				kinect_feed = new ctx.KinectFeed(rgb, depth, process_mesh);
+			});
+  	});
+	});
+
+
 
 }(this));

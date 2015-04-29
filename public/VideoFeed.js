@@ -26,7 +26,7 @@
 			fr_img.src = fr_img_src = createObjectURL(fr.data);
 			fr_canvas.metadata = fr;
 			if (frames.length > 0) {
-				window.console.log('VideoFeed: Too many frames!', frames);
+				console.log('VideoFeed: Too many frames!', frames);
 			}
 		}
 
@@ -35,7 +35,7 @@
 			if(!fr){return;}
 			fr_canvas.metadata = fr;
 			if (frames.length > 0) {
-				window.console.log('VideoFeed: Too many frames!', frames);
+				console.log('VideoFeed: Too many frames!', frames);
 			}
 			// Run the callback on the next JS loop
 			if (typeof cb === 'function') {
