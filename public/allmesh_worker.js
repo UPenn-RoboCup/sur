@@ -99,6 +99,8 @@ get_config(["kinect","mountOffset"], function(val){
 // x, y, z in the torso (upper body) frame
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
+	K2_HFOV_FACTOR_WBT = tan(70 / 2 * DEG_TO_RAD),
+	K2_VFOV_FACTOR_WBT = tan(58 / 2 * DEG_TO_RAD),
   // points within MIN_CONNECTIVITY of each other are connected
 	MIN_CONNECTIVITY = 60, // 5cm
   // Sensor XYZ should always take in millimeters, going forward
@@ -130,8 +132,8 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       x /= 1e3;
       var vCam = [
 				x,
-				-2 * x * (u / width - 0.5) * K2_HFOV_FACTOR,
-				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR
+				-2 * x * (u / width - 0.5) * K2_HFOV_FACTOR_WBT,
+				-2 * x * (v / height - 0.5) * K2_VFOV_FACTOR_WBT
 			],
         gFrame = mat_times_vec(tfK2G, vCam),
 				lFrame = mat_times_vec(tfK2L, vCam);
@@ -221,7 +223,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 				dx = r * ch,
 				y = r * sh,
     		x = dx * cv,// * 0.12,
-				z = -dx * sv,// * 0.12 + 0.3,
+				z = -dx * sv + 0.3,// * 0.12 + 0.3,
     		// Update with pitch/roll
 				// Update with IMU pitch/roll
     		cp = cos(tfL6[4]),
