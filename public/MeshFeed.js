@@ -29,8 +29,8 @@
 			var mesh_obj = {
 					id: metadata.id,
 					c: metadata.c,
-					hfov: metadata.sfov,
-					vfov: metadata.rfov,
+					sfov: metadata.sfov,
+					rfov: metadata.rfov,
 					dynrange: metadata.dr,
 					a: metadata.a,
 					tfL6: metadata.tfL6,

@@ -155,7 +155,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 
     	var tfL6 = mesh.tfL6[v], tfG6 = mesh.tfG6[v],
 				h_angle = mesh.a[v],
-				v_angle = (mesh.vfov[0] - mesh.vfov[1]) * (u / width) - mesh.vfov[0],
+				v_angle = (mesh.rfov[0] - mesh.rfov[1]) * (u / width) - mesh.rfov[0],
     		ch = cos(h_angle),
     		sh = sin(h_angle),
     		cv = cos(v_angle),
@@ -202,21 +202,26 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 		mesh1: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
       // Saturation
-      if (w === 0 || w === 255) {return;}
+      var r;
+			if (mesh.c==='raw'){
+				r = w;
+				if (w === 0 || w > 10) {return;}
+			} else {
+				if (w === 0 || w === 255) {return;}
+				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
+			}
     	var tfL6 = mesh.tfL6[v], tfG6 = mesh.tfG6[v],
-				h_angle = mesh.a[v][1] || 0,
-				v_angle = (mesh.vfov[0] - mesh.vfov[1]) * (u / width) - mesh.vfov[0],
+				v_angle = mesh.a[v][1] || 0,
+				h_angle = (mesh.rfov[0] - mesh.rfov[1]) * (u / width) - mesh.rfov[0],
     		ch = cos(h_angle),
     		sh = sin(h_angle),
     		cv = cos(v_angle),
     		sv = sin(v_angle),
-    		// Convert w of 0-255 to actual meters value
-    		// Rotates a *bit* off axis
-    		r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0],
+				//
 				dx = r * ch,
-    		x = dx + sv * 0.12,
 				y = r * sh,
-				z = -dx * sh + cv * 0.12 + 0.3,
+    		x = dx * cv,// * 0.12,
+				z = -dx * sv,// * 0.12 + 0.3,
     		// Update with pitch/roll
 				// Update with IMU pitch/roll
     		cp = cos(tfL6[4]),
