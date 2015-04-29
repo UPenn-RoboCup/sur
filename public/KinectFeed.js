@@ -24,6 +24,7 @@
 				metadata.pixels.buffer,
 				metadata.rgb.buffer
 			]);
+			metadata = null;
 		}
 
 		function process_color(){
