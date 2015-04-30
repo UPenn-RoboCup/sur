@@ -514,7 +514,7 @@ this.addEventListener('message', function (e) {
       // Check if we are given a valid point
 			// Kill if ground
 			// NOTE: Should disable if on rough terrain
-      if (!point_local ){//|| point_local[2] < 0.0254) {
+      if (!point_local || point_local[2] < 0.0254) {
 				// Saturation check
 				// NOTE: u32 index. start @1, so we can make things invalid with 0
 				pixdex[pixdex_idx] = 0;
