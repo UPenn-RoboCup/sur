@@ -282,22 +282,51 @@
 			d3.select('button#move').on('click', function(){
 				// [x center, y center, z center, radius, height]
 				//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
-				console.log(tcontrol);
-				if(!tcontrol.object){
-					planRobot.meshes.forEach(function(m, i){
-						m.quaternion.copy(this[i].quaternion);
-					}, robot.meshes);
-					planRobot.object.position.copy(robot.object.position);
-					planRobot.object.quaternion.copy(robot.object.quaternion);
-					planRobot.object.visible = true;
-					tcontrol.attach(planRobot.object);
-					this.innerHTML = 'Go!'
-				} else {
+				//console.log(tcontrol);
+				if(tcontrol.object){
 					tcontrol.detach();
 					planRobot.object.visible = false;
 					this.innerHTML = 'Move'
+					tcontrol.enableY = true;
+					return;
 				}
+				this.innerHTML = 'Go!'
+				planRobot.object.visible = true;
+				tcontrol.setMode('translate');
+				tcontrol.space = 'local';
+				tcontrol.enableY = false;
+				tcontrol.attach(planRobot.object);
+				//
+				planRobot.meshes.forEach(function(m, i){
+					m.quaternion.copy(this[i].quaternion);
+				}, robot.meshes);
+				planRobot.object.position.copy(robot.object.position);
+				planRobot.object.quaternion.copy(robot.object.quaternion);
+			});
 
+			var h_update;
+			d3.select('button#teleop').on('click', function(){
+				if(tcontrol.object){
+					tcontrol.detach();
+					planRobot.object.visible = false;
+					this.innerHTML = 'Teleop'
+					tcontrol.enableY = true;
+					tcontrol.enableZ = true;
+					tcontrol.enableXYZE = true;
+					tcontrol.enableE = true;
+					return;
+				}
+				this.innerHTML = 'Go Teleop!'
+				planRobot.object.visible = true;
+				tcontrol.setMode('rotate');
+				tcontrol.space = 'local';
+				tcontrol.enableY = false;
+				tcontrol.enableZ = false;
+				tcontrol.enableXYZE = false;
+				tcontrol.enableE = false;
+				var motor = planRobot.meshes[0];
+						//planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
+				tcontrol.attach(motor);
 			});
 
 			/*

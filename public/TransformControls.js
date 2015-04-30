@@ -567,6 +567,12 @@
 		this.size = 1;
 		this.axis = null;
 
+		this.enableX = true;
+		this.enableY = true;
+		this.enableZ = true;
+		this.enableXYZE = true;
+		this.enableE = true;
+
 		var scope = this;
 
 		var _dragging = false;
@@ -818,9 +824,9 @@
 
 					point.applyMatrix4( tempMatrix.getInverse( worldRotationMatrix ) );
 
-					if ( scope.axis.search("X") == -1 ) point.x = 0;
-					if ( scope.axis.search("Y") == -1 ) point.y = 0;
-					if ( scope.axis.search("Z") == -1 ) point.z = 0;
+					if ( scope.axis.search("X") == -1 || scope.enableX == false) point.x = 0;
+					if ( scope.axis.search("Y") == -1 || scope.enableY == false) point.y = 0;
+					if ( scope.axis.search("Z") == -1 || scope.enableZ == false) point.z = 0;
 
 					point.applyMatrix4( oldRotationMatrix );
 
@@ -831,9 +837,9 @@
 
 				if ( scope.space == "world" || scope.axis.search("XYZ") != -1 ) {
 
-					if ( scope.axis.search("X") == -1 ) point.x = 0;
-					if ( scope.axis.search("Y") == -1 ) point.y = 0;
-					if ( scope.axis.search("Z") == -1 ) point.z = 0;
+					if ( scope.axis.search("X") == -1 || scope.enableX == false) point.x = 0;
+					if ( scope.axis.search("Y") == -1 || scope.enableY == false) point.y = 0;
+					if ( scope.axis.search("Z") == -1 || scope.enableZ == false) point.z = 0;
 
 					point.applyMatrix4( tempMatrix.getInverse( parentRotationMatrix ) );
 
@@ -884,7 +890,7 @@
 				tempVector.copy(offset).sub( worldPosition );
 				tempVector.multiply(parentScale);
 
-				if ( scope.axis == "E" ) {
+				if ( scope.axis == "E" && scope.enableE ) {
 
 					point.applyMatrix4( tempMatrix.getInverse( lookAtMatrix ) );
 					tempVector.applyMatrix4( tempMatrix.getInverse( lookAtMatrix ) );
@@ -902,7 +908,7 @@
 
 					scope.object.quaternion.copy( tempQuaternion );
 
-				} else if ( scope.axis == "XYZE" ) {
+				} else if ( scope.axis == "XYZE" && scope.enableXYZE ) {
 
 					quaternionE.setFromEuler( point.clone().cross(tempVector).normalize() ); // rotation axis
 
@@ -929,9 +935,9 @@
 					quaternionY.setFromAxisAngle( unitY, rotation.y - offsetRotation.y );
 					quaternionZ.setFromAxisAngle( unitZ, rotation.z - offsetRotation.z );
 
-					if ( scope.axis == "X" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionX );
-					if ( scope.axis == "Y" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionY );
-					if ( scope.axis == "Z" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionZ );
+					if ( scope.axis == "X" && scope.enableX ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionX );
+					if ( scope.axis == "Y" && scope.enableY ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionY );
+					if ( scope.axis == "Z" && scope.enableZ ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionZ );
 
 					scope.object.quaternion.copy( quaternionXYZ );
 
