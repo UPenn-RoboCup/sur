@@ -304,7 +304,6 @@
 				planRobot.object.quaternion.copy(robot.object.quaternion);
 			});
 
-			var h_update;
 			d3.select('button#teleop').on('click', function(){
 				if(tcontrol.object){
 					tcontrol.detach();
@@ -316,6 +315,9 @@
 					tcontrol.enableE = true;
 					return;
 				}
+				var sel = document.getElementById('joints');
+				var motor = planRobot.object.getObjectByName(sel.value);
+				if(!motor){return;}
 				this.innerHTML = 'Go Teleop!'
 				planRobot.object.visible = true;
 				tcontrol.setMode('rotate');
@@ -324,8 +326,6 @@
 				tcontrol.enableZ = false;
 				tcontrol.enableXYZE = false;
 				tcontrol.enableE = false;
-				var motor = planRobot.meshes[0];
-						//planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
 				tcontrol.attach(motor);
 			});
 
@@ -470,6 +470,17 @@
 					planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
 					planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
 					planRobot.object.visible = false;
+					// Joint teleop
+					var sel = document.getElementById('joints');
+					console.log(sel);
+					planRobot.meshes.forEach(function(m){
+						var x = document.createElement("OPTION");
+						if(!m.name){return;}
+						x.value = m.name;
+						x.innerHTML = m.name;
+						sel.appendChild(x);
+					});
+
 				}
 			});
     });
