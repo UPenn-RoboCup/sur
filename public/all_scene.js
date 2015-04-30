@@ -7,6 +7,7 @@
 		THREE,
 		scene,
     raycaster,
+		tcontrol,
 		items = [],
 		mesh0_feed, mesh1_feed, kinect_feed,
 		mesh0 = [], mesh1 = [], kinect = [],
@@ -379,6 +380,11 @@
 			});
     });
 
+		util.ljs("/TransformControls.js", function(){
+			tcontrol = new THREE.TransformControls( camera, renderer.domElement );
+			scene.add(tcontrol);
+		});
+
     // RealTime Comms to other windows
     setup_rtc();
 
@@ -399,6 +405,7 @@
 		planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
 		planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
 		planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
+
 	}
 
 	function setup_rtc(){
@@ -443,7 +450,13 @@
 
 			d3.select('button#reset').on('click', function(){
 				// [x center, y center, z center, radius, height]
-				d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
+				//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
+				console.log(tcontrol);
+				if(!tcontrol.object){
+					tcontrol.attach(planRobot.object);
+				} else {
+					tcontrol.detach();
+				}
 			});
 
 			/*
@@ -481,7 +494,6 @@
 	});
 
 	// Begin listening to the feed
-
   util.ljs("/MeshFeed.js", function(){
   	d3.json('/streams/mesh0', function (error, port) {
   		mesh0_feed = new ctx.MeshFeed(port, process_mesh);
@@ -497,7 +509,6 @@
 			});
   	});
 	});
-
 
 
 }(this));
