@@ -279,15 +279,25 @@
 			container.addEventListener('mousedown', select_object, false);
 			container.addEventListener('mouseup', focus_object, false);
 
-			d3.select('button#reset').on('click', function(){
+			d3.select('button#move').on('click', function(){
 				// [x center, y center, z center, radius, height]
 				//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
 				console.log(tcontrol);
 				if(!tcontrol.object){
+					planRobot.meshes.forEach(function(m, i){
+						m.quaternion.copy(this[i].quaternion);
+					}, robot.meshes);
+					planRobot.object.position.copy(robot.object.position);
+					planRobot.object.quaternion.copy(robot.object.quaternion);
+					planRobot.object.visible = true;
 					tcontrol.attach(planRobot.object);
+					this.innerHTML = 'Go!'
 				} else {
 					tcontrol.detach();
+					planRobot.object.visible = false;
+					this.innerHTML = 'Move'
 				}
+
 			});
 
 			/*
@@ -430,6 +440,7 @@
 					planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
 					planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
 					planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
+					planRobot.object.visible = false;
 				}
 			});
     });
