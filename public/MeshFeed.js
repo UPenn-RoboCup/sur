@@ -35,6 +35,8 @@
 					a: metadata.a,
 					tfL6: metadata.tfL6,
 					tfG6: metadata.tfG6,
+					tfL16: metadata.tfL16,
+					tfG16: metadata.tfG16,
 					//
 					width: width,
 					height: height,

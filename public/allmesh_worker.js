@@ -27,6 +27,44 @@ function mat_times_vec(m, v){
 	}, v);
 }
 
+function rotZ(a){
+	var ca = cos(a);
+  var sa = sin(a);
+	return [[ca, -sa, 0, 0],
+    [sa, ca, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]];
+}
+
+function rotY(a){
+	var ca = cos(a);
+  var sa = sin(a);
+	return [
+		[ca, 0, -sa, 0],
+		[0, 1, 0, 0],
+    [sa, 0, ca, 0],
+    [0, 0, 0, 1]];
+}
+
+function rotX(a){
+	var ca = cos(a);
+  var sa = sin(a);
+	return [
+		[1, 0, 0, 0],
+		[0, ca, -sa, 0],
+    [0, sa, ca, 0],
+    [0, 0, 0, 1]];
+}
+
+function trans(x,y,z){
+  return [
+    [1,0,0,x],
+    [0,1,0,y],
+    [0,0,1,z],
+    [0,0,0,1],
+  ];
+}
+
 /*
 function rpy_trans(r,v){
 	'use strict';
@@ -46,15 +84,6 @@ function rpy_trans(r,v){
 this.importScripts('/js/sylvester-min.js');
 function get_k2_transform(head_angles, imu_rpy, body_height){
   return rpy_trans([imu_rpy[1], imu_rpy[2], 0], [0, 0, body_height]).multiply(tNeck).multiply(Matrix.RotationZ(head_angles[1])).multiply(Matrix.RotationY(head_angles[2])).multiply(tKinect);
-}
-
-function trans(v){
-  return [
-    [1,0,0,v[0]],
-    [0,1,0,v[1]],
-    [0,0,1,v[2]],
-    [0,0,0,1],
-  ];
 }
 
 function map2array(obj){
@@ -140,12 +169,103 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       destination[0] = gFrame[1] * 1e3;
       destination[1] = gFrame[2] * 1e3;
       destination[2] = gFrame[0] * 1e3;
+
+      console.assert(gFrame[0]===gFrame[0], 'oopsKw');
+			console.assert(gFrame[1]===gFrame[1], 'oopsKw');
+			console.assert(gFrame[2]===gFrame[2], 'oopsKw');
+
       return gFrame.concat(lFrame).concat(x);
     },
+
+		mesh0: function (u, v, w, width, height, mesh, destination) {
+    	'use strict';
+      // Saturation
+			var r;
+			if (mesh.c==='raw'){
+				r = w;
+				if (w === 0 || w > 10) {return;}
+			} else {
+				if (w === 0 || w === 255) {return;}
+				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
+			}
+			// Rotates a *bit* off axis
+			r += 0.02;
+
+			var a = mesh.a[v];
+			var theta = (mesh.rfov[0] - mesh.rfov[1]) * (u / width) - mesh.rfov[0];
+
+			var TcomG = flat2mat(mesh.tfG16[v]);
+			var TcomL = flat2mat(mesh.tfL16[v]);
+			var Tactuate = rotZ(a);
+			var Tchest = trans(0.05,0,0.09);
+
+			//var Tlidar = rotX(Math.PI/2);
+			//var v = [r*cos(theta), r*sin(theta), 0];
+			// Just form the vector outright
+			var v = [r*cos(theta), 0, r*sin(theta)];
+			var v_actuate = mat_times_vec(Tactuate, v);
+			//console.log(v_actuate);
+			var v_chest = mat_times_vec(Tchest, v_actuate);
+			//console.log(v_chest);
+			var v_global = mat_times_vec(TcomG, v_chest);
+			//console.log(v_global);
+			var v_local = mat_times_vec(TcomL, v_chest);
+			//console.log(v_local);
+
+			// Set into the THREE buffer, in its coordinate frame
+    	destination[0] = v_global[1] * 1e3;
+			destination[1] = v_global[2] * 1e3;
+			destination[2] = v_global[0] * 1e3;
+
+			// Return robot frames, in its coordinates
+			// [global | local]
+			return v_global.concat(v_local).concat(r);
+    },
+
+		mesh1: function (u, v, w, width, height, mesh, destination) {
+    	'use strict';
+      // Saturation
+			var r;
+			if (mesh.c==='raw'){
+				r = w;
+				if (w === 0 || w > 10) {return;}
+			} else {
+				if (w === 0 || w === 255) {return;}
+				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
+			}
+
+			var a = mesh.a[v][1];
+			var theta = (mesh.rfov[0] - mesh.rfov[1]) * (u / width) - mesh.rfov[0];
+
+			var TcomG = flat2mat(mesh.tfG16[v]);
+			var TcomL = flat2mat(mesh.tfL16[v]);
+			var Tactuate = rotY(-a);
+			var Thead = trans(0,0,0.3);
+
+			var v = [r*cos(theta), r*sin(theta), 0.12]; // above the head
+			var v_actuate = mat_times_vec(Tactuate, v);
+			//console.log(v_actuate);
+			var v_head = mat_times_vec(Thead, v_actuate);
+			//console.log(v_head);
+			var v_global = mat_times_vec(TcomG, v_head);
+			//console.log(v_global);
+			var v_local = mat_times_vec(TcomL, v_head);
+			//console.log(v_local);
+
+			// Set into the THREE buffer, in its coordinate frame
+    	destination[0] = v_global[1] * 1e3;
+			destination[1] = v_global[2] * 1e3;
+			destination[2] = v_global[0] * 1e3;
+
+			// Return robot frames, in its coordinates
+			// [global | local]
+			return v_global.concat(v_local).concat(r);
+    },
+
+		/*
     mesh0: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
       // Saturation
-
 			var r;
 			if (mesh.c==='raw'){
 				r = w;
@@ -201,6 +321,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			// [global | local]
 			return [txL, tyL, tzL, txG, tyG, tzG, r];
     },
+
 		mesh1: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
       // Saturation
@@ -251,10 +372,14 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			destination[1] = tzG * 1000;
 			destination[2] = txG * 1000;
 
+			//console.assert(v_angle===v_angle, 'oops1v_angle');
+			//console.assert(h_angle===h_angle, 'oops1h_angle');
+
 			// Return robot frames, in its coordinates
 			// [global | local]
 			return [txL, tyL, tzL, txG, tyG, tzG, r];
     }
+*/
   },
   SENSOR_COLOR = {
     mesh: function (i, j, xyz, img, r, destination) {

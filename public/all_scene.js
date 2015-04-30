@@ -27,6 +27,14 @@
     map_peers = [],
 		last_intersection = {t:0};
 
+	util.ljs("/VideoFeed.js"); // Needed by other feeds
+  ctx.util.ljs('/Estimate.js', function(){
+    E = ctx.Estimate;
+  });
+  ctx.util.ljs('/Classify.js', function(){
+    Classify = ctx.Classify;
+  });
+
 	function mat3_times_vec(m, v){
 		'use strict';
 		return m.map(function(r){
@@ -390,13 +398,6 @@
 		});
 	}
 
-  ctx.util.ljs('/Estimate.js', function(){
-    E = ctx.Estimate;
-  });
-  ctx.util.ljs('/Classify.js', function(){
-    Classify = ctx.Classify;
-  });
-
 	// Load the Styling
 	ctx.util.lcss('/css/gh-buttons.css');
 	ctx.util.lcss('/css/all_scene.css', function () {
@@ -456,7 +457,7 @@
 	});
 
 	// Begin listening to the feed
-	util.ljs("/VideoFeed.js"); // Needed by other feeds
+
   util.ljs("/MeshFeed.js", function(){
   	d3.json('/streams/mesh0', function (error, port) {
   		mesh0_feed = new ctx.MeshFeed(port, process_mesh);
