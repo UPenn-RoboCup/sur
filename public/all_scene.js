@@ -156,7 +156,10 @@
     // Form the raycaster for the camera's current position
     raycaster.ray.set(camera.position, mouse_vector.sub( camera.position ).normalize());
     // Find the intersections with the various meshes in the scene
-		var allitems = items.concat(robot.meshes).concat(kinect).concat(mesh0).concat(mesh1);
+		//var allitems = items.concat(robot.meshes).concat(kinect).concat(mesh0).concat(mesh1);
+		var allitems =
+				items.concat(robot.meshes).concat(planRobot.meshes)
+		.concat(kinect).concat(mesh0).concat(mesh1);
 
     var intersections = raycaster.intersectObjects(allitems);
 		// Return if no intersections
@@ -279,13 +282,22 @@
 			container.addEventListener('mousedown', select_object, false);
 			container.addEventListener('mouseup', focus_object, false);
 
+			d3.select('button#ghost').on('click', function(){
+				planRobot.meshes.forEach(function(m, i){
+					m.quaternion.copy(this[i].quaternion);
+				}, robot.meshes);
+				planRobot.object.position.copy(robot.object.position);
+				planRobot.object.quaternion.copy(robot.object.quaternion);
+				planRobot.object.visible = !planRobot.object.visible;
+			});
+
 			d3.select('button#move').on('click', function(){
 				// [x center, y center, z center, radius, height]
 				//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
 				//console.log(tcontrol);
 				if(tcontrol.object){
 					tcontrol.detach();
-					planRobot.object.visible = false;
+					//planRobot.object.visible = false;
 					this.innerHTML = 'Move'
 					tcontrol.enableY = true;
 					return;
@@ -307,7 +319,7 @@
 			d3.select('button#teleop').on('click', function(){
 				if(tcontrol.object){
 					tcontrol.detach();
-					planRobot.object.visible = false;
+					//planRobot.object.visible = false;
 					this.innerHTML = 'Teleop'
 					tcontrol.enableY = true;
 					tcontrol.enableZ = true;
