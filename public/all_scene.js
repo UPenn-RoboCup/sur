@@ -362,10 +362,10 @@
 		}, false);
 		animate();
 		// Begin listening to the feed
-    util.ljs('/Robot.js', function(){
+    util.ljs('/Robot2.js', function(){
   		d3.json('/streams/feedback', function (error, port) {
   			// Load the robot
-  			robot = new ctx.Robot({
+  			robot = new ctx.Robot2({
   				scene: scene,
   				port: port
   			});
