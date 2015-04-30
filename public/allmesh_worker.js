@@ -27,25 +27,6 @@ function mat_times_vec(m, v){
 	}, v);
 }
 
-function rotZ(a){
-	var ca = cos(a);
-  var sa = sin(a);
-	return [[ca, -sa, 0, 0],
-    [sa, ca, 0, 0],
-    [0, 0, 1, 0],
-    [0, 0, 0, 1]];
-}
-
-function rotY(a){
-	var ca = cos(a);
-  var sa = sin(a);
-	return [
-		[ca, 0, -sa, 0],
-		[0, 1, 0, 0],
-    [sa, 0, ca, 0],
-    [0, 0, 0, 1]];
-}
-
 function rotX(a){
 	var ca = cos(a);
   var sa = sin(a);
@@ -53,7 +34,30 @@ function rotX(a){
 		[1, 0, 0, 0],
 		[0, ca, -sa, 0],
     [0, sa, ca, 0],
-    [0, 0, 0, 1]];
+    [0, 0, 0, 1]
+	];
+}
+
+function rotY(a){
+	var ca = cos(a);
+  var sa = sin(a);
+	return [
+		[ca, 0, sa, 0],
+		[0, 1, 0, 0],
+    [-sa, 0, ca, 0],
+    [0, 0, 0, 1]
+	];
+}
+
+function rotZ(a){
+	var ca = cos(a);
+  var sa = sin(a);
+	return [
+		[ca, -sa, 0, 0],
+    [sa, ca, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]
+	];
 }
 
 function trans(x,y,z){
@@ -227,8 +231,8 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       // Saturation
 			var r;
 			if (mesh.c==='raw'){
-				r = w;
 				if (w === 0 || w > 10) {return;}
+				r = w;
 			} else {
 				if (w === 0 || w === 255) {return;}
 				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
@@ -239,7 +243,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 
 			var TcomG = flat2mat(mesh.tfG16[v]);
 			var TcomL = flat2mat(mesh.tfL16[v]);
-			var Tactuate = rotY(-a);
+			var Tactuate = rotY(a);
 			var Thead = trans(0,0,0.3);
 
 			var v = [r*cos(theta), r*sin(theta), 0.12]; // above the head
