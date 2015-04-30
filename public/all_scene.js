@@ -17,7 +17,7 @@
 		controls,
     selection,
 		robot,
-		robot_preview,
+		planRobot,
 		CANVAS_WIDTH,
     CANVAS_HEIGHT,
     peer,
@@ -198,9 +198,6 @@
     raycaster.ray.set(camera.position, mouse_vector.sub( camera.position ).normalize());
     // Find the intersections with the various meshes in the scene
 		var allitems = items.concat(robot.meshes).concat(kinect).concat(mesh0).concat(mesh1);
-		console.log(allitems);
-
-		//var allitems = items.concat(kinect).concat(mesh0).concat(mesh1);
 
     var intersections = raycaster.intersectObjects(allitems);
 		// Return if no intersections
@@ -366,19 +363,42 @@
 		}, false);
 		animate();
 		// Begin listening to the feed
-    util.ljs('/Robot2.js', function(){
+    util.ljs('/Robot.js', function(){
   		d3.json('/streams/feedback', function (error, port) {
   			// Load the robot
-  			robot = new ctx.Robot2({
+  			robot = new ctx.Robot({
   				scene: scene,
-  				port: port
+  				port: port,
+					name: 'thorop2'
   			});
   		});
+			planRobot = new ctx.Robot({
+				scene: scene,
+				name: 'thorop2',
+				callback: clearBot
+			});
     });
 
     // RealTime Comms to other windows
     setup_rtc();
 
+	}
+
+
+	function clearBot(){
+		var clearMaterial = new THREE.MeshBasicMaterial({
+			color: 0x00ff00,
+			transparent: true,
+			opacity: 0.5,
+		});
+		planRobot.meshes.forEach(function(m){
+			if(!m.material){return;}
+			m.material = clearMaterial;
+		});
+		planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
+		planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
+		planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
+		planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
 	}
 
 	function setup_rtc(){
