@@ -3,6 +3,7 @@
 	// Private variables
 	var d3 = ctx.d3,
 		util = ctx.util,
+		sprintf = ctx.sprintf,
     container, renderer, camera, E, THREE,
 		scene, raycaster, CANVAS_WIDTH, CANVAS_HEIGHT,
 		controls, tcontrol, selection,
@@ -12,7 +13,7 @@
 		N_MESH0 = 1, N_MESH1 = 1, N_KINECT = 1,
     peer, p_conn, map_peers = [],
     peer_id = 'all_scene', peer_map_id = 'all_map',
-		last_intersection = {t:0}, last_selected_parameters = null;;
+		last_intersection = {t:0}, last_selected_parameters = null;
 
   var describe = {
     cylinder: function(mesh, p){
@@ -298,11 +299,11 @@
 				if(tcontrol.object){
 					tcontrol.detach();
 					//planRobot.object.visible = false;
-					this.innerHTML = 'Move'
+					this.innerHTML = 'Move';
 					tcontrol.enableY = true;
 					return;
 				}
-				this.innerHTML = 'Go!'
+				this.innerHTML = 'Go!';
 				planRobot.object.visible = true;
 				tcontrol.setMode('translate');
 				tcontrol.space = 'local';
@@ -320,7 +321,7 @@
 				if(tcontrol.object){
 					tcontrol.detach();
 					//planRobot.object.visible = false;
-					this.innerHTML = 'Teleop'
+					this.innerHTML = 'Teleop';
 					tcontrol.enableY = true;
 					tcontrol.enableZ = true;
 					tcontrol.enableXYZE = true;
@@ -330,7 +331,7 @@
 				var sel = document.getElementById('joints');
 				var motor = planRobot.object.getObjectByName(sel.value);
 				if(!motor){return;}
-				this.innerHTML = 'Go Teleop!'
+				this.innerHTML = 'Go Teleop!';
 				planRobot.object.visible = true;
 				tcontrol.setMode('rotate');
 				tcontrol.space = 'local';
