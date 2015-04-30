@@ -141,48 +141,46 @@ var cos = Math.cos,
 		"ChestLidarPan",
 	];
 
-	function update(o, feedback) {
-		if(!o){return;}
-		var joints = feedback.p;
-		var qQuat = joints.map(function(q){
-			return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
-		});
-		//for (var i = 0; i < servos.length; i += 1) { rotateServo(servos[i], joints[i]); }
-		var torso = feedback.u;
-		o.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));
-		o.position.z = torso[0] * 1e3;
-		o.position.x = torso[1] * 1e3;
-		o.position.y = torso[2] * 1e3;
-	}
-
 	function Robot2(options) {
 		options = options || {};
-		THREE = THREE || ctx.THREE; // TODO: Best check for THREE.js? Allow 2D option?
-		// The 3D THREE.js scene for the robot
 		var scene = options.scene || new THREE.Scene(),
-			// Feedback data. TODO: Should not need
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + (options.port || 9013)),
 			loader = new THREE.ObjectLoader(),
-			object;
+			object, meshes, qDefault;
 
 		ws.onmessage = function (e) {
 			if (typeof e.data !== "string") { return; }
-			update(object, JSON.parse(e.data));
+			var feedback = JSON.parse(e.data);
+			var joints = feedback.p;
+			var qQuat = joints.map(function(q){
+				return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
+			});
+			meshes.forEach(function(m, i){
+				if(!m){return;}
+				m.quaternion.multiplyQuaternions(qDefault[i], qQuat[i]);
+				m.matrixWorldNeedsUpdate = true;
+			});
+			var torso = feedback.u;
+			object.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));
+			object.position.z = torso[0] * 1e3;
+			object.position.x = torso[1] * 1e3;
+			object.position.y = torso[2] * 1e3;
 		};
 
 		// assuming we loaded a JSON structure from elsewhere
 		loader.load('json/thorop2.json', function(o){
-			console.log('THOROP2', object);
-			object = o;
-			scene.add(object);
-			var meshes = jointNames.map(function(name){
-				return this.getObjectByName(name);
-			}, object);
-			console.log(meshes);
-		});
+			//console.log('THOROP2', object, this);
+			scene.add(o);
+			this.object = o;
+			this.meshes = jointNames.map(function(name){return o.getObjectByName(name) || new THREE.Object3D();});
+			qDefault = this.meshes.map(function(m){
 
-		// Export the THREE object for use
-		this.object = object;
+				return m.quaternion.clone();
+			});
+			meshes = this.meshes;
+			object = this.object;
+		}.bind(this));
+
 		/*
     this.forward_larm = forward_larm;
     this.forward_rarm = forward_rarm;

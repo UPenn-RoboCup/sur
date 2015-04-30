@@ -198,6 +198,10 @@
     raycaster.ray.set(camera.position, mouse_vector.sub( camera.position ).normalize());
     // Find the intersections with the various meshes in the scene
 		var allitems = items.concat(robot.meshes).concat(kinect).concat(mesh0).concat(mesh1);
+		console.log(allitems);
+
+		//var allitems = items.concat(kinect).concat(mesh0).concat(mesh1);
+
     var intersections = raycaster.intersectObjects(allitems);
 		// Return if no intersections
 		if (intersections.length === 0) {
