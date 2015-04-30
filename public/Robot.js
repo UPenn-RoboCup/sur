@@ -1,7 +1,8 @@
 (function (ctx) {
 	'use strict';
 
-	var THREE = ctx.THREE;
+	var THREE = ctx.THREE,
+		jointNames = ctx.util.jointNames;
 
 /*
 var cos = Math.cos,
@@ -108,27 +109,6 @@ var cos = Math.cos,
 	*/
 
 	var xAxis = new THREE.Vector3( 1, 0, 0 );
-	var jointNames = [
-		// Head (Yaw, Pitch)
-		"Neck","Head",
-		// Left Arm
-		"ShoulderL", "ArmUpperL", "LeftShoulderYaw",
-		"ArmLowerL","LeftWristYaw","LeftWristRoll","LeftWristYaw2",
-		// Left leg
-		"PelvYL","PelvL","LegUpperL","LegLowerL","AnkleL","FootL",
-		// Right leg
-		"PelvYR","PelvR","LegUpperR","LegLowerR","AnkleR","FootR",
-		// Right arm
-		"ShoulderR", "ArmUpperR", "RightShoulderYaw","ArmLowerR",
-		"RightWristYaw","RightWristRoll","RightWristYaw2",
-		// Waist
-		"TorsoYaw","TorsoPitch",
-		// Gripper
-		"l_grip", "l_trigger", "l_extra",
-		"r_grip", "r_trigger", "r_extra",
-		// lidar movement
-		"ChestLidarPan",
-	];
 
 	function Robot(options) {
 		var scene = options.scene,

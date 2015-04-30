@@ -114,7 +114,7 @@
 			// this: nChunks
 			return (TWO_PI / this) * i - PI;
 		},
-		dist2line(p0, p1){
+		dist2line: function(p0, p1){
 			return abs(
 				this[0] * (p1[1] - p0[1]) -
 				this[1] * (p1[0] - p0[0]) +
@@ -128,6 +128,23 @@
 		}
 	};
 
+	function mat3_times_vec(m, v){
+		'use strict';
+		return m.map(function(r){
+			return r[0]*this[0] + r[1]*this[1] + r[2]*this[2];
+		}, v);
+	}
+
+	function get_THREE_mat3(tm){
+		return [
+			tm.elements.subarray(0, 4),
+			tm.elements.subarray(4, 8),
+			tm.elements.subarray(8, 12)
+		].map(function(v){
+			return [v[0], v[1], v[2]];
+		});
+	}
+
 	// Exports
 	// TODO: Pollute global namespace, or call these utils?
 	ctx.util = {
@@ -137,18 +154,28 @@
 		DEG_TO_RAD: Math.PI / 180,
 		RAD_TO_DEG: 180 / Math.PI,
 		mapFuncs: mapFuncs,
+		mat3_times_vec: mat3_times_vec,
+		get_THREE_mat3: get_THREE_mat3,
 		jointNames: [
-			"Neck", "Head",
+			// Head (Yaw, Pitch)
+			"Neck","Head",
+			// Left Arm
 			"ShoulderL", "ArmUpperL", "LeftShoulderYaw",
-			"ArmLowerL", "LeftWristYaw", "LeftWristRoll", "LeftWristYaw2",
-			"PelvYL", "PelvL", "LegUpperL", "LegLowerL", "AnkleL", "FootL",
-			"PelvYR", "PelvR", "LegUpperR", "LegLowerR", "AnkleR", "FootR",
-			"ShoulderR", "ArmUpperR", "RightShoulderYaw", "ArmLowerR",
-			"RightWristYaw", "RightWristRoll", "RightWristYaw2",
-			"TorsoYaw", "TorsoPitch",
-			"l_grip", "l_trigger",
-			"r_grip", "r_trigger",
-			"ChestLidarPan"
+			"ArmLowerL","LeftWristYaw","LeftWristRoll","LeftWristYaw2",
+			// Left leg
+			"PelvYL","PelvL","LegUpperL","LegLowerL","AnkleL","FootL",
+			// Right leg
+			"PelvYR","PelvR","LegUpperR","LegLowerR","AnkleR","FootR",
+			// Right arm
+			"ShoulderR", "ArmUpperR", "RightShoulderYaw","ArmLowerR",
+			"RightWristYaw","RightWristRoll","RightWristYaw2",
+			// Waist
+			"TorsoYaw","TorsoPitch",
+			// Gripper
+			"l_grip", "l_trigger", "l_extra",
+			"r_grip", "r_trigger", "r_extra",
+			// lidar movement
+			"ChestLidarPan",
 		]
 	};
 }(this));

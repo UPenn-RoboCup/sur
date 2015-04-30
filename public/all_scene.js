@@ -2,56 +2,17 @@
 	'use strict';
 	// Private variables
 	var d3 = ctx.d3,
-		debug = ctx.util.debug,
-    E,
-		THREE,
-		scene,
-    raycaster,
-		tcontrol,
-		items = [],
+		util = ctx.util,
+    container, renderer, camera, E, THREE,
+		scene, raycaster, CANVAS_WIDTH, CANVAS_HEIGHT,
+		controls, tcontrol, selection,
+		robot, planRobot, items = [],
 		mesh0_feed, mesh1_feed, kinect_feed,
 		mesh0 = [], mesh1 = [], kinect = [],
 		N_MESH0 = 1, N_MESH1 = 1, N_KINECT = 1,
-		container,
-		renderer,
-		camera,
-		controls,
-    selection,
-		robot,
-		planRobot,
-		CANVAS_WIDTH,
-    CANVAS_HEIGHT,
-    peer,
-    p_conn,
-    peer_id = 'all_scene',
-    peer_map_id = 'all_map',
-    map_peers = [],
-		last_intersection = {t:0};
-
-	util.ljs("/VideoFeed.js"); // Needed by other feeds
-  ctx.util.ljs('/Estimate.js', function(){
-    E = ctx.Estimate;
-  });
-  ctx.util.ljs('/Classify.js', function(){
-    Classify = ctx.Classify;
-  });
-
-	function mat3_times_vec(m, v){
-		'use strict';
-		return m.map(function(r){
-			return r[0]*this[0] + r[1]*this[1] + r[2]*this[2];
-		}, v);
-	}
-
-	function get_THREE_mat3(tm){
-		return [
-			tm.elements.subarray(0, 4),
-			tm.elements.subarray(4, 8),
-			tm.elements.subarray(8, 12)
-		].map(function(v){
-			return [v[0], v[1], v[2]];
-		});
-	}
+    peer, p_conn, map_peers = [],
+    peer_id = 'all_scene', peer_map_id = 'all_map',
+		last_intersection = {t:0}, last_selected_parameters = null;;
 
   var describe = {
     cylinder: function(mesh, p){
@@ -87,34 +48,34 @@
         new THREE.Vector3(0, 0, 1),
         normalRobot
       );
-			var matNormalRobot = new THREE.Matrix4().makeRotationFromQuaternion(quatNormalRobot);
+			var matNormalRobot =
+					new THREE.Matrix4().makeRotationFromQuaternion(quatNormalRobot);
 
 			// Place the points into a zero-centered, flat space
 			var points0 = parameters.points.map(function(p){
 				return [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
 			}, root);
 			var points0inv = points0.map(function(v){
-				return mat3_times_vec(this, v);
-			}, get_THREE_mat3(matNormalInv));
+				return util.mat3_times_vec(this, v);
+			}, util.get_THREE_mat3(matNormalInv));
 			// Find perimeter in flat space
 			var perimInv = E.find_poly(points0inv);
 			// Place back into the original space
 			var rho = perimInv.map(function(p){ return p.pop(); });
 			var perim = perimInv.map(function(v){
-				return mat3_times_vec(this, v);
-			}, get_THREE_mat3(matNormal));
+				return util.mat3_times_vec(this, v);
+			}, util.get_THREE_mat3(matNormal));
 
 			// Append Robot Frame parameters
 			parameters.perimeter = perim.map(function(p){
 				return [p[2], p[0], p[1]].map(function(v){return v/1e3;});
 			});
 			parameters.rho = rho;
-			parameters.rot = get_THREE_mat3(matNormalRobot);
+			parameters.rot = util.get_THREE_mat3(matNormalRobot);
 			parameters.normal = normalRobot.toArray();
 			parameters.root = [parameters.root[2], parameters.root[0], parameters.root[1]]
 				.map(function(v){return v/1e3;});
 			// NOTE: cov is still in THREE coordinates
-
 
 			// Add the vertices for the line
 			var geometry = new THREE.Geometry();
@@ -131,7 +92,6 @@
 			var line = new THREE.Line(geometry, material);
 			line.position.fromArray(root);
 			scene.add(line);
-
 			// Deal with the raw points and GUI mesh
 			parameters.mesh = line;
 			delete parameters.points;
@@ -139,8 +99,6 @@
 			return parameters;
     }
   };
-
-	var last_selected_parameters = null;
 
 	function estimate_selection(){
 		// Run the descriptor
@@ -234,7 +192,7 @@
     var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray();
     global_msg.unshift('Global: %0.2f %0.2f %0.2f');
 		//console.log(offset_msg);
-    debug([
+    util.debug([
       mesh.name,
 			sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
       //sprintf.apply(null, offset_msg),
@@ -246,14 +204,7 @@
 		e.preventDefault();
 
 	}
-	// Constantly animate the scene
-	function animate() {
-		if (controls) {
-			controls.update();
-		}
-		renderer.render(scene, camera);
-		window.requestAnimationFrame(animate);
-	}
+
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
 
@@ -310,13 +261,105 @@
 
 	}
 
+	// Load the Styling
+	ctx.util.lcss('/css/gh-buttons.css');
+	ctx.util.lcss('/css/all_scene.css', function () {
+		d3.html('/view/all_scene.html', function (error, view) {
+			// Remove landing page elements and add new content
+			d3.select("div#landing").remove();
+			// Just see the scene
+			document.body.appendChild(view);
+			// Menu
+			d3.select("body").on('contextmenu',function (e) {
+				//d3.event.preventDefault();
+
+			});
+			container = document.getElementById('world_container');
+			// Object selection
+			container.addEventListener('mousedown', select_object, false);
+			container.addEventListener('mouseup', focus_object, false);
+
+			d3.select('button#reset').on('click', function(){
+				// [x center, y center, z center, radius, height]
+				//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
+				console.log(tcontrol);
+				if(!tcontrol.object){
+					tcontrol.attach(planRobot.object);
+				} else {
+					tcontrol.detach();
+				}
+			});
+
+			/*
+			// User interactions
+			selection = d3.select('select#objects').node();
+			d3.select('button#look').on('click', function(){
+				controls.enabled = true;
+			});
+			d3.select('button#draw').on('click', function(){
+				controls.enabled = false;
+			});
+			*/
+			d3.selectAll('#topic2 li').on('click', function(){
+				document.getElementById('topic2').classList.add('hidden');
+				var action = this.getAttribute('data-action');
+				// Need parameters
+				if(!last_selected_parameters){ return; }
+				console.log('Action', action);
+				switch(action){
+					case 'clear':
+						scene.remove(last_selected_parameters.mesh);
+						delete last_selected_parameters.mesh;
+						break;
+					default:
+						delete last_selected_parameters.mesh;
+						last_selected_parameters.type = action;
+						map_peers.forEach(function(conn){ conn.send(this); }, last_selected_parameters);
+						console.log('Sending', last_selected_parameters);
+						break;
+				}
+				// Reset the parameters
+				last_selected_parameters = null;
+			});
+
+			setTimeout(setup, 0);
+
+		});
+	});
+
+	util.ljs("/VideoFeed.js", function(){
+		// Begin listening to the feed
+		util.ljs("/MeshFeed.js", function(){
+			d3.json('/streams/mesh0', function (error, port) {
+				mesh0_feed = new ctx.MeshFeed(port, process_mesh);
+			});
+			d3.json('/streams/mesh1', function (error, port) {
+				mesh1_feed = new ctx.MeshFeed(port, process_mesh);
+			});
+		});
+		util.ljs("/KinectFeed.js", function(){
+			d3.json('/streams/kinect2_color', function (error, rgb) {
+				d3.json('/streams/kinect2_depth', function (error, depth) {
+					kinect_feed = new ctx.KinectFeed(rgb, depth, process_mesh);
+				});
+			});
+		});
+	}); // Needed by other feeds
+  ctx.util.ljs('/Estimate.js', function(){ E = ctx.Estimate; });
+  ctx.util.ljs('/Classify.js', function(){ Classify = ctx.Classify; });
+
+	function setup(){
+		ctx.util.ljs('/bc/threejs/build/three.js', function(){
+			THREE = ctx.THREE;
+			setTimeout(setup3d, 0);
+			setTimeout(setup_rtc, 0);
+		});
+	}
+
 	// Add the camera view and append
 	function setup3d() {
-
-		THREE = ctx.THREE;
 		scene = new THREE.Scene();
     raycaster = new THREE.Raycaster();
-
 		// Build the scene
 		var spotLight,
 			ground = new THREE.Mesh(
@@ -376,37 +419,26 @@
 			planRobot = new ctx.Robot({
 				scene: scene,
 				name: 'thorop2',
-				callback: clearBot
+				callback: function(){
+					var clearMaterial = new THREE.MeshBasicMaterial({
+						color: 0x00ff00,
+						transparent: true,
+						opacity: 0.5,
+					});
+					planRobot.meshes.forEach(function(m){ m.material = clearMaterial; });
+					planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
+					planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
+					planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
+					planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
+				}
 			});
     });
-
+		// Able to move the robot around
 		util.ljs("/TransformControls.js", function(){
 			tcontrol = new THREE.TransformControls( camera, renderer.domElement );
 			scene.add(tcontrol);
 		});
-
-    // RealTime Comms to other windows
-    setup_rtc();
-
-	}
-
-
-	function clearBot(){
-		var clearMaterial = new THREE.MeshBasicMaterial({
-			color: 0x00ff00,
-			transparent: true,
-			opacity: 0.5,
-		});
-		planRobot.meshes.forEach(function(m){
-			if(!m.material){return;}
-			m.material = clearMaterial;
-		});
-		planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
-		planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
-		planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
-		planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
-
-	}
+	} //done 3d
 
 	function setup_rtc(){
 		peer = new Peer(peer_id, {host: 'localhost', port: 9000});
@@ -429,86 +461,13 @@
 		});
 	}
 
-	// Load the Styling
-	ctx.util.lcss('/css/gh-buttons.css');
-	ctx.util.lcss('/css/all_scene.css', function () {
-		d3.html('/view/all_scene.html', function (error, view) {
-			// Remove landing page elements and add new content
-			d3.select("div#landing").remove();
-			// Just see the scene
-			document.body.appendChild(view);
-      ctx.util.ljs('/bc/threejs/build/three.js', setup3d);
-			// Menu
-			d3.select("body").on('contextmenu',function (e) {
-				//d3.event.preventDefault();
-
-			});
-			container = document.getElementById('world_container');
-			// Object selection
-			container.addEventListener('mousedown', select_object, false);
-			container.addEventListener('mouseup', focus_object, false);
-
-			d3.select('button#reset').on('click', function(){
-				// [x center, y center, z center, radius, height]
-				//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
-				console.log(tcontrol);
-				if(!tcontrol.object){
-					tcontrol.attach(planRobot.object);
-				} else {
-					tcontrol.detach();
-				}
-			});
-
-			/*
-			// User interactions
-			selection = d3.select('select#objects').node();
-			d3.select('button#look').on('click', function(){
-				controls.enabled = true;
-			});
-			d3.select('button#draw').on('click', function(){
-				controls.enabled = false;
-			});
-			*/
-			d3.selectAll('#topic2 li').on('click', function(){
-				document.getElementById('topic2').classList.add('hidden');
-				var action = this.getAttribute('data-action');
-				// Need parameters
-				if(!last_selected_parameters){ return; }
-				console.log('Action', action);
-				switch(action){
-					case 'clear':
-						scene.remove(last_selected_parameters.mesh);
-						delete last_selected_parameters.mesh;
-						break;
-					default:
-						delete last_selected_parameters.mesh;
-						last_selected_parameters.type = action;
-						map_peers.forEach(function(conn){ conn.send(this); }, last_selected_parameters);
-						console.log('Sending', last_selected_parameters);
-						break;
-				}
-				// Reset the parameters
-				last_selected_parameters = null;
-			});
-		});
-	});
-
-	// Begin listening to the feed
-  util.ljs("/MeshFeed.js", function(){
-  	d3.json('/streams/mesh0', function (error, port) {
-  		mesh0_feed = new ctx.MeshFeed(port, process_mesh);
-  	});
-		d3.json('/streams/mesh1', function (error, port) {
-			mesh1_feed = new ctx.MeshFeed(port, process_mesh);
-  	});
-	});
-	util.ljs("/KinectFeed.js", function(){
-  	d3.json('/streams/kinect2_color', function (error, rgb) {
-  		d3.json('/streams/kinect2_depth', function (error, depth) {
-				kinect_feed = new ctx.KinectFeed(rgb, depth, process_mesh);
-			});
-  	});
-	});
-
+	// Constantly animate the scene
+	function animate() {
+		if (controls) {
+			controls.update();
+		}
+		renderer.render(scene, camera);
+		window.requestAnimationFrame(animate);
+	}
 
 }(this));
