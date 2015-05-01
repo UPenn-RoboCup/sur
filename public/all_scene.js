@@ -299,10 +299,17 @@
 						//console.log(m.name, e.x, e.y, e.z);
 						return e.x;
 					}, planRobot.qDefault);
+/*
+d3.json('/shm/hcm/teleop/joints?fsm=Arm&evt=teleopraw')
+					.post(JSON.stringify(qAll.slice(21, 28)));
+*/
 
-					d3.json('/shm/hcm/teleop/larm').post(JSON.stringify(qAll.slice(2, 9)));
-					d3.json('/shm/hcm/teleop/rarm').post(JSON.stringify(qAll.slice(21, 28)));
-					d3.json('/fsm/Arm/teleop').post();
+					d3.json('/shm/hcm/teleop/larm',function(){
+						d3.json('/shm/hcm/teleop/rarm', function(){
+							d3.json('/fsm/Arm/teleopraw').post();
+						}).post(JSON.stringify(qAll.slice(21, 28)));
+					}).post(JSON.stringify(qAll.slice(2, 9)));
+
 				}
 			});
 
