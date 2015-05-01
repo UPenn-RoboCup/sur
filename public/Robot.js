@@ -139,13 +139,14 @@ var cos = Math.cos,
 		// assuming we loaded a JSON structure from elsewhere
 		loader.load('json/thorop2.json', function(o){
 			//console.log('THOROP2', object, this);
-			this.object = o;
-			this.meshes = jointNames.map(function(name){return o.getObjectByName(name) || new THREE.Object3D();});
-			qDefault = this.meshes.map(function(m){
+			object = o;
+			meshes = jointNames.map(function(name){return o.getObjectByName(name) || new THREE.Object3D();});
+			qDefault = meshes.map(function(m){
 				return m.quaternion.clone();
 			});
-			meshes = this.meshes;
-			object = this.object;
+			this.meshes = meshes;
+			this.object = object;
+			this.qDefault = qDefault;
 			if(options.callback){setTimeout(options.callback.bind(o),0);}
 		}.bind(this));
 

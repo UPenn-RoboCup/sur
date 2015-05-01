@@ -282,11 +282,27 @@
 
 					console.log('relPose', relPose);
 					console.log('globalPose', globalPose);
+					util.debug([
+						sprintf("Local WP: %0.2f %0.2f %0.2f", relPose[0], relPose[1], relPose[2]),
+						sprintf("Global WP: %0.2f %0.2f %0.2f", globalPose[0], globalPose[1], globalPose[2]),
+					]);
 					d3.json('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach')
 						.post(JSON.stringify(globalPose));
 				} else if(d3.select('button#teleop').node().innerHTML==='Done'){
 					// Send the waypoint
 					//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
+
+					var qLArm = planRobot.meshes.slice(2, 9).map(function(m, i){
+						var qDinv = this[i].clone().conjugate();
+						var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+						var e = new THREE.Euler().setFromQuaternion(q0);
+						//console.log(m.name, e.x, e.y, e.z);
+						return e.x;
+					}, planRobot.qDefault.slice(2, 9));
+
+					d3.json('/shm/hcm/teleop/larm').post(JSON.stringify(qLArm));
+					//d3.json('/shm/hcm/teleop/rarm').post(JSON.stringify(globalPose));
+					//d3.json('/fsm/Arm/teleop').post(JSON.stringify(globalPose));
 				}
 			});
 
