@@ -373,7 +373,7 @@
 		}],
 	"object": {
 		"uuid": "7371E7F7-AC8E-448C-B560-2AE8F32CDAD5",
-		"type": "Scene",
+		"type": "Object3D",
 		"name": "COM",
 		"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
 		"children": [

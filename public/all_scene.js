@@ -15,6 +15,17 @@
     peer_id = 'all_scene', peer_map_id = 'all_map',
 		last_intersection = {t:0}, last_selected_parameters = null;
 
+	function process_tcontrol(){
+		var o = tcontrol.object;
+		if(o.name==='COM'){
+			// Robot
+			// Send a waypoint
+			// Relative transform between the two
+		} else {
+			// Joints
+		}
+	}
+
   var describe = {
     cylinder: function(mesh, p){
 			var parameters = E.cylinder(mesh, p);
@@ -51,7 +62,6 @@
       );
 			var matNormalRobot =
 					new THREE.Matrix4().makeRotationFromQuaternion(quatNormalRobot);
-
 			// Place the points into a zero-centered, flat space
 			var points0 = parameters.points.map(function(p){
 				return [p[0] - this[0], p[1] - this[1], p[2] - this[2]];
@@ -66,7 +76,6 @@
 			var perim = perimInv.map(function(v){
 				return util.mat3_times_vec(this, v);
 			}, util.get_THREE_mat3(matNormal));
-
 			// Append Robot Frame parameters
 			parameters.perimeter = perim.map(function(p){
 				return [p[2], p[0], p[1]].map(function(v){return v/1e3;});
@@ -77,7 +86,6 @@
 			parameters.root = [parameters.root[2], parameters.root[0], parameters.root[1]]
 				.map(function(v){return v/1e3;});
 			// NOTE: cov is still in THREE coordinates
-
 			// Add the vertices for the line
 			var geometry = new THREE.Geometry();
 			geometry.vertices = perim.map(function(p){
@@ -96,7 +104,6 @@
 			// Deal with the raw points and GUI mesh
 			parameters.mesh = line;
 			delete parameters.points;
-
 			return parameters;
     }
   };
@@ -115,14 +122,11 @@
 			return;
 		}
 	}
-
 	// Refocus the camera
 	function focus_object(e){
 		// Not a short click refocus
 		//console.log(e.timeStamp - last_intersection.t);
-		if(e.timeStamp - last_intersection.t>90){
-			return;
-		}
+		if(e.timeStamp - last_intersection.t>90){ return; }
 		var menu = document.getElementById('topic2');
 		if (e.button === 0) {
 			// Left click
@@ -211,8 +215,6 @@
 
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
-
-		// mesh should be phong, kinect basic...
 		var geometry = new THREE.BufferGeometry(),
 			material = new THREE.MeshPhongMaterial({
       //material = new THREE.MeshBasicMaterial({
@@ -223,11 +225,7 @@
         vertexColors: THREE.VertexColors,
         // TODO: Check the extra Phong parameters
         ambient: 0xffffff, specular: 0x000, shininess: 100,
-			}),
-			mesh;
-
-		//console.log(mesh_obj);
-
+			});
     // Custom attributes required for rendering the BufferGeometry
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
 		geometry.addAttribute('position', new THREE.BufferAttribute(mesh_obj.pos, 3));
@@ -238,7 +236,7 @@
       );
     }
 		// Make the new mesh and remove the previous one
-		mesh = new THREE.Mesh(geometry, material);
+		var mesh = new THREE.Mesh(geometry, material);
     mesh.name = mesh_obj.id;
     mesh.n_el = mesh_obj.n_el;
 		// Dynamic, because we will do raycasting
@@ -251,7 +249,7 @@
 		geometry.computeVertexNormals();
     // Add the mesh to the scene
 		scene.add(mesh);
-
+		// Save a set of meshes
 		if(mesh.name==='mesh0'){
 			mesh0.push(mesh);
 			if(mesh0.length > N_MESH0){ scene.remove(mesh0.shift()); }
@@ -262,8 +260,7 @@
 			kinect.push(mesh);
 			if(kinect.length > N_KINECT){ scene.remove(kinect.shift()); }
 		}
-
-	}
+	} // process_mesh
 
 	// Load the Styling
 	ctx.util.lcss('/css/gh-buttons.css');
@@ -271,28 +268,45 @@
 		d3.html('/view/all_scene.html', function (error, view) {
 			// Remove landing page elements and add new content
 			d3.select("div#landing").remove();
-			// Just see the scene
 			document.body.appendChild(view);
-			// Menu
-			d3.select("body").on('contextmenu',function (e) {
-				//d3.event.preventDefault();
-
-			});
 			container = document.getElementById('world_container');
 			// Object selection
 			container.addEventListener('mousedown', select_object, false);
 			container.addEventListener('mouseup', focus_object, false);
 
 			d3.select('button#ghost').on('click', function(){
+				if(this.innerHTML==='Rotate'){
+					tcontrol.setMode('rotate');
+					tcontrol.enableX = false;
+					tcontrol.enableY = true;
+					tcontrol.enableZ = false;
+					this.innerHTML = 'Translate';
+					return;
+				} else if(this.innerHTML==='Translate') {
+					tcontrol.setMode('translate');
+					tcontrol.enableX = true;
+					tcontrol.enableY = false;
+					tcontrol.enableZ = true;
+					this.innerHTML = 'Rotate';
+					return;
+				}
+
 				planRobot.meshes.forEach(function(m, i){
 					m.quaternion.copy(this[i].quaternion);
 				}, robot.meshes);
-				planRobot.object.position.copy(robot.object.position);
-				planRobot.object.quaternion.copy(robot.object.quaternion);
 				planRobot.object.visible = !planRobot.object.visible;
 			});
 
 			d3.select('button#move').on('click', function(){
+
+				if(d3.select('button#teleop').node().innerHTML==='Go!'){
+					// Reset just one
+					var motor0 = robot.object.getObjectByName(sel.value);
+					var motor = planRobot.object.getObjectByName(sel.value);
+					motor.quaternion.copy(motor0.quaternion)
+					return;
+				}
+
 				// [x center, y center, z center, radius, height]
 				//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
 				//console.log(tcontrol);
@@ -300,28 +314,43 @@
 					tcontrol.detach();
 					//planRobot.object.visible = false;
 					this.innerHTML = 'Move';
+					d3.select('button#ghost').node().innerHTML = 'Ghost';
+					d3.select('button#teleop').node().innerHTML = 'Teleop';
 					tcontrol.enableY = true;
+
+					var x = new THREE.Matrix4().multiplyMatrices(
+						planRobot.object.matrix,
+						new THREE.Matrix4().getInverse(robot.object.matrix)
+					);
+					console.log(x);
+
 					return;
 				}
 				this.innerHTML = 'Go!';
+				d3.select('button#ghost').node().innerHTML = 'Rotate';
+				d3.select('button#teleop').node().innerHTML = 'Reset';
 				planRobot.object.visible = true;
 				tcontrol.setMode('translate');
 				tcontrol.space = 'local';
 				tcontrol.enableY = false;
 				tcontrol.attach(planRobot.object);
 				//
-				planRobot.meshes.forEach(function(m, i){
-					m.quaternion.copy(this[i].quaternion);
-				}, robot.meshes);
-				planRobot.object.position.copy(robot.object.position);
-				planRobot.object.quaternion.copy(robot.object.quaternion);
+				//planRobot.meshes.forEach(function(m, i){ m.quaternion.copy(this[i].quaternion); }, robot.meshes);
+				//planRobot.object.position.copy(robot.object.position);
+				//planRobot.object.quaternion.copy(robot.object.quaternion);
 			});
 
 			d3.select('button#teleop').on('click', function(){
+				if(d3.select('button#move').node().innerHTML==='Go!'){
+					planRobot.object.position.copy(robot.object.position);
+					planRobot.object.quaternion.copy(robot.object.quaternion);
+					return;
+				}
 				if(tcontrol.object){
 					tcontrol.detach();
 					//planRobot.object.visible = false;
 					this.innerHTML = 'Teleop';
+					d3.select('button#move').node().innerHTML = 'Move';
 					tcontrol.enableY = true;
 					tcontrol.enableZ = true;
 					tcontrol.enableXYZE = true;
@@ -331,7 +360,8 @@
 				var sel = document.getElementById('joints');
 				var motor = planRobot.object.getObjectByName(sel.value);
 				if(!motor){return;}
-				this.innerHTML = 'Go Teleop!';
+				this.innerHTML = 'Go!';
+				d3.select('button#move').node().innerHTML = 'Reset This';
 				planRobot.object.visible = true;
 				tcontrol.setMode('rotate');
 				tcontrol.space = 'local';
@@ -463,44 +493,48 @@
   		d3.json('/streams/feedback', function (error, port) {
   			// Load the robot
   			robot = new ctx.Robot({
-  				scene: scene,
   				port: port,
-					name: 'thorop2'
+					name: 'thorop2',
+					callback: function(){
+						scene.add(this);
+						planRobot = new ctx.Robot({
+						name: 'thorop2',
+						callback: function(){
+							var clearMaterial = new THREE.MeshBasicMaterial({
+								color: 0x00ff00,
+								transparent: true,
+								opacity: 0.5,
+							});
+							planRobot.meshes.forEach(function(m){ m.material = clearMaterial; });
+							planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
+							planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
+							planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
+							planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
+							planRobot.object.visible = false;
+							// Joint teleop
+							var sel = document.getElementById('joints');
+							console.log(sel);
+							planRobot.meshes.forEach(function(m){
+								var x = document.createElement("OPTION");
+								if(!m.name){return;}
+								x.value = m.name;
+								x.innerHTML = m.name;
+								sel.appendChild(x);
+							});
+							console.log(robot.object);
+							scene.add(this);
+						}
+					});
+					}
   			});
   		});
-			planRobot = new ctx.Robot({
-				scene: scene,
-				name: 'thorop2',
-				callback: function(){
-					var clearMaterial = new THREE.MeshBasicMaterial({
-						color: 0x00ff00,
-						transparent: true,
-						opacity: 0.5,
-					});
-					planRobot.meshes.forEach(function(m){ m.material = clearMaterial; });
-					planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
-					planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
-					planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
-					planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
-					planRobot.object.visible = false;
-					// Joint teleop
-					var sel = document.getElementById('joints');
-					console.log(sel);
-					planRobot.meshes.forEach(function(m){
-						var x = document.createElement("OPTION");
-						if(!m.name){return;}
-						x.value = m.name;
-						x.innerHTML = m.name;
-						sel.appendChild(x);
-					});
 
-				}
-			});
     });
 		// Able to move the robot around
 		util.ljs("/TransformControls.js", function(){
 			tcontrol = new THREE.TransformControls( camera, renderer.domElement );
 			scene.add(tcontrol);
+			tcontrol.addEventListener('mouseUp', process_tcontrol);
 		});
 	} //done 3d
 

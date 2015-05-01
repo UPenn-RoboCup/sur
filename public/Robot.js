@@ -111,8 +111,7 @@ var cos = Math.cos,
 	var xAxis = new THREE.Vector3( 1, 0, 0 );
 
 	function Robot(options) {
-		var scene = options.scene,
-			loader = new THREE.ObjectLoader(),
+		var loader = new THREE.ObjectLoader(),
 			object, meshes, qDefault,
 			ws;
 		if(options.port){
@@ -140,7 +139,6 @@ var cos = Math.cos,
 		// assuming we loaded a JSON structure from elsewhere
 		loader.load('json/thorop2.json', function(o){
 			//console.log('THOROP2', object, this);
-			scene.add(o);
 			this.object = o;
 			this.meshes = jointNames.map(function(name){return o.getObjectByName(name) || new THREE.Object3D();});
 			qDefault = this.meshes.map(function(m){
@@ -148,7 +146,7 @@ var cos = Math.cos,
 			});
 			meshes = this.meshes;
 			object = this.object;
-			if(options.callback){setTimeout(options.callback,0);}
+			if(options.callback){setTimeout(options.callback.bind(o),0);}
 		}.bind(this));
 
 		/*
