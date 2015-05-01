@@ -113,11 +113,13 @@ var cos = Math.cos,
 	function Robot(options) {
 		var loader = new THREE.ObjectLoader(),
 			object, meshes, qDefault,
+			foot, lgrip, rgrip,
 			ws;
 		if(options.port){
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + options.port);
 			ws.onmessage = function (e) {
 				if (typeof e.data !== "string") { return; }
+				if(!meshes){return;}
 				var feedback = JSON.parse(e.data);
 				var joints = feedback.p;
 				var qQuat = joints.map(function(q){
@@ -136,6 +138,12 @@ var cos = Math.cos,
 			};
 		}
 
+		foot = new THREE.Mesh(
+			new THREE.BoxGeometry( 100, 10, 200 ),
+			new THREE.MeshBasicMaterial( { color: 0xffff00 } )
+		);
+		this.foot = foot;
+
 		// assuming we loaded a JSON structure from elsewhere
 		loader.load('json/thorop2.json', function(o){
 			//console.log('THOROP2', object, this);
@@ -148,6 +156,7 @@ var cos = Math.cos,
 			this.object = object;
 			this.qDefault = qDefault;
 			if(options.callback){setTimeout(options.callback.bind(o),0);}
+
 		}.bind(this));
 
 		/*
