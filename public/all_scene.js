@@ -15,17 +15,6 @@
     peer_id = 'all_scene', peer_map_id = 'all_map',
 		last_intersection = {t:0}, last_selected_parameters = null;
 
-	function process_tcontrol(){
-		var o = tcontrol.object;
-		if(o.name==='COM'){
-			// Robot
-			// Send a waypoint
-			// Relative transform between the two
-		} else {
-			// Joints
-		}
-	}
-
   var describe = {
     cylinder: function(mesh, p){
 			var parameters = E.cylinder(mesh, p);
@@ -274,6 +263,33 @@
 			container.addEventListener('mousedown', select_object, false);
 			container.addEventListener('mouseup', focus_object, false);
 
+			d3.select('button#go').on('click', function(){
+				if(d3.select('button#move').node().innerHTML==='Done'){
+					// Send the waypoint
+					var Tdiff = new THREE.Matrix4().multiplyMatrices(
+						planRobot.object.matrix,
+						new THREE.Matrix4().getInverse(robot.object.matrix)
+					);
+					var dp = new THREE.Vector3().setFromMatrixPosition(Tdiff);
+					var da = new THREE.Euler().setFromRotationMatrix(Tdiff);
+					console.log(dp);
+					var relPose = [dp.x/1e3, dp.z/1e3, da.y];
+
+					var dp = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
+					var da = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
+					console.log(dp);
+					var globalPose = [dp.x/1e3, dp.z/1e3, da.y];
+
+
+					console.log('relPose', relPose);
+					console.log('globalPose', globalPose);
+					//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
+				} else if(d3.select('button#teleop').node().innerHTML==='Done'){
+					// Send the waypoint
+					//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
+				}
+			});
+
 			d3.select('select#joints').on('change', function(){
 				if(d3.select('button#teleop').node().innerHTML==='Done'){
 					var motor = planRobot.object.getObjectByName(this.value);
@@ -328,13 +344,6 @@
 					d3.select('button#ghost').node().innerHTML = 'Ghost';
 					d3.select('button#teleop').node().innerHTML = 'Teleop';
 					tcontrol.enableY = true;
-
-					var x = new THREE.Matrix4().multiplyMatrices(
-						planRobot.object.matrix,
-						new THREE.Matrix4().getInverse(robot.object.matrix)
-					);
-					console.log(x);
-
 					return;
 				}
 				this.innerHTML = 'Done';
@@ -522,15 +531,13 @@
 							planRobot.object.visible = false;
 							// Joint teleop
 							var sel = document.getElementById('joints');
-							console.log(sel);
 							planRobot.meshes.forEach(function(m){
-								var x = document.createElement("OPTION");
 								if(!m.name){return;}
+								var x = document.createElement("OPTION");
 								x.value = m.name;
 								x.innerHTML = m.name;
 								sel.appendChild(x);
 							});
-							console.log(robot.object);
 							scene.add(this);
 						}
 					});
@@ -543,7 +550,7 @@
 		util.ljs("/TransformControls.js", function(){
 			tcontrol = new THREE.TransformControls( camera, renderer.domElement );
 			scene.add(tcontrol);
-			tcontrol.addEventListener('mouseUp', process_tcontrol);
+			//tcontrol.addEventListener('mouseUp', process_tcontrol);
 		});
 	} //done 3d
 
