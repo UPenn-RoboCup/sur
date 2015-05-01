@@ -274,6 +274,15 @@
 			container.addEventListener('mousedown', select_object, false);
 			container.addEventListener('mouseup', focus_object, false);
 
+			d3.select('select#joints').on('change', function(){
+				if(d3.select('button#teleop').node().innerHTML==='Done'){
+					var motor = planRobot.object.getObjectByName(this.value);
+					if(!motor){return;}
+					tcontrol.detach();
+					tcontrol.attach(motor);
+				}
+			});
+
 			d3.select('button#ghost').on('click', function(){
 				if(this.innerHTML==='Rotate'){
 					tcontrol.setMode('rotate');
