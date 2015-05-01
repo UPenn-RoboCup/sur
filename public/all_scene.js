@@ -289,18 +289,20 @@
 					tcontrol.enableZ = true;
 					this.innerHTML = 'Rotate';
 					return;
+				} else if(this.innerHTML==='Reset All') {
+					planRobot.meshes.forEach(function(m, i){
+						m.quaternion.copy(this[i].quaternion);
+					}, robot.meshes);
+					return;
 				}
-
-				planRobot.meshes.forEach(function(m, i){
-					m.quaternion.copy(this[i].quaternion);
-				}, robot.meshes);
 				planRobot.object.visible = !planRobot.object.visible;
 			});
 
 			d3.select('button#move').on('click', function(){
 
-				if(d3.select('button#teleop').node().innerHTML==='Go!'){
+				if(d3.select('button#teleop').node().innerHTML==='Done'){
 					// Reset just one
+					var sel = document.getElementById('joints');
 					var motor0 = robot.object.getObjectByName(sel.value);
 					var motor = planRobot.object.getObjectByName(sel.value);
 					motor.quaternion.copy(motor0.quaternion)
@@ -326,7 +328,7 @@
 
 					return;
 				}
-				this.innerHTML = 'Go!';
+				this.innerHTML = 'Done';
 				d3.select('button#ghost').node().innerHTML = 'Rotate';
 				d3.select('button#teleop').node().innerHTML = 'Reset';
 				planRobot.object.visible = true;
@@ -334,14 +336,10 @@
 				tcontrol.space = 'local';
 				tcontrol.enableY = false;
 				tcontrol.attach(planRobot.object);
-				//
-				//planRobot.meshes.forEach(function(m, i){ m.quaternion.copy(this[i].quaternion); }, robot.meshes);
-				//planRobot.object.position.copy(robot.object.position);
-				//planRobot.object.quaternion.copy(robot.object.quaternion);
 			});
 
 			d3.select('button#teleop').on('click', function(){
-				if(d3.select('button#move').node().innerHTML==='Go!'){
+				if(d3.select('button#move').node().innerHTML==='Done'){
 					planRobot.object.position.copy(robot.object.position);
 					planRobot.object.quaternion.copy(robot.object.quaternion);
 					return;
@@ -351,6 +349,7 @@
 					//planRobot.object.visible = false;
 					this.innerHTML = 'Teleop';
 					d3.select('button#move').node().innerHTML = 'Move';
+					d3.select('button#ghost').node().innerHTML = 'Ghost';
 					tcontrol.enableY = true;
 					tcontrol.enableZ = true;
 					tcontrol.enableXYZE = true;
@@ -360,8 +359,9 @@
 				var sel = document.getElementById('joints');
 				var motor = planRobot.object.getObjectByName(sel.value);
 				if(!motor){return;}
-				this.innerHTML = 'Go!';
+				this.innerHTML = 'Done';
 				d3.select('button#move').node().innerHTML = 'Reset This';
+				d3.select('button#ghost').node().innerHTML = 'Reset All';
 				planRobot.object.visible = true;
 				tcontrol.setMode('rotate');
 				tcontrol.space = 'local';
