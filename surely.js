@@ -80,9 +80,9 @@ function rest_req(req, res, next) {
 	if (req.method === 'PUT' || req.method === 'POST') {
 		if (req.body !== undefined) {
 			req.params.val = JSON.parse(req.body);
-      console.log(req.params);
 		}
 	}
+	console.log(req.params);
 	// Send to the RPC server
 	rpc_skt.send(mp.pack(req.params)).http_responses.push(res);
 	return next();

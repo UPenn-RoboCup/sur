@@ -292,17 +292,17 @@
 					// Send the waypoint
 					//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
 
-					var qLArm = planRobot.meshes.slice(2, 9).map(function(m, i){
+					var qAll = planRobot.meshes.map(function(m, i){
 						var qDinv = this[i].clone().conjugate();
 						var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
 						var e = new THREE.Euler().setFromQuaternion(q0);
 						//console.log(m.name, e.x, e.y, e.z);
 						return e.x;
-					}, planRobot.qDefault.slice(2, 9));
+					}, planRobot.qDefault);
 
-					d3.json('/shm/hcm/teleop/larm').post(JSON.stringify(qLArm));
-					//d3.json('/shm/hcm/teleop/rarm').post(JSON.stringify(globalPose));
-					//d3.json('/fsm/Arm/teleop').post(JSON.stringify(globalPose));
+					d3.json('/shm/hcm/teleop/larm').post(JSON.stringify(qAll.slice(2, 9)));
+					d3.json('/shm/hcm/teleop/rarm').post(JSON.stringify(qAll.slice(21, 28)));
+					d3.json('/fsm/Arm/teleop').post();
 				}
 			});
 
