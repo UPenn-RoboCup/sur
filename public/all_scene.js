@@ -273,17 +273,17 @@
 					var dp = new THREE.Vector3().setFromMatrixPosition(Tdiff);
 					var da = new THREE.Euler().setFromRotationMatrix(Tdiff);
 					console.log(dp);
-					var relPose = [dp.x/1e3, dp.z/1e3, da.y];
+					var relPose = [dp.z/1e3, dp.x/1e3, da.y];
 
 					var dp = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
 					var da = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
 					console.log(dp);
-					var globalPose = [dp.x/1e3, dp.z/1e3, da.y];
-
+					var globalPose = [dp.z/1e3, dp.x/1e3, da.y];
 
 					console.log('relPose', relPose);
 					console.log('globalPose', globalPose);
-					//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
+					d3.json('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach')
+						.post(JSON.stringify(globalPose));
 				} else if(d3.select('button#teleop').node().innerHTML==='Done'){
 					// Send the waypoint
 					//d3.json('/raw/reset').post(JSON.stringify("state_ch:send('reset')"));
