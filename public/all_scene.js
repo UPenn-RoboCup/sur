@@ -275,7 +275,6 @@
 			////////////////////
 			// Buttons
 			////////////////////
-
 			d3.select('button#reset').on('click', function(){
 				var moveBtn = d3.select('button#move').node(),
 					teleopBtn = d3.select('button#teleop').node(),
@@ -345,7 +344,19 @@
 						}).post(JSON.stringify(qAll.slice(21, 28)));
 					}).post(JSON.stringify(qAll.slice(2, 9)));
 				} else if(stepBtn.innerHTML==='Done'){
-
+					var p = planRobot.foot.position;
+					var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
+					var zpr = [p.y/1e3, e.x, e.z];
+					var relpos = [p.z/1e3, p.x/1e3, e.y];
+					util.debug([
+						sprintf("relpos: %0.2f %0.2f %0.2f",
+										relpos[0], relpos[1], relpos[2]),
+						sprintf("zpr: %0.2f %0.2f %0.2f",
+										zpr[0], zpr[1]*util.RAD_TO_DEG, zpr[2]*util.RAD_TO_DEG),
+					]);
+					d3.json('/shm/hcm/step/relpos').post(JSON.stringify(relpos));
+					d3.json('/shm/hcm/step/zpr').post(JSON.stringify(zpr));
+					d3.json('/fsm/Body/stepover1').post(JSON.stringify(zpr));
 				}
 			});
 
@@ -356,6 +367,23 @@
 					var motor0 = robot.object.getObjectByName(sel.value);
 					var motor = planRobot.object.getObjectByName(sel.value);
 					motor.quaternion.copy(motor0.quaternion)
+					return;
+				} else if(d3.select('button#step').node().innerHTML==='Done'){
+					var moveBtn = d3.select('button#move').node();
+					var gfoot = planRobot.foot;
+					var lfoot = planRobot.object.getObjectByName('L_FOOT');
+					var rfoot = planRobot.object.getObjectByName('R_FOOT');
+					lfoot.remove(gfoot);
+					rfoot.remove(gfoot);
+					if(moveBtn.innerHTML==='Right'){
+						moveBtn.innerHTML = 'Left';
+						rfoot.add(gfoot);
+					} else {
+						moveBtn.innerHTML = 'Right';
+						lfoot.add(gfoot);
+					}
+					gfoot.position.set(0,0,0);
+					gfoot.quaternion.copy(new THREE.Quaternion());
 					return;
 				}
 				if(tcontrol.object){
@@ -381,6 +409,8 @@
 				var rfoot = planRobot.object.getObjectByName('R_FOOT');
 				if(this.innerHTML==='Done'){
 					this.innerHTML = 'Step';
+					d3.select('button#teleop').node().innerHTML = 'Teleop';
+					d3.select('button#move').node().innerHTML = 'Move';
 					tcontrol.detach();
 					var p = gfoot.position;
 					var rpy = new THREE.Euler().setFromQuaternion(gfoot.quaternion);
@@ -388,9 +418,12 @@
 					return;
 				}
 				this.innerHTML = 'Done';
+				d3.select('button#teleop').node().innerHTML = 'Rotate';
+				d3.select('button#move').node().innerHTML = 'Right';
+				this.setAttribute('data-foot', 'left');
 				lfoot.remove(gfoot);
 				rfoot.remove(gfoot);
-				if(true){
+				if(d3.select('button#move').node().innerHTML==='Right'){
 					lfoot.add(gfoot);
 				} else {
 					rfoot.add(gfoot);
@@ -398,26 +431,42 @@
 				//console.log(rfoot);
 				tcontrol.detach();
 				tcontrol.attach(gfoot);
+				tcontrol.setMode('translate');
 				tcontrol.enableX = true;
 				tcontrol.enableY = true;
 				tcontrol.enableZ = true;
 			});
 
 			d3.select('button#teleop').on('click', function(){
-
-				if(this.innerHTML==='Rotate'){
-					tcontrol.setMode('rotate');
-					tcontrol.enableX = false;
-					tcontrol.enableY = true;
-					tcontrol.enableZ = false;
-					this.innerHTML = 'Translate';
+				if(d3.select('button#move').node().innerHTML==='Done'){
+					if(this.innerHTML==='Rotate'){
+						tcontrol.setMode('rotate');
+						tcontrol.enableX = false;
+						tcontrol.enableY = true;
+						tcontrol.enableZ = false;
+						this.innerHTML = 'Translate';
+					} else if(this.innerHTML==='Translate') {
+						tcontrol.setMode('translate');
+						tcontrol.enableX = true;
+						tcontrol.enableY = false;
+						tcontrol.enableZ = true;
+						this.innerHTML = 'Rotate';
+					}
 					return;
-				} else if(this.innerHTML==='Translate') {
-					tcontrol.setMode('translate');
-					tcontrol.enableX = true;
-					tcontrol.enableY = false;
-					tcontrol.enableZ = true;
-					this.innerHTML = 'Rotate';
+				} else if(d3.select('button#step').node().innerHTML==='Done'){
+					if(this.innerHTML==='Rotate'){
+						tcontrol.setMode('rotate');
+						tcontrol.enableX = true;
+						tcontrol.enableY = false;
+						tcontrol.enableZ = true;
+						this.innerHTML = 'Translate';
+					} else if(this.innerHTML==='Translate') {
+						tcontrol.setMode('translate');
+						tcontrol.enableX = true;
+						tcontrol.enableY = true;
+						tcontrol.enableZ = true;
+						this.innerHTML = 'Rotate';
+					}
 					return;
 				}
 
@@ -426,7 +475,6 @@
 					//planRobot.object.visible = false;
 					this.innerHTML = 'Teleop';
 					d3.select('button#move').node().innerHTML = 'Move';
-					d3.select('button#reset').node().innerHTML = 'Reset';
 					tcontrol.enableY = true;
 					tcontrol.enableZ = true;
 					tcontrol.enableXYZE = true;
@@ -437,7 +485,7 @@
 				var motor = planRobot.object.getObjectByName(sel.value);
 				if(!motor){return;}
 				this.innerHTML = 'Done';
-				d3.select('button#move').node().innerHTML = 'Reset';
+				d3.select('button#move').node().innerHTML = 'Undo';
 				tcontrol.setMode('rotate');
 				tcontrol.space = 'local';
 				tcontrol.enableY = false;
@@ -634,9 +682,8 @@
 
 	// Constantly animate the scene
 	function animate() {
-		if (controls) {
-			controls.update();
-		}
+		if (controls) { controls.update(); }
+		if (tcontrol) { tcontrol.update(); }
 		renderer.render(scene, camera);
 		window.requestAnimationFrame(animate);
 	}
