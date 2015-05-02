@@ -348,14 +348,16 @@
 					var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
 					var zpr = [p.y/1e3, e.x, e.z];
 					var relpos = [p.z/1e3, p.x/1e3, e.y];
-					var supportFoot;
+					var supportFoot, supportText;
 					if(moveBtn.innerHTML==='Left'){
+						supportText = 'Left';
 						supportFoot = 1;
 					} else {
+						supportText = 'Right';
 						supportFoot = 0;
 					}
 					util.debug([
-						'Support: ' + supportFoot,
+						'Support: ' + supportText,
 						sprintf("relpos: %0.2f %0.2f %0.2f",
 										relpos[0], relpos[1], relpos[2]),
 						sprintf("zpr: %0.2f %0.2f %0.2f",
@@ -422,7 +424,6 @@
 					tcontrol.detach();
 					var p = gfoot.position;
 					var rpy = new THREE.Euler().setFromQuaternion(gfoot.quaternion);
-					console.log(p, rpy);
 					return;
 				}
 				this.innerHTML = 'Done';
@@ -439,10 +440,8 @@
 				//console.log(rfoot);
 				tcontrol.detach();
 				tcontrol.attach(gfoot);
+				tcontrol.space = 'local';
 				tcontrol.setMode('translate');
-				tcontrol.enableX = true;
-				tcontrol.enableY = true;
-				tcontrol.enableZ = true;
 			});
 
 			d3.select('button#teleop').on('click', function(){
@@ -464,15 +463,9 @@
 				} else if(d3.select('button#step').node().innerHTML==='Done'){
 					if(this.innerHTML==='Rotate'){
 						tcontrol.setMode('rotate');
-						tcontrol.enableX = true;
-						tcontrol.enableY = false;
-						tcontrol.enableZ = true;
 						this.innerHTML = 'Translate';
 					} else if(this.innerHTML==='Translate') {
 						tcontrol.setMode('translate');
-						tcontrol.enableX = true;
-						tcontrol.enableY = true;
-						tcontrol.enableZ = true;
 						this.innerHTML = 'Rotate';
 					}
 					return;
