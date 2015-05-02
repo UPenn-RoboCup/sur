@@ -348,7 +348,14 @@
 					var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
 					var zpr = [p.y/1e3, e.x, e.z];
 					var relpos = [p.z/1e3, p.x/1e3, e.y];
+					var supportFoot;
+					if(moveBtn.innerHTML==='Left'){
+						supportFoot = 1;
+					} else {
+						supportFoot = 0;
+					}
 					util.debug([
+						'Support: ' + supportFoot,
 						sprintf("relpos: %0.2f %0.2f %0.2f",
 										relpos[0], relpos[1], relpos[2]),
 						sprintf("zpr: %0.2f %0.2f %0.2f",
@@ -356,7 +363,8 @@
 					]);
 					d3.json('/shm/hcm/step/relpos').post(JSON.stringify(relpos));
 					d3.json('/shm/hcm/step/zpr').post(JSON.stringify(zpr));
-					d3.json('/fsm/Body/stepover1').post(JSON.stringify(zpr));
+					d3.json('/shm/hcm/step/supportLeg').post(JSON.stringify([supportFoot]));
+					d3.json('/fsm/Body/stepover1').post();
 				}
 			});
 
