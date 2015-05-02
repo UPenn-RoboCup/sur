@@ -39,6 +39,7 @@
         new THREE.Vector3(0, 1, 0),
         normal
       );
+			var rpy = new THREE.Euler().setFromQuaternion(quatNormal);
 			var matNormal = new THREE.Matrix4().makeRotationFromQuaternion(quatNormal);
 			var matNormalInv = new THREE.Matrix4().getInverse(matNormal, true);
 			// Robot Frame
@@ -72,6 +73,7 @@
 			parameters.rho = rho;
 			parameters.rot = util.get_THREE_mat3(matNormalRobot);
 			parameters.normal = normalRobot.toArray();
+			parameters.rpy = [rpy.z, rpy.x, rpy.y];
 			parameters.root = [parameters.root[2], parameters.root[0], parameters.root[1]]
 				.map(function(v){return v/1e3;});
 			// NOTE: cov is still in THREE coordinates
@@ -183,17 +185,13 @@
 			T_offset = new THREE.Matrix4().multiplyMatrices(T_point, T_inv);
 
     // Debugging
-    sprintf.apply({},['%0.2f %f', 1,2, 55]);
     var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1000).toArray();
-    //offset_msg.unshift('Offset: %0.2f %0.2f %0.2f');
     var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1000).toArray();
-    global_msg.unshift('Global: %0.2f %0.2f %0.2f');
 		//console.log(offset_msg);
     util.debug([
       mesh.name,
 			sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
-      //sprintf.apply(null, offset_msg),
-      //sprintf.apply(null, global_msg)
+			sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
     ]);
 
 		// Default gives a text cursor
@@ -367,7 +365,14 @@
 					d3.json('/shm/hcm/step/zpr').post(JSON.stringify(zpr));
 					d3.json('/shm/hcm/step/supportLeg').post(JSON.stringify([supportFoot]));
 					d3.json('/fsm/Body/stepover1').post();
+				} else {
+					// bodyInit
+					d3.json('/fsm/Body/init').post();
 				}
+			});
+
+			d3.select('button#proceed').on('click', function(){
+				d3.json('/shm/hcm/state/proceed').post(JSON.stringify([1]));
 			});
 
 			d3.select('button#move').on('click', function(){
@@ -526,8 +531,15 @@
 						break;
 					default:
 						delete last_selected_parameters.mesh;
+						var rpy = last_selected_parameters.rpy.map(function(v){
+							return util.RAD_TO_DEG*v
+						});
 						last_selected_parameters.type = action;
 						map_peers.forEach(function(conn){ conn.send(this); }, last_selected_parameters);
+		util.debug([
+			last_selected_parameters.type,
+			sprintf("RPY: %0.2f %0.2f %0.2f", rpy[2], rpy[0], rpy[1])
+		]);
 						console.log('Sending', last_selected_parameters);
 						break;
 				}

@@ -187,13 +187,13 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			var r;
 			if (mesh.c==='raw'){
 				r = w;
-				if (w === 0 || w > 10) {return;}
+				if (w < 0.05 || w > 10) {return;}
 			} else {
 				if (w === 0 || w === 255) {return;}
 				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
 			}
 			// Rotates a *bit* off axis
-			r += 0.02;
+			//r += 0.02; // not for mk2
 
 			var a = mesh.a[v];
 			var theta = (mesh.rfov[0] - mesh.rfov[1]) * (u / width) - mesh.rfov[0];
@@ -201,7 +201,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			var TcomG = flat2mat(mesh.tfG16[v]);
 			var TcomL = flat2mat(mesh.tfL16[v]);
 			var Tactuate = rotZ(a);
-			var Tchest = trans(0.05,0,0.09);
+			var Tchest = trans(0.05,0,0.115);//0.137 measured);//0.15 for webots//0.115 calibrated
 
 			//var Tlidar = rotX(Math.PI/2);
 			//var v = [r*cos(theta), r*sin(theta), 0];
