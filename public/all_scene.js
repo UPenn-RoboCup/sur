@@ -379,18 +379,20 @@
 					motor.quaternion.copy(motor0.quaternion)
 					return;
 				} else if(d3.select('button#step').node().innerHTML==='Done'){
-					var moveBtn = d3.select('button#move').node();
+					var stepBtn = d3.select('button#step').node();
 					var gfoot = planRobot.foot;
 					var lfoot = planRobot.object.getObjectByName('L_FOOT');
 					var rfoot = planRobot.object.getObjectByName('R_FOOT');
 					lfoot.remove(gfoot);
 					rfoot.remove(gfoot);
-					if(moveBtn.innerHTML==='Right'){
-						moveBtn.innerHTML = 'Left';
+					if(this.innerHTML==='Right'){
+						this.innerHTML = 'Left';
 						rfoot.add(gfoot);
+						stepBtn.setAttribute('data-foot', 'Right');
 					} else {
-						moveBtn.innerHTML = 'Right';
+						this.innerHTML = 'Right';
 						lfoot.add(gfoot);
+						stepBtn.setAttribute('data-foot', 'Left');
 					}
 					gfoot.position.set(0,0,0);
 					gfoot.quaternion.copy(new THREE.Quaternion());
@@ -428,20 +430,25 @@
 				}
 				this.innerHTML = 'Done';
 				d3.select('button#teleop').node().innerHTML = 'Rotate';
-				d3.select('button#move').node().innerHTML = 'Right';
-				this.setAttribute('data-foot', 'left');
 				lfoot.remove(gfoot);
 				rfoot.remove(gfoot);
-				if(d3.select('button#move').node().innerHTML==='Right'){
+				if(this.getAttribute('data-foot')==='Left'){
 					lfoot.add(gfoot);
+					this.setAttribute('data-foot', 'Left');
+					d3.select('button#move').node().innerHTML = 'Right';
 				} else {
 					rfoot.add(gfoot);
+					this.setAttribute('data-foot', 'Right');
+					d3.select('button#move').node().innerHTML = 'Left';
 				}
 				//console.log(rfoot);
 				tcontrol.detach();
 				tcontrol.attach(gfoot);
 				tcontrol.space = 'local';
 				tcontrol.setMode('translate');
+				tcontrol.enableX = true;
+				tcontrol.enableY = true;
+				tcontrol.enableZ = true;
 			});
 
 			d3.select('button#teleop').on('click', function(){
