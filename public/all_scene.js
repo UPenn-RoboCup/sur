@@ -235,13 +235,18 @@
 			// Debugging
 			var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1e3).toArray();
 			var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1e3).toArray();
-			util.debug([
-				mesh.name,
-				sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
-				sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
-			]);
+
 			// Default gives a text cursor
-			if (e.button !== 2) { return; }
+			if (e.button === 1) {
+				// Middle click
+				util.debug([
+					mesh.name,
+					sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
+					sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
+				]);
+				return;
+			}
+
 			e.preventDefault();
 		});
 		// Refocus the camera
@@ -277,7 +282,8 @@
 			last_selected_parameters = null;
 			document.getElementById('topic2').classList.add('hidden');
 			var action = this.getAttribute('data-action');
-			//console.log('Action', action);
+			var debugMsg = [];
+			debugMsg.push(action);
 			switch(action){
 				case 'clear':
 					scene.remove(params.mesh);
@@ -286,7 +292,6 @@
 					var gfoot = planRobot.foot;
 					var footname = d3.select('button#step').node().getAttribute('data-foot');
 					var worldFoot = robot.object.getObjectByName(footname).matrixWorld;
-
 					var p3 = params.three.position.clone();
 					p3.sub(
 						new THREE.Vector3().setFromMatrixPosition(worldFoot)
@@ -297,23 +302,21 @@
 					gfoot.quaternion.multiplyQuaternions(
 						params.three.quaternion, qFootInv
 					);
-					/*
-					var Tdiff = new THREE.Matrix4().multiplyMatrices(
-						area,
-						new THREE.Matrix4().getInverse(worldFoot)
-					);
-					Tdiff.decompose(gfoot.position, gfoot.quaternion, scale);
-					*/
+					debugMsg.push(footname);
+					// Print
+					var pL = gfoot.position;
+					var pG = params.root;
+					var rpyL = new THREE.Euler().setFromQuaternion(gfoot.quaternion);
+					var rpyG = params.rpy; // global
+					debugMsg.push(sprintf("RPY: %0.2f %0.2f %0.2f", rpyG[0], rpyG[1], rpyG[2]));
+					debugMsg.push(sprintf("XYZ: %0.2f %0.2f %0.2f", pL.z, pL.x, pL.y));
 				default:
 					break;
 			}
-			var rpy = params.rpy.map(function(v){ return util.RAD_TO_DEG*v; });
-			params.type = action;
-			util.debug([
-				params.type,
-				sprintf("RPY: %0.2f %0.2f %0.2f", rpy[2], rpy[0], rpy[1])
-			]);
+
+			util.debug(debugMsg);
 			// For sending over WebRTC, we remove silly things
+			params.type = action;
 			delete params.mesh;
 			delete params.three;
 			map_peers.forEach(function(conn){ conn.send(params); });
@@ -451,11 +454,13 @@
 					rfoot.add(gfoot);
 					stepBtn.setAttribute('data-foot', 'R_FOOT');
 					//gfoot.material.color = 0xff0000;
+					//gfoot.material.needsUpdate = true;
 				} else {
 					this.innerHTML = 'Right';
 					lfoot.add(gfoot);
 					stepBtn.setAttribute('data-foot', 'L_FOOT');
 					//gfoot.material.color = 0xffff00;
+					//gfoot.material.needsUpdate = true;
 				}
 				gfoot.position.set(0,0,0);
 				gfoot.quaternion.copy(new THREE.Quaternion());
@@ -487,8 +492,6 @@
 				d3.select('button#teleop').node().innerHTML = 'Teleop';
 				d3.select('button#move').node().innerHTML = 'Move';
 				tcontrol.detach();
-				var p = gfoot.position;
-				var rpy = new THREE.Euler().setFromQuaternion(gfoot.quaternion);
 				return;
 			}
 			this.innerHTML = 'Done';
@@ -661,6 +664,7 @@
 									x.innerHTML = m.name;
 									sel.appendChild(x);
 								});
+								planRobot.object.getObjectByName('L_FOOT').add(planRobot.foot);
 								scene.add(this);
 							}
 						});
