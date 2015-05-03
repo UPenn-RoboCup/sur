@@ -255,8 +255,8 @@
 			// Not a short click refocus
 			if(tdiff_ms > 90){ return; }
 			var menu = document.getElementById('topic2');
-			// Left click
 			if (e.button === 0) {
+				// Left click
 				if(!menu.classList.contains('hidden')){
 					menu.classList.add('hidden');
 					last_selected_parameters = null;
@@ -267,14 +267,15 @@
 				// Set the new target look
 				controls.target = last_intersection.p;
 				return;
+			} else if (e.button === 2) {
+				// Right click
+				if(last_intersection.mesh.name==='GROUND'){ return; }
+				// If clicked the mesh, run the processing
+				menu.classList.toggle('hidden');
+				menu.style.left = e.offsetX + 'px';
+				menu.style.top = e.offsetY + 'px';
+				setTimeout(estimate_selection, 0);
 			}
-			// Right click
-			if(last_intersection.mesh.name==='GROUND'){ return; }
-			// If clicked the mesh, run the processing
-			menu.classList.toggle('hidden');
-			menu.style.left = e.offsetX + 'px';
-			menu.style.top = e.offsetY + 'px';
-			setTimeout(estimate_selection, 0);
 		});
 		d3.selectAll('#topic2 li').on('click', function(){
 			var params = last_selected_parameters;
