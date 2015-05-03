@@ -370,7 +370,7 @@
 		});
 
 		resetBtn.addEventListener('click', function(){
-			var reset_joints, reset_com, reset_step;
+			var reset_joints, reset_com, reset_step, reset_ik;
 			switch(getMode()){
 				case 'move':
 					reset_com = true;
@@ -381,11 +381,15 @@
 				case 'step':
 					reset_step = true;
 					break;
+				case 'ik':
+					reset_ik = true;
+					break;
 				default:
 					// Reset All
 					reset_com = true;
 					reset_joints = true;
 					reset_step = true;
+					reset_ik = true;
 					break;
 			}
 			if(reset_joints){
@@ -398,9 +402,14 @@
 				planRobot.object.quaternion.copy(robot.object.quaternion);
 			}
 			if(reset_step){
-				var gfoot = planRobot.foot;
-				gfoot.position.set(0,0,0);
-				gfoot.quaternion.copy(new THREE.Quaternion());
+				planRobot.foot.position.set(0,0,0);
+				planRobot.foot.quaternion.copy(new THREE.Quaternion());
+			}
+			if(reset_ik){
+				planRobot.rhand.position.set(0,0,0);
+				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+				planRobot.lhand.position.set(0,0,0);
+				planRobot.lhand.quaternion.copy(new THREE.Quaternion());
 			}
 		});
 		goBtn.addEventListener('click', function(){
@@ -452,6 +461,27 @@
 					d3.json('/fsm/Body/stepover1').post();
 					break;
 				case 'ik':
+					var rpyL = new THREE.Euler().setFromQuaternion(planRobot.lhand.quaternion);
+					var dL = [
+						planRobot.lhand.position.z / 1e3,
+						planRobot.lhand.position.x / 1e3,
+						planRobot.lhand.position.y / 1e3,
+						rpyL.z,
+						rpyL.x,
+						rpyL.y
+					];
+					var rpyR = new THREE.Euler().setFromQuaternion(planRobot.rhand.quaternion);
+					var dR = [
+						planRobot.rhand.position.z / 1e3,
+						planRobot.rhand.position.x / 1e3,
+						planRobot.rhand.position.y / 1e3,
+						rpyR.z,
+						rpyR.x,
+						rpyR.y
+					];
+					d3.json('/shm/hcm/teleop/dlarm').post(JSON.stringify(dL));
+					d3.json('/shm/hcm/teleop/drarm').post(JSON.stringify(dR));
+					d3.json('/fsm/Arm/teleop').post();
 					break;
 				case 'teleop':
 					// Send teleop
@@ -487,15 +517,11 @@
 						rfoot.add(gfoot);
 						stepBtn.setAttribute('data-foot', 'R_FOOT');
 						gfoot.material.color.setHex(0xff0000);
-						//gfoot.material.color = 0xff0000;
-						//gfoot.material.needsUpdate = true;
 					} else {
 						this.innerHTML = 'Right';
 						lfoot.add(gfoot);
 						stepBtn.setAttribute('data-foot', 'L_FOOT');
-						//gfoot.material.color = 0xffff00;
 						gfoot.material.color.setHex(0xffff00);
-						//gfoot.material.needsUpdate = true;
 					}
 					gfoot.position.set(0,0,0);
 					gfoot.quaternion.copy(new THREE.Quaternion());
@@ -573,25 +599,27 @@
 				case 'teleop':
 				case 'step':
 					return;
+				case 'ik':
+					tcontrol.detach();
+					resetLabels();
+					return;
 				default:
 					this.innerHTML = 'Done';
 					teleopBtn.innerHTML = 'Rotate';
 					break;
 			}
-			var glhand = planRobot.lhand,
-				grhand = planRobot.rhand,
-				lhand = planRobot.object.getObjectByName('L_WR_FT'),
+			var lhand = planRobot.object.getObjectByName('L_WR_FT'),
 				rhand = planRobot.object.getObjectByName('R_WR_FT');
 			tcontrol.detach();
 			if(this.getAttribute('data-hand')==='L_WR_FT'){
-				lfoot.add(gfoot);
-				tcontrol.attach(gfoot);
+				lhand.add(planRobot.lhand);
+				tcontrol.attach(planRobot.lhand);
 				this.setAttribute('data-hand', 'L_WR_FT');
 				moveBtn.innerHTML = 'Right';
 			} else {
-				rfoot.add(gfoot);
-				tcontrol.attach(gfoot);
-				this.setAttribute('data-foot', 'R_FOOT');
+				rhand.add(planRobot.rhand);
+				tcontrol.attach(planRobot.rhand);
+				this.setAttribute('data-hand', 'R_WR_FT');
 				moveBtn.innerHTML = 'Left';
 			}
 			tcontrol.space = 'local';
@@ -618,6 +646,7 @@
 						this.innerHTML = 'Rotate';
 					}
 					return;
+				case 'ik':
 				case 'step':
 					if(this.innerHTML==='Rotate'){
 						tcontrol.setMode('rotate');
