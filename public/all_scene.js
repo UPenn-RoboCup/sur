@@ -1,12 +1,11 @@
 (function (ctx) {
 	'use strict';
 	// Private variables
-	var d3 = ctx.d3,
-		util = ctx.util,
-		sprintf = ctx.sprintf,
-    container, renderer, camera, E, THREE,
+	var d3 = ctx.d3, util = ctx.util, sprintf = ctx.sprintf,
+		E, THREE,
+    container, renderer, camera,
 		scene, raycaster, CANVAS_WIDTH, CANVAS_HEIGHT,
-		controls, tcontrol, selection,
+		controls, tcontrol,
 		robot, planRobot, items = [],
 		mesh0_feed, mesh1_feed, kinect_feed,
 		mesh0 = [], mesh1 = [], kinect = [],
@@ -300,7 +299,8 @@
 					);
 					gfoot.position.copy(p3);
 
-					var qFootInv = new THREE.Quaternion().setFromRotationMatrix(worldFoot).inverse()
+					var qFootInv = new THREE.Quaternion()
+						.setFromRotationMatrix(worldFoot).inverse();
 					gfoot.quaternion.multiplyQuaternions(
 						params.three.quaternion, qFootInv
 					);
@@ -314,11 +314,12 @@
 					debugMsg.push(sprintf("XYZ: %0.2f %0.2f %0.2f", pL.z, pL.x, pL.y));
 					break;
 				case 'avoid':
-					console.log(params);
-					var qRobotInv = robot.object.quaternion.clone().inverse()
+					//console.log(params);
+					var qRobotInv = robot.object.quaternion.clone().inverse();
 					var q = new THREE.Quaternion().multiplyQuaternions(
 						params.three.quaternion, qRobotInv
 					);
+					break;
 				default:
 					break;
 			}
@@ -345,7 +346,7 @@
 		function getMode() {
 			for(var i = 0; i<allBtns.length; i+=1){
 				var btn = allBtns.item(i);
-				if(btn.innerHTML==='Done') return btn.id;
+				if(btn.innerHTML==='Done') { return btn.id; }
 			}
 		}
 		function resetLabels() {
@@ -409,12 +410,12 @@
 						planRobot.object.matrix,
 						new THREE.Matrix4().getInverse(robot.object.matrix)
 					);
-					var dp = new THREE.Vector3().setFromMatrixPosition(Tdiff);
-					var da = new THREE.Euler().setFromRotationMatrix(Tdiff);
-					var relPose = [dp.z/1e3, dp.x/1e3, da.y];
-					var dp = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
-					var da = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
-					var globalPose = [dp.z/1e3, dp.x/1e3, da.y];
+					var dpL = new THREE.Vector3().setFromMatrixPosition(Tdiff);
+					var daL = new THREE.Euler().setFromRotationMatrix(Tdiff);
+					var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
+					var dpG = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
+					var daG = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
+					var globalPose = [dpG.z/1e3, dpG.x/1e3, daG.y];
 					util.debug([
 						sprintf("Local WP: %0.2f %0.2f %0.2f",
 										relPose[0], relPose[1], relPose[2]),
@@ -472,17 +473,12 @@
 
 		moveBtn.addEventListener('click', function(){
 			switch(getMode()){
-				case 'move':
-					tcontrol.detach();
-					tcontrol.enableY = true;
-					resetLabels();
-					break;
 				case 'teleop':
 					// Reset just one
 					var motor0 = robot.object.getObjectByName(jointSel.value);
 					var motor = planRobot.object.getObjectByName(jointSel.value);
-					motor.quaternion.copy(motor0.quaternion)
-					break;
+					motor.quaternion.copy(motor0.quaternion);
+					return;
 				case 'step':
 					var gfoot = planRobot.foot;
 					var lfoot = planRobot.object.getObjectByName('L_FOOT');
@@ -506,33 +502,44 @@
 					}
 					gfoot.position.set(0,0,0);
 					gfoot.quaternion.copy(new THREE.Quaternion());
-					break;
+					return;
+				case 'move':
+					tcontrol.detach();
+					tcontrol.enableY = true;
+					resetLabels();
+					return;
 				default:
-					this.innerHTML = 'Done';
-					teleopBtn.innerHTML = 'Rotate';
-					//planRobot.object.visible = true;
-					tcontrol.setMode('translate');
-					tcontrol.space = 'local';
-					tcontrol.enableX = true;
-					tcontrol.enableY = false;
-					tcontrol.enableZ = true;
-					tcontrol.attach(planRobot.object);
-			}
-		});
-
-		stepBtn.addEventListener('click', function(){
-			var gfoot = planRobot.foot;
-			var lfoot = planRobot.object.getObjectByName('L_FOOT');
-			var rfoot = planRobot.object.getObjectByName('R_FOOT');
-			if(this.innerHTML==='Done'){
-				this.innerHTML = 'Step';
-				teleopBtn.innerHTML = 'Teleop';
-				moveBtn.innerHTML = 'Walk';
-				tcontrol.detach();
-				return;
+					break;
 			}
 			this.innerHTML = 'Done';
 			teleopBtn.innerHTML = 'Rotate';
+			//planRobot.object.visible = true;
+			tcontrol.setMode('translate');
+			tcontrol.space = 'local';
+			tcontrol.enableX = true;
+			tcontrol.enableY = false;
+			tcontrol.enableZ = true;
+			tcontrol.attach(planRobot.object);
+		});
+
+		stepBtn.addEventListener('click', function(){
+			switch(getMode()){
+				case 'move':
+					return;
+				case 'teleop':
+					return;
+				case 'step':
+					tcontrol.detach();
+					resetLabels();
+					return;
+				default:
+					this.innerHTML = 'Done';
+					teleopBtn.innerHTML = 'Rotate';
+					break;
+			}
+			var gfoot = planRobot.foot;
+			var lfoot = planRobot.object.getObjectByName('L_FOOT');
+			var rfoot = planRobot.object.getObjectByName('R_FOOT');
 			lfoot.remove(gfoot);
 			rfoot.remove(gfoot);
 			if(this.getAttribute('data-foot')==='L_FOOT'){
@@ -555,42 +562,41 @@
 		});
 
 		teleopBtn.addEventListener('click', function(){
-			if(moveBtn.innerHTML==='Done'){
-				if(this.innerHTML==='Rotate'){
-					tcontrol.setMode('rotate');
-					tcontrol.enableX = false;
+			switch(getMode()){
+				case 'move':
+					if(this.innerHTML==='Rotate'){
+						tcontrol.setMode('rotate');
+						tcontrol.enableX = false;
+						tcontrol.enableY = true;
+						tcontrol.enableZ = false;
+						this.innerHTML = 'Translate';
+					} else if(this.innerHTML==='Translate') {
+						tcontrol.setMode('translate');
+						tcontrol.enableX = true;
+						tcontrol.enableY = false;
+						tcontrol.enableZ = true;
+						this.innerHTML = 'Rotate';
+					}
+					return;
+				case 'step':
+					if(this.innerHTML==='Rotate'){
+						tcontrol.setMode('rotate');
+						this.innerHTML = 'Translate';
+					} else if(this.innerHTML==='Translate') {
+						tcontrol.setMode('translate');
+						this.innerHTML = 'Rotate';
+					}
+					return;
+				case 'teleop':
+					tcontrol.detach();
 					tcontrol.enableY = true;
-					tcontrol.enableZ = false;
-					this.innerHTML = 'Translate';
-				} else if(this.innerHTML==='Translate') {
-					tcontrol.setMode('translate');
-					tcontrol.enableX = true;
-					tcontrol.enableY = false;
 					tcontrol.enableZ = true;
-					this.innerHTML = 'Rotate';
-				}
-				return;
-			} else if(stepBtn.innerHTML==='Done'){
-				if(this.innerHTML==='Rotate'){
-					tcontrol.setMode('rotate');
-					this.innerHTML = 'Translate';
-				} else if(this.innerHTML==='Translate') {
-					tcontrol.setMode('translate');
-					this.innerHTML = 'Rotate';
-				}
-				return;
-			}
-
-			if(tcontrol.object){
-				tcontrol.detach();
-				//planRobot.object.visible = false;
-				this.innerHTML = 'Teleop';
-				moveBtn.innerHTML = 'Walk';
-				tcontrol.enableY = true;
-				tcontrol.enableZ = true;
-				tcontrol.enableXYZE = true;
-				tcontrol.enableE = true;
-				return;
+					tcontrol.enableXYZE = true;
+					tcontrol.enableE = true;
+					resetLabels();
+					return;
+				default:
+					break;
 			}
 			var motor = planRobot.object.getObjectByName(jointSel.value);
 			if(!motor){return;}
