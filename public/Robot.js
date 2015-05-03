@@ -112,23 +112,24 @@ var cos = Math.cos,
 
 	function Robot(options) {
 		var loader = new THREE.ObjectLoader(),
-			object, meshes, qDefault,
-			foot, lgrip, rgrip,
-			ws;
+			object, meshes, qDefault, ws;
 		if(options.port){
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + options.port);
 			ws.onmessage = function (e) {
 				if (typeof e.data !== "string") { return; }
 				if(!meshes){return;}
 				var feedback = JSON.parse(e.data);
-				var joints = feedback.p;
-				var qQuat = joints.map(function(q){
+				var qQuat = feedback.p.map(function(q){
+					return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
+				});
+				var cqQuat = feedback.cp.map(function(q){
 					return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 				});
 				meshes.forEach(function(m, i){
 					if(!m){return;}
 					m.quaternion.multiplyQuaternions(qDefault[i], qQuat[i]);
-					m.matrixWorldNeedsUpdate = true;
+					m.cquaternion.multiplyQuaternions(qDefault[i], cqQuat[i]);
+					//m.matrixWorldNeedsUpdate = true;
 				});
 				var torso = feedback.u;
 				object.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));
@@ -143,12 +144,12 @@ var cos = Math.cos,
 			new THREE.MeshBasicMaterial( { color: 0xffff00 } )
 		);
 
-		this.lgrip = new THREE.Mesh(
+		this.lhand = new THREE.Mesh(
 			new THREE.BoxGeometry( 25, 25, 25 ),
 			new THREE.MeshBasicMaterial( { color: 0xffff00 } )
 		);
 
-		this.rgrip = new THREE.Mesh(
+		this.rhand = new THREE.Mesh(
 			new THREE.BoxGeometry( 25, 25, 25 ),
 			new THREE.MeshBasicMaterial( { color: 0xff0000 } )
 		);
@@ -161,6 +162,10 @@ var cos = Math.cos,
 			qDefault = meshes.map(function(m){
 				return m.quaternion.clone();
 			});
+			// Save the commands. TODO: userData
+			meshes.forEach(function(m){
+				m.cquaternion = new THREE.Quaternion();
+			})
 			this.meshes = meshes;
 			this.object = object;
 			this.qDefault = qDefault;

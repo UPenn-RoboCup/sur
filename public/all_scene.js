@@ -357,7 +357,8 @@
 		}
 
 		jointSel.addEventListener('change', function(){
-			if(stepBtn.innerHTML!=='Done'){ return; }
+			console.log('here')
+			if(getMode()!=='teleop'){ return; }
 			var motor = planRobot.object.getObjectByName(this.value);
 			if(!motor){return;}
 			tcontrol.detach();
@@ -389,7 +390,7 @@
 			}
 			if(reset_joints){
 				planRobot.meshes.forEach(function(m, i){
-					m.quaternion.copy(this[i].quaternion);
+					m.quaternion.copy(this[i].cquaternion);
 				}, robot.meshes);
 			}
 			if(reset_com){
@@ -425,20 +426,6 @@
 					d3.json('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach')
 						.post(JSON.stringify(globalPose));
 					break;
-				case 'teleop':
-					// Send teleop
-					var qAll = planRobot.meshes.map(function(m, i){
-						var qDinv = this[i].clone().conjugate();
-						var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
-						var e = new THREE.Euler().setFromQuaternion(q0);
-						return e.x;
-					}, planRobot.qDefault);
-					d3.json('/shm/hcm/teleop/larm',function(){
-						d3.json('/shm/hcm/teleop/rarm', function(){
-							d3.json('/fsm/Arm/teleopraw').post();
-						}).post(JSON.stringify(qAll.slice(21, 28)));
-					}).post(JSON.stringify(qAll.slice(2, 9)));
-					break;
 				case 'step':
 					var p = planRobot.foot.position;
 					var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
@@ -464,6 +451,22 @@
 					d3.json('/shm/hcm/step/supportLeg').post(JSON.stringify([supportFoot]));
 					d3.json('/fsm/Body/stepover1').post();
 					break;
+				case 'ik':
+					break;
+				case 'teleop':
+					// Send teleop
+					var qAll = planRobot.meshes.map(function(m, i){
+						var qDinv = this[i].clone().conjugate();
+						var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+						var e = new THREE.Euler().setFromQuaternion(q0);
+						return e.x;
+					}, planRobot.qDefault);
+					d3.json('/shm/hcm/teleop/larm',function(){
+						d3.json('/shm/hcm/teleop/rarm', function(){
+							d3.json('/fsm/Arm/teleopraw').post();
+						}).post(JSON.stringify(qAll.slice(21, 28)));
+					}).post(JSON.stringify(qAll.slice(2, 9)));
+					break;
 				default:
 					// bodyInit
 					d3.json('/fsm/Body/init').post();
@@ -473,12 +476,6 @@
 
 		moveBtn.addEventListener('click', function(){
 			switch(getMode()){
-				case 'teleop':
-					// Reset just one
-					var motor0 = robot.object.getObjectByName(jointSel.value);
-					var motor = planRobot.object.getObjectByName(jointSel.value);
-					motor.quaternion.copy(motor0.quaternion);
-					return;
 				case 'step':
 					var gfoot = planRobot.foot;
 					var lfoot = planRobot.object.getObjectByName('L_FOOT');
@@ -503,6 +500,14 @@
 					gfoot.position.set(0,0,0);
 					gfoot.quaternion.copy(new THREE.Quaternion());
 					return;
+				case 'ik':
+					return;
+				case 'teleop':
+					// Reset just one
+					var motor0 = robot.object.getObjectByName(jointSel.value);
+					var motor = planRobot.object.getObjectByName(jointSel.value);
+					motor.quaternion.copy(motor0.quaternion);
+					return;
 				case 'move':
 					tcontrol.detach();
 					tcontrol.enableY = true;
@@ -525,7 +530,7 @@
 		stepBtn.addEventListener('click', function(){
 			switch(getMode()){
 				case 'move':
-					return;
+				case 'ik':
 				case 'teleop':
 					return;
 				case 'step':
@@ -554,6 +559,41 @@
 			//console.log(rfoot);
 			tcontrol.detach();
 			tcontrol.attach(gfoot);
+			tcontrol.space = 'local';
+			tcontrol.setMode('translate');
+			tcontrol.enableX = true;
+			tcontrol.enableY = true;
+			tcontrol.enableZ = true;
+		});
+
+		ikBtn.addEventListener('click', function(){
+			switch(getMode()){
+				case 'move':
+				case 'teleop':
+				case 'teleop':
+				case 'step':
+					return;
+				default:
+					this.innerHTML = 'Done';
+					teleopBtn.innerHTML = 'Rotate';
+					break;
+			}
+			var glhand = planRobot.lhand,
+				grhand = planRobot.rhand,
+				lhand = planRobot.object.getObjectByName('L_WR_FT'),
+				rhand = planRobot.object.getObjectByName('R_WR_FT');
+			tcontrol.detach();
+			if(this.getAttribute('data-hand')==='L_WR_FT'){
+				lfoot.add(gfoot);
+				tcontrol.attach(gfoot);
+				this.setAttribute('data-hand', 'L_WR_FT');
+				moveBtn.innerHTML = 'Right';
+			} else {
+				rfoot.add(gfoot);
+				tcontrol.attach(gfoot);
+				this.setAttribute('data-foot', 'R_FOOT');
+				moveBtn.innerHTML = 'Left';
+			}
 			tcontrol.space = 'local';
 			tcontrol.setMode('translate');
 			tcontrol.enableX = true;
@@ -696,6 +736,8 @@
 									sel.appendChild(x);
 								});
 								planRobot.object.getObjectByName('L_FOOT').add(planRobot.foot);
+								planRobot.object.getObjectByName('L_WR_FT').add(planRobot.lhand);
+								planRobot.object.getObjectByName('R_WR_FT').add(planRobot.rhand);
 								scene.add(this);
 							}
 						});
