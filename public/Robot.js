@@ -138,11 +138,20 @@ var cos = Math.cos,
 			};
 		}
 
-		foot = new THREE.Mesh(
+		this.foot = new THREE.Mesh(
 			new THREE.BoxGeometry( 100, 10, 200 ),
 			new THREE.MeshBasicMaterial( { color: 0xffff00 } )
 		);
-		this.foot = foot;
+
+		this.lgrip = new THREE.Mesh(
+			new THREE.BoxGeometry( 25, 25, 25 ),
+			new THREE.MeshBasicMaterial( { color: 0xffff00 } )
+		);
+
+		this.rgrip = new THREE.Mesh(
+			new THREE.BoxGeometry( 25, 25, 25 ),
+			new THREE.MeshBasicMaterial( { color: 0xff0000 } )
+		);
 
 		// assuming we loaded a JSON structure from elsewhere
 		loader.load('json/thorop2.json', function(o){

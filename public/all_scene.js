@@ -73,7 +73,12 @@
 			parameters.rho = rho;
 			parameters.rot = util.get_THREE_mat3(matNormalRobot);
 			parameters.normal = normalRobot.toArray();
-			parameters.rpy = [rpy.z, rpy.x, rpy.y];
+			if(parameters.id==='v'){
+				var a = Math.atan2(normal.x, normal.z);
+				parameters.rpy = [0, 0, a];
+			} else {
+				parameters.rpy = [rpy.z, rpy.x, 0];
+			}
 			parameters.root = [parameters.root[2], parameters.root[0], parameters.root[1]]
 				.map(function(v){return v/1e3;});
 			// NOTE: cov is still in THREE coordinates
@@ -142,19 +147,16 @@
         mesh_obj.drawCalls[i].start, mesh_obj.drawCalls[i].count, mesh_obj.drawCalls[i].index
       );
     }
-		// Make the new mesh and remove the previous one
-		var mesh = new THREE.Mesh(geometry, material);
-    mesh.name = mesh_obj.id;
-    mesh.n_el = mesh_obj.n_el;
-		// Dynamic, because we will do raycasting
+		// Dynamic, because we will do raycasting; also need bounding info
 		geometry.dynamic = true;
-		// for picking via raycasting
 		geometry.computeBoundingSphere();
     geometry.computeBoundingBox();
 		// Phong Material requires normals for reflectivity
     // TODO: Perform the normals computation in the Worker thread maybe?
 		geometry.computeVertexNormals();
-    // Add the mesh to the scene
+		var mesh = new THREE.Mesh(geometry, material);
+    mesh.name = mesh_obj.id;
+    mesh.n_el = mesh_obj.n_el;
 		scene.add(mesh);
 		// Save a set of meshes
 		if(mesh.name==='mesh0'){
@@ -311,6 +313,13 @@
 					var rpyG = params.rpy; // global
 					debugMsg.push(sprintf("RPY: %0.2f %0.2f %0.2f", rpyG[0], rpyG[1], rpyG[2]));
 					debugMsg.push(sprintf("XYZ: %0.2f %0.2f %0.2f", pL.z, pL.x, pL.y));
+					break;
+				case 'avoid':
+					console.log(params);
+					var qRobotInv = robot.object.quaternion.clone().inverse()
+					var q = new THREE.Quaternion().multiplyQuaternions(
+						params.three.quaternion, qRobotInv
+					);
 				default:
 					break;
 			}
@@ -325,19 +334,24 @@
 	} // setup_clicks
 
 	function setup_buttons(){
-		d3.select('select#joints').on('change', function(){
-			if(d3.select('button#teleop').node().innerHTML==='Done'){
+		var resetBtn = document.querySelector('button#reset'),
+			goBtn = document.querySelector('button#go'),
+			moveBtn = document.querySelector('button#move'),
+			teleopBtn = document.querySelector('button#teleop'),
+			stepBtn = document.querySelector('button#step'),
+			jointSel = document.querySelector('select#joints'),
+			proceedBtn = document.querySelector('button#proceed');
+		// Listeners
+		jointSel.addEventListener('change', function(){
+			if(stepBtn.innerHTML==='Done'){
 				var motor = planRobot.object.getObjectByName(this.value);
 				if(!motor){return;}
 				tcontrol.detach();
 				tcontrol.attach(motor);
 			}
 		});
-		d3.select('button#reset').on('click', function(){
-			var moveBtn = d3.select('button#move').node(),
-				teleopBtn = d3.select('button#teleop').node(),
-				stepBtn = d3.select('button#step').node(),
-				reset_joints = true, reset_com = true, reset_step = true;
+		resetBtn.addEventListener('click', function(){
+			var reset_joints = true, reset_com = true, reset_step = true;
 			if(moveBtn.innerHTML==='Done'){
 				reset_joints = false;
 				reset_step = false;
@@ -363,11 +377,7 @@
 				gfoot.quaternion.copy(new THREE.Quaternion());
 			}
 		});
-
-		d3.select('button#go').on('click', function(){
-			var moveBtn = d3.select('button#move').node(),
-				teleopBtn = d3.select('button#teleop').node(),
-				stepBtn = d3.select('button#step').node();
+		goBtn.addEventListener('click', function(){
 			if(moveBtn.innerHTML==='Done'){
 				// Send the Waypoint
 				var Tdiff = new THREE.Matrix4().multiplyMatrices(
@@ -431,20 +441,18 @@
 			}
 		});
 
-		d3.select('button#proceed').on('click', function(){
+		proceedBtn.addEventListener('click', function(){
 			d3.json('/shm/hcm/state/proceed').post(JSON.stringify([1]));
 		});
 
-		d3.select('button#move').on('click', function(){
-			if(d3.select('button#teleop').node().innerHTML==='Done'){
+		moveBtn.addEventListener('click', function(){
+			if(teleopBtn.innerHTML==='Done'){
 				// Reset just one
-				var sel = document.getElementById('joints');
-				var motor0 = robot.object.getObjectByName(sel.value);
-				var motor = planRobot.object.getObjectByName(sel.value);
+				var motor0 = robot.object.getObjectByName(jointSel.value);
+				var motor = planRobot.object.getObjectByName(jointSel.value);
 				motor.quaternion.copy(motor0.quaternion)
 				return;
-			} else if(d3.select('button#step').node().innerHTML==='Done'){
-				var stepBtn = d3.select('button#step').node();
+			} else if(stepBtn.innerHTML==='Done'){
 				var gfoot = planRobot.foot;
 				var lfoot = planRobot.object.getObjectByName('L_FOOT');
 				var rfoot = planRobot.object.getObjectByName('R_FOOT');
@@ -472,7 +480,7 @@
 			if(tcontrol.object){
 				tcontrol.detach();
 				//planRobot.object.visible = false;
-				this.innerHTML = 'Move';
+				this.innerHTML = 'Walk';
 				d3.select('button#teleop').node().innerHTML = 'Teleop';
 				tcontrol.enableY = true;
 				return;
@@ -482,33 +490,35 @@
 			//planRobot.object.visible = true;
 			tcontrol.setMode('translate');
 			tcontrol.space = 'local';
+			tcontrol.enableX = true;
 			tcontrol.enableY = false;
+			tcontrol.enableZ = true;
 			tcontrol.attach(planRobot.object);
 		});
 
-		d3.select('button#step').on('click', function(){
+		stepBtn.addEventListener('click', function(){
 			var gfoot = planRobot.foot;
 			var lfoot = planRobot.object.getObjectByName('L_FOOT');
 			var rfoot = planRobot.object.getObjectByName('R_FOOT');
 			if(this.innerHTML==='Done'){
 				this.innerHTML = 'Step';
-				d3.select('button#teleop').node().innerHTML = 'Teleop';
-				d3.select('button#move').node().innerHTML = 'Move';
+				teleopBtn.innerHTML = 'Teleop';
+				moveBtn.innerHTML = 'Walk';
 				tcontrol.detach();
 				return;
 			}
 			this.innerHTML = 'Done';
-			d3.select('button#teleop').node().innerHTML = 'Rotate';
+			teleopBtn.innerHTML = 'Rotate';
 			lfoot.remove(gfoot);
 			rfoot.remove(gfoot);
 			if(this.getAttribute('data-foot')==='L_FOOT'){
 				lfoot.add(gfoot);
 				this.setAttribute('data-foot', 'L_FOOT');
-				d3.select('button#move').node().innerHTML = 'Right';
+				moveBtn.innerHTML = 'Right';
 			} else {
 				rfoot.add(gfoot);
 				this.setAttribute('data-foot', 'R_FOOT');
-				d3.select('button#move').node().innerHTML = 'Left';
+				moveBtn.innerHTML = 'Left';
 			}
 			//console.log(rfoot);
 			tcontrol.detach();
@@ -520,8 +530,8 @@
 			tcontrol.enableZ = true;
 		});
 
-		d3.select('button#teleop').on('click', function(){
-			if(d3.select('button#move').node().innerHTML==='Done'){
+		teleopBtn.addEventListener('click', function(){
+			if(moveBtn.innerHTML==='Done'){
 				if(this.innerHTML==='Rotate'){
 					tcontrol.setMode('rotate');
 					tcontrol.enableX = false;
@@ -536,7 +546,7 @@
 					this.innerHTML = 'Rotate';
 				}
 				return;
-			} else if(d3.select('button#step').node().innerHTML==='Done'){
+			} else if(stepBtn.innerHTML==='Done'){
 				if(this.innerHTML==='Rotate'){
 					tcontrol.setMode('rotate');
 					this.innerHTML = 'Translate';
@@ -551,18 +561,17 @@
 				tcontrol.detach();
 				//planRobot.object.visible = false;
 				this.innerHTML = 'Teleop';
-				d3.select('button#move').node().innerHTML = 'Move';
+				moveBtn.innerHTML = 'Walk';
 				tcontrol.enableY = true;
 				tcontrol.enableZ = true;
 				tcontrol.enableXYZE = true;
 				tcontrol.enableE = true;
 				return;
 			}
-			var sel = document.getElementById('joints');
-			var motor = planRobot.object.getObjectByName(sel.value);
+			var motor = planRobot.object.getObjectByName(jointSel.value);
 			if(!motor){return;}
 			this.innerHTML = 'Done';
-			d3.select('button#move').node().innerHTML = 'Undo';
+			moveBtn.innerHTML = 'Undo';
 			tcontrol.setMode('rotate');
 			tcontrol.space = 'local';
 			tcontrol.enableY = false;
@@ -571,17 +580,6 @@
 			tcontrol.enableE = false;
 			tcontrol.attach(motor);
 		});
-
-		/*
-		// User interactions
-		selection = d3.select('select#objects').node();
-		d3.select('button#look').on('click', function(){
-			controls.enabled = true;
-		});
-		d3.select('button#draw').on('click', function(){
-			controls.enabled = false;
-		});
-		*/
 
 	}
 
