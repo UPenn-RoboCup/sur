@@ -11,8 +11,7 @@
 		mesh0_feed, mesh1_feed, kinect_feed,
 		mesh0 = [], mesh1 = [], kinect = [],
 		N_MESH0 = 1, N_MESH1 = 1, N_KINECT = 1,
-    peer, p_conn, map_peers = [],
-    peer_id = 'all_scene', peer_map_id = 'all_map',
+		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null;
 
   var describe = {
@@ -339,28 +338,53 @@
 			moveBtn = document.querySelector('button#move'),
 			teleopBtn = document.querySelector('button#teleop'),
 			stepBtn = document.querySelector('button#step'),
+			ikBtn = document.querySelector('button#ik'),
 			jointSel = document.querySelector('select#joints'),
-			proceedBtn = document.querySelector('button#proceed');
-		// Listeners
-		jointSel.addEventListener('change', function(){
-			if(stepBtn.innerHTML==='Done'){
-				var motor = planRobot.object.getObjectByName(this.value);
-				if(!motor){return;}
-				tcontrol.detach();
-				tcontrol.attach(motor);
+			proceedBtn = document.querySelector('button#proceed'),
+			allBtns = document.querySelectorAll('#topic button');
+		function getMode() {
+			for(var i = 0; i<allBtns.length; i+=1){
+				var btn = allBtns.item(i);
+				if(btn.innerHTML==='Done') return btn.id;
 			}
+		}
+		function resetLabels() {
+			for(var i = 0; i<allBtns.length; i+=1){
+				var btn = allBtns.item(i);
+				btn.innerHTML = btn.name;
+			}
+		}
+
+		jointSel.addEventListener('change', function(){
+			if(stepBtn.innerHTML!=='Done'){ return; }
+			var motor = planRobot.object.getObjectByName(this.value);
+			if(!motor){return;}
+			tcontrol.detach();
+			tcontrol.attach(motor);
 		});
+
+		proceedBtn.addEventListener('click', function(){
+			d3.json('/shm/hcm/state/proceed').post(JSON.stringify([1]));
+		});
+
 		resetBtn.addEventListener('click', function(){
-			var reset_joints = true, reset_com = true, reset_step = true;
-			if(moveBtn.innerHTML==='Done'){
-				reset_joints = false;
-				reset_step = false;
-			} else if(teleopBtn.innerHTML==='Done'){
-				reset_com = false;
-				reset_step = false;
-			} else if(stepBtn.innerHTML==='Done'){
-				reset_com = false;
-				reset_joints = false;
+			var reset_joints, reset_com, reset_step;
+			switch(getMode()){
+				case 'move':
+					reset_com = true;
+					break;
+				case 'teleop':
+					reset_joints = true;
+					break;
+				case 'step':
+					reset_step = true;
+					break;
+				default:
+					// Reset All
+					reset_com = true;
+					reset_joints = true;
+					reset_step = true;
+					break;
 			}
 			if(reset_joints){
 				planRobot.meshes.forEach(function(m, i){
@@ -378,122 +402,122 @@
 			}
 		});
 		goBtn.addEventListener('click', function(){
-			if(moveBtn.innerHTML==='Done'){
-				// Send the Waypoint
-				var Tdiff = new THREE.Matrix4().multiplyMatrices(
-					planRobot.object.matrix,
-					new THREE.Matrix4().getInverse(robot.object.matrix)
-				);
-				var dp = new THREE.Vector3().setFromMatrixPosition(Tdiff);
-				var da = new THREE.Euler().setFromRotationMatrix(Tdiff);
-				var relPose = [dp.z/1e3, dp.x/1e3, da.y];
-				var dp = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
-				var da = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
-				var globalPose = [dp.z/1e3, dp.x/1e3, da.y];
-				util.debug([
-					sprintf("Local WP: %0.2f %0.2f %0.2f",
-									relPose[0], relPose[1], relPose[2]),
-					sprintf("Global WP: %0.2f %0.2f %0.2f",
-									globalPose[0], globalPose[1], globalPose[2]),
-				]);
-				d3.json('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach')
-					.post(JSON.stringify(globalPose));
-			} else if(teleopBtn.innerHTML==='Done'){
-				// Send teleop
-				var qAll = planRobot.meshes.map(function(m, i){
-					var qDinv = this[i].clone().conjugate();
-					var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
-					var e = new THREE.Euler().setFromQuaternion(q0);
-					return e.x;
-				}, planRobot.qDefault);
-				d3.json('/shm/hcm/teleop/larm',function(){
-					d3.json('/shm/hcm/teleop/rarm', function(){
-						d3.json('/fsm/Arm/teleopraw').post();
-					}).post(JSON.stringify(qAll.slice(21, 28)));
-				}).post(JSON.stringify(qAll.slice(2, 9)));
-			} else if(stepBtn.innerHTML==='Done'){
-				var p = planRobot.foot.position;
-				var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
-				var zpr = [p.y/1e3, e.x, e.z];
-				var relpos = [p.z/1e3, p.x/1e3, e.y];
-				var supportFoot, supportText;
-				if(moveBtn.innerHTML==='Left'){
-					supportText = 'Left';
-					supportFoot = 1;
-				} else {
-					supportText = 'Right';
-					supportFoot = 0;
-				}
-				util.debug([
-					'Support: ' + supportText,
-					sprintf("relpos: %0.2f %0.2f %0.2f",
-									relpos[0], relpos[1], relpos[2]),
-					sprintf("zpr: %0.2f %0.2f %0.2f",
-									zpr[0], zpr[1]*util.RAD_TO_DEG, zpr[2]*util.RAD_TO_DEG),
-				]);
-				d3.json('/shm/hcm/step/relpos').post(JSON.stringify(relpos));
-				d3.json('/shm/hcm/step/zpr').post(JSON.stringify(zpr));
-				d3.json('/shm/hcm/step/supportLeg').post(JSON.stringify([supportFoot]));
-				d3.json('/fsm/Body/stepover1').post();
-			} else {
-				// bodyInit
-				d3.json('/fsm/Body/init').post();
+			switch(getMode()){
+				case 'move':
+					// Send the Waypoint
+					var Tdiff = new THREE.Matrix4().multiplyMatrices(
+						planRobot.object.matrix,
+						new THREE.Matrix4().getInverse(robot.object.matrix)
+					);
+					var dp = new THREE.Vector3().setFromMatrixPosition(Tdiff);
+					var da = new THREE.Euler().setFromRotationMatrix(Tdiff);
+					var relPose = [dp.z/1e3, dp.x/1e3, da.y];
+					var dp = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
+					var da = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
+					var globalPose = [dp.z/1e3, dp.x/1e3, da.y];
+					util.debug([
+						sprintf("Local WP: %0.2f %0.2f %0.2f",
+										relPose[0], relPose[1], relPose[2]),
+						sprintf("Global WP: %0.2f %0.2f %0.2f",
+										globalPose[0], globalPose[1], globalPose[2]),
+					]);
+					d3.json('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach')
+						.post(JSON.stringify(globalPose));
+					break;
+				case 'teleop':
+					// Send teleop
+					var qAll = planRobot.meshes.map(function(m, i){
+						var qDinv = this[i].clone().conjugate();
+						var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+						var e = new THREE.Euler().setFromQuaternion(q0);
+						return e.x;
+					}, planRobot.qDefault);
+					d3.json('/shm/hcm/teleop/larm',function(){
+						d3.json('/shm/hcm/teleop/rarm', function(){
+							d3.json('/fsm/Arm/teleopraw').post();
+						}).post(JSON.stringify(qAll.slice(21, 28)));
+					}).post(JSON.stringify(qAll.slice(2, 9)));
+					break;
+				case 'step':
+					var p = planRobot.foot.position;
+					var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
+					var zpr = [p.y/1e3, e.x, e.z];
+					var relpos = [p.z/1e3, p.x/1e3, e.y];
+					var supportFoot, supportText;
+					if(moveBtn.innerHTML==='Left'){
+						supportText = 'Left';
+						supportFoot = 1;
+					} else {
+						supportText = 'Right';
+						supportFoot = 0;
+					}
+					util.debug([
+						'Support: ' + supportText,
+						sprintf("relpos: %0.2f %0.2f %0.2f",
+										relpos[0], relpos[1], relpos[2]),
+						sprintf("zpr: %0.2f %0.2f %0.2f",
+										zpr[0], zpr[1]*util.RAD_TO_DEG, zpr[2]*util.RAD_TO_DEG),
+					]);
+					d3.json('/shm/hcm/step/relpos').post(JSON.stringify(relpos));
+					d3.json('/shm/hcm/step/zpr').post(JSON.stringify(zpr));
+					d3.json('/shm/hcm/step/supportLeg').post(JSON.stringify([supportFoot]));
+					d3.json('/fsm/Body/stepover1').post();
+					break;
+				default:
+					// bodyInit
+					d3.json('/fsm/Body/init').post();
+					break;
 			}
-		});
-
-		proceedBtn.addEventListener('click', function(){
-			d3.json('/shm/hcm/state/proceed').post(JSON.stringify([1]));
 		});
 
 		moveBtn.addEventListener('click', function(){
-			if(teleopBtn.innerHTML==='Done'){
-				// Reset just one
-				var motor0 = robot.object.getObjectByName(jointSel.value);
-				var motor = planRobot.object.getObjectByName(jointSel.value);
-				motor.quaternion.copy(motor0.quaternion)
-				return;
-			} else if(stepBtn.innerHTML==='Done'){
-				var gfoot = planRobot.foot;
-				var lfoot = planRobot.object.getObjectByName('L_FOOT');
-				var rfoot = planRobot.object.getObjectByName('R_FOOT');
-				lfoot.remove(gfoot);
-				rfoot.remove(gfoot);
-				if(this.innerHTML==='Right'){
-					this.innerHTML = 'Left';
-					rfoot.add(gfoot);
-					stepBtn.setAttribute('data-foot', 'R_FOOT');
-					gfoot.material.color.setHex(0xff0000);
-					//gfoot.material.color = 0xff0000;
-					//gfoot.material.needsUpdate = true;
-				} else {
-					this.innerHTML = 'Right';
-					lfoot.add(gfoot);
-					stepBtn.setAttribute('data-foot', 'L_FOOT');
-					//gfoot.material.color = 0xffff00;
-					gfoot.material.color.setHex(0xffff00);
-					//gfoot.material.needsUpdate = true;
-				}
-				gfoot.position.set(0,0,0);
-				gfoot.quaternion.copy(new THREE.Quaternion());
-				return;
+			switch(getMode()){
+				case 'move':
+					tcontrol.detach();
+					tcontrol.enableY = true;
+					resetLabels();
+					break;
+				case 'teleop':
+					// Reset just one
+					var motor0 = robot.object.getObjectByName(jointSel.value);
+					var motor = planRobot.object.getObjectByName(jointSel.value);
+					motor.quaternion.copy(motor0.quaternion)
+					break;
+				case 'step':
+					var gfoot = planRobot.foot;
+					var lfoot = planRobot.object.getObjectByName('L_FOOT');
+					var rfoot = planRobot.object.getObjectByName('R_FOOT');
+					lfoot.remove(gfoot);
+					rfoot.remove(gfoot);
+					if(this.innerHTML==='Right'){
+						this.innerHTML = 'Left';
+						rfoot.add(gfoot);
+						stepBtn.setAttribute('data-foot', 'R_FOOT');
+						gfoot.material.color.setHex(0xff0000);
+						//gfoot.material.color = 0xff0000;
+						//gfoot.material.needsUpdate = true;
+					} else {
+						this.innerHTML = 'Right';
+						lfoot.add(gfoot);
+						stepBtn.setAttribute('data-foot', 'L_FOOT');
+						//gfoot.material.color = 0xffff00;
+						gfoot.material.color.setHex(0xffff00);
+						//gfoot.material.needsUpdate = true;
+					}
+					gfoot.position.set(0,0,0);
+					gfoot.quaternion.copy(new THREE.Quaternion());
+					break;
+				default:
+					this.innerHTML = 'Done';
+					teleopBtn.innerHTML = 'Rotate';
+					//planRobot.object.visible = true;
+					tcontrol.setMode('translate');
+					tcontrol.space = 'local';
+					tcontrol.enableX = true;
+					tcontrol.enableY = false;
+					tcontrol.enableZ = true;
+					tcontrol.attach(planRobot.object);
 			}
-			if(tcontrol.object){
-				tcontrol.detach();
-				//planRobot.object.visible = false;
-				this.innerHTML = 'Walk';
-				d3.select('button#teleop').node().innerHTML = 'Teleop';
-				tcontrol.enableY = true;
-				return;
-			}
-			this.innerHTML = 'Done';
-			d3.select('button#teleop').node().innerHTML = 'Rotate';
-			//planRobot.object.visible = true;
-			tcontrol.setMode('translate');
-			tcontrol.space = 'local';
-			tcontrol.enableX = true;
-			tcontrol.enableY = false;
-			tcontrol.enableZ = true;
-			tcontrol.attach(planRobot.object);
 		});
 
 		stepBtn.addEventListener('click', function(){
@@ -683,7 +707,8 @@
 	} //done 3d
 
 	function setup_rtc(){
-		peer = new Peer(peer_id, {host: 'localhost', port: 9000});
+		var peer_id = 'all_scene';
+		var peer = new Peer(peer_id, {host: 'localhost', port: 9000});
 		peer.on('open', function(id) {
 			console.log('My peer ID is: ' + id);
 		});

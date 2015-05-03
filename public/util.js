@@ -7,20 +7,35 @@
 (function (ctx) {
 	"use strict";
 
+	// http://www.html5rocks.com/en/tutorials/es6/promises/
+	function get(url) {
+		// Return a new promise.
+		return new Promise(function(resolve, reject) {
+			// Do the usual XHR stuff
+			var req = new XMLHttpRequest();
+			req.open('GET', url);
+			req.onload = function() {
+				if (req.status == 200) {
+					resolve(req.response);
+				} else {
+					reject(Error(req.statusText));
+				}
+			};
+			req.onerror = function() {
+				reject(Error("Network Error"));
+			};
+			req.send();
+		});
+	}
+
 	function ljs(src, cb) {
-		if (typeof src !== 'string') {
-			return;
+		if (typeof src !== 'string') { return; }
+		// Ensure not already loaded
+		var scripts = document.getElementsByTagName('script');
+		for (var i = 0; i < scripts.length; i = i + 1) {
+			if (scripts[i].src.indexOf(src) !== -1) { return; }
 		}
-		var scripts = document.getElementsByTagName('script'),
-			len = scripts.length,
-			i,
-			s;
-		for (i = 0; i < len; i = i + 1) {
-			if (scripts[i].src.indexOf(src) !== -1) {
-				return;
-			}
-		}
-		s = document.createElement('script');
+		var s = document.createElement('script');
 		s.src = src;
 		s.async = true;
 		s.type = "application/javascript";
