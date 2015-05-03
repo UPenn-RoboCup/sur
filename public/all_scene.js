@@ -453,6 +453,7 @@
 					this.innerHTML = 'Left';
 					rfoot.add(gfoot);
 					stepBtn.setAttribute('data-foot', 'R_FOOT');
+					gfoot.material.color.setHex(0xff0000);
 					//gfoot.material.color = 0xff0000;
 					//gfoot.material.needsUpdate = true;
 				} else {
@@ -460,6 +461,7 @@
 					lfoot.add(gfoot);
 					stepBtn.setAttribute('data-foot', 'L_FOOT');
 					//gfoot.material.color = 0xffff00;
+					gfoot.material.color.setHex(0xffff00);
 					//gfoot.material.needsUpdate = true;
 				}
 				gfoot.position.set(0,0,0);
