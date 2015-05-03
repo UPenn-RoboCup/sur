@@ -97,6 +97,7 @@
 			delete parameters.points;
 			// Store some threejs items
 			parameters.three = {
+				normal: normal,
 				quaternion: quatNormal,
 				position: line.position.clone()
 			};
@@ -283,8 +284,15 @@
 					return;
 				case 'step':
 					var gfoot = planRobot.foot;
-					gfoot.position.copy(params.three.position);
-					gfoot.quaternion.copy(params.three.quaternion);
+					var scale = new THREE.Vector3(1,1,1);
+					var area = new THREE.Matrix4().compose(params.three.position, params.three.quaternion, scale);
+					var footname = d3.select('button#step').node().getAttribute('data-foot');
+					var worldFoot = robot.object.getObjectByName(footname).matrixWorld;
+					var Tdiff = new THREE.Matrix4().multiplyMatrices(
+						area,
+						new THREE.Matrix4().getInverse(worldFoot)
+					);
+					Tdiff.decompose(gfoot.position, gfoot.quaternion, scale);
 				default:
 					break;
 			}
@@ -430,11 +438,11 @@
 				if(this.innerHTML==='Right'){
 					this.innerHTML = 'Left';
 					rfoot.add(gfoot);
-					stepBtn.setAttribute('data-foot', 'Right');
+					stepBtn.setAttribute('data-foot', 'R_FOOT');
 				} else {
 					this.innerHTML = 'Right';
 					lfoot.add(gfoot);
-					stepBtn.setAttribute('data-foot', 'Left');
+					stepBtn.setAttribute('data-foot', 'L_FOOT');
 				}
 				gfoot.position.set(0,0,0);
 				gfoot.quaternion.copy(new THREE.Quaternion());
@@ -474,13 +482,13 @@
 			d3.select('button#teleop').node().innerHTML = 'Rotate';
 			lfoot.remove(gfoot);
 			rfoot.remove(gfoot);
-			if(this.getAttribute('data-foot')==='Left'){
+			if(this.getAttribute('data-foot')==='L_FOOT'){
 				lfoot.add(gfoot);
-				this.setAttribute('data-foot', 'Left');
+				this.setAttribute('data-foot', 'L_FOOT');
 				d3.select('button#move').node().innerHTML = 'Right';
 			} else {
 				rfoot.add(gfoot);
-				this.setAttribute('data-foot', 'Right');
+				this.setAttribute('data-foot', 'R_FOOT');
 				d3.select('button#move').node().innerHTML = 'Left';
 			}
 			//console.log(rfoot);
