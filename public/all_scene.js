@@ -284,15 +284,26 @@
 					return;
 				case 'step':
 					var gfoot = planRobot.foot;
-					var scale = new THREE.Vector3(1,1,1);
-					var area = new THREE.Matrix4().compose(params.three.position, params.three.quaternion, scale);
 					var footname = d3.select('button#step').node().getAttribute('data-foot');
 					var worldFoot = robot.object.getObjectByName(footname).matrixWorld;
+
+					var p3 = params.three.position.clone();
+					p3.sub(
+						new THREE.Vector3().setFromMatrixPosition(worldFoot)
+					);
+					gfoot.position.copy(p3);
+
+					var qFootInv = new THREE.Quaternion().setFromRotationMatrix(worldFoot).inverse()
+					gfoot.quaternion.multiplyQuaternions(
+						params.three.quaternion, qFootInv
+					);
+					/*
 					var Tdiff = new THREE.Matrix4().multiplyMatrices(
 						area,
 						new THREE.Matrix4().getInverse(worldFoot)
 					);
 					Tdiff.decompose(gfoot.position, gfoot.quaternion, scale);
+					*/
 				default:
 					break;
 			}
@@ -439,10 +450,12 @@
 					this.innerHTML = 'Left';
 					rfoot.add(gfoot);
 					stepBtn.setAttribute('data-foot', 'R_FOOT');
+					//gfoot.material.color = 0xff0000;
 				} else {
 					this.innerHTML = 'Right';
 					lfoot.add(gfoot);
 					stepBtn.setAttribute('data-foot', 'L_FOOT');
+					//gfoot.material.color = 0xffff00;
 				}
 				gfoot.position.set(0,0,0);
 				gfoot.quaternion.copy(new THREE.Quaternion());
