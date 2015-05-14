@@ -60,7 +60,12 @@ var rpc_skt = zmq.socket('req');
 //var robot_ip = Config.net.robot.wireless;
 var robot_ip = Config.net.robot.wired;
 
-//rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
+/* Connect to the Arm Plan server - always on localhost :P */
+var armplan_skt = zmq.socket('req');
+armplan_skt.connect('ipc:///tmp/'+'armplan');
+
+// TODO: Let's try this... dunno if using both will work :P
+rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
 // For localhost, use this instead:
 rpc_skt.connect('ipc:///tmp/'+rpc.uds);
 //console.log(rpc_skt);

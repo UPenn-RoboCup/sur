@@ -1,8 +1,8 @@
 (function (ctx) {
 	'use strict';
 	// Private variables
-	var d3 = ctx.d3, util = ctx.util, sprintf = ctx.sprintf,
-		E, THREE,
+	var d3 = ctx.d3, util = ctx.util, sprintf = ctx.sprintf, Peer = ctx.Peer,
+		E, Classify, THREE,
     container, renderer, camera,
 		scene, raycaster, CANVAS_WIDTH, CANVAS_HEIGHT,
 		controls, tcontrol,
@@ -357,7 +357,6 @@
 		}
 
 		jointSel.addEventListener('change', function(){
-			console.log('here')
 			if(getMode()!=='teleop'){ return; }
 			var motor = planRobot.object.getObjectByName(this.value);
 			if(!motor){return;}
