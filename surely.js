@@ -2,7 +2,6 @@
 /*
 Next gen version for hosting
 */
-var require = require;
 var restify = require('restify'),
 	server = restify.createServer({
 		name: 'surely',
@@ -46,6 +45,7 @@ ping_skt.bind('tcp://*:' + Config.net.ping.tcp);
 var go_skt = dgram.createSocket("udp4");
 go_skt.bind(Config.net.ping.udp);
 go_skt.on("message", function(){
+	'use strict';
 	if(!NET_OPEN){
 		console.log('Network open');
 		NET_OPEN = true;
@@ -95,12 +95,13 @@ function rest_req(req, res, next) {
 
 // Save data from the app
 server.post('/log/:name', function(req, res, next){
+	'use strict';
 	console.log('Saving a log...');
-	var name = 'public/logs/'+req.params.name+'.json'
+	var name = 'public/logs/'+req.params.name+'.json';
 	//var name = req.params.name+'.json'
 	if (req.body !== undefined) {
 		fs.writeFile(name, req.body, function (err) {
-			if (err) throw err;
+			if (err) { throw err; }
 			res.send();
 			console.log('Saved '+name);
 		});
@@ -127,6 +128,7 @@ server.post('/raw/:raw', rest_req);
 
 // Grab streams
 server.get('/streams/:stream', function (req, res, next) {
+	'use strict';
 	var stream = streams[req.params.stream];
 	if (typeof stream === 'object' && typeof stream.ws === 'number') {
 		res.json(200, stream.ws);
@@ -138,6 +140,7 @@ server.get('/streams/:stream', function (req, res, next) {
 
 // Grab Config information
 function findKey(prev, cur){
+	'use strict';
   if (typeof prev !== 'object'){
     prev = Config[prev];
   }
@@ -150,6 +153,7 @@ function findKey(prev, cur){
 //server.get('/config/:key', function (req, res, next) {
 //server.get(/\/config\/(.+)/, function (req, res, next) {
 server.get(/\/Config\/(.+)/, function (req, res, next) {
+	'use strict';
   var value = req.params[0].split('/').reduce(findKey);
 	if (value !== undefined) {
     res.json(200, value);
@@ -195,6 +199,8 @@ function bridge_send_ws(sur_stream, meta, payload) {
  * the payload (e.g. jpeg) is right after the messagepacked metadata (concatenated)
  * msgpack -> JSON
 */
+// NOTE: Using udp_wizard right now
+/*
 function udp_message(msg, rinfo) {
 	"use strict";
   //console.log('got udp', rinfo);
@@ -208,6 +214,7 @@ function udp_message(msg, rinfo) {
 	}
 	bridge_send_ws(this.sur_stream, meta, payload);
 }
+*/
 
 /* ZMQ Message Handling
  * msgpack -> JSON
@@ -290,8 +297,10 @@ server.listen(8080, function () {
 /* PeerServer for WebRTC */
 var pserver = new PeerServer({ port: 9000 });
 pserver.on('connection', function(id) {
+	'use strict';
   console.log('Peer connected:', id);
 });
 pserver.on('disconnect', function(id) {
+	'use strict';
   console.log('Peer disconnected:', id);
 });
