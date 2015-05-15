@@ -478,8 +478,23 @@
 						rpyR.x,
 						rpyR.y
 					];
+
 					d3.json('/armplan').post(JSON.stringify([
-						{qLArm0:0},{}
+						{
+							tr: [0.05, 0.35, -0.25, 0,0,0],
+							timeout: 20,
+							via: 'jacobian_preplan',
+							weights: [1,0,0],
+							qLArm0: [0,0,0, 0, 0,0,0],
+							qWaist0: [0,0]
+						}, {
+							tr: [0.05, -0.35, -0.25, 0,0,0],
+							timeout: 20,
+							via: 'jacobian_preplan',
+							weights: [1,0,0],
+							qRArm0: [0,0,0, 0, 0,0,0],
+							qWaist0: [0,0]
+						}
 					]));
 					/*
 					d3.json('/shm/hcm/teleop/dlarm').post(JSON.stringify(dL));
