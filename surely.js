@@ -63,6 +63,22 @@ var robot_ip = Config.net.robot.wired;
 /* Connect to the Arm Plan server - always on localhost :P */
 var armplan_skt = zmq.socket('req');
 armplan_skt.connect('ipc:///tmp/'+'armplan');
+armplan_skt.http_responses = [];
+armplan_skt.on('message', function (msg) {
+	"use strict";
+	var plan = mp.unpack(msg);
+	console.log('plan', plan);
+	this.http_responses.shift().json(200, plan);
+});
+// POST will send FSM events
+server.post('/armplan', function(req, res, next){
+		"use strict";
+	if(req.body === undefined){return next();}
+	console.log(req.body);
+	// Send to the armplan server
+	armplan_skt.send(mp.pack(JSON.parse(req.body))).http_responses.push(res);
+	return next();
+});
 
 // TODO: Let's try this... dunno if using both will work :P
 rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);

@@ -15,7 +15,7 @@
 			var req = new XMLHttpRequest();
 			req.open('GET', url);
 			req.onload = function() {
-				if (req.status == 200) {
+				if (req.status === 200) {
 					resolve(req.response);
 				} else {
 					reject(Error(req.statusText));
@@ -144,7 +144,6 @@
 	};
 
 	function mat3_times_vec(m, v){
-		'use strict';
 		return m.map(function(r){
 			return r[0]*this[0] + r[1]*this[1] + r[2]*this[2];
 		}, v);

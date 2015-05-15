@@ -478,9 +478,14 @@
 						rpyR.x,
 						rpyR.y
 					];
+					d3.json('/armplan').post(JSON.stringify([
+						{qLArm0:0},{}
+					]));
+					/*
 					d3.json('/shm/hcm/teleop/dlarm').post(JSON.stringify(dL));
 					d3.json('/shm/hcm/teleop/drarm').post(JSON.stringify(dR));
 					d3.json('/fsm/Arm/teleop').post();
+					*/
 					break;
 				case 'teleop':
 					// Send teleop

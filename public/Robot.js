@@ -165,7 +165,7 @@ var cos = Math.cos,
 			// Save the commands. TODO: userData
 			meshes.forEach(function(m){
 				m.cquaternion = new THREE.Quaternion();
-			})
+			});
 			this.meshes = meshes;
 			this.object = object;
 			this.qDefault = qDefault;
