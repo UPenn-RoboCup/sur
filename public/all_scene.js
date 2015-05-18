@@ -3,6 +3,7 @@
 	// Private variables
 	var d3 = ctx.d3, util = ctx.util, sprintf = ctx.sprintf, Peer = ctx.Peer,
 		E, Classify, THREE,
+		RAD_TO_DEG = util.RAD_TO_DEG,
     container, renderer, camera,
 		scene, raycaster, CANVAS_WIDTH, CANVAS_HEIGHT,
 		controls, tcontrol,
@@ -16,7 +17,9 @@
 
 	function procPlan(plan){
 		//console.log(plan);
-		var hz = 100;
+		var speedup = 2;
+		// Plan speed is at 100Hz (120?)
+		var hz = 100 * speedup;
 		// Playback on the robot
 		var iL = 0, planL = plan[0];
 		console.log('Start Plan Playback');
@@ -469,6 +472,11 @@
 				var e = new THREE.Euler().setFromQuaternion(q0);
 				return e.x;
 			}, robot.qDefault);
+			var qLArm = qPlan.slice(2, 9);
+			var qRArm = qPlan.slice(21, 28);
+			var qWaist0 = qNow.slice(28, 30);
+			var qLArm0 = qNow.slice(2, 9);
+			var qRArm0 = qNow.slice(21, 28);
 			var comWorldNow = robot.object.matrixWorld;
 			var comWorldPlan = robot.object.matrixWorld;
 			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
@@ -534,12 +542,18 @@
 						rpyL.z, rpyL.x, rpyL.y ];
 					var tfR = [ pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
 						rpyR.z, rpyR.x, rpyR.y ];
-					var qWaist0 = qNow.slice(28, 30);
-					var qLArm0 = qNow.slice(2, 9);
-					var qRArm0 = qNow.slice(21, 28);
 
-					console.log('trL', tfL);
-					console.log('trR', tfR);
+					util.debug([
+						sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+										tfL[0], tfL[1], tfL[2],
+										tfL[4]*RAD_TO_DEG, tfL[5]*RAD_TO_DEG, tfL[6]*RAD_TO_DEG),
+						sprintf("Right: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+										tfR[0], tfR[1], tfR[2],
+										tfR[4]*RAD_TO_DEG, tfR[5]*RAD_TO_DEG, tfR[6]*RAD_TO_DEG),
+					]);
+
+					//console.log('trL', tfL);
+					//console.log('trR', tfR);
 
 					d3.json('/armplan', procPlan).post(JSON.stringify([
 						{
@@ -558,6 +572,13 @@
 							qWaist0: qWaist0
 						}
 					]));
+
+					// Reset the position
+					planRobot.rhand.position.set(0,0,0);
+					planRobot.lhand.position.set(0,0,0);
+					planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+
 					/*
 					d3.json('/shm/hcm/teleop/dlarm').post(JSON.stringify(dL));
 					d3.json('/shm/hcm/teleop/drarm').post(JSON.stringify(dR));
@@ -566,24 +587,7 @@
 					break;
 				case 'teleop':
 					// Send teleop
-					var qAll = planRobot.meshes.map(function(m, i){
-						var qDinv = this[i].clone().conjugate();
-						var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
-						var e = new THREE.Euler().setFromQuaternion(q0);
-						return e.x;
-					}, planRobot.qDefault);
-					var qNow = robot.meshes.map(function(m, i){
-						var qDinv = this[i].clone().conjugate();
-						var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
-						var e = new THREE.Euler().setFromQuaternion(q0);
-						return e.x;
-					}, robot.qDefault);
 
-					var qLArm = qPlan.slice(2, 9);
-					var qRArm = qPlan.slice(21, 28);
-					var qWaist0 = qNow.slice(28, 30);
-					var qLArm0 = qNow.slice(2, 9);
-					var qRArm0 = qNow.slice(21, 28);
 					d3.json('/armplan', procPlan).post(JSON.stringify([
 						{
 							q: qLArm,
@@ -637,6 +641,17 @@
 					gfoot.quaternion.copy(new THREE.Quaternion());
 					return;
 				case 'ik':
+					// Switch hands
+					tcontrol.detach();
+					if(ikBtn.getAttribute('data-hand')==='L_WR_FT'){
+						ikBtn.setAttribute('data-hand', 'R_WR_FT');
+						tcontrol.attach(planRobot.rhand);
+						moveBtn.innerHTML = 'Left';
+					} else {
+						ikBtn.setAttribute('data-hand', 'L_WR_FT');
+						tcontrol.attach(planRobot.lhand);
+						moveBtn.innerHTML = 'Right';
+					}
 					return;
 				case 'teleop':
 					// Reset just one
@@ -718,15 +733,12 @@
 					teleopBtn.innerHTML = 'Rotate';
 					break;
 			}
-			//var lhand = planRobot.object.getObjectByName('L_WR_FT'), rhand = planRobot.object.getObjectByName('R_WR_FT');
 			tcontrol.detach();
 			if(this.getAttribute('data-hand')==='L_WR_FT'){
-				//lhand.add(planRobot.lhand);
 				tcontrol.attach(planRobot.lhand);
 				this.setAttribute('data-hand', 'L_WR_FT');
 				moveBtn.innerHTML = 'Right';
 			} else {
-				//rhand.add(planRobot.rhand);
 				tcontrol.attach(planRobot.rhand);
 				this.setAttribute('data-hand', 'R_WR_FT');
 				moveBtn.innerHTML = 'Left';
