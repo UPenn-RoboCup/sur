@@ -35,10 +35,7 @@
 
 	// Add the camera view and append
 	util.lhtml('/view/head_video.html').then(function(view) {
-		//console.log(view);
-		// Remove landing page elements and add new content
-		d3.select("div#landing").remove();
-		document.body.appendChild(view);
+		document.body = view;
 		return util.ljs('/VideoFeed.js');
 	}).then(function(){
 		return util.shm('/streams/camera0');

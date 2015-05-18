@@ -8,36 +8,16 @@
 	"use strict";
 
 	// http://www.html5rocks.com/en/tutorials/es6/promises/
-	/*
-	function get(url) {
+	function xhr(url, method, mime, responseType, contentType) {
 		// Return a new promise.
 		return new Promise(function(resolve, reject) {
 			// Do the usual XHR stuff
 			var req = new XMLHttpRequest();
-			req.open('GET', url);
-			req.onload = function() {
-				if (req.status === 200) {
-					resolve(req.response);
-				} else {
-					reject(Error(req.statusText));
-				}
-			};
-			req.onerror = function() {
-				reject(Error("Network Error"));
-			};
-			req.send();
-		});
-	}
-	*/
-
-		// http://www.html5rocks.com/en/tutorials/es6/promises/
-	function xhr(url, method, mime) {
-		// Return a new promise.
-		return new Promise(function(resolve, reject) {
-			// Do the usual XHR stuff
-			var req = new XMLHttpRequest();
-			req.open('GET', url);
-			req.setRequestHeader('accept', mime);
+			req.open(method || 'GET', url, true);
+			req.setRequestHeader('accept', mime || 'application/json');
+			req.responseType = responseType || 'json';
+			req.setRequestHeader("Content-Type",
+													 contentType || "application/json;charset=UTF-8");
 			req.onload = function() {
 				if (req.status === 200) {
 					resolve(req.response);
@@ -53,13 +33,10 @@
 	}
 	function shm(url, val){
 		if (val) {
-			return xhr(url, 'POST', 'application/json').then(function(res){
-				return JSON.parse(res);
-			});
+			return xhr(url, 'POST', JSON.stringify(val));
+		} else {
+			return xhr(url);
 		}
-		return xhr(url, 'GET', 'application/json').then(function(res){
-			return JSON.parse(res);
-		});
 	}
 
 	function ljs(src){
@@ -86,10 +63,18 @@
 		});
 	}
 	function lhtml(url) {
-		return xhr(url, 'GET', 'text/plain').then(function(text){
+		return xhr(url, 'GET', 'text/plain', 'document').then(function(doc){
+			//var body = doc.getElementsByTagName('body')[0];
+			//return body;
+			return doc.body;
+			/*
+			// For text response
 			var range = document.createRange();
 			range.selectNode(document.body);
 			return range.createContextualFragment(text);
+			*/
+		}).catch(function(error) {
+			console.log("Failed!", error);
 		});
 	}
 

@@ -363,7 +363,8 @@
 		});
 
 		proceedBtn.addEventListener('click', function(){
-			d3.json('/shm/hcm/state/proceed').post(JSON.stringify([1]));
+			//d3.json('/shm/hcm/state/proceed').post(JSON.stringify([1]));
+			util.shm('/shm/hcm/state/proceed', [1]);
 		});
 
 		resetBtn.addEventListener('click', function(){
@@ -887,11 +888,10 @@
 
 	// Load everything
 	util.lhtml('/view/all_scene.html').then(function(view){
-		d3.select("div#landing").remove();
-		document.body.appendChild(view);
+		document.body = view;
 		container = document.getElementById('world_container');
 		//console.log(view);
-		return util.lcss('/css/all_scene.css')
+		return util.lcss('/css/all_scene.css');
 	}).then(function(){
 		return util.lcss('/css/gh-buttons.css');
 	}).then(function(){
