@@ -180,6 +180,7 @@ server.get(/\/Config\/(.+)/, function (req, res, next) {
 });
 
 // Serve static items as catch-all
+// TODO: text/html?
 server.get(/^\/.*/, restify.serveStatic({
   directory: './public',
   "default": 'index.html'

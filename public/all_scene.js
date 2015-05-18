@@ -2,7 +2,6 @@
 	'use strict';
 	// Private variables
 	var d3 = ctx.d3, util = ctx.util, sprintf = ctx.sprintf, Peer = ctx.Peer,
-		E, Classify, THREE,
 		RAD_TO_DEG = util.RAD_TO_DEG,
     container, renderer, camera,
 		scene, raycaster, CANVAS_WIDTH, CANVAS_HEIGHT,
@@ -206,45 +205,6 @@
 			if(kinect.length > N_KINECT){ scene.remove(kinect.shift()); }
 		}
 	} // process_mesh
-
-	// Load the Styling
-	ctx.util.lcss('/css/gh-buttons.css');
-	ctx.util.lcss('/css/all_scene.css', function () {
-		d3.html('/view/all_scene.html', function (error, view) {
-			// Remove landing page elements and add new content
-			d3.select("div#landing").remove();
-			document.body.appendChild(view);
-			container = document.getElementById('world_container');
-			// After DOM, perform the setup
-			util.ljs("/VideoFeed.js", function(){
-				// Begin listening to the feed
-				util.ljs("/MeshFeed.js", function(){
-					d3.json('/streams/mesh0', function (error, port) {
-						mesh0_feed = new ctx.MeshFeed(port, process_mesh);
-					});
-					d3.json('/streams/mesh1', function (error, port) {
-						mesh1_feed = new ctx.MeshFeed(port, process_mesh);
-					});
-				});
-				util.ljs("/KinectFeed.js", function(){
-					d3.json('/streams/kinect2_color', function (error, rgb) {
-						d3.json('/streams/kinect2_depth', function (error, depth) {
-							kinect_feed = new ctx.KinectFeed(rgb, depth, process_mesh);
-						});
-					});
-				});
-			});
-			ctx.util.ljs('/bc/threejs/build/three.js', function(){
-				THREE = ctx.THREE;
-				setTimeout(setup3d, 0);
-				setTimeout(setup_rtc, 0);
-				setTimeout(setup_buttons, 0);
-				setTimeout(setup_clicks, 0);
-			});
-		});
-	});
-  ctx.util.ljs('/Estimate.js', function(){ E = ctx.Estimate; });
-  ctx.util.ljs('/Classify.js', function(){ Classify = ctx.Classify; });
 
 	function setup_clicks(){
 		// Object selection
@@ -552,19 +512,16 @@
 										tfR[4]*RAD_TO_DEG, tfR[5]*RAD_TO_DEG, tfR[6]*RAD_TO_DEG),
 					]);
 
-					//console.log('trL', tfL);
-					//console.log('trR', tfR);
-
 					d3.json('/armplan', procPlan).post(JSON.stringify([
 						{
-							tr: tfL, //[0.05, 0.35, -0.25, 0,0,0],
+							tr: tfL,
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
 						}, {
-							tr: tfR, //[0.05, -0.35, -0.25, 0,0,0],
+							tr: tfR,
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
@@ -582,7 +539,6 @@
 					/*
 					d3.json('/shm/hcm/teleop/dlarm').post(JSON.stringify(dL));
 					d3.json('/shm/hcm/teleop/drarm').post(JSON.stringify(dR));
-					d3.json('/fsm/Arm/teleop').post();
 					*/
 					break;
 				case 'teleop':
@@ -603,13 +559,9 @@
 							qWaist0: qWaist0
 						}
 					]));
-					/*
-					d3.json('/shm/hcm/teleop/larm', function(){
-						d3.json('/shm/hcm/teleop/rarm', function(){
-							d3.json('/fsm/Arm/teleopraw').post();
-						}).post(JSON.stringify(qAll.slice(21, 28)));
-					}).post(JSON.stringify(qAll.slice(2, 9)));
-					*/
+					// TODO: Do this *after* the plan
+					//d3.json('/shm/hcm/teleop/larm').post(JSON.stringify(qAll.slice(2, 9)));
+					//d3.json('/shm/hcm/teleop/rarm').post(JSON.stringify(qAll.slice(21, 28)));
 					break;
 				default:
 					// bodyInit
@@ -731,6 +683,8 @@
 				default:
 					this.innerHTML = 'Done';
 					teleopBtn.innerHTML = 'Rotate';
+					// Tell the robot to go into teleop mode
+					d3.json('/fsm/Arm/teleop').post();
 					break;
 			}
 			tcontrol.detach();
@@ -786,6 +740,8 @@
 					resetLabels();
 					return;
 				default:
+					// Tell the robot to go into teleop
+					d3.json('/fsm/Arm/teleopraw').post();
 					break;
 			}
 			var motor = planRobot.object.getObjectByName(jointSel.value);
@@ -829,10 +785,10 @@
     //camera = new THREE.OrthographicCamera( CANVAS_WIDTH / - 2, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_HEIGHT / - 2, 1, 1000 );
 		camera.position.copy(new THREE.Vector3(500, 2000, -500));
 		// Load in the Orbit controls dynamically
-		ctx.util.ljs('/OrbitControls.js', function () {
-			controls = new THREE.OrbitControls(camera, container);
-			controls.target = new THREE.Vector3(0, 0, 5000);
-		});
+		controls = new THREE.OrbitControls(camera, container);
+		controls.target = new THREE.Vector3(0, 0, 5000);
+		tcontrol = new THREE.TransformControls( camera, renderer.domElement );
+		scene.add(tcontrol);
 		// Load the ground
 		ground.rotation.x = -Math.PI / 2;
 		ground.position.y = 0;
@@ -853,59 +809,6 @@
 			renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		}, false);
 		animate();
-		// Begin listening to the feed
-    util.ljs('/Robot.js', function(){
-  		d3.json('/streams/feedback', function (error, port) {
-  			// Load the robot
-  			robot = new ctx.Robot({
-  				port: port,
-					name: 'thorop2',
-					callback: function(){
-						scene.add(this);
-						planRobot = new ctx.Robot({
-							name: 'thorop2',
-							callback: function(){
-								var clearMaterial = new THREE.MeshBasicMaterial({
-									color: 0x00ff00,
-									transparent: true,
-									opacity: 0.5,
-								});
-								planRobot.meshes.forEach(function(m){ m.material = clearMaterial; });
-								planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
-								planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
-								planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
-								planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
-								//planRobot.object.visible = false;
-								// Joint teleop
-								var sel = document.getElementById('joints');
-								planRobot.meshes.forEach(function(m){
-									if(!m.name){return;}
-									var x = document.createElement("OPTION");
-									x.value = m.name;
-									x.innerHTML = m.name;
-									sel.appendChild(x);
-								});
-								planRobot.object.getObjectByName('L_FOOT').add(planRobot.foot);
-								planRobot.object.getObjectByName('L_WR_FT').add(planRobot.lhand);
-								planRobot.object.getObjectByName('R_WR_FT').add(planRobot.rhand);
-								/*
-								planRobot.object.add(planRobot.lhand);
-								planRobot.object.add(planRobot.rhand);
-								*/
-								scene.add(this);
-							}
-						});
-					}
-  			});
-  		});
-
-    });
-		// Able to move the robot around
-		util.ljs("/TransformControls.js", function(){
-			tcontrol = new THREE.TransformControls( camera, renderer.domElement );
-			scene.add(tcontrol);
-			//tcontrol.addEventListener('mouseUp', process_tcontrol);
-		});
 	} //done 3d
 
 	function setup_rtc(){
@@ -930,6 +833,50 @@
 		});
 	}
 
+	function setup_robot(port){
+		// Load the robot
+		robot = new ctx.Robot({
+			port: port,
+			name: 'thorop2',
+			callback: function(){
+				scene.add(this);
+				planRobot = new ctx.Robot({
+					name: 'thorop2',
+					callback: function(){
+						var clearMaterial = new THREE.MeshBasicMaterial({
+							color: 0x00ff00,
+							transparent: true,
+							opacity: 0.5,
+						});
+						planRobot.meshes.forEach(function(m){ m.material = clearMaterial; });
+						planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
+						planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
+						planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
+						planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
+						//planRobot.object.visible = false;
+						// Joint teleop
+						var sel = document.getElementById('joints');
+						planRobot.meshes.forEach(function(m){
+							if(!m.name){return;}
+							var x = document.createElement("OPTION");
+							x.value = m.name;
+							x.innerHTML = m.name;
+							sel.appendChild(x);
+						});
+						planRobot.object.getObjectByName('L_FOOT').add(planRobot.foot);
+						planRobot.object.getObjectByName('L_WR_FT').add(planRobot.lhand);
+						planRobot.object.getObjectByName('R_WR_FT').add(planRobot.rhand);
+						/*
+						planRobot.object.add(planRobot.lhand);
+						planRobot.object.add(planRobot.rhand);
+						*/
+						scene.add(this);
+					}
+				});
+			}
+		});
+	}
+
 	// Constantly animate the scene
 	function animate() {
 		if (controls) { controls.update(); }
@@ -937,5 +884,54 @@
 		renderer.render(scene, camera);
 		window.requestAnimationFrame(animate);
 	}
+
+	// Load everything
+	util.lhtml('/view/all_scene.html').then(function(view){
+		d3.select("div#landing").remove();
+		document.body.appendChild(view);
+		container = document.getElementById('world_container');
+		//console.log(view);
+		return util.lcss('/css/all_scene.css')
+	}).then(function(){
+		return util.lcss('/css/gh-buttons.css');
+	}).then(function(){
+  	return util.ljs('/Estimate.js');
+	}).then(function(){
+		return util.ljs('/Classify.js');
+	}).then(function(){
+		return util.ljs("/VideoFeed.js");
+	}).then(function(){
+		return util.ljs("/MeshFeed.js");
+	}).then(function(){
+		return util.ljs('/bc/threejs/build/three.js');
+	}).then(function(){
+		return util.ljs('/OrbitControls.js');
+	}).then(function(){
+		return util.ljs('/TransformControls.js');
+	}).then(function(){
+		return util.ljs('/Robot.js');
+	}).then(function(){
+		util.shm('/streams/mesh0').then(function(port) {
+			mesh0_feed = new ctx.MeshFeed(port, process_mesh);
+		});
+		util.shm('/streams/mesh1').then(function(port) {
+			mesh1_feed = new ctx.MeshFeed(port, process_mesh);
+		});
+		return util.ljs("/KinectFeed.js");
+	}).then(function(){
+		util.shm('/streams/kinect2_color').then(function(rgb){
+			util.shm('/streams/kinect2_depth').then(function(depth){
+				kinect_feed = new ctx.KinectFeed(rgb, depth, process_mesh);
+				//console.log(kinect_feed, rgb, depth);
+			});
+		});
+	})
+		.then(setup3d)
+		.then(setup_rtc)
+		.then(setup_buttons)
+		.then(setup_clicks)
+	.then(function(){
+		return util.shm('/streams/feedback');
+	}).then(setup_robot);
 
 }(this));

@@ -8,6 +8,7 @@
 	"use strict";
 
 	// http://www.html5rocks.com/en/tutorials/es6/promises/
+	/*
 	function get(url) {
 		// Return a new promise.
 		return new Promise(function(resolve, reject) {
@@ -27,57 +28,69 @@
 			req.send();
 		});
 	}
+	*/
 
-	function ljs(src, cb) {
-		if (typeof src !== 'string') { return; }
-		// Ensure not already loaded
-		var scripts = document.getElementsByTagName('script');
-		for (var i = 0; i < scripts.length; i = i + 1) {
-			if (scripts[i].src.indexOf(src) !== -1) { return; }
-		}
-		var s = document.createElement('script');
-		s.src = src;
-		s.async = true;
-		s.type = "application/javascript";
-		if (typeof cb === 'function') {
-			s.onreadystatechange = s.onload = function () {
-				var state = s.readyState;
-				if (!state || /loaded|complete/.test(state)) {
-					setTimeout(cb);
+		// http://www.html5rocks.com/en/tutorials/es6/promises/
+	function xhr(url, method, mime) {
+		// Return a new promise.
+		return new Promise(function(resolve, reject) {
+			// Do the usual XHR stuff
+			var req = new XMLHttpRequest();
+			req.open('GET', url);
+			req.setRequestHeader('accept', mime);
+			req.onload = function() {
+				if (req.status === 200) {
+					resolve(req.response);
+				} else {
+					reject(Error(req.statusText));
 				}
 			};
+			req.onerror = function() {
+				reject(Error("Network Error"));
+			};
+			req.send();
+		});
+	}
+	function shm(url, val){
+		if (val) {
+			return xhr(url, 'POST', 'application/json').then(function(res){
+				return JSON.parse(res);
+			});
 		}
-		document.getElementsByTagName('head')[0].appendChild(s);
+		return xhr(url, 'GET', 'application/json').then(function(res){
+			return JSON.parse(res);
+		});
 	}
 
-	function lcss(url, cb) {
-		if (typeof url !== 'string') {
-			return;
-		}
-		var links = document.getElementsByTagName('link'),
-			len = links.length,
-			i,
-			head,
-			link;
-		for (i = 0; i < len; i = i + 1) {
-			if (links[i].href.indexOf(url) !== -1) {
-				return;
-			}
-		}
-		head = document.getElementsByTagName('head')[0];
-		link = document.createElement('link');
-		link.type = 'text/css';
-		link.rel = 'stylesheet';
-		link.href = url;
-		if (typeof cb === 'function') {
-			link.onreadystatechange = link.onload = function () {
-				var state = link.readyState;
-				if (!state || /loaded|complete/.test(state)) {
-					setTimeout(cb);
-				}
-			};
-		}
-		head.appendChild(link);
+	function ljs(src){
+		// Return a new promise.
+		return new Promise(function(resolve, reject) {
+			var s = document.createElement('script');
+			s.src = src;
+			s.async = true;
+			s.type = "application/javascript";
+			s.onload = resolve;
+			s.onerror = reject;
+			document.getElementsByTagName('head')[0].appendChild(s);
+		});
+	}
+	function lcss(src) {
+		return new Promise(function(resolve, reject) {
+			var link = document.createElement('link');
+			link.type = 'text/css';
+			link.rel = 'stylesheet';
+			link.href = src;
+			link.onload = resolve;
+			link.onerror = reject;
+			document.getElementsByTagName('head')[0].appendChild(link);
+		});
+	}
+	function lhtml(url) {
+		return xhr(url, 'GET', 'text/plain').then(function(text){
+			var range = document.createRange();
+			range.selectNode(document.body);
+			return range.createContextualFragment(text);
+		});
 	}
 
 	// Take in an array of debugging messages and combine into the info div
@@ -165,6 +178,8 @@
 		debug: debug,
 		ljs: ljs,
 		lcss: lcss,
+		lhtml: lhtml,
+		shm: shm,
 		DEG_TO_RAD: Math.PI / 180,
 		RAD_TO_DEG: 180 / Math.PI,
 		mapFuncs: mapFuncs,
