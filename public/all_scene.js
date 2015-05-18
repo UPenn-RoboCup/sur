@@ -13,6 +13,25 @@
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null;
 
+	function showPlan(){
+		// Pop the plan
+		this.shift()
+	}
+
+	function procPlan(plan){
+		console.log(plan);
+		// Playback on the robot
+		var iL = 0, planL = plan[0];
+		var hPlanL = setInterval(function(){
+			if (iL >= planL.length) {
+				clearInterval(hPlanL);
+				return;
+			}
+			console.log(iL, planL[iL]);
+			iL += 1;
+		}, 1e3/100);
+	}
+
   var describe = {
     cylinder: function(mesh, p){
 			var parameters = E.cylinder(mesh, p);
@@ -409,6 +428,15 @@
 				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
 				planRobot.lhand.position.set(0,0,0);
 				planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+				/*
+				// Must copy from the matrix4....
+				var lh = planRobot.object.getObjectByName('L_WR_FT');
+				var rh = planRobot.object.getObjectByName('R_WR_FT');
+				planRobot.lhand.position..setFromRotationMatrix(lh.matrixWorld);
+				planRobot.rhand.position.copy(rh.position);
+				planRobot.lhand.quaternion.copy(lh.quaternion);
+				planRobot.rhand.quaternion.copy(rh.quaternion);
+				*/
 			}
 		});
 		goBtn.addEventListener('click', function(){
@@ -460,35 +488,33 @@
 					d3.json('/fsm/Body/stepover1').post();
 					break;
 				case 'ik':
-					var rpyL = new THREE.Euler().setFromQuaternion(planRobot.lhand.quaternion);
-					var dL = [
-						planRobot.lhand.position.z / 1e3,
-						planRobot.lhand.position.x / 1e3,
-						planRobot.lhand.position.y / 1e3,
-						rpyL.z,
-						rpyL.x,
-						rpyL.y
-					];
-					var rpyR = new THREE.Euler().setFromQuaternion(planRobot.rhand.quaternion);
-					var dR = [
-						planRobot.rhand.position.z / 1e3,
-						planRobot.rhand.position.x / 1e3,
-						planRobot.rhand.position.y / 1e3,
-						rpyR.z,
-						rpyR.x,
-						rpyR.y
-					];
+					// Always with respect to our com position.
+					// NOTE: Be careful between robots...
+					var com = new THREE.Matrix4().getInverse(robot.object.matrix);
+					var rhand_com = new THREE.Matrix4().multiplyMatrices(
+						planRobot.rhand.matrix, com);
+					var lhand_com = new THREE.Matrix4().multiplyMatrices(
+						planRobot.lhand.matrix, com);
+					// TODO: Go to quaternion
+					var rpyL = new THREE.Euler().setFromRotationMatrix(lhand_com);
+					var rpyR = new THREE.Euler().setFromRotationMatrix(rhand_com);
+					var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
+					var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
+					var dL = [ pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
+						rpyL.z, rpyL.x, rpyL.y ];
+					var dR = [ pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
+						rpyR.z, rpyR.x, rpyR.y ];
 
 					d3.json('/armplan').post(JSON.stringify([
 						{
-							tr: [0.05, 0.35, -0.25, 0,0,0],
+							tr: dL, //[0.05, 0.35, -0.25, 0,0,0],
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
 							qLArm0: [0,0,0, 0, 0,0,0],
 							qWaist0: [0,0]
 						}, {
-							tr: [0.05, -0.35, -0.25, 0,0,0],
+							tr: dR, //[0.05, -0.35, -0.25, 0,0,0],
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
@@ -510,11 +536,40 @@
 						var e = new THREE.Euler().setFromQuaternion(q0);
 						return e.x;
 					}, planRobot.qDefault);
-					d3.json('/shm/hcm/teleop/larm',function(){
+					var qNow = robot.meshes.map(function(m, i){
+						var qDinv = this[i].clone().conjugate();
+						var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+						var e = new THREE.Euler().setFromQuaternion(q0);
+						return e.x;
+					}, robot.qDefault);
+
+					var qLArm = qAll.slice(2, 9);
+					var qRArm = qAll.slice(21, 28);
+					var qWaist0 = qNow.slice(28, 30);
+					var qLArm0 = qNow.slice(2, 9);
+					var qRArm0 = qNow.slice(21, 28);
+					d3.json('/armplan', procPlan).post(JSON.stringify([
+						{
+							q: qLArm,
+							timeout: 20,
+							via: 'joint_preplan',
+							qLArm0: qLArm0,
+							qWaist0: qWaist0
+						}, {
+							q: qRArm,
+							timeout: 20,
+							via: 'joint_preplan',
+							qRArm0: qRArm0,
+							qWaist0: qWaist0
+						}
+					]));
+					/*
+					d3.json('/shm/hcm/teleop/larm', function(){
 						d3.json('/shm/hcm/teleop/rarm', function(){
 							d3.json('/fsm/Arm/teleopraw').post();
 						}).post(JSON.stringify(qAll.slice(21, 28)));
 					}).post(JSON.stringify(qAll.slice(2, 9)));
+					*/
 					break;
 				default:
 					// bodyInit
@@ -627,16 +682,15 @@
 					teleopBtn.innerHTML = 'Rotate';
 					break;
 			}
-			var lhand = planRobot.object.getObjectByName('L_WR_FT'),
-				rhand = planRobot.object.getObjectByName('R_WR_FT');
+			//var lhand = planRobot.object.getObjectByName('L_WR_FT'), rhand = planRobot.object.getObjectByName('R_WR_FT');
 			tcontrol.detach();
 			if(this.getAttribute('data-hand')==='L_WR_FT'){
-				lhand.add(planRobot.lhand);
+				//lhand.add(planRobot.lhand);
 				tcontrol.attach(planRobot.lhand);
 				this.setAttribute('data-hand', 'L_WR_FT');
 				moveBtn.innerHTML = 'Right';
 			} else {
-				rhand.add(planRobot.rhand);
+				//rhand.add(planRobot.rhand);
 				tcontrol.attach(planRobot.rhand);
 				this.setAttribute('data-hand', 'R_WR_FT');
 				moveBtn.innerHTML = 'Left';
@@ -786,6 +840,10 @@
 								planRobot.object.getObjectByName('L_FOOT').add(planRobot.foot);
 								planRobot.object.getObjectByName('L_WR_FT').add(planRobot.lhand);
 								planRobot.object.getObjectByName('R_WR_FT').add(planRobot.rhand);
+								/*
+								planRobot.object.add(planRobot.lhand);
+								planRobot.object.add(planRobot.rhand);
+								*/
 								scene.add(this);
 							}
 						});

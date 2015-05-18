@@ -67,7 +67,7 @@ armplan_skt.http_responses = [];
 armplan_skt.on('message', function (msg) {
 	"use strict";
 	var plan = mp.unpack(msg);
-	console.log('plan', plan);
+	//console.log('plan', plan);
 	this.http_responses.shift().json(200, plan);
 });
 // POST will send FSM events
