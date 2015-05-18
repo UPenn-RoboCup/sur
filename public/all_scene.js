@@ -13,23 +13,39 @@
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null;
 
-	function showPlan(){
-		// Pop the plan
-		this.shift()
-	}
 
 	function procPlan(plan){
-		console.log(plan);
+		//console.log(plan);
+		var hz = 100;
 		// Playback on the robot
 		var iL = 0, planL = plan[0];
+		console.log('Start Plan Playback');
 		var hPlanL = setInterval(function(){
-			if (iL >= planL.length) {
+			var frame = planL[iL];
+			if (frame) {iL += 1;} else {
 				clearInterval(hPlanL);
+				console.log('Done Left');
 				return;
 			}
-			console.log(iL, planL[iL]);
-			iL += 1;
-		}, 1e3/100);
+			frame.forEach(function(v, i){
+				planRobot.setJoints(v, planRobot.IDS_LARM[i]);
+			});
+		}, 1e3/hz);
+		var iR = 0, planR = plan[1];
+		console.log('Start Right');
+		var hPlanR = setInterval(function(){
+			var frame = planR[iR];
+			if (frame) {iR += 1;} else {
+				clearInterval(hPlanR);
+				console.log('Done Right');
+				return;
+			}
+			frame.forEach(function(v, i){
+				planRobot.setJoints(v, planRobot.IDS_RARM[i]);
+			});
+		}, 1e3/hz);
+		var iW = 0, planW = plan[2];
+		// TODO: Allow awist playback
 	}
 
   var describe = {
@@ -440,13 +456,28 @@
 			}
 		});
 		goBtn.addEventListener('click', function(){
+
+			var qPlan = planRobot.meshes.map(function(m, i){
+				var qDinv = this[i].clone().conjugate();
+				var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+				var e = new THREE.Euler().setFromQuaternion(q0);
+				return e.x;
+			}, planRobot.qDefault);
+			var qNow = robot.meshes.map(function(m, i){
+				var qDinv = this[i].clone().conjugate();
+				var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+				var e = new THREE.Euler().setFromQuaternion(q0);
+				return e.x;
+			}, robot.qDefault);
+			var comWorldNow = robot.object.matrixWorld;
+			var comWorldPlan = robot.object.matrixWorld;
+			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
+			var invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
+
 			switch(getMode()){
 				case 'move':
 					// Send the Waypoint
-					var Tdiff = new THREE.Matrix4().multiplyMatrices(
-						planRobot.object.matrix,
-						new THREE.Matrix4().getInverse(robot.object.matrix)
-					);
+					var Tdiff = new THREE.Matrix4().multiplyMatrices(comWorldPlan, invComWorldNow);
 					var dpL = new THREE.Vector3().setFromMatrixPosition(Tdiff);
 					var daL = new THREE.Euler().setFromRotationMatrix(Tdiff);
 					var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
@@ -490,36 +521,41 @@
 				case 'ik':
 					// Always with respect to our com position.
 					// NOTE: Be careful between robots...
-					var com = new THREE.Matrix4().getInverse(robot.object.matrix);
 					var rhand_com = new THREE.Matrix4().multiplyMatrices(
-						planRobot.rhand.matrix, com);
+						planRobot.rhand.matrixWorld, invComWorldPlan);
 					var lhand_com = new THREE.Matrix4().multiplyMatrices(
-						planRobot.lhand.matrix, com);
+						planRobot.lhand.matrixWorld, invComWorldPlan);
 					// TODO: Go to quaternion
 					var rpyL = new THREE.Euler().setFromRotationMatrix(lhand_com);
 					var rpyR = new THREE.Euler().setFromRotationMatrix(rhand_com);
 					var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
 					var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
-					var dL = [ pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
+					var tfL = [ pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
 						rpyL.z, rpyL.x, rpyL.y ];
-					var dR = [ pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
+					var tfR = [ pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
 						rpyR.z, rpyR.x, rpyR.y ];
+					var qWaist0 = qNow.slice(28, 30);
+					var qLArm0 = qNow.slice(2, 9);
+					var qRArm0 = qNow.slice(21, 28);
 
-					d3.json('/armplan').post(JSON.stringify([
+					console.log('trL', tfL);
+					console.log('trR', tfR);
+
+					d3.json('/armplan', procPlan).post(JSON.stringify([
 						{
-							tr: dL, //[0.05, 0.35, -0.25, 0,0,0],
+							tr: tfL, //[0.05, 0.35, -0.25, 0,0,0],
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
-							qLArm0: [0,0,0, 0, 0,0,0],
-							qWaist0: [0,0]
+							qLArm0: qLArm0,
+							qWaist0: qWaist0
 						}, {
-							tr: dR, //[0.05, -0.35, -0.25, 0,0,0],
+							tr: tfR, //[0.05, -0.35, -0.25, 0,0,0],
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
-							qRArm0: [0,0,0, 0, 0,0,0],
-							qWaist0: [0,0]
+							qRArm0: qRArm0,
+							qWaist0: qWaist0
 						}
 					]));
 					/*
@@ -543,8 +579,8 @@
 						return e.x;
 					}, robot.qDefault);
 
-					var qLArm = qAll.slice(2, 9);
-					var qRArm = qAll.slice(21, 28);
+					var qLArm = qPlan.slice(2, 9);
+					var qRArm = qPlan.slice(21, 28);
 					var qWaist0 = qNow.slice(28, 30);
 					var qLArm0 = qNow.slice(2, 9);
 					var qRArm0 = qNow.slice(21, 28);
