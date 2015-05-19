@@ -1,8 +1,7 @@
 (function (ctx) {
 	'use strict';
 	// Private variables
-	var d3 = ctx.d3, util = ctx.util, sprintf = ctx.sprintf, Peer = ctx.Peer,
-		RAD_TO_DEG = util.RAD_TO_DEG,
+	var RAD_TO_DEG = util.RAD_TO_DEG,
     container, renderer, camera,
 		scene, raycaster, CANVAS_WIDTH, CANVAS_HEIGHT,
 		controls, tcontrol,
@@ -12,9 +11,33 @@
 		N_MESH0 = 1, N_MESH1 = 1, N_KINECT = 1,
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null;
+
+	function procPlan (plan){
+		var speedup = 4;
+		// Plan speed is at 100Hz (120?)
+
+		var lplan = plan[0].length ? plan[0] : [],
+				rplan = plan[1].length ? plan[1] : [],
+				wplan = plan[2].length ? plan[2] : [];
+
+		var hz = 100 * speedup;
+		// TODO: catch on bad plan or user cancel
+		return Promise.all([
+			util.loop(lplan, function(idx, frame){
+				frame.forEach(function(v, i){ planRobot.setJoints(v, this[i]); },
+											planRobot.IDS_LARM);
+			}, 1e3/hz),
+			util.loop(rplan, function(idx, frame){
+				frame.forEach(function(v, i){planRobot.setJoints(v, this[i]);},
+											planRobot.IDS_RARM);
+			}, 1e3/hz),
+			util.loop(wplan, function(){}, 1e3/hz),
+		]);
+	}
+
   var describe = {
     cylinder: function(mesh, p){
-			var parameters = E.cylinder(mesh, p);
+			var parameters = Estimate.cylinder(mesh, p);
 			if(!parameters){return;}
       // Draw Cylinder
       var geometry = new THREE.CylinderGeometry(parameters.r, parameters.r, parameters.h, 20),
@@ -27,7 +50,7 @@
 			return parameters;
     },
     plane: function(mesh, p){
-			var parameters = E.plane(mesh, p);
+			var parameters = Estimate.plane(mesh, p);
 			if(!parameters){return;}
 			var root = parameters.root;
 			// THREE frame
@@ -57,7 +80,7 @@
 				return util.mat3_times_vec(this, v);
 			}, util.get_THREE_mat3(matNormalInv));
 			// Find perimeter in flat space
-			var perimInv = E.find_poly(points0inv);
+			var perimInv = Estimate.find_poly(points0inv);
 			// Place back into the original space
 			var rho = perimInv.map(function(p){ return p.pop(); });
 			var perim = perimInv.map(function(v){
@@ -265,20 +288,22 @@
 						params.three.quaternion, qFootInv
 					);
 					debugMsg.push(footname);
-					// Print
+					// Print (L: Local, G: Global)
 					var pL = gfoot.position;
-					var pG = params.root;
-					var rpyL = new THREE.Euler().setFromQuaternion(gfoot.quaternion);
+					//var pG = params.root;
+					//var rpyL = new THREE.Euler().setFromQuaternion(gfoot.quaternion);
 					var rpyG = params.rpy; // global
 					debugMsg.push(sprintf("RPY: %0.2f %0.2f %0.2f", rpyG[0], rpyG[1], rpyG[2]));
 					debugMsg.push(sprintf("XYZ: %0.2f %0.2f %0.2f", pL.z, pL.x, pL.y));
 					break;
 				case 'avoid':
 					//console.log(params);
+										/*
 					var qRobotInv = robot.object.quaternion.clone().inverse();
 					var q = new THREE.Quaternion().multiplyQuaternions(
 						params.three.quaternion, qRobotInv
 					);
+					*/
 					break;
 				default:
 					break;
@@ -399,7 +424,7 @@
 			var qWaist0 = qNow.slice(28, 30);
 			var qLArm0 = qNow.slice(2, 9);
 			var qRArm0 = qNow.slice(21, 28);
-			var comWorldNow = robot.object.matrixWorld;
+			//var comWorldNow = robot.object.matrixWorld;
 			var comWorldPlan = robot.object.matrixWorld;
 			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
 			var invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
@@ -471,8 +496,8 @@
 										pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
 										rpyR.z*RAD_TO_DEG, rpyR.x*RAD_TO_DEG, rpyR.y*RAD_TO_DEG),
 					]);
-					var tfL = [ quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
-					var tfR = [ quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
+					var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
+					var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
 					util.shm('/armplan', [
 						{
 							tr: tfL,
@@ -489,23 +514,7 @@
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]).then(function(plan){
-						var speedup = 1;
-						// Plan speed is at 100Hz (120?)
-						var hz = 100 * speedup;
-						// TODO: catch on bad plan or user cancel
-						return Promise.all([
-							util.loop(plan[0], function(idx, frame){
-								frame.forEach(function(v, i){ planRobot.setJoints(v, this[i]); },
-															planRobot.IDS_LARM);
-							}, 1e3/hz),
-							util.loop(plan[1], function(idx, frame){
-								frame.forEach(function(v, i){planRobot.setJoints(v, this[i]);},
-															planRobot.IDS_RARM);
-							}, 1e3/hz)
-							//util.loop(plan[2], function(idx, frame){}, 1e3/hz),
-						]);
-					}).then(function(decision){
+					]).then(procPlan).then(function(){
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
 							util.shm('/shm/hcm/teleop/tflarm', tfL),
@@ -795,7 +804,7 @@
 		peer.on('open', function(id) {
 			console.log('My peer ID is: ' + id);
 		});
-		peer.on('disconnected', function(conn) { console.log('disconnected'); });
+		peer.on('disconnected', function(conn) { console.log('disconnected', conn); });
 		peer.on('error', function(e) { console.log('error', e); });
 		peer.on('close', function() { console.log('close'); });
 		peer.on('connection', function(conn) {

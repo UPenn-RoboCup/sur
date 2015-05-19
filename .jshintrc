@@ -1,7 +1,19 @@
 {
+	"globals": {
+		"sprintf": false,
+		"d3": true,
+		"THREE": false,
+		"util": false,
+		"Estimate": false,
+		"Classify": false,
+		"VideoFeed": false,
+		"MeshFeed": false,
+		"Peer": false
+	},
   "esnext": true,
 	"validthis": true,
 	"browser": true,
+	"devel" : true,
 	"strict": true,
 	"bitwise": true,
 	"curly": true,
