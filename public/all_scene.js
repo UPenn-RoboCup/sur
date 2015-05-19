@@ -662,12 +662,15 @@
 				case 'teleop':
 				case 'teleop':
 				case 'step':
+					// These don't do anything...
 					return;
 				case 'ik':
+					// In our mode, we just reset everything
 					tcontrol.detach();
 					resetLabels();
 					return;
 				default:
+					// Enter a new control mode
 					this.innerHTML = 'Done';
 					teleopBtn.innerHTML = 'Rotate';
 					stepBtn.innerHTML = 'Accept';
@@ -696,13 +699,14 @@
 		teleopBtn.addEventListener('click', function(){
 			switch(getMode()){
 				case 'move':
+					// Switches between rotate/translate
 					if(this.innerHTML==='Rotate'){
 						tcontrol.setMode('rotate');
 						tcontrol.enableX = false;
 						tcontrol.enableY = true;
 						tcontrol.enableZ = false;
 						this.innerHTML = 'Translate';
-					} else if(this.innerHTML==='Translate') {
+					} else if(this.innerHTML === 'Translate') {
 						tcontrol.setMode('translate');
 						tcontrol.enableX = true;
 						tcontrol.enableY = false;
@@ -712,6 +716,7 @@
 					return;
 				case 'ik':
 				case 'step':
+					// Switches between rotate/translate
 					if(this.innerHTML==='Rotate'){
 						tcontrol.setMode('rotate');
 						this.innerHTML = 'Translate';
@@ -721,6 +726,7 @@
 					}
 					return;
 				case 'teleop':
+					// In our mode, we just reset everything
 					tcontrol.detach();
 					tcontrol.enableY = true;
 					tcontrol.enableZ = true;
@@ -729,12 +735,13 @@
 					resetLabels();
 					return;
 				default:
-					// Tell the robot to go into teleop
-					util.shm('/fsm/Arm/teleopraw', true);
+					// Enter a new control mode
 					this.innerHTML = 'Done';
 					stepBtn.innerHTML = 'Accept';
 					goBtn.innerHTML = 'Plan';
 					moveBtn.innerHTML = 'Undo';
+					// Tell the robot to go into teleop
+					util.shm('/fsm/Arm/teleopraw', true);
 					break;
 			}
 			var motor = planRobot.object.getObjectByName(jointSel.value);
