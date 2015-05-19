@@ -274,7 +274,7 @@
 					return;
 				case 'step':
 					var gfoot = planRobot.foot;
-					var footname = d3.select('button#step').node().getAttribute('data-foot');
+					var footname = document.querySelector('button#step').getAttribute('data-foot');
 					var worldFoot = robot.object.getObjectByName(footname).matrixWorld;
 					var p3 = params.three.position.clone();
 					p3.sub(
@@ -670,6 +670,8 @@
 				default:
 					this.innerHTML = 'Done';
 					teleopBtn.innerHTML = 'Rotate';
+					stepBtn.innerHTML = 'Accept';
+					goBtn.innerHTML = 'Plan';
 					// Tell the robot to go into teleop mode
 					util.shm('/fsm/Arm/teleop', true);
 					break;
@@ -729,19 +731,22 @@
 				default:
 					// Tell the robot to go into teleop
 					util.shm('/fsm/Arm/teleopraw', true);
+					this.innerHTML = 'Done';
+					stepBtn.innerHTML = 'Accept';
+					goBtn.innerHTML = 'Plan';
+					moveBtn.innerHTML = 'Undo';
 					break;
 			}
 			var motor = planRobot.object.getObjectByName(jointSel.value);
-			if(!motor){return;}
-			this.innerHTML = 'Done';
-			moveBtn.innerHTML = 'Undo';
-			tcontrol.setMode('rotate');
-			tcontrol.space = 'local';
-			tcontrol.enableY = false;
-			tcontrol.enableZ = false;
-			tcontrol.enableXYZE = false;
-			tcontrol.enableE = false;
-			tcontrol.attach(motor);
+			if (motor) {
+				tcontrol.setMode('rotate');
+				tcontrol.space = 'local';
+				tcontrol.enableY = false;
+				tcontrol.enableZ = false;
+				tcontrol.enableXYZE = false;
+				tcontrol.enableE = false;
+				tcontrol.attach(motor);
+			}
 		});
 
 	}
@@ -770,10 +775,10 @@
 		container.appendChild(renderer.domElement);
 		camera = new THREE.PerspectiveCamera(75, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 1e6);
     //camera = new THREE.OrthographicCamera( CANVAS_WIDTH / - 2, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_HEIGHT / - 2, 1, 1000 );
-		camera.position.copy(new THREE.Vector3(500, 2000, -500));
+		camera.position.copy(new THREE.Vector3(500, 1500, -500));
 		// Load in the Orbit controls dynamically
 		controls = new THREE.OrbitControls(camera, container);
-		controls.target = new THREE.Vector3(0, 0, 5000);
+		controls.target = new THREE.Vector3(0, 0, 1000);
 		tcontrol = new THREE.TransformControls( camera, renderer.domElement );
 		scene.add(tcontrol);
 		// Load the ground

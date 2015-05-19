@@ -24,7 +24,7 @@
     "pako": "latest",
     "sprintfjs": "latest",
     "threejs": "latest",
-		"peerjs": "latest",
-		"numericjs": "latest"
+    "peerjs": "latest",
+    "numericjs": "latest"
   }
 }
