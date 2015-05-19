@@ -459,7 +459,6 @@
 										globalPose[0], globalPose[1], globalPose[2]),
 					]);
 					util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', globalPose);
-//d3.json('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach').post(JSON.stringify(globalPose));
 					break;
 				case 'step':
 					var p = planRobot.foot.position;
@@ -481,10 +480,13 @@
 						sprintf("zpr: %0.2f %0.2f %0.2f",
 										zpr[0], zpr[1]*util.RAD_TO_DEG, zpr[2]*util.RAD_TO_DEG),
 					]);
-					d3.json('/shm/hcm/step/relpos').post(JSON.stringify(relpos));
-					d3.json('/shm/hcm/step/zpr').post(JSON.stringify(zpr));
-					d3.json('/shm/hcm/step/supportLeg').post(JSON.stringify([supportFoot]));
-					d3.json('/fsm/Body/stepover1').post();
+					Promise.all([
+						util.shm('/shm/hcm/step/relpos', relpos),
+						util.shm('/shm/hcm/step/zpr', zpr),
+						util.shm('/shm/hcm/step/supportLeg', [supportFoot]),
+					]).then(function(){
+						util.shm('/fsm/Body/stepover1', true);
+					});
 					break;
 				case 'ik':
 					// Always with respect to our com position.
@@ -512,7 +514,7 @@
 										tfR[4]*RAD_TO_DEG, tfR[5]*RAD_TO_DEG, tfR[6]*RAD_TO_DEG),
 					]);
 
-					d3.json('/armplan', procPlan).post(JSON.stringify([
+					util.shm('/armplan', [
 						{
 							tr: tfL,
 							timeout: 20,
@@ -528,7 +530,7 @@
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]));
+					]).then(procPlan);
 
 					// Reset the position
 					planRobot.rhand.position.set(0,0,0);
@@ -544,7 +546,7 @@
 				case 'teleop':
 					// Send teleop
 
-					d3.json('/armplan', procPlan).post(JSON.stringify([
+					util.shm('/armplan', [
 						{
 							q: qLArm,
 							timeout: 20,
@@ -558,14 +560,14 @@
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]));
+					]).then(procPlan);
 					// TODO: Do this *after* the plan
 					//d3.json('/shm/hcm/teleop/larm').post(JSON.stringify(qAll.slice(2, 9)));
 					//d3.json('/shm/hcm/teleop/rarm').post(JSON.stringify(qAll.slice(21, 28)));
 					break;
 				default:
 					// bodyInit
-					d3.json('/fsm/Body/init').post();
+					util.shm('/fsm/Body/init', true);
 					break;
 			}
 		});
@@ -684,7 +686,7 @@
 					this.innerHTML = 'Done';
 					teleopBtn.innerHTML = 'Rotate';
 					// Tell the robot to go into teleop mode
-					d3.json('/fsm/Arm/teleop').post();
+					util.shm('/fsm/Arm/teleop', true);
 					break;
 			}
 			tcontrol.detach();
@@ -886,44 +888,36 @@
 	}
 
 	// Load everything
-	util.lhtml('/view/all_scene.html').then(function(view){
+	Promise.all([
+		util.lcss('/css/all_scene.css'),
+		util.lcss('/css/gh-buttons.css'),
+		util.ljs('/Estimate.js'),
+		util.ljs('/Classify.js'),
+		util.ljs("/VideoFeed.js"),
+		util.ljs('/bc/threejs/build/three.js')
+	]).then(function(){
+		return Promise.all([
+			util.ljs("/MeshFeed.js"),
+			util.ljs("/KinectFeed.js"),
+			util.ljs('/OrbitControls.js'),
+			util.ljs('/TransformControls.js'),
+			util.ljs('/Robot.js'),
+		]);
+	}).then(function(){
+		return util.lhtml('/view/all_scene.html')
+	}).then(function(view){
 		document.body = view;
 		container = document.getElementById('world_container');
-		//console.log(view);
-		return util.lcss('/css/all_scene.css');
-	}).then(function(){
-		return util.lcss('/css/gh-buttons.css');
-	}).then(function(){
-  	return util.ljs('/Estimate.js');
-	}).then(function(){
-		return util.ljs('/Classify.js');
-	}).then(function(){
-		return util.ljs("/VideoFeed.js");
-	}).then(function(){
-		return util.ljs("/MeshFeed.js");
-	}).then(function(){
-		return util.ljs('/bc/threejs/build/three.js');
-	}).then(function(){
-		return util.ljs('/OrbitControls.js');
-	}).then(function(){
-		return util.ljs('/TransformControls.js');
-	}).then(function(){
-		return util.ljs('/Robot.js');
-	}).then(function(){
-		util.shm('/streams/mesh0').then(function(port) {
-			mesh0_feed = new ctx.MeshFeed(port, process_mesh);
-		});
-		util.shm('/streams/mesh1').then(function(port) {
-			mesh1_feed = new ctx.MeshFeed(port, process_mesh);
-		});
-		return util.ljs("/KinectFeed.js");
-	}).then(function(){
-		util.shm('/streams/kinect2_color').then(function(rgb){
-			util.shm('/streams/kinect2_depth').then(function(depth){
-				kinect_feed = new ctx.KinectFeed(rgb, depth, process_mesh);
-				//console.log(kinect_feed, rgb, depth);
-			});
-		});
+		return Promise.all([
+			util.shm('/streams/mesh0'),
+			util.shm('/streams/mesh1'),
+			util.shm('/streams/kinect2_color'),
+			util.shm('/streams/kinect2_depth')
+		]);
+	}).then(function(ports){
+		mesh0_feed = new MeshFeed(ports[0], process_mesh);
+		mesh1_feed = new MeshFeed(ports[1], process_mesh);
+		kinect_feed = new ctx.KinectFeed(ports[2], ports[3], process_mesh);
 	})
 		.then(setup3d)
 		.then(setup_rtc)
