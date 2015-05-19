@@ -91,13 +91,15 @@
 	}
 
 	// http://syzygy.st/javascript-coroutines/
+	/*
 	function coroutine(f, interval) {
     var o = f(); // instantiate the coroutine
     o.next(); // execute until the first yield
     return function(x) {
       o.next(x);
-    }
+    };
 	}
+	*/
 
 	// Take in an array of debugging messages and combine into the info div
 	function debug(arr){
@@ -107,18 +109,18 @@
 	var pow = Math.pow,
     abs = Math.abs,
     sqrt = Math.sqrt,
-    exp = Math.exp,
+    //exp = Math.exp,
     min = Math.min,
-		max = Math.max,
+		//max = Math.max,
     PI = Math.PI,
-		HALF_PI = PI / 2,
+		//HALF_PI = PI / 2,
 		TWO_PI = 2 * PI,
-    atan = Math.atan,
+    //atan = Math.atan,
     atan2 = Math.atan2,
-    sin = Math.sin,
-    cos = Math.cos,
-    floor = Math.floor,
-		ceil = Math.ceil,
+    //sin = Math.sin,
+    //cos = Math.cos,
+    //floor = Math.floor,
+		//ceil = Math.ceil,
 		round = Math.round;
 
 	var mapFuncs = {

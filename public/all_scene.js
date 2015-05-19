@@ -12,7 +12,7 @@
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null;
 
-	function procPlan (plan){
+	function procPlan(plan) {
 		var speedup = 4;
 		// Plan speed is at 100Hz (120?)
 
@@ -545,10 +545,13 @@
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]).then(procPlan);
-					// TODO: Do this *after* the plan
-					//util.shm('/shm/hcm/teleop/larm', qAll.slice(2, 9));
-					//util.shm('/shm/hcm/teleop/rarm', qAll.slice(21, 28));
+					]).then(procPlan).then(function(){
+						// TODO: Grab a decision, via the promise
+						return Promise.all([
+							util.shm('/shm/hcm/teleop/larm', qLArm),
+							util.shm('/shm/hcm/teleop/rarm', qRArm)
+						]);
+					});
 					break;
 				default:
 					// bodyInit

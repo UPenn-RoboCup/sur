@@ -27,7 +27,9 @@ function mat_times_vec(m, v){
 	}, v);
 }
 
+/*
 function rotX(a){
+	'use strict';
 	var ca = cos(a);
   var sa = sin(a);
 	return [
@@ -37,8 +39,10 @@ function rotX(a){
     [0, 0, 0, 1]
 	];
 }
+*/
 
 function rotY(a){
+	'use strict';
 	var ca = cos(a);
   var sa = sin(a);
 	return [
@@ -50,6 +54,7 @@ function rotY(a){
 }
 
 function rotZ(a){
+	'use strict';
 	var ca = cos(a);
   var sa = sin(a);
 	return [
@@ -61,6 +66,7 @@ function rotZ(a){
 }
 
 function trans(x,y,z){
+	'use strict';
   return [
     [1,0,0,x],
     [0,1,0,y],
@@ -206,8 +212,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			//var Tlidar = rotX(Math.PI/2);
 			//var v = [r*cos(theta), r*sin(theta), 0];
 			// Just form the vector outright
-			var v = [r*cos(theta), 0, r*sin(theta)];
-			var v_actuate = mat_times_vec(Tactuate, v);
+			var v_actuate = mat_times_vec(Tactuate, [r*cos(theta), 0, r*sin(theta)]);
 			//console.log(v_actuate);
 			var v_chest = mat_times_vec(Tchest, v_actuate);
 			//console.log(v_chest);
@@ -246,8 +251,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			var Tactuate = rotY(a);
 			var Thead = trans(0,0,0.3);
 
-			var v = [r*cos(theta), r*sin(theta), 0.12]; // above the head
-			var v_actuate = mat_times_vec(Tactuate, v);
+			var v_actuate = mat_times_vec(Tactuate, [r*cos(theta), r*sin(theta), 0.12]);
 			//console.log(v_actuate);
 			var v_head = mat_times_vec(Thead, v_actuate);
 			//console.log(v_head);
