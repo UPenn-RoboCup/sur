@@ -12,29 +12,6 @@
 		N_MESH0 = 1, N_MESH1 = 1, N_KINECT = 1,
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null;
-
-	function procPlan(plan){
-		//console.log(plan);
-		var speedup = 1;
-		// Plan speed is at 100Hz (120?)
-		var hz = 100 * speedup;
-		Promise.all([
-			util.loop(plan[0], function(idx, frame){
-				frame.forEach(function(v, i){ planRobot.setJoints(v, this[i]); },
-											planRobot.IDS_LARM);
-			}, 1e3/hz),
-			util.loop(plan[1], function(idx, frame){
-				frame.forEach(function(v, i){planRobot.setJoints(v, this[i]);},
-											planRobot.IDS_RARM);
-			}, 1e3/hz)
-			//util.loop(plan[2], function(idx, frame){}, 1e3/hz),
-		]).catch(function(){
-		}).then(function(){
-			console.log('Done arms');
-		});
-
-	}
-
   var describe = {
     cylinder: function(mesh, p){
 			var parameters = E.cylinder(mesh, p);
@@ -480,54 +457,25 @@
 						planRobot.rhand.matrixWorld, invComWorldPlan);
 					var lhand_com = new THREE.Matrix4().multiplyMatrices(
 						planRobot.lhand.matrixWorld, invComWorldPlan);
-					// TODO: Go to quaternion
 					var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
 					var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
 					var rpyL = new THREE.Euler().setFromQuaternion(quatL);
 					var rpyR = new THREE.Euler().setFromQuaternion(quatR);
 					var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
 					var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
-					var tfL = [ pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
-						rpyL.z, rpyL.x, rpyL.y ];
-					var tfR = [ pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
-						rpyR.z, rpyR.x, rpyR.y ];
-/*
-					var fix = new THREE.Euler(-90*util.DEG_TO_RAD, 0, -90*util.DEG_TO_RAD);
-					var quatFix = new THREE.Quaternion().setFromEuler(fix);
-					var invFix = new THREE.Quaternion().copy(quatFix).inverse();
-					//
-					var fixedL = new THREE.Quaternion().multiplyQuaternions ( quatFix, quatL);
-					var fixed_rpyL = new THREE.Euler().setFromQuaternion(fixedL);
-					console.log(fixed_rpyL.x, fixed_rpyL.y, fixed_rpyL.z);
-					//
-					var fixedL = new THREE.Quaternion().multiplyQuaternions ( invFix, quatL);
-					var fixed_rpyL = new THREE.Euler().setFromQuaternion(fixedL);
-					console.log(fixed_rpyL.x, fixed_rpyL.y, fixed_rpyL.z);
-					//
-					console.log(tfL);
-					//
-*/
-					//var quatLrobot = new THREE.Quaternion( quatL.z, quatL.x, quatL.y, quatL.w );
-					//var rpyLrobot = new THREE.Euler().setFromQuaternion(quatLrobot);
-					//console.log(rpyLrobot.x, rpyLrobot.y, rpyLrobot.z);
-
-					var tfLa = [
-						quatL.w, quatL.z, quatL.x, quatL.y,
-						pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
-					];
-
 					util.debug([
 						sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
-										tfL[0], tfL[1], tfL[2],
-										tfL[3]*RAD_TO_DEG, tfL[4]*RAD_TO_DEG, tfL[5]*RAD_TO_DEG),
+										pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
+										rpyL.z*RAD_TO_DEG, rpyL.x*RAD_TO_DEG, rpyL.y*RAD_TO_DEG),
 						sprintf("Right: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
-										tfR[0], tfR[1], tfR[2],
-										tfR[3]*RAD_TO_DEG, tfR[4]*RAD_TO_DEG, tfR[5]*RAD_TO_DEG),
+										pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
+										rpyR.z*RAD_TO_DEG, rpyR.x*RAD_TO_DEG, rpyR.y*RAD_TO_DEG),
 					]);
-
+					var tfL = [ quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
+					var tfR = [ quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
 					util.shm('/armplan', [
 						{
-							tr: tfLa,
+							tr: tfL,
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
@@ -541,18 +489,35 @@
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]).then(procPlan);
+					]).then(function(plan){
+						var speedup = 1;
+						// Plan speed is at 100Hz (120?)
+						var hz = 100 * speedup;
+						// TODO: catch on bad plan or user cancel
+						return Promise.all([
+							util.loop(plan[0], function(idx, frame){
+								frame.forEach(function(v, i){ planRobot.setJoints(v, this[i]); },
+															planRobot.IDS_LARM);
+							}, 1e3/hz),
+							util.loop(plan[1], function(idx, frame){
+								frame.forEach(function(v, i){planRobot.setJoints(v, this[i]);},
+															planRobot.IDS_RARM);
+							}, 1e3/hz)
+							//util.loop(plan[2], function(idx, frame){}, 1e3/hz),
+						]);
+					}).then(function(decision){
+						// TODO: Grab a decision, via the promise
+						return Promise.all([
+							util.shm('/shm/hcm/teleop/tflarm', tfL),
+							util.shm('/shm/hcm/teleop/tfrarm', tfR)
+						]);
+					});
 
 					// Reset the position
-					planRobot.rhand.position.set(0,0,0);
-					planRobot.lhand.position.set(0,0,0);
+					planRobot.rhand.position.set(0, 0, 0);
+					planRobot.lhand.position.set(0, 0, 0);
 					planRobot.rhand.quaternion.copy(new THREE.Quaternion());
 					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
-
-					/*
-					d3.json('/shm/hcm/teleop/dlarm').post(JSON.stringify(dL));
-					d3.json('/shm/hcm/teleop/drarm').post(JSON.stringify(dR));
-					*/
 					break;
 				case 'teleop':
 					// Send teleop
