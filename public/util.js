@@ -8,16 +8,16 @@
 	"use strict";
 
 	// http://www.html5rocks.com/en/tutorials/es6/promises/
-	function xhr(url, method, mime, responseType, contentType) {
+	function xhr(url, method, data, mime, responseType, contentType) {
 		// Return a new promise.
 		return new Promise(function(resolve, reject) {
 			// Do the usual XHR stuff
 			var req = new XMLHttpRequest();
 			req.open(method || 'GET', url, true);
-			req.setRequestHeader('accept', mime || 'application/json');
 			req.responseType = responseType || 'json';
 			req.setRequestHeader("Content-Type",
 													 contentType || "application/json;charset=UTF-8");
+			req.setRequestHeader('accept', mime || 'application/json');
 			req.onload = function() {
 				if (req.status === 200) {
 					resolve(req.response);
@@ -28,7 +28,7 @@
 			req.onerror = function() {
 				reject(Error("Network Error"));
 			};
-			req.send();
+			req.send(data);
 		});
 	}
 	function shm(url, val){
@@ -63,16 +63,8 @@
 		});
 	}
 	function lhtml(url) {
-		return xhr(url, 'GET', 'text/plain', 'document').then(function(doc){
-			//var body = doc.getElementsByTagName('body')[0];
-			//return body;
+		return xhr(url, 'GET', null, 'text/plain', 'document').then(function(doc){
 			return doc.body;
-			/*
-			// For text response
-			var range = document.createRange();
-			range.selectNode(document.body);
-			return range.createContextualFragment(text);
-			*/
 		}).catch(function(error) {
 			console.log("Failed!", error);
 		});
