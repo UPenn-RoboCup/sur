@@ -481,27 +481,53 @@
 					var lhand_com = new THREE.Matrix4().multiplyMatrices(
 						planRobot.lhand.matrixWorld, invComWorldPlan);
 					// TODO: Go to quaternion
-					var rpyL = new THREE.Euler().setFromRotationMatrix(lhand_com);
-					var rpyR = new THREE.Euler().setFromRotationMatrix(rhand_com);
+					var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
+					var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
+					var rpyL = new THREE.Euler().setFromQuaternion(quatL);
+					var rpyR = new THREE.Euler().setFromQuaternion(quatR);
 					var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
 					var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
 					var tfL = [ pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
 						rpyL.z, rpyL.x, rpyL.y ];
 					var tfR = [ pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
 						rpyR.z, rpyR.x, rpyR.y ];
+/*
+					var fix = new THREE.Euler(-90*util.DEG_TO_RAD, 0, -90*util.DEG_TO_RAD);
+					var quatFix = new THREE.Quaternion().setFromEuler(fix);
+					var invFix = new THREE.Quaternion().copy(quatFix).inverse();
+					//
+					var fixedL = new THREE.Quaternion().multiplyQuaternions ( quatFix, quatL);
+					var fixed_rpyL = new THREE.Euler().setFromQuaternion(fixedL);
+					console.log(fixed_rpyL.x, fixed_rpyL.y, fixed_rpyL.z);
+					//
+					var fixedL = new THREE.Quaternion().multiplyQuaternions ( invFix, quatL);
+					var fixed_rpyL = new THREE.Euler().setFromQuaternion(fixedL);
+					console.log(fixed_rpyL.x, fixed_rpyL.y, fixed_rpyL.z);
+					//
+					console.log(tfL);
+					//
+*/
+					//var quatLrobot = new THREE.Quaternion( quatL.z, quatL.x, quatL.y, quatL.w );
+					//var rpyLrobot = new THREE.Euler().setFromQuaternion(quatLrobot);
+					//console.log(rpyLrobot.x, rpyLrobot.y, rpyLrobot.z);
+
+					var tfLa = [
+						quatL.w, quatL.z, quatL.x, quatL.y,
+						pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
+					];
 
 					util.debug([
 						sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
 										tfL[0], tfL[1], tfL[2],
-										tfL[4]*RAD_TO_DEG, tfL[5]*RAD_TO_DEG, tfL[6]*RAD_TO_DEG),
+										tfL[3]*RAD_TO_DEG, tfL[4]*RAD_TO_DEG, tfL[5]*RAD_TO_DEG),
 						sprintf("Right: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
 										tfR[0], tfR[1], tfR[2],
-										tfR[4]*RAD_TO_DEG, tfR[5]*RAD_TO_DEG, tfR[6]*RAD_TO_DEG),
+										tfR[3]*RAD_TO_DEG, tfR[4]*RAD_TO_DEG, tfR[5]*RAD_TO_DEG),
 					]);
 
 					util.shm('/armplan', [
 						{
-							tr: tfL,
+							tr: tfLa,
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
@@ -547,8 +573,8 @@
 						}
 					]).then(procPlan);
 					// TODO: Do this *after* the plan
-					//d3.json('/shm/hcm/teleop/larm').post(JSON.stringify(qAll.slice(2, 9)));
-					//d3.json('/shm/hcm/teleop/rarm').post(JSON.stringify(qAll.slice(21, 28)));
+					//util.shm('/shm/hcm/teleop/larm', qAll.slice(2, 9));
+					//util.shm('/shm/hcm/teleop/rarm', qAll.slice(21, 28));
 					break;
 				default:
 					// bodyInit
@@ -728,7 +754,7 @@
 					return;
 				default:
 					// Tell the robot to go into teleop
-					d3.json('/fsm/Arm/teleopraw').post();
+					util.shm('/fsm/Arm/teleopraw', true);
 					break;
 			}
 			var motor = planRobot.object.getObjectByName(jointSel.value);
