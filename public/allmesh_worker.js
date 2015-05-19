@@ -483,11 +483,11 @@ this.addEventListener('message', function (e) {
 			tfK2L = flat2mat(mesh.tfL16);
 			tfK2G = flat2mat(mesh.tfG16);
 			// Cartesian coordinate formation function
-			//get_xyz = SENSOR_XYZ.kinectV2;
-			get_xyz = SENSOR_XYZ.kinectV2webots;
+			get_xyz = SENSOR_XYZ.kinectV2;
+			//get_xyz = SENSOR_XYZ.kinectV2webots;
 			// Color formation function
-			//get_color = SENSOR_COLOR.kinectV2;
-			get_color = SENSOR_COLOR.kinectV2webots;
+			get_color = SENSOR_COLOR.kinectV2;
+			//get_color = SENSOR_COLOR.kinectV2webots;
 			break;
 		case 'mesh0':
 			get_xyz = SENSOR_XYZ.mesh0;

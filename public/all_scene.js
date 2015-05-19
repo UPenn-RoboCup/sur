@@ -13,41 +13,26 @@
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null;
 
-
 	function procPlan(plan){
 		//console.log(plan);
-		var speedup = 2;
+		var speedup = 1;
 		// Plan speed is at 100Hz (120?)
 		var hz = 100 * speedup;
-		// Playback on the robot
-		var iL = 0, planL = plan[0];
-		console.log('Start Plan Playback');
-		var hPlanL = setInterval(function(){
-			var frame = planL[iL];
-			if (frame) {iL += 1;} else {
-				clearInterval(hPlanL);
-				console.log('Done Left');
-				return;
-			}
-			frame.forEach(function(v, i){
-				planRobot.setJoints(v, planRobot.IDS_LARM[i]);
-			});
-		}, 1e3/hz);
-		var iR = 0, planR = plan[1];
-		console.log('Start Right');
-		var hPlanR = setInterval(function(){
-			var frame = planR[iR];
-			if (frame) {iR += 1;} else {
-				clearInterval(hPlanR);
-				console.log('Done Right');
-				return;
-			}
-			frame.forEach(function(v, i){
-				planRobot.setJoints(v, planRobot.IDS_RARM[i]);
-			});
-		}, 1e3/hz);
-		var iW = 0, planW = plan[2];
-		// TODO: Allow awist playback
+		Promise.all([
+			util.loop(plan[0], function(idx, frame){
+				frame.forEach(function(v, i){ planRobot.setJoints(v, this[i]); },
+											planRobot.IDS_LARM);
+			}, 1e3/hz),
+			util.loop(plan[1], function(idx, frame){
+				frame.forEach(function(v, i){planRobot.setJoints(v, this[i]);},
+											planRobot.IDS_RARM);
+			}, 1e3/hz)
+			//util.loop(plan[2], function(idx, frame){}, 1e3/hz),
+		]).catch(function(){
+		}).then(function(){
+			console.log('Done arms');
+		});
+
 	}
 
   var describe = {
@@ -904,7 +889,7 @@
 			util.ljs('/Robot.js'),
 		]);
 	}).then(function(){
-		return util.lhtml('/view/all_scene.html')
+		return util.lhtml('/view/all_scene.html');
 	}).then(function(view){
 		document.body = view;
 		container = document.getElementById('world_container');

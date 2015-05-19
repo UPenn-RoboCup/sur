@@ -70,6 +70,35 @@
 		});
 	}
 
+	// Promise to loop over an array and process each element at an interval
+	function loop(arr, proc, interval){
+		return new Promise(function(resolve, reject) {
+			if(!arr.entries){
+				reject();
+			}
+			var ae = arr.entries();
+			var h = setInterval(function(){
+				var nxt = ae.next();
+				if(nxt.done){
+					clearInterval(h);
+					resolve();
+				} else {
+					// value: [idx, val]
+					proc.apply(arr, nxt.value);
+				}
+			}, interval || 0);
+		});
+	}
+
+	// http://syzygy.st/javascript-coroutines/
+	function coroutine(f, interval) {
+    var o = f(); // instantiate the coroutine
+    o.next(); // execute until the first yield
+    return function(x) {
+      o.next(x);
+    }
+	}
+
 	// Take in an array of debugging messages and combine into the info div
 	function debug(arr){
 		document.getElementById('info').innerHTML = arr.join('<br/>');
@@ -157,6 +186,7 @@
 		lcss: lcss,
 		lhtml: lhtml,
 		shm: shm,
+		loop: loop,
 		DEG_TO_RAD: Math.PI / 180,
 		RAD_TO_DEG: 180 / Math.PI,
 		mapFuncs: mapFuncs,
