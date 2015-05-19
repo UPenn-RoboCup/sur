@@ -363,7 +363,6 @@
 		});
 
 		proceedBtn.addEventListener('click', function(){
-			//d3.json('/shm/hcm/state/proceed').post(JSON.stringify([1]));
 			util.shm('/shm/hcm/state/proceed', [1]);
 		});
 
@@ -459,8 +458,8 @@
 						sprintf("Global WP: %0.2f %0.2f %0.2f",
 										globalPose[0], globalPose[1], globalPose[2]),
 					]);
-					d3.json('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach')
-						.post(JSON.stringify(globalPose));
+					util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', globalPose);
+//d3.json('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach').post(JSON.stringify(globalPose));
 					break;
 				case 'step':
 					var p = planRobot.foot.position;

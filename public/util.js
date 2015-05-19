@@ -16,7 +16,7 @@
 			req.open(method || 'GET', url, true);
 			req.responseType = responseType || 'json';
 			req.setRequestHeader("Content-Type",
-													 contentType || "application/json;charset=UTF-8");
+													 contentType || "text/plain;charset=UTF-8");
 			req.setRequestHeader('accept', mime || 'application/json');
 			req.onload = function() {
 				if (req.status === 200) {
