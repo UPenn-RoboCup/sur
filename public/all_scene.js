@@ -13,7 +13,7 @@
 		last_intersection = {t:0}, last_selected_parameters = null;
 
 	function procPlan(plan) {
-		var play_hz = 30, true_hz = 120, speedup = 3, skip = (true_hz/play_hz) * speedup;
+		var play_hz = 30, true_hz = 120, speedup = 3, skip = Math.ceil((true_hz/play_hz) * speedup);
 
 		var lplan = plan[0].length ? plan[0] : [],
 				rplan = plan[1].length ? plan[1] : [],
