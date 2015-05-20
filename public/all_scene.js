@@ -376,6 +376,7 @@
 					break;
 				case 'ik':
 					reset_ik = true;
+					reset_joints = true;
 					break;
 				default:
 					// Reset All
@@ -403,15 +404,6 @@
 				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
 				planRobot.lhand.position.set(0,0,0);
 				planRobot.lhand.quaternion.copy(new THREE.Quaternion());
-				/*
-				// Must copy from the matrix4....
-				var lh = planRobot.object.getObjectByName('L_WR_FT');
-				var rh = planRobot.object.getObjectByName('R_WR_FT');
-				planRobot.lhand.position..setFromRotationMatrix(lh.matrixWorld);
-				planRobot.rhand.position.copy(rh.position);
-				planRobot.lhand.quaternion.copy(lh.quaternion);
-				planRobot.rhand.quaternion.copy(rh.quaternion);
-				*/
 			}
 		});
 		goBtn.addEventListener('click', function(){
@@ -500,6 +492,8 @@
 					var I16 = new THREE.Matrix4().elements;
 					var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
 					var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
+					console.log('sameLArmTF', sameLArmTF);
+					console.log('sameRArmTF', sameRArmTF);
 					// NOTE: Be careful between robots...
 					var rhand_com = new THREE.Matrix4().multiplyMatrices(
 						planRobot.rhand.matrixWorld, invComWorldPlan);
@@ -539,7 +533,12 @@
 							qWaist0: qWaist0
 						}
 					]).then(procPlan).then(function(plans){
-						console.log(plans);
+						//console.log(plans);
+						return Promise.all([
+							sameLArmTF || util.shm('/shm/hcm/teleop/lweights', [1,1,0]),
+							sameRArmTF || util.shm('/shm/hcm/teleop/rweights', [1,1,0])
+						]);
+					}).then(function(){
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
 							sameLArmTF || util.shm('/shm/hcm/teleop/tflarm', tfL),
@@ -872,11 +871,11 @@
 		// Load the robot
 		robot = new ctx.Robot({
 			port: port,
-			name: 'thorop2',
+			name: 'dale',
 			callback: function(){
 				scene.add(this);
 				planRobot = new ctx.Robot({
-					name: 'thorop2',
+					name: 'dale',
 					callback: function(){
 						var clearMaterial = new THREE.MeshBasicMaterial({
 							color: 0x00ff00,

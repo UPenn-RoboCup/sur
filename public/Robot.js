@@ -59,8 +59,9 @@
 			new THREE.MeshBasicMaterial( { color: 0xff0000 } )
 		);
 
+		this.name = options.name || 'thorop2';
 		// assuming we loaded a JSON structure from elsewhere
-		loader.load('json/thorop2.json', function(o){
+		loader.load('json/' + this.name + '.json', function(o){
 			//console.log('THOROP2', object, this);
 			object = o;
 			meshes = jointNames.map(function(name){return o.getObjectByName(name) || new THREE.Object3D();});
