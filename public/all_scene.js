@@ -510,17 +510,17 @@
 					util.shm('/armplan', [
 						diffL===0 ? false : {
 							tr: tfL,
-							timeout: 20,
+							timeout: 30,
 							via: 'jacobian_preplan',
-							weights: [1,0,0],
+							weights: [1,1,0],
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
 						},
 						diffR===0 ? false : {
 							tr: tfR,
-							timeout: 20,
+							timeout: 30,
 							via: 'jacobian_preplan',
-							weights: [1,0,0],
+							weights: [1,1,0],
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
@@ -545,13 +545,13 @@
 					util.shm('/armplan', [
 						{
 							q: qLArm,
-							timeout: 20,
+							timeout: 30,
 							via: 'joint_preplan',
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
 						}, {
 							q: qRArm,
-							timeout: 20,
+							timeout: 30,
 							via: 'joint_preplan',
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
