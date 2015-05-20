@@ -42,7 +42,7 @@
 			var qQuat = new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 			//console.log(qQuat);
 			meshes[i].quaternion.multiplyQuaternions(qDefault[i], qQuat);
-		}
+		};
 
 		this.foot = new THREE.Mesh(
 			new THREE.BoxGeometry( 100, 10, 200 ),

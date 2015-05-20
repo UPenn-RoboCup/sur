@@ -42,7 +42,7 @@ var streams = Config.net.streams;
 console.log(streams);
 
 // Network detection
-if (!USE_LOCALHOST) {
+if (!USE_LOCALHOST && Config.net.ping) {
 	var NET_OPEN = false;
 	var ping_skt = zmq.socket('pub');
 	ping_skt.bind('tcp://*:' + Config.net.ping.tcp);

@@ -180,6 +180,13 @@
 		});
 	}
 
+	function same(arr1, arr2, threshold){
+		threshold = threshold || 1e-3;
+		return arr1.reduce(function(prev, cur, i, arr){
+			return prev && Math.abs(arr[i] - arr2[i]) < threshold;
+		}, true);
+	}
+
 	// Exports
 	// TODO: Pollute global namespace, or call these utils?
 	ctx.util = {
@@ -192,6 +199,7 @@
 		DEG_TO_RAD: Math.PI / 180,
 		RAD_TO_DEG: 180 / Math.PI,
 		mapFuncs: mapFuncs,
+		same: same,
 		mat3_times_vec: mat3_times_vec,
 		get_THREE_mat3: get_THREE_mat3,
 		jointNames: [

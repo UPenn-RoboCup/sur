@@ -13,7 +13,7 @@
 		last_intersection = {t:0}, last_selected_parameters = null;
 
 	function procPlan(plan) {
-		var play_hz = 30, true_hz = 120, speedup = 3, skip = Math.ceil((true_hz/play_hz) * speedup);
+		var play_hz = 30, true_hz = 120, speedup = 4, skip = Math.ceil((true_hz/play_hz) * speedup);
 
 		var lplan = plan[0].length ? plan[0] : [],
 				rplan = plan[1].length ? plan[1] : [],
@@ -428,11 +428,22 @@
 				var e = new THREE.Euler().setFromQuaternion(q0);
 				return e.x;
 			}, robot.qDefault);
+
+			var qHead = qPlan.slice(0, 2);
+			var qHead0 = qNow.slice(0, 2);
+			var sameHead = util.same(qHead, qHead0);
+			//
 			var qLArm = qPlan.slice(2, 9);
-			var qRArm = qPlan.slice(21, 28);
-			var qWaist0 = qNow.slice(28, 30);
 			var qLArm0 = qNow.slice(2, 9);
+			var sameLArm = util.same(qLArm, qLArm0);
+			//
+			var qRArm = qPlan.slice(21, 28);
 			var qRArm0 = qNow.slice(21, 28);
+			var sameRArm = util.same(qRArm, qRArm0);
+			//
+			var qWaist = qPlan.slice(28, 30);
+			var qWaist0 = qNow.slice(28, 30);
+			var sameWaist = util.same(qHead, qHead0);
 			//var comWorldNow = robot.object.matrixWorld;
 			var comWorldPlan = robot.object.matrixWorld;
 			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
@@ -487,12 +498,8 @@
 				case 'ik':
 					// Always with respect to our com position.
 					var I16 = new THREE.Matrix4().elements;
-					var diffL = planRobot.lhand.matrix.elements.reduce(function(prev, cur, i, arr){
-						return prev + Math.abs(arr[i] - I16[i]);
-					}, 0);
-					var diffR = planRobot.rhand.matrix.elements.reduce(function(prev, cur, i, arr){
-						return prev + Math.abs(arr[i] - I16[i]);
-					}, 0);
+					var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
+					var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
 					// NOTE: Be careful between robots...
 					var rhand_com = new THREE.Matrix4().multiplyMatrices(
 						planRobot.rhand.matrixWorld, invComWorldPlan);
@@ -515,7 +522,7 @@
 					var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
 					var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
 					util.shm('/armplan', [
-						diffL===0 ? false : {
+						sameLArmTF ? false : {
 							tr: tfL,
 							timeout: 30,
 							via: 'jacobian_preplan',
@@ -523,7 +530,7 @@
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
 						},
-						diffR===0 ? false : {
+						sameRArmTF ? false : {
 							tr: tfR,
 							timeout: 30,
 							via: 'jacobian_preplan',
@@ -535,8 +542,8 @@
 						console.log(plans);
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
-							plans[0].length===0 ? true : util.shm('/shm/hcm/teleop/tflarm', tfL),
-							plans[1].length===0 ? true : util.shm('/shm/hcm/teleop/tfrarm', tfR)
+							sameLArmTF || util.shm('/shm/hcm/teleop/tflarm', tfL),
+							sameRArmTF || util.shm('/shm/hcm/teleop/tfrarm', tfR)
 						]);
 					});
 
@@ -548,28 +555,32 @@
 					break;
 				case 'teleop':
 					// Send teleop
-
 					util.shm('/armplan', [
-						{
+						sameLArm ? false : {
 							q: qLArm,
 							timeout: 30,
 							via: 'joint_preplan',
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
-						}, {
+						},
+						sameRArm ? false : {
 							q: qRArm,
 							timeout: 30,
 							via: 'joint_preplan',
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]).then(procPlan).then(function(){
+					]).then(procPlan).then(function(plans){
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
-							util.shm('/shm/hcm/teleop/larm', qLArm),
-							util.shm('/shm/hcm/teleop/rarm', qRArm)
+							sameLArm || util.shm('/shm/hcm/teleop/larm', qLArm),
+							sameRArm || util.shm('/shm/hcm/teleop/rarm', qRArm)
 						]);
+					}).then(function(){
+						return sameHead || util.shm('/shm/hcm/teleop/head', qHead);
 					});
+
+					//hcm.get_teleop_head()
 					break;
 				default:
 					// Proceed
@@ -765,6 +776,7 @@
 					goBtn.innerHTML = 'Plan';
 					moveBtn.innerHTML = 'Undo';
 					// Tell the robot to go into teleop
+					util.shm('/fsm/Head/teleop', true);
 					util.shm('/fsm/Arm/teleopraw', true);
 					break;
 			}

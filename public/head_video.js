@@ -58,7 +58,7 @@
 			//console.log('clicked', this);
 			toggle();
 		});
-	})
+	});
 
 	// LabelA WebWorker
 	label_worker = new Worker("/label_worker.js");
