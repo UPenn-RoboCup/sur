@@ -79,9 +79,9 @@ var rpc = Config.net.rpc;
 var rpc_skt = zmq.socket('req');
 //var robot_ip = Config.net.robot.wireless;
 var robot_ip = Config.net.robot.wired;
-//rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
+rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
 // For localhost, use this instead:
-rpc_skt.connect('ipc:///tmp/'+rpc.uds);
+//rpc_skt.connect('ipc:///tmp/'+rpc.uds);
 //console.log(rpc_skt);
 rpc_skt.http_responses = [];
 // Since a REP/REQ pattern, we can use a queue and know we are OK

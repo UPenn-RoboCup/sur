@@ -13,7 +13,7 @@
 		last_intersection = {t:0}, last_selected_parameters = null;
 
 	function procPlan(plan) {
-		var speedup = 4;
+		var speedup = 5;
 		// Plan speed is at 100Hz (120?)
 
 		var lplan = plan[0].length ? plan[0] : [],
@@ -477,6 +477,13 @@
 					break;
 				case 'ik':
 					// Always with respect to our com position.
+					var I16 = new THREE.Matrix4().elements;
+					var diffL = planRobot.lhand.matrix.elements.reduce(function(prev, cur, i, arr){
+						return prev + Math.abs(arr[i] - I16[i]);
+					}, 0);
+					var diffR = planRobot.rhand.matrix.elements.reduce(function(prev, cur, i, arr){
+						return prev + Math.abs(arr[i] - I16[i]);
+					}, 0);
 					// NOTE: Be careful between robots...
 					var rhand_com = new THREE.Matrix4().multiplyMatrices(
 						planRobot.rhand.matrixWorld, invComWorldPlan);
@@ -499,14 +506,15 @@
 					var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
 					var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
 					util.shm('/armplan', [
-						{
+						diffL===0 ? false : {
 							tr: tfL,
 							timeout: 20,
 							via: 'jacobian_preplan',
 							weights: [1,0,0],
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
-						}, {
+						},
+						diffR===0 ? false : {
 							tr: tfR,
 							timeout: 20,
 							via: 'jacobian_preplan',
@@ -517,8 +525,8 @@
 					]).then(procPlan).then(function(){
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
-							util.shm('/shm/hcm/teleop/tflarm', tfL),
-							util.shm('/shm/hcm/teleop/tfrarm', tfR)
+							diffL===0 ? true : util.shm('/shm/hcm/teleop/tflarm', tfL),
+							diffR===0 ? true : util.shm('/shm/hcm/teleop/tfrarm', tfR)
 						]);
 					});
 
