@@ -2,12 +2,14 @@
 /*
 Next gen version for hosting
 */
+
+var USE_LOCALHOST = process.argv[2]==='-l';
+
 var restify = require('restify'),
 	server = restify.createServer({
 		name: 'surely',
 		version: '0.1.0'
 	}),
-	nodelua = require('nodelua'),
 	WebSocketServer = require('ws').Server,
 	dgram = require('dgram'),
 	zmq = require('zmq'),
@@ -32,6 +34,7 @@ server.use(restify.dateParser());
 //server.use(restify.gzipResponse());
 
 // Load config from Lua
+var nodelua = require('nodelua');
 var lua = new nodelua.LuaState('config');
 var UPENNDEV_PATH = '../UPennDev';
 var Config = lua.doFileSync(UPENNDEV_PATH + '/include.lua');
@@ -78,10 +81,17 @@ server.post('/armplan', function(req, res, next){
 var rpc = Config.net.rpc;
 var rpc_skt = zmq.socket('req');
 //var robot_ip = Config.net.robot.wireless;
-var robot_ip = Config.net.robot.wired;
-rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
-// For localhost, use this instead:
-//rpc_skt.connect('ipc:///tmp/'+rpc.uds);
+
+if(USE_LOCALHOST){
+	console.log('localhost', rpc.uds);
+	// For localhost, use this instead:
+	rpc_skt.connect('ipc:///tmp/'+rpc.uds);
+} else {
+	var robot_ip = Config.net.robot.wired;
+	console.log('robot', robot_ip);
+	rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
+}
+
 //console.log(rpc_skt);
 rpc_skt.http_responses = [];
 // Since a REP/REQ pattern, we can use a queue and know we are OK
@@ -294,7 +304,7 @@ for (var w in streams) {
 		zmq_recv_skt.sur_stream = b;
 	}
 	// Add TCP
-	if (b.tcp !== undefined) {
+	if (!USE_LOCALHOST && b.tcp !== undefined) {
 		var zmq_recv_skt = zmq.socket('sub');
 		zmq_recv_skt.subscribe('');
 		zmq_recv_skt.connect('tcp://'+robot_ip+':'+b.tcp);

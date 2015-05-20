@@ -447,7 +447,7 @@
 						sprintf("Global WP: %0.2f %0.2f %0.2f",
 										globalPose[0], globalPose[1], globalPose[2]),
 					]);
-					util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', globalPose);
+					util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
 					break;
 				case 'step':
 					var p = planRobot.foot.position;
