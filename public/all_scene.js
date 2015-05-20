@@ -13,25 +13,27 @@
 		last_intersection = {t:0}, last_selected_parameters = null;
 
 	function procPlan(plan) {
-		var speedup = 5;
-		// Plan speed is at 100Hz (120?)
+		var play_hz = 30, true_hz = 120, speedup = 3, skip = (true_hz/play_hz) * speedup;
 
 		var lplan = plan[0].length ? plan[0] : [],
 				rplan = plan[1].length ? plan[1] : [],
 				wplan = plan[2].length ? plan[2] : [];
 
-		var hz = 100 * speedup;
+		lplan = lplan.filter(function(v, i) {
+			return (i % skip)===0;
+		});
+
 		// TODO: catch on bad plan or user cancel
 		return Promise.all([
 			util.loop(lplan, function(idx, frame){
 				frame.forEach(function(v, i){ planRobot.setJoints(v, this[i]); },
 											planRobot.IDS_LARM);
-			}, 1e3/hz),
+			}, 1e3/play_hz),
 			util.loop(rplan, function(idx, frame){
 				frame.forEach(function(v, i){planRobot.setJoints(v, this[i]);},
 											planRobot.IDS_RARM);
-			}, 1e3/hz),
-			util.loop(wplan, function(){}, 1e3/hz),
+			}, 1e3/play_hz),
+			util.loop(wplan, function(){}, 1e3/play_hz),
 		]);
 	}
 
@@ -522,11 +524,12 @@
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]).then(procPlan).then(function(){
+					]).then(procPlan).then(function(plans){
+						console.log(plans);
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
-							diffL===0 ? true : util.shm('/shm/hcm/teleop/tflarm', tfL),
-							diffR===0 ? true : util.shm('/shm/hcm/teleop/tfrarm', tfR)
+							plans[0].length===0 ? true : util.shm('/shm/hcm/teleop/tflarm', tfL),
+							plans[1].length===0 ? true : util.shm('/shm/hcm/teleop/tfrarm', tfR)
 						]);
 					});
 
