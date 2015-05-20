@@ -328,7 +328,8 @@
 			stepBtn = document.querySelector('button#step'),
 			ikBtn = document.querySelector('button#ik'),
 			jointSel = document.querySelector('select#joints'),
-			proceedBtn = document.querySelector('button#proceed'),
+			initBtn = document.querySelector('button#init'),
+			readyBtn = document.querySelector('button#ready'),
 			allBtns = document.querySelectorAll('#topic button');
 		function getMode() {
 			for(var i = 0; i<allBtns.length; i+=1){
@@ -351,8 +352,14 @@
 			tcontrol.attach(motor);
 		});
 
-		proceedBtn.addEventListener('click', function(){
-			util.shm('/shm/hcm/state/proceed', [1]);
+		initBtn.addEventListener('click', function(){
+			// bodyInit
+			util.shm('/fsm/Body/init', true);
+		});
+
+		readyBtn.addEventListener('click', function(){
+			// bodyInit
+			util.shm('/fsm/Arm/ready', true);
 		});
 
 		resetBtn.addEventListener('click', function(){
@@ -565,8 +572,8 @@
 					});
 					break;
 				default:
-					// bodyInit
-					util.shm('/fsm/Body/init', true);
+					// Proceed
+					util.shm('/shm/hcm/state/proceed', [1]);
 					break;
 			}
 		});
@@ -618,10 +625,12 @@
 					resetLabels();
 					return;
 				default:
+					this.innerHTML = 'Done';
+					goBtn.innerHTML = 'Go';
+					teleopBtn.innerHTML = 'Rotate';
 					break;
 			}
-			this.innerHTML = 'Done';
-			teleopBtn.innerHTML = 'Rotate';
+
 			//planRobot.object.visible = true;
 			tcontrol.setMode('translate');
 			tcontrol.space = 'local';
@@ -643,6 +652,7 @@
 					return;
 				default:
 					this.innerHTML = 'Done';
+					goBtn.innerHTML = 'Go';
 					teleopBtn.innerHTML = 'Rotate';
 					break;
 			}

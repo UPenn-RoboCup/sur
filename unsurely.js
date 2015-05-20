@@ -3,7 +3,6 @@
 /*
 Next gen version for hosting
 */
-var require = require;
 var restify = require('restify'),
 	server = restify.createServer({
 		name: 'surely',
@@ -46,15 +45,17 @@ var IS_BLACKED_OUT = false;
 var MAX_BLACKOUT = 30;
 var enable_blackout, disable_blackout;
 disable_blackout = function(){
+	"use strict";
 	IS_BLACKED_OUT = false;
 	setTimeout(enable_blackout, 1e3);
-}
+};
 enable_blackout = function(){
+	"use strict";
 	IS_BLACKED_OUT = true;
 	var BLACKOUT_TIME = Math.floor((Math.random() * MAX_BLACKOUT) + 1);
 	console.log('BLACKOUT_TIME', BLACKOUT_TIME);
 	setTimeout(disable_blackout, 1e3*BLACKOUT_TIME);
-}
+};
 // Comment this line to kill off the network outages
 enable_blackout();
 // Pinging for detection
@@ -63,6 +64,7 @@ ping_skt.bind('tcp://*:' + Config.net.ping.tcp);
 var ping_skt2 = zmq.socket('pub');
 ping_skt2.bind('ipc:///tmp/' + Config.net.ping.sub);
 function send_net_ok(){
+	"use strict";
 	if(IS_BLACKED_OUT){return;}
 	ping_skt.send('go');
 	ping_skt2.send('go');
@@ -112,12 +114,13 @@ function rest_req(req, res, next) {
 
 // Save data from the app
 server.post('/log/:name', function(req, res, next){
+	"use strict";
 	console.log('Saving a log...');
-	var name = 'public/logs/'+req.params.name+'.json'
+	var name = 'public/logs/'+req.params.name+'.json';
 	//var name = req.params.name+'.json'
 	if (req.body !== undefined) {
 		fs.writeFile(name, req.body, function (err) {
-			if (err) throw err;
+			if (err) {throw err;}
 			res.send();
 			console.log('Saved '+name);
 		});

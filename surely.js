@@ -42,20 +42,22 @@ var streams = Config.net.streams;
 console.log(streams);
 
 // Network detection
-var NET_OPEN = false;
-var ping_skt = zmq.socket('pub');
-ping_skt.bind('tcp://*:' + Config.net.ping.tcp);
-var go_skt = dgram.createSocket("udp4");
-go_skt.bind(Config.net.ping.udp);
-go_skt.on("message", function(){
-	'use strict';
-	if(!NET_OPEN){
-		console.log('Network open');
-		NET_OPEN = true;
-		setTimeout(function(){NET_OPEN=false;console.log('Network closed');}, 1000);
-	}
-	ping_skt.send('ok');
-});
+if (!USE_LOCALHOST) {
+	var NET_OPEN = false;
+	var ping_skt = zmq.socket('pub');
+	ping_skt.bind('tcp://*:' + Config.net.ping.tcp);
+	var go_skt = dgram.createSocket("udp4");
+	go_skt.bind(Config.net.ping.udp);
+	go_skt.on("message", function(){
+		'use strict';
+		if(!NET_OPEN){
+			console.log('Network open');
+			NET_OPEN = true;
+			setTimeout(function(){NET_OPEN=false;console.log('Network closed');}, 1000);
+		}
+		ping_skt.send('ok');
+	});
+}
 
 /* Connect to the Arm Plan server - always on localhost :P */
 var armplan_skt = zmq.socket('req');
