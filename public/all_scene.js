@@ -493,10 +493,20 @@
 					});
 					break;
 				case 'ik':
+					if(this.innerHTML === 'Accept'){
+						// We accepted a plan...
+						this.innerHTML = 'Plan';
+						return;
+					}
+
 					// Always with respect to our com position.
 					var I16 = new THREE.Matrix4().elements;
 					var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
 					var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
+					if(sameLArmTF && sameRArmTF){
+						return;
+					}
+
 					//console.log('sameLArmTF', sameLArmTF);
 					//console.log('sameRArmTF', sameRArmTF);
 					// NOTE: Be careful between robots...
@@ -520,6 +530,16 @@
 					]);
 					var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
 					var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
+
+					// Reset our position
+					planRobot.rhand.position.set(0,0,0);
+					planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+					planRobot.lhand.position.set(0,0,0);
+					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+
+					var h_accept, h_decline, h_done;
+					this.innerHTML = 'Accept';
+					// TODO: Check if the planner failed
 					util.shm('/armplan', [
 						sameLArmTF ? false : {
 							tr: tfL,
@@ -540,6 +560,19 @@
 					]).then(procPlan).then(function(plans){
 						return plans.map(function(p){return p.length>0;});
 					}).then(function(valid){
+						return new Promise(function(resolve, reject) {
+							var success = (sameLArmTF || valid[0]) && (sameRArmTF || valid[1]);
+							if(!success){reject('Failed!');}
+							// Go accepts and sends
+							h_accept = goBtn.addEventListener('click', function(){
+								resolve(valid);
+							});
+							// Step rejects
+							h_decline = stepBtn.addEventListener('click', reject);
+							// Done rejects
+							h_done = ikBtn.addEventListener('click', reject);
+						});
+					}).then(function(valid){
 						return Promise.all([
 							valid[0] && util.shm('/shm/hcm/teleop/lweights', [1,1,0]),
 							valid[1] && util.shm('/shm/hcm/teleop/rweights', [1,1,0])
@@ -550,18 +583,19 @@
 							valid[0] && util.shm('/shm/hcm/teleop/tflarm', tfL),
 							valid[1] && util.shm('/shm/hcm/teleop/tfrarm', tfR)
 						]);
+					}).catch(function(reason){
+						// Reset the arms
+						planRobot.meshes.forEach(function(m, i){
+							m.quaternion.copy(this[i].cquaternion);
+						}, robot.meshes);
+						console.log('Rejection of plan', reason);
 					}).then(function(){
-						planRobot.rhand.position.set(0,0,0);
-						planRobot.rhand.quaternion.copy(new THREE.Quaternion());
-						planRobot.lhand.position.set(0,0,0);
-						planRobot.lhand.quaternion.copy(new THREE.Quaternion());
-					});
-
-					// Reset the position
-					planRobot.rhand.position.set(0, 0, 0);
-					planRobot.lhand.position.set(0, 0, 0);
-					planRobot.rhand.quaternion.copy(new THREE.Quaternion());
-					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+						goBtn.innerHTML = 'Plan';
+						// Remove the listeners
+						goBtn.removeEventListener('click', h_accept);
+						stepBtn.removeEventListener('click', h_decline);
+						ikBtn.removeEventListener('click', h_done);
+					})
 					break;
 				case 'teleop':
 					// Send teleop
@@ -665,6 +699,12 @@
 			switch(getMode()){
 				case 'move':
 				case 'ik':
+					if(goBtn.innerHTML === 'Accept'){
+						// We accepted a plan...
+						goBtn.innerHTML = 'Plan';
+						return;
+					}
+					return;
 				case 'teleop':
 					return;
 				case 'step':
@@ -716,10 +756,10 @@
 					return;
 				default:
 					// Enter a new control mode
+					goBtn.innerHTML = 'Plan';
+					stepBtn.innerHTML = 'Decline';
 					this.innerHTML = 'Done';
 					teleopBtn.innerHTML = 'Rotate';
-					stepBtn.innerHTML = 'Accept';
-					goBtn.innerHTML = 'Plan';
 					// Tell the robot to go into teleop mode
 					util.shm('/fsm/Arm/teleop', true);
 					break;
