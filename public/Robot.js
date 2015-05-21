@@ -39,7 +39,7 @@
 		}
 
 		this.setJoints = function(q, i) {
-			console.log(q, i);
+			//console.log(q, i);
 			var qQuat = new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 			//console.log(qQuat);
 			meshes[i].quaternion.multiplyQuaternions(qDefault[i], qQuat);
