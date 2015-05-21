@@ -7,7 +7,7 @@
 
 	var IDS_LARM = [2, 3, 4,  5,  6, 7, 8];
 	var IDS_RARM = [21, 22, 23, 24, 25, 26, 27];
-	var IDS_WAIST = [27, 29];
+	var IDS_WAIST = [28, 29];
 
 	function Robot(options) {
 		var loader = new THREE.ObjectLoader(),
@@ -39,7 +39,7 @@
 		}
 
 		this.setJoints = function(q, i) {
-			//console.log(q, i);
+			console.log(q, i);
 			var qQuat = new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 			//console.log(qQuat);
 			meshes[i].quaternion.multiplyQuaternions(qDefault[i], qQuat);

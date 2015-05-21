@@ -563,7 +563,7 @@
 
 					// Check if the waist moved:
 					if(!sameWaist){
-						console.log('Not same waist!');
+						//console.log('Not same waist!');
 						// Use the planned waist as the final guess
 						lPlan.qWaistGuess = rPlan.qWaistGuess = qWaist;
 						// Check which moved. If both, then the current selection
