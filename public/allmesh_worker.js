@@ -207,7 +207,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			var TcomG = flat2mat(mesh.tfG16[v]);
 			var TcomL = flat2mat(mesh.tfL16[v]);
 			var Tactuate = rotZ(a);
-			var Tchest = trans(0.05,0,0.115);//0.137 measured);//0.15 for webots//0.115 calibrated
+			var Tchest = trans(0.050, 0, 0.130); // Dale
 
 			//var Tlidar = rotX(Math.PI/2);
 			//var v = [r*cos(theta), r*sin(theta), 0];
