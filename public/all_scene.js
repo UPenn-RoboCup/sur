@@ -20,12 +20,12 @@
 				rplan = plan[1].length ? plan[1] : [],
 				wplan = plan[2].length ? plan[2] : [];
 
-		lplan = lplan.filter(function(v, i) {
-			return (i % half_sec)===0;
+		lplan = lplan.filter(function(v, i, arr) {
+			return (i % half_sec)===0 || i===arr.length;
 		});
 
-		rplan = rplan.filter(function(v, i) {
-			return (i % half_sec)===0;
+		rplan = rplan.filter(function(v, i, arr) {
+			return (i % half_sec)===0 || i===arr.length;
 		});
 
 		// TODO: catch on bad plan or user cancel
@@ -267,6 +267,7 @@
 				setTimeout(estimate_selection, 0);
 			}
 		});
+		//var footname = document.querySelector('button#step').getAttribute('data-foot');
 		d3.selectAll('#topic2 li').on('click', function(){
 			var params = last_selected_parameters;
 			if(!params){ return; }
@@ -440,7 +441,7 @@
 			//
 			var qWaist = qPlan.slice(28, 30);
 			var qWaist0 = qNow.slice(28, 30);
-			var sameWaist = util.same(qHead, qHead0);
+			var sameWaist = util.same(qWaist, qWaist0);
 			//var comWorldNow = robot.object.matrixWorld;
 			var comWorldPlan = robot.object.matrixWorld;
 			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
@@ -537,19 +538,19 @@
 					planRobot.lhand.position.set(0,0,0);
 					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
 
-					var h_accept, h_decline, h_done;
-					this.innerHTML = 'Accept';
-					// TODO: Check if the planner failed
-					util.shm('/armplan', [
-						sameLArmTF ? false : {
+					var lPlan = false, rPlan = false;
+					if(!sameLArmTF){
+						lPlan = {
 							tr: tfL,
 							timeout: 30,
 							via: 'jacobian_preplan',
 							weights: [1,1,0],
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
-						},
-						sameRArmTF ? false : {
+						}
+					}
+					if(!sameRArmTF){
+						lPlan = {
 							tr: tfR,
 							timeout: 30,
 							via: 'jacobian_preplan',
@@ -557,7 +558,33 @@
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]).then(procPlan).then(function(plans){
+					}
+
+					// Check if the waist moved:
+					if(!sameWaist){
+						console.log('Not same waist!');
+						// Use the planned waist
+						lPlan.qWaist0 = rPlan.qWaist0 = qWaist;
+						// Check which moved. If both, then the current selection
+						if(lPlan && rPlan){
+							if(ikBtn.getAttribute('data-hand')==='L_WR_FT'){
+								lPlan.via = 'jacobian_waist_preplan';
+							} else {
+								rPlan.via = 'jacobian_waist_preplan';
+							}
+						} else if (lPlan) {
+							lPlan.via = 'jacobian_waist_preplan';
+						} else {
+							rPlan.via = 'jacobian_waist_preplan';
+						}
+					}
+
+					var h_accept, h_decline, h_done;
+					this.innerHTML = 'Accept';
+					// TODO: Check if the planner failed
+					util.shm('/armplan', [lPlan, rPlan])
+					.then(procPlan)
+					.then(function(plans){
 						return plans.map(function(p){return p.length>0;});
 					}).then(function(valid){
 						return new Promise(function(resolve, reject) {
@@ -584,6 +611,7 @@
 							valid[1] && util.shm('/shm/hcm/teleop/tfrarm', tfR)
 						]);
 					}).catch(function(reason){
+						util.debug([reason]);
 						// Reset the arms
 						planRobot.meshes.forEach(function(m, i){
 							m.quaternion.copy(this[i].cquaternion);
