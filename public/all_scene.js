@@ -13,14 +13,15 @@
 		last_intersection = {t:0}, last_selected_parameters = null;
 
 	function procPlan(plan) {
-		var play_hz = 30, true_hz = 120, speedup = 4, skip = Math.ceil((true_hz/play_hz) * speedup);
+		var true_hz = 120, subsample = 0.5, half_sec = Math.floor(true_hz * subsample),
+				speedup = 4, play_rate = Math.floor(1e3 * subsample / speedup);
 
 		var lplan = plan[0].length ? plan[0] : [],
 				rplan = plan[1].length ? plan[1] : [],
 				wplan = plan[2].length ? plan[2] : [];
 
 		lplan = lplan.filter(function(v, i) {
-			return (i % skip)===0;
+			return (i % half_sec)===0;
 		});
 
 		// TODO: catch on bad plan or user cancel
@@ -28,12 +29,12 @@
 			util.loop(lplan, function(idx, frame){
 				frame.forEach(function(v, i){ planRobot.setJoints(v, this[i]); },
 											planRobot.IDS_LARM);
-			}, 1e3/play_hz),
+			}, play_rate),
 			util.loop(rplan, function(idx, frame){
 				frame.forEach(function(v, i){planRobot.setJoints(v, this[i]);},
 											planRobot.IDS_RARM);
-			}, 1e3/play_hz),
-			util.loop(wplan, function(){}, 1e3/play_hz),
+			}, play_rate),
+			util.loop(wplan, function(){}, play_rate),
 		]);
 	}
 
@@ -533,16 +534,17 @@
 							qWaist0: qWaist0
 						}
 					]).then(procPlan).then(function(plans){
-						//console.log(plans);
+						return plans.map(function(p){return p.length>0;});
+					}).then(function(valid){
 						return Promise.all([
-							sameLArmTF || util.shm('/shm/hcm/teleop/lweights', [1,1,0]),
-							sameRArmTF || util.shm('/shm/hcm/teleop/rweights', [1,1,0])
+							valid[0] && util.shm('/shm/hcm/teleop/lweights', [1,1,0]),
+							valid[1] && util.shm('/shm/hcm/teleop/rweights', [1,1,0])
 						]);
-					}).then(function(){
+					}).then(function(valid){
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
-							sameLArmTF || util.shm('/shm/hcm/teleop/tflarm', tfL),
-							sameRArmTF || util.shm('/shm/hcm/teleop/tfrarm', tfR)
+							valid[0] && util.shm('/shm/hcm/teleop/tflarm', tfL),
+							valid[1] && util.shm('/shm/hcm/teleop/tfrarm', tfR)
 						]);
 					});
 
