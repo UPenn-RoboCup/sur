@@ -603,7 +603,8 @@
 					}).then(function(valid){
 						return Promise.all([
 							valid[0] && util.shm('/shm/hcm/teleop/lweights', [1,1,0]),
-							valid[1] && util.shm('/shm/hcm/teleop/rweights', [1,1,0])
+							valid[1] && util.shm('/shm/hcm/teleop/rweights', [1,1,0]),
+							valid[2] && util.shm('/shm/hcm/teleop/waist', qWaist)
 						]);
 					}).then(function(valid){
 						// TODO: Grab a decision, via the promise
