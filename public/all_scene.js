@@ -15,30 +15,31 @@
 	function procPlan(plan) {
 		var true_hz = 120, subsample = 0.5, half_sec = Math.floor(true_hz * subsample),
 				speedup = 4, play_rate = Math.floor(1e3 * subsample / speedup);
+		function halfsec(v, i, arr) {
+			return (i % half_sec)===0 || i===arr.length;
+		}
+		function updatechain(frame){
+			var chain_ids = this;
+			frame[1].forEach(function(v, i){
+				planRobot.setJoints(v, chain_ids[i]);
+			});
+		}
 
 		var lplan = plan[0].length ? plan[0] : [],
 				rplan = plan[1].length ? plan[1] : [],
 				wplan = plan[2].length ? plan[2] : [];
 
-		lplan = lplan.filter(function(v, i, arr) {
-			return (i % half_sec)===0 || i===arr.length;
-		});
+		lplan = lplan.filter(halfsec);
+		rplan = rplan.filter(halfsec);
+		wplan = wplan.filter(halfsec);
 
-		rplan = rplan.filter(function(v, i, arr) {
-			return (i % half_sec)===0 || i===arr.length;
-		});
+		console.log('wplan', wplan);
 
 		// TODO: catch on bad plan or user cancel
 		return Promise.all([
-			util.loop(lplan, function(idx, frame){
-				frame.forEach(function(v, i){ planRobot.setJoints(v, this[i]); },
-											planRobot.IDS_LARM);
-			}, play_rate),
-			util.loop(rplan, function(idx, frame){
-				frame.forEach(function(v, i){planRobot.setJoints(v, this[i]);},
-											planRobot.IDS_RARM);
-			}, play_rate),
-			util.loop(wplan, function(){}, play_rate),
+			util.loop(lplan, updatechain.bind(planRobot.IDS_LARM), play_rate),
+			util.loop(rplan, updatechain.bind(planRobot.IDS_RARM), play_rate),
+			util.loop(wplan, updatechain.bind(planRobot.IDS_WAIST), play_rate),
 		]);
 	}
 
@@ -563,8 +564,8 @@
 					// Check if the waist moved:
 					if(!sameWaist){
 						console.log('Not same waist!');
-						// Use the planned waist
-						lPlan.qWaist0 = rPlan.qWaist0 = qWaist;
+						// Use the planned waist as the final guess
+						lPlan.qWaistGuess = rPlan.qWaistGuess = qWaist;
 						// Check which moved. If both, then the current selection
 						if(lPlan && rPlan){
 							if(ikBtn.getAttribute('data-hand')==='L_WR_FT'){

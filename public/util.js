@@ -84,7 +84,7 @@
 					resolve(arr);
 				} else {
 					// value: [idx, val]
-					proc.apply(arr, nxt.value);
+					proc(nxt.value);
 				}
 			}, interval || 0);
 		});

@@ -7,6 +7,7 @@
 
 	var IDS_LARM = [2, 3, 4,  5,  6, 7, 8];
 	var IDS_RARM = [21, 22, 23, 24, 25, 26, 27];
+	var IDS_WAIST = [27, 29];
 
 	function Robot(options) {
 		var loader = new THREE.ObjectLoader(),
@@ -81,6 +82,7 @@
 
 		this.IDS_LARM = IDS_LARM;
 		this.IDS_RARM = IDS_RARM;
+		this.IDS_WAIST = IDS_WAIST;
 	}
 
 	ctx.Robot = Robot;
