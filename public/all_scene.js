@@ -24,6 +24,10 @@
 			return (i % half_sec)===0;
 		});
 
+		rplan = rplan.filter(function(v, i) {
+			return (i % half_sec)===0;
+		});
+
 		// TODO: catch on bad plan or user cancel
 		return Promise.all([
 			util.loop(lplan, function(idx, frame){
@@ -493,13 +497,13 @@
 					var I16 = new THREE.Matrix4().elements;
 					var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
 					var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
-					console.log('sameLArmTF', sameLArmTF);
-					console.log('sameRArmTF', sameRArmTF);
+					//console.log('sameLArmTF', sameLArmTF);
+					//console.log('sameRArmTF', sameRArmTF);
 					// NOTE: Be careful between robots...
 					var rhand_com = new THREE.Matrix4().multiplyMatrices(
-						planRobot.rhand.matrixWorld, invComWorldPlan);
+						invComWorldPlan, planRobot.rhand.matrixWorld);
 					var lhand_com = new THREE.Matrix4().multiplyMatrices(
-						planRobot.lhand.matrixWorld, invComWorldPlan);
+						invComWorldPlan, planRobot.lhand.matrixWorld);
 					var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
 					var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
 					var rpyL = new THREE.Euler().setFromQuaternion(quatL);
@@ -546,6 +550,11 @@
 							valid[0] && util.shm('/shm/hcm/teleop/tflarm', tfL),
 							valid[1] && util.shm('/shm/hcm/teleop/tfrarm', tfR)
 						]);
+					}).then(function(){
+						planRobot.rhand.position.set(0,0,0);
+						planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+						planRobot.lhand.position.set(0,0,0);
+						planRobot.lhand.quaternion.copy(new THREE.Quaternion());
 					});
 
 					// Reset the position
