@@ -381,7 +381,7 @@
 	"object": {
 		"uuid": "7371E7F7-AC8E-448C-B560-2AE8F32CDAD5",
 		"type": "Object3D",
-		"name": "dale",
+		"name": "DaleRoot",
 		"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
 		"children": [
 			{
@@ -390,7 +390,7 @@
 				"name": "TorsoPitch",
 				"geometry": "1B5729DB-833F-479F-A1AE-7CC6AB3F5DEC",
 				"material": "27AC58EF-F60C-4A39-BFF4-2C712904AC13",
-				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,-111,22.7979793548584,1],
+				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,-111,0,1],
 				"children": [
 					{
 						"uuid": "13DF3976-92C1-418F-B33B-665F927556FD",
