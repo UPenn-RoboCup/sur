@@ -548,17 +548,17 @@
 							weights: [1,1,0],
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
-						}
+						};
 					}
 					if(!sameRArmTF){
-						lPlan = {
+						rPlan = {
 							tr: tfR,
 							timeout: 30,
 							via: 'jacobian_preplan',
 							weights: [1,1,0],
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
-						}
+						};
 					}
 
 					// Check if the waist moved:
@@ -625,7 +625,7 @@
 						goBtn.removeEventListener('click', h_accept);
 						stepBtn.removeEventListener('click', h_decline);
 						ikBtn.removeEventListener('click', h_done);
-					})
+					});
 					break;
 				case 'teleop':
 					// Send teleop
@@ -644,7 +644,7 @@
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
 						}
-					]).then(procPlan).then(function(plans){
+					]).then(procPlan).then(function(){
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
 							sameLArm || util.shm('/shm/hcm/teleop/larm', qLArm),
