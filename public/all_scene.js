@@ -443,6 +443,8 @@
 			var qWaist = qPlan.slice(28, 30);
 			var qWaist0 = qNow.slice(28, 30);
 			var sameWaist = util.same(qWaist, qWaist0);
+			//
+			var lPlan = false, rPlan = false;
 			//var comWorldNow = robot.object.matrixWorld;
 			var comWorldPlan = robot.object.matrixWorld;
 			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
@@ -539,7 +541,6 @@
 					planRobot.lhand.position.set(0,0,0);
 					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
 
-					var lPlan = false, rPlan = false;
 					if(!sameLArmTF){
 						lPlan = {
 							tr: tfL,
@@ -628,23 +629,74 @@
 					});
 					break;
 				case 'teleop':
-					// Send teleop
-					util.shm('/armplan', [
-						sameLArm ? false : {
+					if(this.innerHTML === 'Accept'){
+						// We accepted a plan...
+						this.innerHTML = 'Plan';
+						return;
+					}
+
+					if(sameLArm && sameRArm && sameWaist){
+						return;
+					}
+
+					if(!sameLArm){
+						lPlan = {
 							q: qLArm,
 							timeout: 30,
 							via: 'joint_preplan',
 							qLArm0: qLArm0,
 							qWaist0: qWaist0
-						},
-						sameRArm ? false : {
+						};
+					}
+					if(!sameRArm){
+						rPlan = {
 							q: qRArm,
 							timeout: 30,
 							via: 'joint_preplan',
 							qRArm0: qRArm0,
 							qWaist0: qWaist0
+						};
+					}
+					// Check if the waist moved:
+					if(!sameWaist){
+						//console.log('Not same waist!');
+						// Use the planned waist as the final guess
+						lPlan.qWaistGuess = rPlan.qWaistGuess = qWaist;
+						// Check which moved. If both, then the current selection
+						if(lPlan && rPlan){
+							// Does not matter, so use the left
+							lPlan.via = 'joint_waist_preplan';
+						} else if (lPlan) {
+							lPlan.via = 'joint_waist_preplan';
+						} else {
+							rPlan.via = 'joint_waist_preplan';
 						}
-					]).then(procPlan).then(function(){
+					}
+
+					// Send teleop
+					util.shm('/armplan', [lPlan, rPlan])
+					.then(procPlan)
+					.then(function(plans){
+						return plans.map(function(p){return p.length>0;});
+					})
+					.then(function(valid){
+						return new Promise(function(resolve, reject) {
+							var success = (sameLArm || valid[0]) && (sameRArm || valid[1]);
+							if(!success){reject('Failed!');}
+							// Go accepts and sends
+							h_accept = goBtn.addEventListener('click', function(){
+								resolve(valid);
+							});
+							// Step rejects
+							h_decline = stepBtn.addEventListener('click', reject);
+							// Done rejects
+							h_done = ikBtn.addEventListener('click', reject);
+						});
+					})
+					.then(function(){
+						return sameHead || util.shm('/shm/hcm/teleop/waist', qWaist);
+					})
+					.then(function(){
 						// TODO: Grab a decision, via the promise
 						return Promise.all([
 							sameLArm || util.shm('/shm/hcm/teleop/larm', qLArm),
@@ -653,8 +705,6 @@
 					}).then(function(){
 						return sameHead || util.shm('/shm/hcm/teleop/head', qHead);
 					});
-
-					//hcm.get_teleop_head()
 					break;
 				default:
 					// Proceed
@@ -736,6 +786,10 @@
 					}
 					return;
 				case 'teleop':
+					if(goBtn.innerHTML === 'Accept'){
+						// We accepted a plan...
+						goBtn.innerHTML = 'Plan';
+					}
 					return;
 				case 'step':
 					tcontrol.detach();
@@ -852,9 +906,10 @@
 				default:
 					// Enter a new control mode
 					this.innerHTML = 'Done';
-					stepBtn.innerHTML = 'Accept';
+					stepBtn.innerHTML = 'Decline';
 					goBtn.innerHTML = 'Plan';
 					moveBtn.innerHTML = 'Undo';
+					ikBtn.innerHTML = '_';
 					// Tell the robot to go into teleop
 					util.shm('/fsm/Head/teleop', true);
 					util.shm('/fsm/Arm/teleopraw', true);
