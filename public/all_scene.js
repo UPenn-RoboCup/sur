@@ -445,6 +445,7 @@
 			var sameWaist = util.same(qWaist, qWaist0);
 			//
 			var lPlan = false, rPlan = false;
+			var h_accept, h_decline, h_done;
 			//var comWorldNow = robot.object.matrixWorld;
 			var comWorldPlan = robot.object.matrixWorld;
 			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
@@ -581,7 +582,6 @@
 						}
 					}
 
-					var h_accept, h_decline, h_done;
 					this.innerHTML = 'Accept';
 					// TODO: Check if the planner failed
 					util.shm('/armplan', [lPlan, rPlan])
@@ -673,6 +673,7 @@
 						}
 					}
 
+					this.innerHTML = 'Accept';
 					// Send teleop
 					util.shm('/armplan', [lPlan, rPlan])
 					.then(procPlan)
@@ -704,6 +705,19 @@
 						]);
 					}).then(function(){
 						return sameHead || util.shm('/shm/hcm/teleop/head', qHead);
+					}).catch(function(reason){
+						util.debug([reason]);
+						// Reset the arms
+						planRobot.meshes.forEach(function(m, i){
+							m.quaternion.copy(this[i].cquaternion);
+						}, robot.meshes);
+						console.log('Rejection of plan', reason);
+					}).then(function(){
+						goBtn.innerHTML = 'Plan';
+						// Remove the listeners
+						goBtn.removeEventListener('click', h_accept);
+						stepBtn.removeEventListener('click', h_decline);
+						ikBtn.removeEventListener('click', h_done);
 					});
 					break;
 				default:
