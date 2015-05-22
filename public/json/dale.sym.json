@@ -1,0 +1,696 @@
+{
+	"metadata": {
+		"version": 4.3,
+		"type": "Object",
+		"generator": "ObjectExporter"
+	},
+	"geometries": [
+		{
+			"uuid": "1B5729DB-833F-479F-A1AE-7CC6AB3F5DEC",
+			"type": "BoxGeometry",
+			"name": "200W",
+			"width": 126,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "90D99631-3A06-4FF5-9F6D-F93B469BAE5C",
+			"type": "BoxGeometry",
+			"width": 210,
+			"height": 210,
+			"depth": 75,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "AC396A69-09BE-4ED3-B5CA-88B52A047BB6",
+			"type": "BoxGeometry",
+			"width": 10,
+			"height": 150,
+			"depth": 75,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "5032D0A2-E3FF-497E-8A85-661343CF27BE",
+			"type": "BoxGeometry",
+			"name": "200W",
+			"width": 126,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "9A13DC5F-18EE-4BBA-9319-BC30135EE390",
+			"type": "BoxGeometry",
+			"name": "200W",
+			"width": 126,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "618F3274-A9B6-4251-9264-E8E6EDEAA2CA",
+			"type": "BoxGeometry",
+			"name": "100W",
+			"width": 108,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "E290630A-40AB-41D5-A3D5-F06F26663EDF",
+			"type": "BoxGeometry",
+			"name": "100W",
+			"width": 108,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "7AE63552-7BB8-4C71-ACBB-37B9B49E3728",
+			"type": "BoxGeometry",
+			"name": "20W",
+			"width": 84,
+			"height": 42,
+			"depth": 42,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "A8F37D5C-B8AE-4AFA-8032-E93C88744497",
+			"type": "BoxGeometry",
+			"name": "20W",
+			"width": 84,
+			"height": 42,
+			"depth": 42,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "40667CD3-5025-474A-8F83-F5D85D336982",
+			"type": "BoxGeometry",
+			"width": 50,
+			"height": 50,
+			"depth": 10,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "8E2ABE34-0B12-4B9B-B678-1F20C6BCDC68",
+			"type": "BoxGeometry",
+			"width": 10,
+			"height": 42,
+			"depth": 42,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "9D4388ED-C598-4953-8920-CFD9A84F1F47",
+			"type": "BoxGeometry",
+			"name": "20W",
+			"width": 84,
+			"height": 42,
+			"depth": 42,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "A6BA9F07-69F4-4EB4-960F-786FEC6754AB",
+			"type": "BoxGeometry",
+			"width": 10,
+			"height": 150,
+			"depth": 75,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "613D7FF4-23D5-449A-ABF5-1FA8B40E6A78",
+			"type": "BoxGeometry",
+			"width": 50,
+			"height": 50,
+			"depth": 10,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "6ACE9609-0CC8-4275-A715-7A5A96D40599",
+			"type": "BoxGeometry",
+			"name": "200W",
+			"width": 126,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "283CB7A8-E8DB-4F30-9960-6609B5CB714D",
+			"type": "BoxGeometry",
+			"name": "200W",
+			"width": 126,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "A0D9838D-6527-4F67-84BE-967B9A1E524B",
+			"type": "BoxGeometry",
+			"name": "200W",
+			"width": 126,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "979FA7B7-33A0-4B5F-B577-E0E4D984A8D5",
+			"type": "BoxGeometry",
+			"name": "200W",
+			"width": 126,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "D9DD4D38-38C1-42DA-9C4C-F489A96CD307",
+			"type": "BoxGeometry",
+			"name": "200W",
+			"width": 126,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "A0ECF556-AEE7-435E-83D7-E0A9751941CF",
+			"type": "BoxGeometry",
+			"width": 108,
+			"height": 54,
+			"depth": 54,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		},
+		{
+			"uuid": "B2849EBF-B60F-4D67-A0D1-06EC56A81805",
+			"type": "BoxGeometry",
+			"width": 100,
+			"height": 10,
+			"depth": 200,
+			"widthSegments": 1,
+			"heightSegments": 1,
+			"depthSegments": 1
+		}],
+	"materials": [
+		{
+			"uuid": "27AC58EF-F60C-4A39-BFF4-2C712904AC13",
+			"type": "MeshBasicMaterial",
+			"name": "Clear",
+			"color": 0
+		},
+		{
+			"uuid": "BAA2B578-158B-4FBD-BCCF-7859616600E7",
+			"type": "MeshBasicMaterial",
+			"color": 0
+		},
+		{
+			"uuid": "F3A24F6F-C898-4564-95A7-6FE72D3E20B8",
+			"type": "MeshBasicMaterial",
+			"color": 0
+		},
+		{
+			"uuid": "6E91E749-864D-400F-A0A8-886F7FE3F145",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "C4EAF2E1-9F59-4E45-BFE3-26010414B1A8",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "11BE38F7-1A53-4712-91BE-7FA7148D4698",
+			"type": "MeshBasicMaterial",
+			"color": 0
+		},
+		{
+			"uuid": "CB206B6E-D626-4B9D-9873-FEB261B6E56D",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "B86AFA54-B05C-4773-856E-0F2571672E82",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "23EF71A4-8F3A-4A14-9A98-7DF8EE42C109",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "0CC29F2A-2EF3-4523-AF54-D5D9E7FFB2CC",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "A24616F6-773C-4047-932E-5454903F7871",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "C6811700-01D6-4121-AA67-9C75DA9D252C",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "667A3FA0-8CA7-4C54-9B9E-88E905D975A0",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "EEAE06F0-2711-4DAC-BB46-82386D6AC74E",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "8A5A9443-F202-4BED-A196-F9036D8BBE93",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "390A0A7F-F4C4-4F42-9BB2-FD8BE50F2B13",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "E1565F64-CD6A-45E5-A73F-F2A191D20656",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "82D91E19-E989-4A83-BC2B-EC8F8AF11A61",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "25C76E64-1E50-4742-9F1C-728DCF4EFB57",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		},
+		{
+			"uuid": "81741C2F-4625-42C2-BEEA-B2B49E469B22",
+			"type": "MeshPhongMaterial",
+			"color": 16777215,
+			"emissive": 0,
+			"specular": 1118481,
+			"shininess": 30
+		}],
+	"object": {
+		"uuid": "7371E7F7-AC8E-448C-B560-2AE8F32CDAD5",
+		"type": "Object3D",
+		"name": "DaleRoot",
+		"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+		"children": [
+			{
+				"uuid": "85E50AFF-CE13-4FA9-9163-F270E9480531",
+				"type": "Mesh",
+				"name": "TorsoPitch",
+				"geometry": "1B5729DB-833F-479F-A1AE-7CC6AB3F5DEC",
+				"material": "27AC58EF-F60C-4A39-BFF4-2C712904AC13",
+				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,-111,0,1],
+				"children": [
+					{
+						"uuid": "13DF3976-92C1-418F-B33B-665F927556FD",
+						"type": "Mesh",
+						"name": "TorsoYaw",
+						"geometry": "90D99631-3A06-4FF5-9F6D-F93B469BAE5C",
+						"material": "BAA2B578-158B-4FBD-BCCF-7859616600E7",
+						"matrix": [0.0007962886593304574,0.9999997019767761,0,0,-0.9999997019767761,0.0007962886593304574,0,0,0,0,1,0,0,200,0,1],
+						"children": [
+							{
+								"uuid": "A385E180-911E-40C8-99E8-68FE2FF420A6",
+								"type": "Mesh",
+								"name": "ShoulderR",
+								"geometry": "AC396A69-09BE-4ED3-B5CA-88B52A047BB6",
+								"material": "F3A24F6F-C898-4564-95A7-6FE72D3E20B8",
+								"matrix": [0.0007960991933941841,-0.9999997019767761,0,0,0.9999997019767761,0.0007960991933941841,0,0,0,0,1,0,76,200,0,1],
+								"children": [
+									{
+										"uuid": "5654FE37-6DAC-4D5E-BA13-D087C3DD939D",
+										"type": "Mesh",
+										"name": "ArmUpperR",
+										"geometry": "5032D0A2-E3FF-497E-8A85-661343CF27BE",
+										"material": "6E91E749-864D-400F-A0A8-886F7FE3F145",
+										"matrix": [0.0007960991933941841,0.9999997019767761,0,0,-0.9999997019767761,0.0007960991933941841,0,0,0,0,1,0,-34,0,0,1],
+										"children": [
+											{
+												"uuid": "A402DFEF-28FB-4D3F-BB1A-924FB06CE14E",
+												"type": "Mesh",
+												"name": "RightShoulderYaw",
+												"geometry": "9A13DC5F-18EE-4BBA-9319-BC30135EE390",
+												"material": "C4EAF2E1-9F59-4E45-BFE3-26010414B1A8",
+												"matrix": [0.0007960614748299122,0,0.9999997019767761,0,0,1,0,0,-0.9999997019767761,0,0.0007960614748299122,0,0,0,100,1],
+												"children": [
+													{
+														"uuid": "46001BC7-B891-4DA0-9A18-F40401D8B6D0",
+														"type": "Mesh",
+														"name": "ArmLowerR",
+														"geometry": "618F3274-A9B6-4251-9264-E8E6EDEAA2CA",
+														"material": "11BE38F7-1A53-4712-91BE-7FA7148D4698",
+														"matrix": [0.0007963267271406949,-0.9999997019767761,0,0,0.9999997019767761,0.0007963267271406949,0,0,0,0,1,0,220,0,-30,1],
+														"children": [
+															{
+																"uuid": "746DB681-A97F-4341-8BFF-27005B80F923",
+																"type": "Mesh",
+																"name": "RightWristYaw",
+																"geometry": "E290630A-40AB-41D5-A3D5-F06F26663EDF",
+																"material": "CB206B6E-D626-4B9D-9873-FEB261B6E56D",
+																"matrix": [0.0007960991933941841,0.9999997019767761,0,0,-0.9999997019767761,0.0007960991933941841,0,0,0,0,1,0,0,100,30,1],
+																"children": [
+																	{
+																		"uuid": "BF5E8713-5846-4381-BD01-244D989C20A0",
+																		"type": "Mesh",
+																		"name": "RightWristRoll",
+																		"geometry": "7AE63552-7BB8-4C71-ACBB-37B9B49E3728",
+																		"material": "B86AFA54-B05C-4773-856E-0F2571672E82",
+																		"matrix": [0.0007963267271406949,0,-0.9999997019767761,0,0,1,0,0,0.9999997019767761,0,0.0007963267271406949,0,212,0,0,1],
+																		"children": [
+																			{
+																				"uuid": "12ADEB52-34BB-4435-BCB4-DB794FDCB4E1",
+																				"type": "Mesh",
+																				"name": "RightWristYaw2",
+																				"geometry": "A8F37D5C-B8AE-4AFA-8032-E93C88744497",
+																				"material": "23EF71A4-8F3A-4A14-9A98-7DF8EE42C109",
+																				"matrix": [0.0007960991933941841,0,0.9999997019767761,0,0,1,0,0,-0.9999997019767761,0,0.0007960991933941841,0,0,0,84,1],
+																				"children": [
+																					{
+																						"uuid": "2C066520-772F-4FBB-B075-ACCEEA99A59C",
+																						"type": "Mesh",
+																						"name": "R_WR_FT",
+																						"geometry": "40667CD3-5025-474A-8F83-F5D85D336982",
+																						"material": "0CC29F2A-2EF3-4523-AF54-D5D9E7FFB2CC",
+																						"matrix": [0.0007962765521369874,-0.999999463558197,-0.0007963154930621386,0,-1.325942804442093e-7,0.0007962764357216656,-0.9999997019767761,0,0.9999997019767761,0.0007963154930621386,4.623656764124462e-7,0,57,0,0,1]
+																					}]
+																			}]
+																	}]
+															}]
+													}]
+											}]
+									}]
+							},
+							{
+								"uuid": "7F5FEB8B-35E9-4997-A7B8-6815E237D539",
+								"type": "Mesh",
+								"name": "Neck",
+								"geometry": "8E2ABE34-0B12-4B9B-B678-1F20C6BCDC68",
+								"material": "A24616F6-773C-4047-932E-5454903F7871",
+								"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,120,0,0,1],
+								"children": [
+									{
+										"uuid": "D077F313-95BD-4669-B6A1-2760A5FD2104",
+										"type": "Mesh",
+										"name": "Head",
+										"geometry": "9D4388ED-C598-4953-8920-CFD9A84F1F47",
+										"material": "C6811700-01D6-4121-AA67-9C75DA9D252C",
+										"matrix": [0.0007960991933941841,-0.9999997019767761,0,0,0.9999997019767761,0.0007960991933941841,0,0,0,0,1,0,73,0,0,1]
+									}]
+							},
+							{
+								"uuid": "E9EE39FC-254A-4E84-A39B-58E862B891E1",
+								"type": "Mesh",
+								"name": "ShoulderL",
+								"geometry": "A6BA9F07-69F4-4EB4-960F-786FEC6754AB",
+								"material": "667A3FA0-8CA7-4C54-9B9E-88E905D975A0",
+								"matrix": [0.0007960991933941841,-0.9999997019767761,0,0,0.9999997019767761,0.0007960991933941841,0,0,0,0,1,0,76,-200,0,1],
+								"children": [
+									{
+										"uuid": "774AE4AB-D3A3-4B2F-88C5-775349A9BF8D",
+										"type": "Mesh",
+										"name": "ArmUpperL",
+										"geometry": "5032D0A2-E3FF-497E-8A85-661343CF27BE",
+										"material": "6E91E749-864D-400F-A0A8-886F7FE3F145",
+										"matrix": [0.0007960614748299122,0.9999997019767761,0,0,-0.9999997019767761,0.0007960614748299122,0,0,0,0,1,0,34,0,0,1],
+										"children": [
+											{
+												"uuid": "0708D0F9-7D3A-47A3-85D4-17F6E435B681",
+												"type": "Mesh",
+												"name": "LeftShoulderYaw",
+												"geometry": "9A13DC5F-18EE-4BBA-9319-BC30135EE390",
+												"material": "C4EAF2E1-9F59-4E45-BFE3-26010414B1A8",
+												"matrix": [0.0007960614748299122,0,0.9999997019767761,0,0,1,0,0,-0.9999997019767761,0,0.0007960614748299122,0,0,0,100,1],
+												"children": [
+													{
+														"uuid": "4A687263-ECE1-4E34-83BF-5FF98339D6BB",
+														"type": "Mesh",
+														"name": "ArmLowerL",
+														"geometry": "618F3274-A9B6-4251-9264-E8E6EDEAA2CA",
+														"material": "11BE38F7-1A53-4712-91BE-7FA7148D4698",
+														"matrix": [0.0007963267271406949,-0.9999997019767761,0,0,0.9999997019767761,0.0007963267271406949,0,0,0,0,1,0,161,0,-30,1],
+														"children": [
+															{
+																"uuid": "010E949D-0C10-42E0-B92A-22857A198D0B",
+																"type": "Mesh",
+																"name": "LeftWristYaw",
+																"geometry": "E290630A-40AB-41D5-A3D5-F06F26663EDF",
+																"material": "CB206B6E-D626-4B9D-9873-FEB261B6E56D",
+																"matrix": [0.0007960991933941841,0.9999997019767761,0,0,-0.9999997019767761,0.0007960991933941841,0,0,0,0,1,0,0,100,30,1],
+																"children": [
+																	{
+																		"uuid": "A417DADE-96CB-428C-9B26-DED17CE6F979",
+																		"type": "Mesh",
+																		"name": "LeftWristRoll",
+																		"geometry": "7AE63552-7BB8-4C71-ACBB-37B9B49E3728",
+																		"material": "B86AFA54-B05C-4773-856E-0F2571672E82",
+																		"matrix": [0.0007963267271406949,0,-0.9999997019767761,0,0,1,0,0,0.9999997019767761,0,0.0007963267271406949,0,152,0,0,1],
+																		"children": [
+																			{
+																				"uuid": "D2B190EF-E566-4AA2-97B1-6C33853E6C2B",
+																				"type": "Mesh",
+																				"name": "LeftWristYaw2",
+																				"geometry": "A8F37D5C-B8AE-4AFA-8032-E93C88744497",
+																				"material": "23EF71A4-8F3A-4A14-9A98-7DF8EE42C109",
+																				"matrix": [0.0007960991933941841,0,0.9999997019767761,0,0,1,0,0,-0.9999997019767761,0,0.0007960991933941841,0,0,0,84,1],
+																				"children": [
+																					{
+																						"uuid": "55C12FBE-2C69-45A9-BD5B-6F548DBCF144",
+																						"type": "Mesh",
+																						"name": "L_WR_FT",
+																						"geometry": "613D7FF4-23D5-449A-ABF5-1FA8B40E6A78",
+																						"material": "0CC29F2A-2EF3-4523-AF54-D5D9E7FFB2CC",
+																						"matrix": [4.623656764124462e-7,-0.9999997019767761,-0.0007963154930621386,0,0.0007963154930621386,0.0007962765521369874,-0.999999463558197,0,0.9999997019767761,-1.325942804442093e-7,0.0007962764357216656,0,57,0,0,1]
+																					}]
+																			}]
+																	}]
+															}]
+													}]
+											}]
+									}]
+							}]
+					}]
+			},
+			{
+				"uuid": "8D07DDC9-D40F-42D1-8C88-3A80B570DDBF",
+				"type": "Group",
+				"name": "LowerBody",
+				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,-111,0,1],
+				"children": [
+					{
+						"uuid": "96710896-7EB1-4E8B-A3AE-AACA7FB6B5D4",
+						"type": "Mesh",
+						"name": "PelvYL",
+						"geometry": "6ACE9609-0CC8-4275-A715-7A5A96D40599",
+						"material": "EEAE06F0-2711-4DAC-BB46-82386D6AC74E",
+						"matrix": [0.0007960614748299122,0.9999997019767761,0,0,-0.9999997019767761,0.0007960614748299122,0,0,0,0,1,0,105,0,0,1],
+						"children": [
+							{
+								"uuid": "5728634B-CE7B-493B-B058-6C47F8CDE6F0",
+								"type": "Mesh",
+								"name": "PelvL",
+								"geometry": "283CB7A8-E8DB-4F30-9960-6609B5CB714D",
+								"material": "8A5A9443-F202-4BED-A196-F9036D8BBE93",
+								"matrix": [0.0007960614748299122,0,0.9999997019767761,0,0,1,0,0,-0.9999997019767761,0,0.0007960614748299122,0,-180,0,0,1],
+								"children": [
+									{
+										"uuid": "39B129D2-9CC1-432A-B647-F3487782CE79",
+										"type": "Mesh",
+										"name": "LegUpperL",
+										"geometry": "A0D9838D-6527-4F67-84BE-967B9A1E524B",
+										"material": "390A0A7F-F4C4-4F42-9BB2-FD8BE50F2B13",
+										"matrix": [0.0007960614748299122,-0.9999997019767761,0,0,0.9999997019767761,0.0007960614748299122,0,0,0,0,1,0,0,0,0,1],
+										"children": [
+											{
+												"uuid": "A883FA1C-1424-4C45-B83F-B0F5CBBA3111",
+												"type": "Mesh",
+												"name": "LegLowerL",
+												"geometry": "979FA7B7-33A0-4B5F-B577-E0E4D984A8D5",
+												"material": "E1565F64-CD6A-45E5-A73F-F2A191D20656",
+												"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,300,1],
+												"children": [
+													{
+														"uuid": "3C360008-4FBF-4800-8214-B6C151CD6D78",
+														"type": "Mesh",
+														"name": "AnkleL",
+														"geometry": "D9DD4D38-38C1-42DA-9C4C-F489A96CD307",
+														"material": "82D91E19-E989-4A83-BC2B-EC8F8AF11A61",
+														"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,300,1],
+														"children": [
+															{
+																"uuid": "D30BF956-B3AC-441B-942D-823330721E58",
+																"type": "Mesh",
+																"name": "FootL",
+																"geometry": "A0ECF556-AEE7-435E-83D7-E0A9751941CF",
+																"material": "25C76E64-1E50-4742-9F1C-728DCF4EFB57",
+																"matrix": [0.0007960614748299122,0.9999997019767761,0,0,-0.9999997019767761,0.0007960614748299122,0,0,0,0,1,0,0,0,0,1],
+																"children": [
+																	{
+																		"uuid": "E16BF5A5-77C1-47DC-84EE-268629B12A3F",
+																		"type": "Mesh",
+																		"name": "L_FOOT",
+																		"geometry": "B2849EBF-B60F-4D67-A0D1-06EC56A81805",
+																		"material": "81741C2F-4625-42C2-BEEA-B2B49E469B22",
+																		"matrix": [0.000795522762928158,-1.0000001192092896,-0.0007957846391946077,0,-8.265730571110907e-7,0.0007955225300975144,-1.000000238418579,0,1.000000238418579,0.0007957846391946077,-4.548940921722533e-7,0,0,0,95,1]
+																	}]
+															}]
+													}]
+											}]
+									}]
+							}]
+					},
+					{
+						"uuid": "DFD32B4C-0665-4C60-B2FA-7AC317895C49",
+						"type": "Mesh",
+						"name": "PelvYR",
+						"geometry": "6ACE9609-0CC8-4275-A715-7A5A96D40599",
+						"material": "EEAE06F0-2711-4DAC-BB46-82386D6AC74E",
+						"matrix": [0.0007960614748299122,0.9999997019767761,0,0,-0.9999997019767761,0.0007960614748299122,0,0,0,0,1,0,-105,0,0,1],
+						"children": [
+							{
+								"uuid": "FF78E9EE-F594-4EA1-BC18-2786E6722543",
+								"type": "Mesh",
+								"name": "PelvR",
+								"geometry": "283CB7A8-E8DB-4F30-9960-6609B5CB714D",
+								"material": "8A5A9443-F202-4BED-A196-F9036D8BBE93",
+								"matrix": [0.0007960614748299122,0,0.9999997019767761,0,0,1,0,0,-0.9999997019767761,0,0.0007960614748299122,0,-180,0,0,1],
+								"children": [
+									{
+										"uuid": "E735D50F-19D6-481C-ACC1-4DAC54101410",
+										"type": "Mesh",
+										"name": "LegUpperR",
+										"geometry": "A0D9838D-6527-4F67-84BE-967B9A1E524B",
+										"material": "390A0A7F-F4C4-4F42-9BB2-FD8BE50F2B13",
+										"matrix": [0.0007960614748299122,-0.9999997019767761,0,0,0.9999997019767761,0.0007960614748299122,0,0,0,0,1,0,0,0,0,1],
+										"children": [
+											{
+												"uuid": "4A8B7CEB-4C0A-4091-BC39-10E297699DA3",
+												"type": "Mesh",
+												"name": "LegLowerR",
+												"geometry": "979FA7B7-33A0-4B5F-B577-E0E4D984A8D5",
+												"material": "E1565F64-CD6A-45E5-A73F-F2A191D20656",
+												"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,300,1],
+												"children": [
+													{
+														"uuid": "7CB4DE1D-ABE6-4525-973A-8CF225A6A275",
+														"type": "Mesh",
+														"name": "AnkleR",
+														"geometry": "D9DD4D38-38C1-42DA-9C4C-F489A96CD307",
+														"material": "82D91E19-E989-4A83-BC2B-EC8F8AF11A61",
+														"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,300,1],
+														"children": [
+															{
+																"uuid": "C08A6094-B24E-4CBE-8EC7-194832B02E59",
+																"type": "Mesh",
+																"name": "FootR",
+																"geometry": "A0ECF556-AEE7-435E-83D7-E0A9751941CF",
+																"material": "25C76E64-1E50-4742-9F1C-728DCF4EFB57",
+																"matrix": [0.0007960614748299122,0.9999997019767761,0,0,-0.9999997019767761,0.0007960614748299122,0,0,0,0,1,0,0,0,0,1],
+																"children": [
+																	{
+																		"uuid": "BC31466D-A98A-4984-88B1-0D46B8ED659A",
+																		"type": "Mesh",
+																		"name": "R_FOOT",
+																		"geometry": "B2849EBF-B60F-4D67-A0D1-06EC56A81805",
+																		"material": "81741C2F-4625-42C2-BEEA-B2B49E469B22",
+																		"matrix": [0.000795522762928158,-1.0000001192092896,-0.0007957846391946077,0,-8.265730571110907e-7,0.0007955225300975144,-1.000000238418579,0,1.000000238418579,0.0007957846391946077,-4.548940921722533e-7,0,0,0,95,1]
+																	}]
+															}]
+													}]
+											}]
+									}]
+							}]
+					}]
+			}]
+	}
+}
