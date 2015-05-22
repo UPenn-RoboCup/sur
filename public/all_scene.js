@@ -33,7 +33,11 @@
 		rplan = rplan.filter(halfsec);
 		wplan = wplan.filter(halfsec);
 
+		/*
+		console.log('lplan', lplan);
+		console.log('rplan', rplan);
 		console.log('wplan', wplan);
+		*/
 
 		// TODO: catch on bad plan or user cancel
 		return Promise.all([
@@ -430,19 +434,19 @@
 
 			var qHead = qPlan.slice(0, 2);
 			var qHead0 = qNow.slice(0, 2);
-			var sameHead = util.same(qHead, qHead0);
+			var sameHead = util.same(qHead, qHead0, 1e-2);
 			//
 			var qLArm = qPlan.slice(2, 9);
 			var qLArm0 = qNow.slice(2, 9);
-			var sameLArm = util.same(qLArm, qLArm0);
+			var sameLArm = util.same(qLArm, qLArm0, 1e-2);
 			//
 			var qRArm = qPlan.slice(21, 28);
 			var qRArm0 = qNow.slice(21, 28);
-			var sameRArm = util.same(qRArm, qRArm0);
+			var sameRArm = util.same(qRArm, qRArm0, 1e-2);
 			//
 			var qWaist = qPlan.slice(28, 30);
 			var qWaist0 = qNow.slice(28, 30);
-			var sameWaist = util.same(qWaist, qWaist0);
+			var sameWaist = util.same(qWaist, qWaist0, 1e-2);
 			//
 			var lPlan = false, rPlan = false;
 			var h_accept, h_decline, h_done;
@@ -547,8 +551,9 @@
 							tr: tfL,
 							timeout: 30,
 							via: 'jacobian_preplan',
-							weights: [1,1,0],
+							weights: [0,1,0,1],
 							qLArm0: qLArm0,
+							qArmGuess: sameLArm ? null : qLArm,
 							qWaist0: qWaist0
 						};
 					}
@@ -557,8 +562,9 @@
 							tr: tfR,
 							timeout: 30,
 							via: 'jacobian_preplan',
-							weights: [1,1,0],
+							weights: [0,1,0,1],
 							qRArm0: qRArm0,
+							qArmGuess: sameRArm ? null : qRArm,
 							qWaist0: qWaist0
 						};
 					}
@@ -583,6 +589,7 @@
 					}
 
 					this.innerHTML = 'Accept';
+					console.log([lPlan, rPlan]);
 					// TODO: Check if the planner failed
 					util.shm('/armplan', [lPlan, rPlan])
 					.then(procPlan)
