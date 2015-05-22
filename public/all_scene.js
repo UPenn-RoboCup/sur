@@ -695,7 +695,7 @@
 						});
 					})
 					.then(function(){
-						return sameHead || util.shm('/shm/hcm/teleop/waist', qWaist);
+						return sameWaist || util.shm('/shm/hcm/teleop/waist', qWaist);
 					})
 					.then(function(){
 						// TODO: Grab a decision, via the promise
