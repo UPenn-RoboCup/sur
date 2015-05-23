@@ -8,7 +8,8 @@
 		"Classify": false,
 		"VideoFeed": false,
 		"MeshFeed": false,
-		"Peer": false
+		"Peer": false,
+		"keypress": false
 	},
   "esnext": true,
 	"validthis": true,

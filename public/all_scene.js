@@ -331,6 +331,13 @@
 		});
 	} // setup_clicks
 
+	function setup_keys(){
+		var listener = new keypress.Listener();
+		listener.simple_combo("s", function(e) {
+			console.log('s', e);
+		});
+	}
+
 	function setup_buttons(){
 		var resetBtn = document.querySelector('button#reset'),
 			goBtn = document.querySelector('button#go'),
@@ -1126,6 +1133,7 @@
 		.then(setup_rtc)
 		.then(setup_buttons)
 		.then(setup_clicks)
+	.then(setup_keys)
 	.then(function(){
 		return util.shm('/streams/feedback');
 	}).then(setup_robot);
