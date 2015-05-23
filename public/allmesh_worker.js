@@ -190,15 +190,15 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 
 		mesh0: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
-			console.assert(w===w, 'nan w', w);
+			//console.assert(w===w, 'nan w', w);
       // Saturation
 			var r = w || 0;
 			if (mesh.c==='raw'){
 				if (w < 0.05 || w > 10) {return;}
-				console.assert(r===r, 'nan w');
+				//console.assert(r===r, 'nan w');
 			} else {
 				if (w === 0 || w === 255) {return;}
-				console.log('why not raw??', mesh.c);
+				//console.log('why not raw??', mesh.c);
 				r *= (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
 			}
 			// Rotates a *bit* off axis
@@ -206,8 +206,8 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 
 
 			var theta = (mesh.rfov[0] - mesh.rfov[1]) * (u / width) - mesh.rfov[0];
-			console.assert(r===r, 'nan r', r);
-			console.assert(theta===theta, 'nan theta', theta);
+			//console.assert(r===r, 'nan r', r);
+			//console.assert(theta===theta, 'nan theta', theta);
 			var v_lidar = [r*cos(theta), 0, r*sin(theta)];
 			console.assert(v_lidar[0]===v_lidar[0], 'nan v_lidar', r, theta);
 
@@ -215,7 +215,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			var TcomL = flat2mat(mesh.tfL16[v]);
 			var a = mesh.a[v];
 			var Tactuate = rotZ(a);
-			console.assert(a===a, 'nan mesh.a', a, v);
+			//console.assert(a===a, 'nan mesh.a', a, v);
 
 			//var Tlidar = rotX(Math.PI/2);
 			//var v = [r*cos(theta), r*sin(theta), 0];
@@ -223,7 +223,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			// Just form the vector outright
 			var v_actuate = mat_times_vec(Tactuate, v_lidar);
 			// here
-			console.assert(v_actuate[0]===v_actuate[0], 'nan v_actuate',r,w,theta);
+			//console.assert(v_actuate[0]===v_actuate[0], 'nan v_actuate',r,w,theta);
 			//console.assert(v_actuate[1]===v_actuate[1], 'nan v_actuate',r,w,theta);
 			//console.assert(v_actuate[2]===v_actuate[2], 'nan v_actuate',r,w,theta);
 			var v_chest = mat_times_vec(Tchest, v_actuate);
@@ -483,7 +483,6 @@ this.addEventListener('message', function (e) {
   	// Access pixel array elements and particle elements
     // TODO: Better comment
   	pixdex_idx = 0,
-  	pixel_idx = 0,
 		// Quads will cite indexed pixels
 		// first offset is just zero
 		quad_offsets = [{
@@ -526,14 +525,18 @@ this.addEventListener('message', function (e) {
 			break;
 	}
 
+	var pixel_idx = 0;
+
 	for (j = 0; j < height; j += 1) {
 		for (i = 0; i < width; i += 1) {
 			// Compute and set the xyz positions
 			point_xyz = positions.subarray(position_idx, position_idx + 3);
+			//console.assert(typeof pixel_idx==='number', 'undefined pixel_idx', pixel_idx);
+			var r = pixels[pixel_idx];
+			//console.assert(typeof r==='number', 'undefined pixels[pixel_idx]', r);
       point_local = get_xyz(
-        i, j, pixels[pixel_idx], width, height, mesh, point_xyz
+        i, j, r, width, height, mesh, point_xyz
       );
-
       // Check if we are given a valid point
 			// Kill if ground
 			// NOTE: Should disable if on rough terrain

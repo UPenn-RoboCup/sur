@@ -1085,8 +1085,8 @@
 						//
 						planRobot.lhand = lclone;
 						planRobot.rhand = rclone;
-						console.log(planRobot.lhand);
-						console.log(planRobot.rhand);
+						//console.log(planRobot.lhand);
+						//console.log(planRobot.rhand);
 
 						scene.add(this);
 					}
