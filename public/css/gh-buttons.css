@@ -270,6 +270,9 @@
 .button.danger {
     color: #900;
 }
+.label.danger {
+    color: #900;
+}
 
 /*
 .button.danger:hover,
@@ -319,8 +322,9 @@
     font-size: 14px;
 }
 
-.button.big.bigger {
+.big.bigger {
   height: 62px;
+	font-size: 28px;
 }
 
 .label.big.icon:before, .button.big.icon:before {

@@ -338,8 +338,6 @@
 			teleopBtn = document.querySelector('button#teleop'),
 			stepBtn = document.querySelector('button#step'),
 			ikBtn = document.querySelector('button#ik'),
-			initBtn = document.querySelector('button#init'),
-			readyBtn = document.querySelector('button#ready'),
 			allBtns = document.querySelectorAll('#topic button'),
 			jointSel = document.querySelector('select#joints');
 
@@ -362,17 +360,6 @@
 			if(!motor){return;}
 			tcontrol.detach();
 			tcontrol.attach(motor);
-		});
-
-		initBtn.addEventListener('click', function(){
-			// bodyInit
-			util.shm('/fsm/Body/init', true);
-			util.shm('/fsm/Arm/init', true);
-		});
-
-		readyBtn.addEventListener('click', function(){
-			// bodyInit
-			util.shm('/fsm/Arm/ready', true);
 		});
 
 		resetBtn.addEventListener('click', function(){
