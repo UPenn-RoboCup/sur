@@ -49,7 +49,7 @@
 			new THREE.BoxGeometry( 100, 10, 200 ),
 			new THREE.MeshBasicMaterial( { color: 0xffff00 } )
 		);
-
+/*
 		this.lhand = new THREE.Mesh(
 			new THREE.BoxGeometry( 25, 25, 25 ),
 			new THREE.MeshBasicMaterial( { color: 0xffff00 } )
@@ -59,6 +59,7 @@
 			new THREE.BoxGeometry( 25, 25, 25 ),
 			new THREE.MeshBasicMaterial( { color: 0xff0000 } )
 		);
+*/
 
 		this.name = options.name || 'thorop2';
 		// assuming we loaded a JSON structure from elsewhere

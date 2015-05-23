@@ -135,6 +135,7 @@ get_config(["kinect","mountOffset"], function(val){
 	py = mesh.posey[i];
 	pa = mesh.posez[i];
 	*/
+var Tchest = trans(0.050, 0, 0.130); // Dale
 // x, y, z in the torso (upper body) frame
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
@@ -189,42 +190,60 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 
 		mesh0: function (u, v, w, width, height, mesh, destination) {
     	'use strict';
+			console.assert(w===w, 'nan w', w);
       // Saturation
-			var r;
+			var r = w || 0;
 			if (mesh.c==='raw'){
-				r = w;
 				if (w < 0.05 || w > 10) {return;}
+				console.assert(r===r, 'nan w');
 			} else {
 				if (w === 0 || w === 255) {return;}
-				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
+				console.log('why not raw??', mesh.c);
+				r *= (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
 			}
 			// Rotates a *bit* off axis
 			//r += 0.02; // not for mk2
 
-			var a = mesh.a[v];
+
 			var theta = (mesh.rfov[0] - mesh.rfov[1]) * (u / width) - mesh.rfov[0];
+			console.assert(r===r, 'nan r', r);
+			console.assert(theta===theta, 'nan theta', theta);
+			var v_lidar = [r*cos(theta), 0, r*sin(theta)];
+			console.assert(v_lidar[0]===v_lidar[0], 'nan v_lidar', r, theta);
 
 			var TcomG = flat2mat(mesh.tfG16[v]);
 			var TcomL = flat2mat(mesh.tfL16[v]);
+			var a = mesh.a[v];
 			var Tactuate = rotZ(a);
-			var Tchest = trans(0.050, 0, 0.130); // Dale
+			console.assert(a===a, 'nan mesh.a', a, v);
 
 			//var Tlidar = rotX(Math.PI/2);
 			//var v = [r*cos(theta), r*sin(theta), 0];
+
 			// Just form the vector outright
-			var v_actuate = mat_times_vec(Tactuate, [r*cos(theta), 0, r*sin(theta)]);
-			//console.log(v_actuate);
+			var v_actuate = mat_times_vec(Tactuate, v_lidar);
+			// here
+			console.assert(v_actuate[0]===v_actuate[0], 'nan v_actuate',r,w,theta);
+			//console.assert(v_actuate[1]===v_actuate[1], 'nan v_actuate',r,w,theta);
+			//console.assert(v_actuate[2]===v_actuate[2], 'nan v_actuate',r,w,theta);
 			var v_chest = mat_times_vec(Tchest, v_actuate);
-			//console.log(v_chest);
+			/*
+			console.assert(v_chest[0]===v_chest[0], 'nan v_chest');
+			console.assert(v_chest[1]===v_chest[1], 'nan v_chest');
+			console.assert(v_chest[2]===v_chest[2], 'nan v_chest');
+			*/
 			var v_global = mat_times_vec(TcomG, v_chest);
-			//console.log(v_global);
 			var v_local = mat_times_vec(TcomL, v_chest);
-			//console.log(v_local);
 
 			// Set into the THREE buffer, in its coordinate frame
     	destination[0] = v_global[1] * 1e3;
 			destination[1] = v_global[2] * 1e3;
 			destination[2] = v_global[0] * 1e3;
+			/*
+			console.assert(v_global[0]===v_global[0], 'nan global');
+			console.assert(v_global[1]===v_global[1], 'nan global');
+			console.assert(v_global[2]===v_global[2], 'nan global');
+			*/
 
 			// Return robot frames, in its coordinates
 			// [global | local]

@@ -8,7 +8,7 @@
 		robot, planRobot, items = [],
 		mesh0_feed, mesh1_feed, kinect_feed,
 		mesh0 = [], mesh1 = [], kinect = [],
-		N_MESH0 = 1, N_MESH1 = 1, N_KINECT = 1,
+		N_MESH0 = 4, N_MESH1 = 4, N_KINECT = 1,
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null;
 
@@ -338,10 +338,11 @@
 			teleopBtn = document.querySelector('button#teleop'),
 			stepBtn = document.querySelector('button#step'),
 			ikBtn = document.querySelector('button#ik'),
-			jointSel = document.querySelector('select#joints'),
 			initBtn = document.querySelector('button#init'),
 			readyBtn = document.querySelector('button#ready'),
-			allBtns = document.querySelectorAll('#topic button');
+			allBtns = document.querySelectorAll('#topic button'),
+			jointSel = document.querySelector('select#joints');
+
 		function getMode() {
 			for(var i = 0; i<allBtns.length; i+=1){
 				var btn = allBtns.item(i);
@@ -366,6 +367,7 @@
 		initBtn.addEventListener('click', function(){
 			// bodyInit
 			util.shm('/fsm/Body/init', true);
+			util.shm('/fsm/Arm/init', true);
 		});
 
 		readyBtn.addEventListener('click', function(){
@@ -448,6 +450,10 @@
 			var qWaist0 = qNow.slice(28, 30);
 			var sameWaist = util.same(qWaist, qWaist0, 1e-2);
 			//
+			var I16 = new THREE.Matrix4().elements;
+			var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
+			var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
+			//
 			var lPlan = false, rPlan = false;
 			var h_accept, h_decline, h_done;
 			//var comWorldNow = robot.object.matrixWorld;
@@ -509,9 +515,6 @@
 					}
 
 					// Always with respect to our com position.
-					var I16 = new THREE.Matrix4().elements;
-					var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
-					var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
 					if(sameLArmTF && sameRArmTF){
 						return;
 					}
@@ -553,7 +556,7 @@
 							via: 'jacobian_preplan',
 							weights: [0,1,0,1],
 							qLArm0: qLArm0,
-							qArmGuess: sameLArm ? null : qLArm,
+							//qArmGuess: sameLArm ? null : qLArm,
 							qWaist0: qWaist0
 						};
 					}
@@ -564,7 +567,7 @@
 							via: 'jacobian_preplan',
 							weights: [0,1,0,1],
 							qRArm0: qRArm0,
-							qArmGuess: sameRArm ? null : qRArm,
+							//qArmGuess: sameRArm ? null : qRArm,
 							qWaist0: qWaist0
 						};
 					}
@@ -576,7 +579,7 @@
 						lPlan.qWaistGuess = rPlan.qWaistGuess = qWaist;
 						// Check which moved. If both, then the current selection
 						if(lPlan && rPlan){
-							if(ikBtn.getAttribute('data-hand')==='L_WR_FT'){
+							if(ikBtn.getAttribute('data-hand')==='L_TIP'){
 								lPlan.via = 'jacobian_waist_preplan';
 							} else {
 								rPlan.via = 'jacobian_waist_preplan';
@@ -759,12 +762,12 @@
 				case 'ik':
 					// Switch hands
 					tcontrol.detach();
-					if(ikBtn.getAttribute('data-hand')==='L_WR_FT'){
-						ikBtn.setAttribute('data-hand', 'R_WR_FT');
+					if(ikBtn.getAttribute('data-hand')==='L_TIP'){
+						ikBtn.setAttribute('data-hand', 'R_TIP');
 						tcontrol.attach(planRobot.rhand);
 						moveBtn.innerHTML = 'Left';
 					} else {
-						ikBtn.setAttribute('data-hand', 'L_WR_FT');
+						ikBtn.setAttribute('data-hand', 'R_TIP');
 						tcontrol.attach(planRobot.lhand);
 						moveBtn.innerHTML = 'Right';
 					}
@@ -870,13 +873,13 @@
 					break;
 			}
 			tcontrol.detach();
-			if(this.getAttribute('data-hand')==='L_WR_FT'){
+			if(this.getAttribute('data-hand')==='L_TIP'){
 				tcontrol.attach(planRobot.lhand);
-				this.setAttribute('data-hand', 'L_WR_FT');
+				this.setAttribute('data-hand', 'L_TIP');
 				moveBtn.innerHTML = 'Right';
 			} else {
 				tcontrol.attach(planRobot.rhand);
-				this.setAttribute('data-hand', 'R_WR_FT');
+				this.setAttribute('data-hand', 'R_TIP');
 				moveBtn.innerHTML = 'Left';
 			}
 			tcontrol.space = 'local';
@@ -1039,11 +1042,16 @@
 							transparent: true,
 							opacity: 0.5,
 						});
+						/*
 						planRobot.meshes.forEach(function(m){ m.material = clearMaterial; });
 						planRobot.object.getObjectByName('L_FOOT').material = clearMaterial;
 						planRobot.object.getObjectByName('R_FOOT').material = clearMaterial;
 						planRobot.object.getObjectByName('L_WR_FT').material = clearMaterial;
 						planRobot.object.getObjectByName('R_WR_FT').material = clearMaterial;
+						*/
+						planRobot.object.traverse(function(o){
+							o.material = clearMaterial;
+						});
 						//planRobot.object.visible = false;
 						// Joint teleop
 						var sel = document.getElementById('joints');
@@ -1055,12 +1063,31 @@
 							sel.appendChild(x);
 						});
 						planRobot.object.getObjectByName('L_FOOT').add(planRobot.foot);
-						planRobot.object.getObjectByName('L_WR_FT').add(planRobot.lhand);
-						planRobot.object.getObjectByName('R_WR_FT').add(planRobot.rhand);
-						/*
-						planRobot.object.add(planRobot.lhand);
-						planRobot.object.add(planRobot.rhand);
-						*/
+						//planRobot.object.getObjectByName('L_WR_FT').add(planRobot.lhand);
+						//planRobot.object.getObjectByName('R_WR_FT').add(planRobot.rhand);
+						// TODO: Attach to the group and move the group around
+						var lclone = planRobot.object.getObjectByName('L_TIP').clone();
+						var rclone = planRobot.object.getObjectByName('R_TIP').clone();
+						lclone.name = 'L_TIP_PLAN';
+						rclone.name = 'R_TIP_PLAN';
+						var rmat = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+						var lmat = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+						lclone.traverse(function(o){
+							o.material = lmat;
+						});
+						rclone.traverse(function(o){
+							o.material = rmat;
+						});
+						lclone.position.set(0,0,0);
+						rclone.position.set(0,0,0);
+						planRobot.object.getObjectByName('L_TIP').add(lclone);
+						planRobot.object.getObjectByName('R_TIP').add(rclone);
+						//
+						planRobot.lhand = lclone;
+						planRobot.rhand = rclone;
+						console.log(planRobot.lhand);
+						console.log(planRobot.rhand);
+
 						scene.add(this);
 					}
 				});
