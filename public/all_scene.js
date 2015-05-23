@@ -383,14 +383,18 @@
 					break;
 				case 'ik':
 					reset_ik = true;
-					reset_joints = true;
+					//reset_joints = true;
 					break;
 				default:
 					// Reset All
 					reset_com = true;
 					reset_joints = true;
 					reset_step = true;
-					reset_ik = true;
+					//reset_ik = true;
+					planRobot.lhand.position.set(0,0,0);
+					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+					planRobot.rhand.position.set(0,0,0);
+					planRobot.rhand.quaternion.copy(new THREE.Quaternion());
 					break;
 			}
 			if(reset_joints){
@@ -407,10 +411,22 @@
 				planRobot.foot.quaternion.copy(new THREE.Quaternion());
 			}
 			if(reset_ik){
+				var lhandPlan = planRobot.object.getObjectByName('L_TIP');
+				var lhandNow = robot.object.getObjectByName('L_TIP');
+				//var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
+				var invLHandNow = new THREE.Matrix4().getInverse(lhandNow.matrixWorld);
+
+				var TdiffL1 = new THREE.Matrix4().multiplyMatrices(invLHandNow, lhandPlan.matrixWorld);
+				var TdiffL = new THREE.Matrix4().getInverse(TdiffL1);
+				//var TdiffL = new THREE.Matrix4().multiplyMatrices(lhandNow.matrixWorld, invLHandPlan);
+				var dpL = new THREE.Vector3().setFromMatrixPosition(TdiffL);
+				var daL = new THREE.Quaternion().setFromRotationMatrix(TdiffL);
+				planRobot.lhand.position.copy(dpL);
+				planRobot.lhand.quaternion.copy(daL);
+
 				planRobot.rhand.position.set(0,0,0);
 				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
-				planRobot.lhand.position.set(0,0,0);
-				planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+
 			}
 		});
 		goBtn.addEventListener('click', function(){
