@@ -23,6 +23,7 @@
 	function procPlan(plan) {
 		var true_hz = 120, subsample = 0.5, half_sec = Math.floor(true_hz * subsample),
 				speedup = 4, play_rate = Math.floor(1e3 * subsample / speedup);
+		// Guarantees 2 points
 		function halfsec(v, i, arr) {
 			return (i % half_sec)===0 || i===arr.length;
 		}
@@ -542,10 +543,9 @@
 					});
 					break;
 				case 'ik':
-					if(this.innerHTML !== 'Plan'){
+					if(goBtn.innerHTML !== 'Plan'){
 						return;
 					}
-
 
 					// Always with respect to our com position.
 					if(sameLArmTF && sameRArmTF){
@@ -624,23 +624,22 @@
 							rPlan.via = 'jacobian_waist_preplan';
 						}
 					}
-
+					console.log([lPlan, rPlan]);
 					goBtn.innerHTML = 'Planning...';
 					goBtn.classList.add('danger');
 
-					console.log([lPlan, rPlan]);
 					// TODO: Check if the planner failed
 					util.shm('/armplan', [lPlan, rPlan])
 					.then(procPlan)
 					.then(function(plans){
 						goBtn.innerHTML = 'Accept';
-						goBtn.classList.remove('danger');
-						stepBtn.innerHTML = 'Decline';
 						return plans.map(function(p){return p.length>0;});
 					}).then(function(valid){
 						return new Promise(function(resolve, reject) {
 							var success = (sameLArmTF || valid[0]) && (sameRArmTF || valid[1]);
 							if(!success){reject('Failed!');}
+							goBtn.innerHTML = 'Accept';
+							stepBtn.innerHTML = 'Decline';
 							// Go accepts and sends
 							h_accept = goBtn.addEventListener('click', function(){
 								goBtn.innerHTML = 'Plan';
@@ -684,9 +683,7 @@
 					});
 					break;
 				case 'teleop':
-					if(this.innerHTML === 'Accept'){
-						// We accepted a plan...
-						this.innerHTML = 'Plan';
+					if(goBtn.innerHTML !== 'Plan'){
 						return;
 					}
 
@@ -724,30 +721,45 @@
 							lPlan.via = 'joint_waist_preplan';
 						} else if (lPlan) {
 							lPlan.via = 'joint_waist_preplan';
-						} else {
+						} else if (rPlan) {
 							rPlan.via = 'joint_waist_preplan';
+						} else {
+							console.log('Did not implement waist only joint level');
 						}
 					}
+					console.log([lPlan, rPlan]);
+					goBtn.innerHTML = 'Planning...';
+					goBtn.classList.add('danger');
 
-					this.innerHTML = 'Accept';
 					// Send teleop
 					util.shm('/armplan', [lPlan, rPlan])
 					.then(procPlan)
 					.then(function(plans){
+						console.log('plans', plans);
 						return plans.map(function(p){return p.length>0;});
 					})
 					.then(function(valid){
 						return new Promise(function(resolve, reject) {
 							var success = (sameLArm || valid[0]) && (sameRArm || valid[1]);
 							if(!success){reject('Failed!');}
+							goBtn.innerHTML = 'Accept';
+							stepBtn.innerHTML = 'Decline';
 							// Go accepts and sends
 							h_accept = goBtn.addEventListener('click', function(){
 								resolve(valid);
 							});
 							// Step rejects
-							h_decline = stepBtn.addEventListener('click', reject);
+							h_decline = stepBtn.addEventListener('click', function(){
+								goBtn.innerHTML = 'Plan';
+								stepBtn.innerHTML = '_';
+								reject(valid);
+							});
 							// Done rejects
-							h_done = ikBtn.addEventListener('click', reject);
+							h_done = ikBtn.addEventListener('click', function(){
+								goBtn.innerHTML = 'Plan';
+								stepBtn.innerHTML = '_';
+								reject(valid);
+							});
 						});
 					})
 					.then(function(){
