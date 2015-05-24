@@ -11,7 +11,6 @@ var restify = require('restify'),
 		version: '0.1.0'
 	}),
 	WebSocketServer = require('ws').Server,
-	dgram = require('dgram'),
 	zmq = require('zmq'),
 	mp = require('msgpack'),
   PeerServer = require('peer').PeerServer,
@@ -60,6 +59,8 @@ var streams = Config.net.streams;
 console.log(streams);
 
 // Network detection
+/*
+var dgram = require('dgram');
 if (!USE_LOCALHOST && Config.net.ping) {
 	var NET_OPEN = false;
 	var ping_skt = zmq.socket('pub');
@@ -76,6 +77,7 @@ if (!USE_LOCALHOST && Config.net.ping) {
 		ping_skt.send('ok');
 	});
 }
+*/
 
 /* Connect to the Arm Plan server - always on localhost :P */
 var armplan_skt = zmq.socket('req');
@@ -323,6 +325,8 @@ for (var w in streams) {
 		zmq_recv_skt.on('message', zmq_message);
 		zmq_recv_skt.sur_stream = b;
 	}
+	/*
+	// Not actually used... Only for the field computer
 	// Add TCP
 	if (!USE_LOCALHOST && b.tcp !== undefined) {
 		var zmq_recv_skt = zmq.socket('sub');
@@ -332,6 +336,7 @@ for (var w in streams) {
 		zmq_recv_skt.on('message', zmq_message);
 		zmq_recv_skt.sur_stream = b;
 	}
+	*/
 }
 
 /* Listen for HTTP on port 8080 */
