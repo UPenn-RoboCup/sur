@@ -136,6 +136,7 @@ get_config(["kinect","mountOffset"], function(val){
 	pa = mesh.posez[i];
 	*/
 var Tchest = trans(0.050, 0, 0.130); // Dale
+var Thead = trans(0,0,0.282);
 // x, y, z in the torso (upper body) frame
 var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
   K2_VFOV_FACTOR = tan(60 / 2 * DEG_TO_RAD),
@@ -268,9 +269,8 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			var TcomG = flat2mat(mesh.tfG16[v]);
 			var TcomL = flat2mat(mesh.tfL16[v]);
 			var Tactuate = rotY(a);
-			var Thead = trans(0,0,0.3);
 
-			var v_actuate = mat_times_vec(Tactuate, [r*cos(theta), r*sin(theta), 0.12]);
+			var v_actuate = mat_times_vec(Tactuate, [r*cos(theta), r*sin(theta), 0.1]);
 			//console.log(v_actuate);
 			var v_head = mat_times_vec(Thead, v_actuate);
 			//console.log(v_head);
@@ -526,6 +526,7 @@ this.addEventListener('message', function (e) {
 	}
 
 	var pixel_idx = 0;
+	console.assert(typeof positions[0]==='number', 'undefined positions');
 
 	for (j = 0; j < height; j += 1) {
 		for (i = 0; i < width; i += 1) {

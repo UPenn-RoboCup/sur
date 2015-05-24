@@ -240,14 +240,17 @@
 			var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1e3).toArray();
 			var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1e3).toArray();
 
+			util.debug([
+				mesh.name,
+				//sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
+				//sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
+				sprintf("%0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], global_msg[1]),
+			]);
+
 			// Default gives a text cursor
 			if (e.button === 1) {
 				// Middle click
-				util.debug([
-					mesh.name,
-					sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
-					sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
-				]);
+
 				switch(getMode()){
 					case 'ik':
 						var ikBtn = document.getElementById('ik');

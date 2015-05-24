@@ -1,7 +1,6 @@
 (function (ctx) {
 	'use strict';
-	var d3 = ctx.d3,
-		util = ctx.util,
+	var util = ctx.util,
 		lA_canvas = document.createElement('canvas'),
 		lA_ctx = lA_canvas.getContext('2d'),
 		lA_img_data,
@@ -52,12 +51,7 @@
 		container.appendChild(feed.canvas);
 		container.appendChild(lA_canvas);
 		lA_canvas.classList.toggle('nodisplay');
-		// Animate the buttons
-		d3.selectAll('button').on('click', function () {
-			// 'this' variable is the button node
-			//console.log('clicked', this);
-			toggle();
-		});
+		container.addEventListener('dblclick', toggle);
 	});
 
 	// LabelA WebWorker
