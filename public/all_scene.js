@@ -247,22 +247,29 @@
 					sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
 					sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
 				]);
-
 				switch(getMode()){
 					case 'ik':
-						var lhandPlan = planRobot.object.getObjectByName('L_TIP');
-						var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
-						var TdiffL = new THREE.Matrix4().multiplyMatrices(invLHandPlan, T_point);
-						//var TdiffL = new THREE.Matrix4().multiplyMatrices(T_point, invLHandPlan);
-						planRobot.lhand.position.setFromMatrixPosition(TdiffL);
-						planRobot.lhand.quaternion.setFromRotationMatrix(TdiffL);
+						var ikBtn = document.getElementById('ik');
+						if(ikBtn.getAttribute('data-hand')==='L_TIP'){
+							var lhandPlan = planRobot.object.getObjectByName('L_TIP');
+							var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
+							var TdiffL = new THREE.Matrix4().multiplyMatrices(invLHandPlan, T_point);
+							planRobot.lhand.position.setFromMatrixPosition(TdiffL);
+							//planRobot.lhand.quaternion.setFromRotationMatrix(TdiffL);
+						} else {
+							var rhandPlan = planRobot.object.getObjectByName('R_TIP');
+							var invRHandPlan = new THREE.Matrix4().getInverse(rhandPlan.matrixWorld);
+							var TdiffR = new THREE.Matrix4().multiplyMatrices(invRHandPlan, T_point);
+							planRobot.rhand.position.setFromMatrixPosition(TdiffR);
+							//planRobot.lhand.quaternion.setFromRotationMatrix(TdiffR);
+						}
+
 						break;
 					default:
 						break;
 				}
 				return;
 			}
-
 			e.preventDefault();
 		});
 		// Refocus the camera
@@ -602,7 +609,8 @@
 					if(!sameWaist){
 						//console.log('Not same waist!');
 						// Use the planned waist as the final guess
-						lPlan.qWaistGuess = rPlan.qWaistGuess = qWaist;
+						if (lPlan) {lPlan.qWaistGuess = qWaist;}
+						if (rPlan) {rPlan.qWaistGuess = qWaist;}
 						// Check which moved. If both, then the current selection
 						if(lPlan && rPlan){
 							if(ikBtn.getAttribute('data-hand')==='L_TIP'){
@@ -697,7 +705,8 @@
 					if(!sameWaist){
 						//console.log('Not same waist!');
 						// Use the planned waist as the final guess
-						lPlan.qWaistGuess = rPlan.qWaistGuess = qWaist;
+						if(lPlan) {lPlan.qWaistGuess = qWaist;}
+						if(rPlan) {rPlan.qWaistGuess = qWaist;}
 						// Check which moved. If both, then the current selection
 						if(lPlan && rPlan){
 							// Does not matter, so use the left
