@@ -250,7 +250,8 @@
 				switch(getMode()){
 					case 'ik':
 						var ikBtn = document.getElementById('ik');
-						if(ikBtn.getAttribute('data-hand')==='L_TIP'){
+						var cur = ikBtn.getAttribute('data-hand');
+						if(cur==='L_TIP'){
 							var lhandPlan = planRobot.object.getObjectByName('L_TIP');
 							var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
 							var TdiffL = new THREE.Matrix4().multiplyMatrices(invLHandPlan, T_point);
@@ -541,11 +542,10 @@
 					});
 					break;
 				case 'ik':
-					if(this.innerHTML === 'Accept'){
-						// We accepted a plan...
-						this.innerHTML = 'Plan';
+					if(this.innerHTML !== 'Plan'){
 						return;
 					}
+
 
 					// Always with respect to our com position.
 					if(sameLArmTF && sameRArmTF){
@@ -625,12 +625,17 @@
 						}
 					}
 
-					this.innerHTML = 'Accept';
+					goBtn.innerHTML = 'Planning...';
+					goBtn.classList.add('danger');
+
 					console.log([lPlan, rPlan]);
 					// TODO: Check if the planner failed
 					util.shm('/armplan', [lPlan, rPlan])
 					.then(procPlan)
 					.then(function(plans){
+						goBtn.innerHTML = 'Accept';
+						goBtn.classList.remove('danger');
+						stepBtn.innerHTML = 'Decline';
 						return plans.map(function(p){return p.length>0;});
 					}).then(function(valid){
 						return new Promise(function(resolve, reject) {
@@ -638,10 +643,16 @@
 							if(!success){reject('Failed!');}
 							// Go accepts and sends
 							h_accept = goBtn.addEventListener('click', function(){
+								goBtn.innerHTML = 'Plan';
+								stepBtn.innerHTML = '_';
 								resolve(valid);
 							});
 							// Step rejects
-							h_decline = stepBtn.addEventListener('click', reject);
+							h_decline = stepBtn.addEventListener('click', function(){
+								goBtn.innerHTML = 'Plan';
+								stepBtn.innerHTML = '_';
+								reject(valid);
+							});
 							// Done rejects
 							h_done = ikBtn.addEventListener('click', reject);
 						});
@@ -802,7 +813,7 @@
 						tcontrol.attach(planRobot.rhand);
 						moveBtn.innerHTML = 'Left';
 					} else {
-						ikBtn.setAttribute('data-hand', 'R_TIP');
+						ikBtn.setAttribute('data-hand', 'L_TIP');
 						tcontrol.attach(planRobot.lhand);
 						moveBtn.innerHTML = 'Right';
 					}
@@ -899,9 +910,9 @@
 					return;
 				default:
 					// Enter a new control mode
+					ikBtn.innerHTML = 'Done';
 					goBtn.innerHTML = 'Plan';
-					stepBtn.innerHTML = 'Decline';
-					this.innerHTML = 'Done';
+					stepBtn.innerHTML = '_';
 					teleopBtn.innerHTML = 'Rotate';
 					// Tell the robot to go into teleop mode
 					util.shm('/fsm/Arm/teleop', true);
