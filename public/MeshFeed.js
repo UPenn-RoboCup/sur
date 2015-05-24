@@ -1,10 +1,6 @@
 (function (ctx) {
 	'use strict';
 
-	var createObjectURL = window.URL.createObjectURL,
-			revokeObjectURL = window.URL.revokeObjectURL;
-
-
 	function MeshFeed(port, callback) {
 
 		var depth_worker, video_feed;
@@ -15,6 +11,9 @@
 				metadata = canvas.metadata,
 				pixels, width, height;
 			if(metadata.c === 'raw'){
+				console.log(metadata.data, metadata);
+				console.assert(metadata.data, metadata);
+				//if(!metadata.data){return;}
 				pixels = new Float32Array(metadata.data);
 				width = metadata.dim[1];
 				height = metadata.dim[0];
