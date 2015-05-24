@@ -1,7 +1,6 @@
 (function (ctx) {
 	'use strict';
-	var d3 = ctx.d3,
-		util = ctx.util,
+	var util = ctx.util,
 		min = Math.min,
 		max = Math.max,
 		mesh_feed = [];

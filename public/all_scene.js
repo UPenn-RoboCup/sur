@@ -302,63 +302,70 @@
 				setTimeout(estimate_selection, 0);
 			}
 		});
-		//var footname = document.querySelector('button#step').getAttribute('data-foot');
-		d3.selectAll('#topic2 li').on('click', function(){
-			var params = last_selected_parameters;
-			if(!params){ return; }
-			last_selected_parameters = null;
-			document.getElementById('topic2').classList.add('hidden');
-			var action = this.getAttribute('data-action');
-			var debugMsg = [];
-			debugMsg.push(action);
-			switch(action){
-				case 'clear':
-					scene.remove(params.mesh);
-					return;
-				case 'step':
-					var gfoot = planRobot.foot;
-					var footname = document.querySelector('button#step').getAttribute('data-foot');
-					var worldFoot = robot.object.getObjectByName(footname).matrixWorld;
-					var p3 = params.three.position.clone();
-					p3.sub(
-						new THREE.Vector3().setFromMatrixPosition(worldFoot)
-					);
-					gfoot.position.copy(p3);
+		function handleRightClick (e){
+				console.log(this, e);
+				var params = last_selected_parameters;
+				if(!params){ return; }
+				last_selected_parameters = null;
+				document.getElementById('topic2').classList.add('hidden');
+				var action = this.getAttribute('data-action');
+				var debugMsg = [];
+				debugMsg.push(action);
+				switch(action){
+					case 'clear':
+						scene.remove(params.mesh);
+						return;
+					case 'step':
+						var gfoot = planRobot.foot;
+						var footname = document.querySelector('button#step').getAttribute('data-foot');
+						var worldFoot = robot.object.getObjectByName(footname).matrixWorld;
+						var p3 = params.three.position.clone();
+						p3.sub(
+							new THREE.Vector3().setFromMatrixPosition(worldFoot)
+						);
+						gfoot.position.copy(p3);
 
-					var qFootInv = new THREE.Quaternion()
-						.setFromRotationMatrix(worldFoot).inverse();
-					gfoot.quaternion.multiplyQuaternions(
-						params.three.quaternion, qFootInv
-					);
-					debugMsg.push(footname);
-					// Print (L: Local, G: Global)
-					var pL = gfoot.position;
-					//var pG = params.root;
-					//var rpyL = new THREE.Euler().setFromQuaternion(gfoot.quaternion);
-					var rpyG = params.rpy; // global
-					debugMsg.push(sprintf("RPY: %0.2f %0.2f %0.2f", rpyG[0], rpyG[1], rpyG[2]));
-					debugMsg.push(sprintf("XYZ: %0.2f %0.2f %0.2f", pL.z, pL.x, pL.y));
-					break;
-				case 'avoid':
-					//console.log(params);
-										/*
-					var qRobotInv = robot.object.quaternion.clone().inverse();
-					var q = new THREE.Quaternion().multiplyQuaternions(
-						params.three.quaternion, qRobotInv
-					);
-					*/
-					break;
-				default:
-					break;
+						var qFootInv = new THREE.Quaternion()
+							.setFromRotationMatrix(worldFoot).inverse();
+						gfoot.quaternion.multiplyQuaternions(
+							params.three.quaternion, qFootInv
+						);
+						debugMsg.push(footname);
+						// Print (L: Local, G: Global)
+						var pL = gfoot.position;
+						//var pG = params.root;
+						//var rpyL = new THREE.Euler().setFromQuaternion(gfoot.quaternion);
+						var rpyG = params.rpy; // global
+						debugMsg.push(sprintf("RPY: %0.2f %0.2f %0.2f", rpyG[0], rpyG[1], rpyG[2]));
+						debugMsg.push(sprintf("XYZ: %0.2f %0.2f %0.2f", pL.z, pL.x, pL.y));
+						break;
+					case 'avoid':
+						//console.log(params);
+											/*
+						var qRobotInv = robot.object.quaternion.clone().inverse();
+						var q = new THREE.Quaternion().multiplyQuaternions(
+							params.three.quaternion, qRobotInv
+						);
+						*/
+						break;
+					default:
+						break;
+				}
+
+				util.debug(debugMsg);
+				// For sending over WebRTC, we remove silly things
+				params.type = action;
+				delete params.mesh;
+				delete params.three;
+				map_peers.forEach(function(conn){ conn.send(params); });
 			}
 
-			util.debug(debugMsg);
-			// For sending over WebRTC, we remove silly things
-			params.type = action;
-			delete params.mesh;
-			delete params.three;
-			map_peers.forEach(function(conn){ conn.send(params); });
-		});
+		var allRightClicks = document.querySelectorAll('#topic2 li');
+		for(var i = 0; i<allRightClicks.length; i+=1){
+			var menu = allRightClicks.item(i);
+			menu.addEventListener('click', handleRightClick);
+		}
+
 	} // setup_clicks
 
 	function setup_keys(){
@@ -1165,11 +1172,16 @@
 	Promise.all([
 		util.lcss('/css/all_scene.css'),
 		util.lcss('/css/gh-buttons.css'),
-		util.ljs('/Estimate.js'),
-		util.ljs('/Classify.js'),
-		util.ljs("/VideoFeed.js"),
-		util.ljs('/bc/threejs/build/three.js')
+		util.ljs('/bc/threejs/build/three.js'),
+		//util.ljs("/bc/peerjs/peer.min.js"),
+		util.ljs("/bc/sprintfjs/sprintf.js"),
+		util.ljs("/bc/Keypress/keypress.js"),
+		util.ljs("/js/numeric-1.2.6.min.js")
 	]).then(function(){
+		return Promise.all([
+			util.ljs("/VideoFeed.js")
+		]);
+	}).then(function(){
 		return Promise.all([
 			util.ljs("/MeshFeed.js"),
 			util.ljs("/KinectFeed.js"),
@@ -1193,13 +1205,20 @@
 		mesh1_feed = new MeshFeed(ports[1], process_mesh);
 		kinect_feed = new ctx.KinectFeed(ports[2], ports[3], process_mesh);
 	})
-		.then(setup3d)
-		.then(setup_rtc)
-		.then(setup_buttons)
-		.then(setup_clicks)
-	.then(setup_keys)
+	.then(function(){
+		setTimeout(setup3d, 0);
+		setTimeout(setup_rtc, 0);
+		setTimeout(setup_buttons, 0);
+		setTimeout(setup_clicks, 0);
+		setTimeout(setup_keys, 0);
+	}).then(function(){
+		util.ljs('/Estimate.js');
+		util.ljs('/Classify.js');
+	})
 	.then(function(){
 		return util.shm('/streams/feedback');
-	}).then(setup_robot);
+	}).then(setup_robot).catch(function(e){
+		console.log('Loading error', e);
+	});
 
 }(this));
