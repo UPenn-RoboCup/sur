@@ -4,10 +4,11 @@
 		util = ctx.util,
 		min = Math.min,
 		max = Math.max,
-		feed;
+		mesh_feed = [];
 
 	/* The Mesh Video feed should display in the JET colormap */
 	function to_jet() {
+		var feed = mesh_feed[this];
 		var ctx = feed.context2d,
 			metadata = feed.canvas.metadata,
 			range = 255.0;
@@ -49,27 +50,33 @@
 	}
 
 	// Add the camera view and append
-	d3.html('/view/mesh_video.html', function (error, view) {
-		// Remove landing page elements and add new content
-		d3.select("div#landing").remove();
-		document.body.appendChild(view);
-		// Add the video feed. There is a 90 degree offset for the chest mesh
-		util.ljs("/VideoFeed.js",function(){
-			d3.json('/streams/mesh0', function (error, port) {
-				feed = new ctx.VideoFeed({
-					port: port,
-					fr_callback: to_jet,
-					cw90: true
-				});
-				document.getElementById('camera_container').appendChild(feed.canvas);
-			});
+	Promise.all([
+		util.lcss('/css/all_scene.css'),
+		util.lcss('/css/gh-buttons.css'),
+		util.ljs("/VideoFeed.js"),
+	]).then(function(){
+		return util.ljs("/MeshFeed.js");
+	}).then(function(){
+		return util.lhtml('/view/mesh_video.html');
+	}).then(function (view) {
+		document.body = view;
+		return Promise.all([
+			util.shm('/streams/mesh0'),
+			util.shm('/streams/mesh1')
+		]);
+	}).then(function(ports){
+		// TODO: cw90...
+		mesh_feed[0] = new ctx.VideoFeed({
+			port: ports[0],
+			fr_callback: to_jet.bind(0),
+			cw90: true
 		});
-		// Animate the buttons
-		d3.selectAll('button').on('click', function () {
-			// 'this' variable is the button node
+		mesh_feed[1] = new ctx.VideoFeed({
+			port: ports[1],
+			fr_callback: to_jet.bind(1),
+			cw90: true
 		});
+		document.getElementById('camera_container')
+			.appendChild(mesh_feed[0].canvas);
 	});
-	// Load the CSS that we need for our app
-	util.lcss('/css/gh-buttons.css');
-	util.lcss('/css/video.css');
 }(this));

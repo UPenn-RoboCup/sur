@@ -263,7 +263,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			}
 
 			var a = mesh.a[v][1];
-			var theta = (mesh.rfov[0] - mesh.rfov[1]) * (u / width) - mesh.rfov[0];
+			var theta = mesh.rfov[0] - (mesh.rfov[0] - mesh.rfov[1]) * (u / width);
 
 			var TcomG = flat2mat(mesh.tfG16[v]);
 			var TcomL = flat2mat(mesh.tfL16[v]);
