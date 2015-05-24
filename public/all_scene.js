@@ -10,7 +10,15 @@
 		mesh0 = [], mesh1 = [], kinect = [],
 		N_MESH0 = 4, N_MESH1 = 4, N_KINECT = 1,
 		map_peers = [],
-		last_intersection = {t:0}, last_selected_parameters = null;
+		last_intersection = {t:0}, last_selected_parameters = null,
+		allBtns;
+
+	function getMode() {
+		for(var i = 0; i<allBtns.length; i+=1){
+			var btn = allBtns.item(i);
+			if(btn.innerHTML==='Done') { return btn.id; }
+		}
+	}
 
 	function procPlan(plan) {
 		var true_hz = 120, subsample = 0.5, half_sec = Math.floor(true_hz * subsample),
@@ -239,6 +247,19 @@
 					sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
 					sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
 				]);
+
+				switch(getMode()){
+					case 'ik':
+						var lhandPlan = planRobot.object.getObjectByName('L_TIP');
+						var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
+						var TdiffL = new THREE.Matrix4().multiplyMatrices(invLHandPlan, T_point);
+						//var TdiffL = new THREE.Matrix4().multiplyMatrices(T_point, invLHandPlan);
+						planRobot.lhand.position.setFromMatrixPosition(TdiffL);
+						planRobot.lhand.quaternion.setFromRotationMatrix(TdiffL);
+						break;
+					default:
+						break;
+				}
 				return;
 			}
 
@@ -345,15 +366,10 @@
 			teleopBtn = document.querySelector('button#teleop'),
 			stepBtn = document.querySelector('button#step'),
 			ikBtn = document.querySelector('button#ik'),
-			allBtns = document.querySelectorAll('#topic button'),
 			jointSel = document.querySelector('select#joints');
+		allBtns = document.querySelectorAll('#topic button');
 
-		function getMode() {
-			for(var i = 0; i<allBtns.length; i+=1){
-				var btn = allBtns.item(i);
-				if(btn.innerHTML==='Done') { return btn.id; }
-			}
-		}
+
 		function resetLabels() {
 			for(var i = 0; i<allBtns.length; i+=1){
 				var btn = allBtns.item(i);
@@ -566,8 +582,8 @@
 							via: 'jacobian_preplan',
 							weights: [0,1,0,1],
 							qLArm0: qLArm0,
-							//qArmGuess: sameLArm ? null : qLArm,
-							qWaist0: qWaist0
+							qWaist0: sameWaist ? null : qWaist0,
+							qArmGuess: sameLArm ? null : qLArm
 						};
 					}
 					if(!sameRArmTF){
@@ -577,8 +593,8 @@
 							via: 'jacobian_preplan',
 							weights: [0,1,0,1],
 							qRArm0: qRArm0,
-							//qArmGuess: sameRArm ? null : qRArm,
-							qWaist0: qWaist0
+							qWaist0: sameWaist ? null : qWaist0,
+							qArmGuess: sameRArm ? null : qRArm
 						};
 					}
 
