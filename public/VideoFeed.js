@@ -15,28 +15,36 @@
 			fr_img = new Image(),
 			fr_canvas = document.createElement('canvas'),
 			fr_ctx = fr_canvas.getContext('2d'),
-			frames = [],
+			frames = [], requests = [],
 			fr_metadata,
 			fr_raw,
 			fr_img_src;
 
 		function animate() {
+			requests.pop();
 			var fr = frames.pop();
 			if(!fr){return;}
+			// Still more frames in the buffer?
+			if (frames.length > 0) {
+				console.log('VideoFeed | Still too many frames!');
+			}
 			fr_img.src = fr_img_src = createObjectURL(fr.data);
 			fr_canvas.metadata = fr;
-			if (frames.length > 0) {
-				console.log('VideoFeed: Too many frames!', frames);
-			}
 		}
 
 		function animate_raw() {
+			requests.pop();
 			var fr = frames.pop();
-			if(!fr){return;}
-			fr_canvas.metadata = fr;
-			if (frames.length > 0) {
-				console.log('VideoFeed: Too many frames!', frames);
+			if(!fr){
+				return;
 			}
+			// Still more frames in the buffer?
+			if (frames.length > 0) {
+				console.log('VideoFeed | Still too many frames!');
+				frames = [];
+			}
+			fr_canvas.metadata = fr;
+
 			// Run the callback on the next JS loop
 			if (typeof cb === 'function') {
         fr_canvas.metadata = fr_metadata;
@@ -123,12 +131,23 @@
 				}
 				// Set the MIME type and make URL for image tag
 				fr_metadata.data = e.data.slice(0, e.data.size, 'image/' + fr_metadata.c);
+				while (requests.length > 1) {
+					console.log('VideoFeed | Releasing frame requests for img');
+					frames.shift();
+					cancelAnimationFrame(requests.shift());
+				}
 				frames.push(fr_metadata);
-				window.requestAnimationFrame(animate);
+				requests.push(requestAnimationFrame(animate));
 			} else if (fr_metadata.c === "raw") {
 				fr_metadata.data = e.data;
+				//console.log(requests.length);
+				while (requests.length > 0) {
+					console.log('VideoFeed | Releasing frame requests for raw');
+					frames.shift();
+					cancelAnimationFrame(requests.shift());
+				}
 				frames.push(fr_metadata);
-				window.requestAnimationFrame(animate_raw);
+				requests.push(requestAnimationFrame(animate_raw));
 			} else if (typeof extra_cb === 'function') {
 				// Run the callback on non video data
 				fr_metadata.data = e.data;

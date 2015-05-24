@@ -17,7 +17,7 @@
 			metadata.data = new window.Float32Array(metadata.data);
 			feed.canvas.width = metadata.dim[1];
 			feed.canvas.height = metadata.dim[0];
-			range = 8.0;
+			range = 5.0;
 		}
 
 		var data = metadata.data,
@@ -51,7 +51,7 @@
 
 	// Add the camera view and append
 	Promise.all([
-		util.lcss('/css/all_scene.css'),
+		util.lcss('/css/video.css'),
 		util.lcss('/css/gh-buttons.css'),
 		util.ljs("/VideoFeed.js"),
 	]).then(function(){
@@ -74,9 +74,9 @@
 		mesh_feed[1] = new ctx.VideoFeed({
 			port: ports[1],
 			fr_callback: to_jet.bind(1),
-			cw90: true
+			//cw90: true
 		});
 		document.getElementById('camera_container')
-			.appendChild(mesh_feed[0].canvas);
+			.appendChild(mesh_feed[1].canvas);
 	});
 }(this));
