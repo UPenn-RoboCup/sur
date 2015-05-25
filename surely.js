@@ -118,12 +118,15 @@ if(USE_LOCALHOST){
 rpc_skt.http_responses = [];
 // Since a REP/REQ pattern, we can use a queue and know we are OK
 // This means one node.js per robot rpc server!
+var recv_usage = [];
 rpc_skt.on('message', function (msg) {
 	"use strict";
+	recv_usage.push([Date.now(), msg.length]);
 	this.http_responses.shift().json(200, mp.unpack(msg));
 });
 
 /* Standard forwarding pattern to rpc */
+var sent_usage = [];
 function rest_req(req, res, next) {
 	"use strict";
 	// Ensure we get a val inside the body of a PUT or POST operation
@@ -136,7 +139,9 @@ function rest_req(req, res, next) {
 	}
 	console.log(req.params);
 	// Send to the RPC server
-	rpc_skt.send(mp.pack(req.params)).http_responses.push(res);
+	var msg = mp.pack(req.params);
+	sent_usage.push([Date.now(), msg.length]);
+	rpc_skt.send(msg).http_responses.push(res);
 	return next();
 }
 
@@ -354,4 +359,13 @@ pserver.on('connection', function(id) {
 pserver.on('disconnect', function(id) {
 	'use strict';
   console.log('Peer disconnected:', id);
+});
+
+process.on('SIGINT', function() {
+	"use strict";
+	//console.log(sent_usage);
+	mp.pack(sent_usage);
+	mp.pack(recv_usage);
+//  socket.close();
+  process.exit();
 });
