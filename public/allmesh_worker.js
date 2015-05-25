@@ -214,6 +214,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 
 			var TcomG = flat2mat(mesh.tfG16[v]);
 			var TcomL = flat2mat(mesh.tfL16[v]);
+
 			var a = mesh.a[v];
 			var Tactuate = rotZ(a);
 			//console.assert(a===a, 'nan mesh.a', a, v);
@@ -228,13 +229,17 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			//console.assert(v_actuate[1]===v_actuate[1], 'nan v_actuate',r,w,theta);
 			//console.assert(v_actuate[2]===v_actuate[2], 'nan v_actuate',r,w,theta);
 			var v_chest = mat_times_vec(Tchest, v_actuate);
+
+			var Twaist = rotZ(mesh.qW[v][0]);
+			var v_waist = mat_times_vec(Twaist, v_chest);
+			//console.log('v_waist', v_waist);
 			/*
 			console.assert(v_chest[0]===v_chest[0], 'nan v_chest');
 			console.assert(v_chest[1]===v_chest[1], 'nan v_chest');
 			console.assert(v_chest[2]===v_chest[2], 'nan v_chest');
 			*/
-			var v_global = mat_times_vec(TcomG, v_chest);
-			var v_local = mat_times_vec(TcomL, v_chest);
+			var v_global = mat_times_vec(TcomG, v_waist);
+			var v_local = mat_times_vec(TcomL, v_waist);
 
 			// Set into the THREE buffer, in its coordinate frame
     	destination[0] = v_global[1] * 1e3;
@@ -263,20 +268,28 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 				r = w * (mesh.dynrange[1] - mesh.dynrange[0]) / 255 + mesh.dynrange[0];
 			}
 
-			var a = mesh.a[v][1];
+
 			var theta = mesh.rfov[0] - (mesh.rfov[0] - mesh.rfov[1]) * (u / width);
 
 			var TcomG = flat2mat(mesh.tfG16[v]);
 			var TcomL = flat2mat(mesh.tfL16[v]);
-			var Tactuate = rotY(a);
+			var Tactuate = rotY(mesh.a[v][1]);
 
 			var v_actuate = mat_times_vec(Tactuate, [r*cos(theta), r*sin(theta), 0.1]);
-			//console.log(v_actuate);
-			var v_head = mat_times_vec(Thead, v_actuate);
+
+			var Tactuate1 = rotZ(mesh.a[v][0]);
+			var v_actuate1 = mat_times_vec(Tactuate1, v_actuate);
+
+			//console.log('v_actuate1',v_actuate1);
+			var v_head = mat_times_vec(Thead, v_actuate1);
+
+			var Twaist = rotZ(mesh.qW[v][0]);
+			var v_waist = mat_times_vec(Twaist, v_head);
+
 			//console.log(v_head);
-			var v_global = mat_times_vec(TcomG, v_head);
+			var v_global = mat_times_vec(TcomG, v_waist);
 			//console.log(v_global);
-			var v_local = mat_times_vec(TcomL, v_head);
+			var v_local = mat_times_vec(TcomL, v_waist);
 			//console.log(v_local);
 
 			// Set into the THREE buffer, in its coordinate frame

@@ -34,7 +34,10 @@
 					sfov: metadata.sfov,
 					rfov: metadata.rfov,
 					dynrange: metadata.dr,
+					//
 					a: metadata.a,
+					qW: metadata.qW,
+					//
 					tfL6: metadata.tfL6,
 					tfG6: metadata.tfG6,
 					tfL16: metadata.tfL16,
