@@ -686,6 +686,7 @@
 						console.log('Rejection of plan', reason);
 					}).then(function(){
 						goBtn.innerHTML = 'Plan';
+						goBtn.classList.remove('danger');
 						// Remove the listeners
 						goBtn.removeEventListener('click', h_accept);
 						stepBtn.removeEventListener('click', h_decline);
@@ -792,6 +793,7 @@
 						console.log('Rejection of plan', reason);
 					}).then(function(){
 						goBtn.innerHTML = 'Plan';
+						goBtn.classList.remove('danger');
 						// Remove the listeners
 						goBtn.removeEventListener('click', h_accept);
 						stepBtn.removeEventListener('click', h_decline);
