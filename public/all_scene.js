@@ -710,6 +710,8 @@
 						return;
 					}
 
+					if(!sameHead){util.shm('/shm/hcm/teleop/head', qHead);}
+
 					if(sameLArm && sameRArm && sameWaist){
 						return;
 					}
@@ -750,6 +752,7 @@
 							console.log('Did not implement waist only joint level');
 						}
 					}
+
 					console.log([lPlan, rPlan]);
 					goBtn.innerHTML = 'Planning...';
 					goBtn.classList.add('danger');
@@ -794,8 +797,6 @@
 							sameLArm || util.shm('/shm/hcm/teleop/larm', qLArm),
 							sameRArm || util.shm('/shm/hcm/teleop/rarm', qRArm)
 						]);
-					}).then(function(){
-						return sameHead || util.shm('/shm/hcm/teleop/head', qHead);
 					}).catch(function(reason){
 						util.debug([reason]);
 						// Reset the arms
