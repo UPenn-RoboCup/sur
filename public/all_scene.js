@@ -8,7 +8,7 @@
 		robot, planRobot, items = [],
 		mesh0_feed, mesh1_feed, kinect_feed,
 		mesh0 = [], mesh1 = [], kinect = [],
-		N_MESH0 = 4, N_MESH1 = 4, N_KINECT = 1,
+		N_MESH0 = 2, N_MESH1 = 2, N_KINECT = 1,
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null,
 		allBtns;
@@ -228,6 +228,7 @@
 			var obj = intersections[0];
 			if(obj.name==='GROUND' && intersections[1]){ obj = intersections[1]; }
 			var p = obj.point, mesh = obj.object;
+			//console.log(obj);
 			// Save the intersection for a mouseup refocus
 			last_intersection.p = p;
 			last_intersection.mesh = mesh;
@@ -235,15 +236,15 @@
 			// Solve for the transform from the robot frame to the point
 			var T_point = new THREE.Matrix4().makeTranslation(p.x, p.y, p.z),
 				T_inv = new THREE.Matrix4().getInverse(robot.object.matrix),
-				T_offset = new THREE.Matrix4().multiplyMatrices(T_point, T_inv);
+				T_offset = new THREE.Matrix4().multiplyMatrices(T_inv, T_point);
 			// Debugging
 			var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1e3).toArray();
 			var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1e3).toArray();
 
 			util.debug([
 				mesh.name,
-				//sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
-				//sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
+				sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
+				sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
 				sprintf("%0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], global_msg[1]),
 			]);
 
@@ -268,7 +269,9 @@
 							planRobot.rhand.position.setFromMatrixPosition(TdiffR);
 							//planRobot.lhand.quaternion.setFromRotationMatrix(TdiffR);
 						}
-
+						break;
+					case 'move':
+						planRobot.object.position.set(p.x, planRobot.object.position.y, p.z);
 						break;
 					default:
 						break;
@@ -521,7 +524,7 @@
 			switch(getMode()){
 				case 'move':
 					// Send the Waypoint
-					var Tdiff = new THREE.Matrix4().multiplyMatrices(comWorldPlan, invComWorldNow);
+					var Tdiff = new THREE.Matrix4().multiplyMatrices(invComWorldNow, comWorldPlan);
 					var dpL = new THREE.Vector3().setFromMatrixPosition(Tdiff);
 					var daL = new THREE.Euler().setFromRotationMatrix(Tdiff);
 					var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
@@ -534,8 +537,8 @@
 						sprintf("Global WP: %0.2f %0.2f %0.2f",
 										globalPose[0], globalPose[1], globalPose[2]),
 					]);
-					util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
-					//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
+					//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
+					util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
 					//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', globalPose);
 					break;
 				case 'step':
@@ -1043,8 +1046,7 @@
 		scene = new THREE.Scene();
     raycaster = new THREE.Raycaster();
 		// Build the scene
-		var spotLight,
-			ground = new THREE.Mesh(
+		var ground = new THREE.Mesh(
 				new THREE.PlaneBufferGeometry(100000, 100000),
 				new THREE.MeshBasicMaterial({
 					side: THREE.DoubleSide,
@@ -1074,11 +1076,6 @@
 		ground.name = 'GROUND';
 		scene.add(ground);
 		items.push(ground);
-		// Add light from robot
-		spotLight = new THREE.PointLight(0xffffff, 1, 0);
-		spotLight.position.set(0, 2000, -100);
-		spotLight.castShadow = true;
-		scene.add(spotLight);
 		// Handle resizing
 		window.addEventListener('resize', function () {
 			CANVAS_WIDTH = container.clientWidth;
@@ -1119,9 +1116,19 @@
 			name: 'dale',
 			callback: function(){
 				scene.add(this);
+				// Add light from robot
+				var spotLight = new THREE.PointLight(0xffffff, 1, 0);
+				spotLight.position.set(0, 2000, -100);
+				spotLight.castShadow = true;
+				this.add(spotLight);
 				planRobot = new ctx.Robot({
 					name: 'dale',
 					callback: function(){
+						// Add light from robot
+						var spotLight = new THREE.PointLight(0xffffff, 1, 0);
+						spotLight.position.set(0, 2000, -100);
+						spotLight.castShadow = true;
+						this.add(spotLight);
 						var clearMaterial = new THREE.MeshBasicMaterial({
 							color: 0x00ff00,
 							transparent: true,
