@@ -368,7 +368,6 @@ pserver.on('disconnect', function(id) {
 
 process.on('SIGINT', function() {
 	"use strict";
-	console.log(sent_usage);
 	var log1 = mp.pack(recv_usage);
 	var log2 = mp.pack(sent_usage);
 	fs.writeFileSync('node_recv.log', log1);

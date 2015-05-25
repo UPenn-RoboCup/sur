@@ -446,21 +446,33 @@
 				planRobot.foot.quaternion.copy(new THREE.Quaternion());
 			}
 			if(reset_ik){
-				var lhandPlan = planRobot.object.getObjectByName('L_TIP');
-				var lhandNow = robot.object.getObjectByName('L_TIP');
-				//var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
-				var invLHandNow = new THREE.Matrix4().getInverse(lhandNow.matrixWorld);
 
-				var TdiffL1 = new THREE.Matrix4().multiplyMatrices(invLHandNow, lhandPlan.matrixWorld);
-				var TdiffL = new THREE.Matrix4().getInverse(TdiffL1);
-				//var TdiffL = new THREE.Matrix4().multiplyMatrices(lhandNow.matrixWorld, invLHandPlan);
-				var dpL = new THREE.Vector3().setFromMatrixPosition(TdiffL);
-				var daL = new THREE.Quaternion().setFromRotationMatrix(TdiffL);
-				planRobot.lhand.position.copy(dpL);
-				planRobot.lhand.quaternion.copy(daL);
 
-				planRobot.rhand.position.set(0,0,0);
-				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+				if(ikBtn.getAttribute('data-hand')==='L_TIP'){
+					var lhandPlan = planRobot.object.getObjectByName('L_TIP');
+					var lhandNow = robot.object.getObjectByName('L_TIP');
+					//var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
+					var invLHandNow = new THREE.Matrix4().getInverse(lhandNow.matrixWorld);
+					var TdiffL1 = new THREE.Matrix4().multiplyMatrices(invLHandNow, lhandPlan.matrixWorld);
+					var TdiffL = new THREE.Matrix4().getInverse(TdiffL1);
+					//var TdiffL = new THREE.Matrix4().multiplyMatrices(lhandNow.matrixWorld, invLHandPlan);
+					var dpL = new THREE.Vector3().setFromMatrixPosition(TdiffL);
+					var daL = new THREE.Quaternion().setFromRotationMatrix(TdiffL);
+					planRobot.lhand.position.copy(dpL);
+					planRobot.lhand.quaternion.copy(daL);
+				} else {
+					var rhandPlan = planRobot.object.getObjectByName('R_TIP');
+					var rhandNow = robot.object.getObjectByName('R_TIP');
+					//var invRHandPlan = new THREE.Matrix4().getInverse(rhandPlan.matrixWorld);
+					var invRHandNow = new THREE.Matrix4().getInverse(rhandNow.matrixWorld);
+					var TdiffR1 = new THREE.Matrix4().multiplyMatrices(invRHandNow, rhandPlan.matrixWorld);
+					var TdiffR = new THREE.Matrix4().getInverse(TdiffR1);
+					//var TdiffL = new THREE.Matrix4().multiplyMatrices(rhandNow.matrixWorld, invRHandPlan);
+					var dpR = new THREE.Vector3().setFromMatrixPosition(TdiffR);
+					var daR = new THREE.Quaternion().setFromRotationMatrix(TdiffR);
+					planRobot.rhand.position.copy(dpR);
+					planRobot.rhand.quaternion.copy(daR);
+				}
 
 			}
 		});
