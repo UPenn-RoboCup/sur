@@ -611,7 +611,7 @@
 							via: 'jacobian_preplan',
 							weights: [0,1,0,1],
 							qLArm0: qLArm0,
-							qWaist0: sameWaist ? null : qWaist0,
+							qWaist0: qWaist0,
 							qArmGuess: sameLArm ? null : qLArm
 						};
 					}
@@ -622,7 +622,7 @@
 							via: 'jacobian_preplan',
 							weights: [0,1,0,1],
 							qRArm0: qRArm0,
-							qWaist0: sameWaist ? null : qWaist0,
+							qWaist0: qWaist0,
 							qArmGuess: sameRArm ? null : qRArm
 						};
 					}
