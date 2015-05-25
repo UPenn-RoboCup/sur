@@ -16,6 +16,8 @@ var restify = require('restify'),
   PeerServer = require('peer').PeerServer,
 	fs = require('fs');
 
+var sockets = [];
+
 /* Is this Needed? Seems so, to get JSON data posted. TODO: See why */
 server.use(restify.acceptParser(server.acceptable));
 // The query parser *may* have t from the AJAX lib used. May be useful
@@ -81,6 +83,7 @@ if (!USE_LOCALHOST && Config.net.ping) {
 
 /* Connect to the Arm Plan server - always on localhost :P */
 var armplan_skt = zmq.socket('req');
+sockets.push(armplan_skt);
 armplan_skt.connect('ipc:///tmp/'+'armplan');
 armplan_skt.http_responses = [];
 armplan_skt.on('message', function (msg) {
@@ -102,6 +105,7 @@ server.post('/armplan', function(req, res, next){
 /* Connect to the RPC server */
 var rpc = Config.net.rpc;
 var rpc_skt = zmq.socket('req');
+sockets.push(rpc_skt);
 //var robot_ip = Config.net.robot.wireless;
 
 if(USE_LOCALHOST){
@@ -329,6 +333,7 @@ for (var w in streams) {
 		zmq_recv_skt.subscribe('');
 		zmq_recv_skt.on('message', zmq_message);
 		zmq_recv_skt.sur_stream = b;
+		sockets.push(zmq_recv_skt);
 	}
 	/*
 	// Not actually used... Only for the field computer
@@ -363,9 +368,14 @@ pserver.on('disconnect', function(id) {
 
 process.on('SIGINT', function() {
 	"use strict";
-	//console.log(sent_usage);
-	mp.pack(sent_usage);
-	mp.pack(recv_usage);
+	console.log(sent_usage);
+	var log1 = mp.pack(recv_usage);
+	var log2 = mp.pack(sent_usage);
+	fs.writeFileSync('node_recv.log', log1);
+	fs.writeFileSync('node_sent.log', log2);
+	sockets.forEach(function(s){
+		s.close();
+	});
 //  socket.close();
   process.exit();
 });
