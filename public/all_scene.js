@@ -514,7 +514,7 @@
 			var lPlan = false, rPlan = false;
 			var h_accept, h_decline, h_done;
 			//var comWorldNow = robot.object.matrixWorld;
-			var comWorldPlan = robot.object.matrixWorld;
+			var comWorldPlan = planRobot.object.matrixWorld;
 			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
 			var invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
 
@@ -535,6 +535,8 @@
 										globalPose[0], globalPose[1], globalPose[2]),
 					]);
 					util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
+					//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
+					//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', globalPose);
 					break;
 				case 'step':
 					var p = planRobot.foot.position;
@@ -1018,7 +1020,7 @@
 					moveBtn.innerHTML = 'Undo';
 					ikBtn.innerHTML = '_';
 					// Tell the robot to go into teleop
-					util.shm('/fsm/Head/teleop', true);
+					//util.shm('/fsm/Head/teleop', true);
 					util.shm('/fsm/Arm/teleopraw', true);
 					break;
 			}
