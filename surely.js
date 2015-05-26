@@ -35,12 +35,10 @@ server.use(restify.dateParser());
 //server.use(restify.gzipResponse());
 
 // Load config from Lua
-/*
 var nodelua = require('nodelua');
 var lua = new nodelua.LuaState('config');
 var UPENNDEV_PATH = '../UPennDev';
 var Config = lua.doFileSync(UPENNDEV_PATH + '/include.lua');
-*/
 
 /*
 var sys = require('sys');
@@ -52,9 +50,11 @@ child_process.execSync("../UPennDev/packConfig.lua", function(error, stdout, std
 	Config = mp.unpack(stdout);
 });
 */
+/*
 //var str = require("fs").readFileSync("../UPennDev/include2.lua",{encoding:'utf8'})
 var buf = require("fs").readFileSync("./config.mp");
 var Config = mp.unpack(buf);
+*/
 //console.log(Config);
 
 var streams = Config.net.streams;
