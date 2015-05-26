@@ -1112,7 +1112,7 @@
 	var pillars = [];
 	function update_pillars(p){
 		pillars.forEach(function(p0){
-			scene.remove(p0);
+			robot.object.remove(p0);
 		});
 		pillars = [];
 		p.forEach(function(p0){
@@ -1120,7 +1120,7 @@
       	material = new THREE.MeshBasicMaterial({color: 0xffff00}),
       	cylinder = new THREE.Mesh(geometry, material);
       cylinder.position.set(p0[1]*1e3, 0, p0[0]*1e3);
-      scene.add(cylinder);
+      robot.object.add(cylinder);
 			pillars.push(cylinder);
 		});
 		//console.log(pillars);
