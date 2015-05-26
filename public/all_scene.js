@@ -1109,11 +1109,29 @@
 		});
 	}
 
+	var pillars = [];
+	function update_pillars(p){
+		pillars.forEach(function(p0){
+			scene.remove(p0);
+		});
+		pillars = [];
+		p.forEach(function(p0){
+			var geometry = new THREE.CylinderGeometry(15, 15, 10000),
+      	material = new THREE.MeshBasicMaterial({color: 0xffff00}),
+      	cylinder = new THREE.Mesh(geometry, material);
+      cylinder.position.set(p0[1]*1e3, 0, p0[0]*1e3);
+      scene.add(cylinder);
+			pillars.push(cylinder);
+		});
+		//console.log(pillars);
+	}
+
 	function setup_robot(port){
 		// Load the robot
 		robot = new ctx.Robot({
 			port: port,
 			name: 'dale',
+			update_pillars: update_pillars,
 			callback: function(){
 				scene.add(this);
 				// Add light from robot
