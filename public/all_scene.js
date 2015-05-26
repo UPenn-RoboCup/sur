@@ -201,13 +201,13 @@
 
 		// Save a set of meshes
 		if(mesh.name==='mesh0'){
-			var meshadd = document.querySelector('input#mesh0sel').checked;
-			if(meshadd){scene.add(mesh);}
+			var mesh0add = document.querySelector('input#mesh0sel').checked;
+			if(mesh0add){scene.add(mesh);}
 			mesh0.push(mesh);
 			if(mesh0.length > N_MESH0){ scene.remove(mesh0.shift()); }
 		} else if(mesh.name==='mesh1'){
-			var meshadd = document.querySelector('input#mesh1sel').checked;
-			if(meshadd){scene.add(mesh);}
+			var mesh1add = document.querySelector('input#mesh1sel').checked;
+			if(mesh1add){scene.add(mesh);}
 			mesh1.push(mesh);
 			if(mesh1.length > N_MESH1){ scene.remove(mesh1.shift()); }
 		} else if(mesh.name==='kinect'){
@@ -380,9 +380,19 @@
 
 	function setup_keys(){
 		var listener = new keypress.Listener();
-		listener.simple_combo("s", function(e) {
-			console.log('s', e);
-		});
+		function delta_walk(e){
+			var mat = planRobot.object.matrix.multiply(this);
+			planRobot.object.position.setFromMatrixPosition(mat);
+			planRobot.object.quaternion.setFromRotationMatrix(mat);
+		}
+		listener.simple_combo("i", delta_walk.bind(new THREE.Matrix4().makeTranslation(0,0,100)));
+		listener.simple_combo(",", delta_walk.bind(new THREE.Matrix4().makeTranslation(0,0,-100)));
+		listener.simple_combo("h", delta_walk.bind(new THREE.Matrix4().makeTranslation(100,0,0)));
+		listener.simple_combo(";", delta_walk.bind(new THREE.Matrix4().makeTranslation(-100,0,0)));
+		listener.simple_combo("j", delta_walk.bind(
+			new THREE.Matrix4().makeRotationY(10*util.DEG_TO_RAD)));
+		listener.simple_combo("l", delta_walk.bind(
+			new THREE.Matrix4().makeRotationY(-10*util.DEG_TO_RAD)));
 	}
 
 	function setup_buttons(){
