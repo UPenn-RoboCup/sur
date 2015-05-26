@@ -220,7 +220,6 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 					tcontrol.enableY = false;
 					tcontrol.enableZ = true;
 				}
-				// Continue as before
 			case 'ik':
 			case 'step':
 				// Switches between rotate/translate
@@ -426,7 +425,7 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 			}).then(function(){
 				goBtn.classList.remove('danger');
 			});
-			var prAccept = new Promise(function(resolve, reject) {
+			var prAccept = new Promise(function(resolve) {
 				h_accept = goBtn.addEventListener('click', function(e){
 					e.stopPropagation();
 					resolve();
@@ -1082,9 +1081,11 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		//
 		listener.simple_combo("2", function(){
 			util.shm('/Config/arm/init').then(function(cfg){
-				console.log(cfg);
+				return plan_arm(cfg[1]).then(function(valid){
+					return plan_arm(cfg[2]);
+				});
 			});
-			//return plan_arm(lPlan, rPlan).then(function(valid){});
+
 		});
 	}
 
