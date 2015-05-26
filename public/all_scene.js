@@ -381,6 +381,11 @@
 				switch(action){
 					case 'clear':
 						scene.remove(params.mesh);
+						params.mesh.geometry.dispose();
+						params.mesh.geometry = null;
+						params.mesh.material.dispose();
+						params.mesh.material = null;
+						params.mesh = null;
 						return;
 					case 'step':
 						var gfoot = planRobot.foot;
