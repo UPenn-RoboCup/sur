@@ -198,12 +198,16 @@
 		var mesh = new THREE.Mesh(geometry, material);
     mesh.name = mesh_obj.id;
     mesh.n_el = mesh_obj.n_el;
-		scene.add(mesh);
+
 		// Save a set of meshes
 		if(mesh.name==='mesh0'){
+			var meshadd = document.querySelector('input#mesh0sel').checked;
+			if(meshadd){scene.add(mesh);}
 			mesh0.push(mesh);
 			if(mesh0.length > N_MESH0){ scene.remove(mesh0.shift()); }
 		} else if(mesh.name==='mesh1'){
+			var meshadd = document.querySelector('input#mesh1sel').checked;
+			if(meshadd){scene.add(mesh);}
 			mesh1.push(mesh);
 			if(mesh1.length > N_MESH1){ scene.remove(mesh1.shift()); }
 		} else if(mesh.name==='kinect'){
@@ -387,10 +391,34 @@
 			moveBtn = document.querySelector('button#move'),
 			teleopBtn = document.querySelector('button#teleop'),
 			stepBtn = document.querySelector('button#step'),
-			ikBtn = document.querySelector('button#ik'),
-			jointSel = document.querySelector('select#joints');
+			ikBtn = document.querySelector('button#ik');
+		var jointSel = document.querySelector('select#joints'),
+			mesh0Sel = document.querySelector('input#mesh0sel'),
+			mesh1Sel = document.querySelector('input#mesh1sel');
 		allBtns = document.querySelectorAll('#topic button');
 
+		mesh0Sel.addEventListener('change', function(){
+			var is_add = this.checked;
+			mesh0.forEach(function(m){
+				if(is_add){
+					scene.add(m);
+				} else {
+					scene.remove(m);
+				}
+				//console.log(m);
+			});
+		});
+		mesh1Sel.addEventListener('change', function(){
+			var is_add = this.checked;
+			mesh1.forEach(function(m){
+				if(is_add){
+					scene.add(m);
+				} else {
+					scene.remove(m);
+				}
+				//console.log(m);
+			});
+		});
 
 		function resetLabels() {
 			for(var i = 0; i<allBtns.length; i+=1){
