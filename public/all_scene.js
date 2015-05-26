@@ -122,7 +122,14 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		}
 
 		// TODO: catch on bad plan or user cancel
-		return Promise.all(promises);
+		var prAll = Promise.all(promises);
+		prAll.stop = function(){
+			promises.forEach(function(pr){
+				if(pr && pr.h){pr.stop();}
+			});
+			return plans;
+		};
+		return prAll;
 	}
 
 	function reset_hands(){
@@ -401,57 +408,53 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		tcontrol.attach(planRobot.object);
 	}
 
-	function plan_arm(lPlan, rPlan){
+	function plan_arm(plan){
+		var success = true;
+		var h_accept, h_decline;
 		goBtn.innerHTML = 'Planning...';
 		goBtn.classList.add('danger');
-		return util.shm('/armplan', [lPlan, rPlan])
+		return util.shm('/armplan', plan)
 		.then(procPlan)
 		.then(function(plans){
-			goBtn.innerHTML = 'Playing...';
-			stepBtn.innerHTML = 'Decline';
-			return playPlan(plans);
-		}).then(function(valid){
 			goBtn.innerHTML = 'Accept';
-			return new Promise(function(resolve, reject) {
-				var h_accept, h_decline, h_done;
-				function finish_ask(){
-					// Remove the listeners
-					goBtn.removeEventListener('click', h_accept);
-					stepBtn.removeEventListener('click', h_decline);
-					ikBtn.removeEventListener('click', h_done);
-				}
-				// Go accepts and sends
+			stepBtn.innerHTML = 'Decline';
+			var prPlay = playPlan(plans);
+			prPlay.then(function(){
+				console.log('Finished playing');
+			}).catch(function(){
+				console.log('Interrupted playing');
+			}).then(function(){
+				goBtn.classList.remove('danger');
+			});
+			var prAccept = new Promise(function(resolve, reject) {
 				h_accept = goBtn.addEventListener('click', function(e){
 					e.stopPropagation();
-					goBtn.innerHTML = 'Sending...';
-					stepBtn.innerHTML = 'Wait...';
-					finish_ask();
-					resolve(valid);
-				});
-				// Step rejects
-				h_decline = stepBtn.addEventListener('click', function(e){
-					e.stopPropagation();
-					finish_ask();
-					reject('Declined');
-				});
-				// Done rejects
-				h_done = ikBtn.addEventListener('click', function(){
-					//e.stopPropagation();
-					finish_ask();
-					reject('Done IK Mode');
+					resolve();
 				});
 			});
-		}).catch(function(reason){
-			util.debug([reason]);
-			// Reset the arms
-			planRobot.meshes.forEach(function(m, i){
-				m.quaternion.copy(this[i].cquaternion);
-			}, robot.meshes);
-		}).then(function(valid){
-			goBtn.classList.remove('danger');
-			goBtn.innerHTML = 'Plan';
-			stepBtn.innerHTML = '_';
-			return valid;
+			var prDecline = new Promise(function(resolve, reject) {
+				h_decline = stepBtn.addEventListener('click', function(e){
+					e.stopPropagation();
+					reject();
+				});
+			});
+			return Promise.race([prAccept, prDecline]).catch(function(){
+				// Rejection goes here
+				// Reset the arms
+				planRobot.meshes.forEach(function(m, i){
+					m.quaternion.copy(this[i].cquaternion);
+				}, robot.meshes);
+				success = false;
+			}).then(function(){
+				console.log('Cleaning up');
+				goBtn.removeEventListener('click', h_accept);
+				goBtn.removeEventListener('click', h_decline);
+				goBtn.innerHTML = 'Plan';
+				stepBtn.innerHTML = '_';
+				console.log('Canceling playback');
+				var plans = prPlay.stop();
+				return success ? plans : false;
+			});
 		});
 	}
 
@@ -539,15 +542,17 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 			}
 		}
 
-		return plan_arm(lPlan, rPlan).then(function(valid){
-			console.log('Sending IK', valid);
-			if(!valid){return;};
+		return plan_arm({left: lPlan, right: rPlan}).then(function(plans){
+			console.log('Sending IK', plans);
+			if(!plans){return;}
+			// TODO: Set the final arm configs
+
 			return Promise.all([
-				valid[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
-				valid[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
-				valid[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
-				valid[0] ? util.shm('/shm/hcm/teleop/tflarm', lPlan.tr) : false,
-				valid[1] ? util.shm('/shm/hcm/teleop/tfrarm', rPlan.tr) : false
+				plans[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
+				plans[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
+				plans[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
+				plans[0] ? util.shm('/shm/hcm/teleop/tflarm', lPlan.tr) : false,
+				plans[1] ? util.shm('/shm/hcm/teleop/tfrarm', rPlan.tr) : false
 			]);
 		});
 	}
@@ -601,11 +606,9 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 			}
 		}
 
-		console.log('teleopraw',[lPlan, rPlan]);
-
-		return plan_arm(lPlan, rPlan).then(function(valid){
-			console.log('Sending Q', valid);
-			if(!valid){return;};
+		return plan_arm({left: lPlan, right: rPlan}).then(function(plans){
+			console.log('Sending Q', plans);
+			if(!plans){return;}
 			return Promise.all([
 				sameWaist ? true : util.shm('/shm/hcm/teleop/waist', qWaist),
 				sameLArm ? true : util.shm('/shm/hcm/teleop/larm', qLArm),
@@ -1077,14 +1080,12 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		listener.simple_combo("9", click_move);
 		//listener.simple_combo("escape", click_escape);
 		//
-		/*
 		listener.simple_combo("2", function(){
-			util.shm('/Config/arm/')
-			return plan_arm(lPlan, rPlan).then(function(valid){
-
+			util.shm('/Config/arm/init').then(function(cfg){
+				console.log(cfg);
 			});
+			//return plan_arm(lPlan, rPlan).then(function(valid){});
 		});
-		*/
 	}
 
 	function setup_buttons(){
@@ -1198,7 +1199,6 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		});
 	}
 
-	var pillars = [];
 	function update_pillars(p){
 		/*
 		pillars.forEach(function(p0){
@@ -1212,7 +1212,7 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		*/
 
 		p.forEach(function(p0, i){
-			var p_cyl = pillars[i], p_cyl;
+			var p_cyl = pillars[i];
 			if(!p_cyl){
 				var geometry = new THREE.CylinderGeometry(15, 15, 10000),
 					material = new THREE.MeshBasicMaterial({color: 0xffff00});

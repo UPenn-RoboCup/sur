@@ -71,23 +71,33 @@
 	}
 
 	// Promise to loop over an array and process each element at an interval
+
 	function loop(arr, proc, interval){
-		return new Promise(function(resolve, reject) {
-			if(!arr.entries){
-				reject();
-			}
+		var stop, h;
+		var pr = new Promise(function(resolve, reject) {
+			if(!arr.entries){ reject(); }
 			var ae = arr.entries();
-			var h = setInterval(function(){
-				var nxt = ae.next();
+			var nxt;
+			h = setInterval(function(){
+				nxt = ae.next();
 				if(nxt.done){
 					clearInterval(h);
-					resolve(true);
+					h = null;
+					resolve();
 				} else {
 					// value: [idx, val]
 					proc(nxt.value);
 				}
 			}, interval || 0);
+			stop = function(){
+				clearInterval(h);
+				h = null;
+				reject(nxt);
+			}
 		});
+		pr.stop = stop;
+		pr.h = h;
+		return pr;
 	}
 
 	// http://syzygy.st/javascript-coroutines/
