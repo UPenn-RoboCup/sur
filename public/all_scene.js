@@ -378,21 +378,88 @@
 
 	} // setup_clicks
 
+	function reset_hands(){
+		if(document.querySelector('button#ik').getAttribute('data-hand')==='L_TIP'){
+			var lhandPlan = planRobot.object.getObjectByName('L_TIP');
+			var lhandNow = robot.object.getObjectByName('L_TIP');
+			//var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
+			var invLHandNow = new THREE.Matrix4().getInverse(lhandNow.matrixWorld);
+			var TdiffL1 = new THREE.Matrix4().multiplyMatrices(invLHandNow, lhandPlan.matrixWorld);
+			var TdiffL = new THREE.Matrix4().getInverse(TdiffL1);
+			//var TdiffL = new THREE.Matrix4().multiplyMatrices(lhandNow.matrixWorld, invLHandPlan);
+			var dpL = new THREE.Vector3().setFromMatrixPosition(TdiffL);
+			var daL = new THREE.Quaternion().setFromRotationMatrix(TdiffL);
+			planRobot.lhand.position.copy(dpL);
+			planRobot.lhand.quaternion.copy(daL);
+		} else {
+			var rhandPlan = planRobot.object.getObjectByName('R_TIP');
+			var rhandNow = robot.object.getObjectByName('R_TIP');
+			//var invRHandPlan = new THREE.Matrix4().getInverse(rhandPlan.matrixWorld);
+			var invRHandNow = new THREE.Matrix4().getInverse(rhandNow.matrixWorld);
+			var TdiffR1 = new THREE.Matrix4().multiplyMatrices(invRHandNow, rhandPlan.matrixWorld);
+			var TdiffR = new THREE.Matrix4().getInverse(TdiffR1);
+			//var TdiffL = new THREE.Matrix4().multiplyMatrices(rhandNow.matrixWorld, invRHandPlan);
+			var dpR = new THREE.Vector3().setFromMatrixPosition(TdiffR);
+			var daR = new THREE.Quaternion().setFromRotationMatrix(TdiffR);
+			planRobot.rhand.position.copy(dpR);
+			planRobot.rhand.quaternion.copy(daR);
+		}
+	}
+
+	function delta_walk(){
+		if(getMode()!=='move'){ return; }
+		var mat = planRobot.object.matrix.multiply(this);
+		planRobot.object.position.setFromMatrixPosition(mat);
+		planRobot.object.quaternion.setFromRotationMatrix(mat);
+	}
+	function delta_hand(){
+		if(getMode()!=='ik'){ return; }
+		var hand;
+		if(document.querySelector('button#ik').getAttribute('data-hand')==='L_TIP'){
+			hand = planRobot.lhand;
+		} else {
+			hand = planRobot.rhand;
+		}
+		var mat = hand.matrix.multiply(this);
+		hand.position.setFromMatrixPosition(mat);
+		hand.quaternion.setFromRotationMatrix(mat);
+	}
 	function setup_keys(){
 		var listener = new keypress.Listener();
-		function delta_walk(e){
-			var mat = planRobot.object.matrix.multiply(this);
-			planRobot.object.position.setFromMatrixPosition(mat);
-			planRobot.object.quaternion.setFromRotationMatrix(mat);
-		}
-		listener.simple_combo("i", delta_walk.bind(new THREE.Matrix4().makeTranslation(0,0,100)));
-		listener.simple_combo(",", delta_walk.bind(new THREE.Matrix4().makeTranslation(0,0,-100)));
-		listener.simple_combo("h", delta_walk.bind(new THREE.Matrix4().makeTranslation(100,0,0)));
-		listener.simple_combo(";", delta_walk.bind(new THREE.Matrix4().makeTranslation(-100,0,0)));
+		listener.simple_combo("i", delta_walk.bind(
+			new THREE.Matrix4().makeTranslation(0,0,100)));
+		listener.simple_combo(",", delta_walk.bind(
+			new THREE.Matrix4().makeTranslation(0,0,-100)));
+		listener.simple_combo("h", delta_walk.bind(
+			new THREE.Matrix4().makeTranslation(100,0,0)));
+		listener.simple_combo(";", delta_walk.bind(
+			new THREE.Matrix4().makeTranslation(-100,0,0)));
 		listener.simple_combo("j", delta_walk.bind(
 			new THREE.Matrix4().makeRotationY(10*util.DEG_TO_RAD)));
 		listener.simple_combo("l", delta_walk.bind(
 			new THREE.Matrix4().makeRotationY(-10*util.DEG_TO_RAD)));
+		listener.simple_combo("k", function(){
+			planRobot.object.position.copy(robot.object.position);
+			planRobot.object.quaternion.copy(robot.object.quaternion);
+		});
+		//
+		listener.simple_combo("i", delta_hand.bind(
+			new THREE.Matrix4().makeTranslation(0,0,100)));
+		listener.simple_combo(",", delta_hand.bind(
+			new THREE.Matrix4().makeTranslation(0,0,-100)));
+		listener.simple_combo("h", delta_hand.bind(
+			new THREE.Matrix4().makeTranslation(100,0,0)));
+		listener.simple_combo(";", delta_hand.bind(
+			new THREE.Matrix4().makeTranslation(-100,0,0)));
+		listener.simple_combo("u", delta_hand.bind(
+			new THREE.Matrix4().makeTranslation(0,100,0)));
+		listener.simple_combo("m", delta_hand.bind(
+			new THREE.Matrix4().makeTranslation(0,-100,0)));
+		listener.simple_combo("j", delta_hand.bind(
+			new THREE.Matrix4().makeRotationY(10*util.DEG_TO_RAD)));
+		listener.simple_combo("l", delta_hand.bind(
+			new THREE.Matrix4().makeRotationY(-10*util.DEG_TO_RAD)));
+		listener.simple_combo("k", reset_hands);
 	}
 
 	function setup_buttons(){
@@ -487,34 +554,7 @@
 				planRobot.foot.quaternion.copy(new THREE.Quaternion());
 			}
 			if(reset_ik){
-
-
-				if(ikBtn.getAttribute('data-hand')==='L_TIP'){
-					var lhandPlan = planRobot.object.getObjectByName('L_TIP');
-					var lhandNow = robot.object.getObjectByName('L_TIP');
-					//var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
-					var invLHandNow = new THREE.Matrix4().getInverse(lhandNow.matrixWorld);
-					var TdiffL1 = new THREE.Matrix4().multiplyMatrices(invLHandNow, lhandPlan.matrixWorld);
-					var TdiffL = new THREE.Matrix4().getInverse(TdiffL1);
-					//var TdiffL = new THREE.Matrix4().multiplyMatrices(lhandNow.matrixWorld, invLHandPlan);
-					var dpL = new THREE.Vector3().setFromMatrixPosition(TdiffL);
-					var daL = new THREE.Quaternion().setFromRotationMatrix(TdiffL);
-					planRobot.lhand.position.copy(dpL);
-					planRobot.lhand.quaternion.copy(daL);
-				} else {
-					var rhandPlan = planRobot.object.getObjectByName('R_TIP');
-					var rhandNow = robot.object.getObjectByName('R_TIP');
-					//var invRHandPlan = new THREE.Matrix4().getInverse(rhandPlan.matrixWorld);
-					var invRHandNow = new THREE.Matrix4().getInverse(rhandNow.matrixWorld);
-					var TdiffR1 = new THREE.Matrix4().multiplyMatrices(invRHandNow, rhandPlan.matrixWorld);
-					var TdiffR = new THREE.Matrix4().getInverse(TdiffR1);
-					//var TdiffL = new THREE.Matrix4().multiplyMatrices(rhandNow.matrixWorld, invRHandPlan);
-					var dpR = new THREE.Vector3().setFromMatrixPosition(TdiffR);
-					var daR = new THREE.Quaternion().setFromRotationMatrix(TdiffR);
-					planRobot.rhand.position.copy(dpR);
-					planRobot.rhand.quaternion.copy(daR);
-				}
-
+				reset_hands();
 			}
 		});
 		goBtn.addEventListener('click', function(){
