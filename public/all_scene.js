@@ -20,7 +20,7 @@
 qLArm, qLArm0, sameLArm, qRArm, qRArm0, sameRArm,
 qWaist, qWaist0, sameWaist,
 sameLArmTF, sameRArmTF,
-comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
+comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 	function getMode() {
 		for(var i = 0; i<allBtns.length; i+=1){
@@ -87,7 +87,7 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		});
 	}
 
-	function playPlan(plans) {
+	function playPlan(paths) {
 		var true_hz = 120, subsample = 0.5, half_sec = Math.floor(true_hz * subsample),
 				speedup = 4, play_rate = Math.floor(1e3 * subsample / speedup);
 		// Guarantees 2 points
@@ -102,21 +102,21 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		}
 
 		var promises = [];
-		if(plans[0]){
+		if(paths[0]){
 			promises.push(
-				util.loop(plans[0].filter(halfsec), updatechain.bind(planRobot.IDS_LARM), play_rate));
+				util.loop(paths[0].filter(halfsec), updatechain.bind(planRobot.IDS_LARM), play_rate));
 		} else {
 			promises.push(false);
 		}
-		if(plans[1]){
+		if(paths[1]){
 			promises.push(
-				util.loop(plans[1].filter(halfsec), updatechain.bind(planRobot.IDS_RARM), play_rate));
+				util.loop(paths[1].filter(halfsec), updatechain.bind(planRobot.IDS_RARM), play_rate));
 		} else {
 			promises.push(false);
 		}
-		if(plans[2]){
+		if(paths[2]){
 			promises.push(
-				util.loop(plans[2].filter(halfsec), updatechain.bind(planRobot.IDS_WAIST), play_rate));
+				util.loop(paths[2].filter(halfsec), updatechain.bind(planRobot.IDS_WAIST), play_rate));
 		} else {
 			promises.push(false);
 		}
@@ -127,7 +127,7 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 			promises.forEach(function(pr){
 				if(pr && pr.h){pr.stop();}
 			});
-			return plans;
+			return paths;
 		};
 		return prAll;
 	}
@@ -412,16 +412,16 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		var h_accept, h_decline;
 		goBtn.innerHTML = 'Planning...';
 		goBtn.classList.add('danger');
-		return util.shm('/armplan', plan)
+		return util.shm('/armplan', plan || this)
 		.then(procPlan)
-		.then(function(plans){
+		.then(function(paths){
 			goBtn.innerHTML = 'Accept';
 			stepBtn.innerHTML = 'Decline';
-			var prPlay = playPlan(plans);
+			var prPlay = playPlan(paths);
 			prPlay.then(function(){
-				console.log('Finished playing');
-			}).catch(function(){
-				console.log('Interrupted playing');
+				//console.log('Finished playing');
+			}, function(){
+				//console.log('Interrupted playing');
 			}).then(function(){
 				goBtn.classList.remove('danger');
 			});
@@ -445,14 +445,14 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 				}, robot.meshes);
 				success = false;
 			}).then(function(){
-				console.log('Cleaning up');
+				//console.log('Cleaning up');
 				goBtn.removeEventListener('click', h_accept);
 				goBtn.removeEventListener('click', h_decline);
 				goBtn.innerHTML = 'Plan';
 				stepBtn.innerHTML = '_';
-				console.log('Canceling playback');
-				var plans = prPlay.stop();
-				return success ? plans : false;
+				//console.log('Canceling playback');
+				var paths = prPlay.stop();
+				return success ? paths : false;
 			});
 		});
 	}
@@ -541,17 +541,17 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 			}
 		}
 
-		return plan_arm({left: lPlan, right: rPlan}).then(function(plans){
-			console.log('Sending IK', plans);
-			if(!plans){return;}
+		return plan_arm({left: lPlan, right: rPlan}).then(function(paths){
+			console.log('Sending IK', paths);
+			if(!paths){return;}
 			// TODO: Set the final arm configs
 
 			return Promise.all([
-				plans[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
-				plans[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
-				plans[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
-				plans[0] ? util.shm('/shm/hcm/teleop/tflarm', lPlan.tr) : false,
-				plans[1] ? util.shm('/shm/hcm/teleop/tfrarm', rPlan.tr) : false
+				paths[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
+				paths[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
+				paths[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
+				paths[0] ? util.shm('/shm/hcm/teleop/tflarm', lPlan.tr) : false,
+				paths[1] ? util.shm('/shm/hcm/teleop/tfrarm', rPlan.tr) : false
 			]);
 		});
 	}
@@ -605,9 +605,9 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 			}
 		}
 
-		return plan_arm({left: lPlan, right: rPlan}).then(function(plans){
-			console.log('Sending Q', plans);
-			if(!plans){return;}
+		return plan_arm({left: lPlan, right: rPlan}).then(function(paths){
+			console.log('Sending Q', paths);
+			if(!paths){return;}
 			return Promise.all([
 				sameWaist ? true : util.shm('/shm/hcm/teleop/waist', qWaist),
 				sameLArm ? true : util.shm('/shm/hcm/teleop/larm', qLArm),
@@ -1080,13 +1080,47 @@ comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 		//listener.simple_combo("escape", click_escape);
 		//
 		listener.simple_combo("2", function(){
-			util.shm('/Config/arm/init').then(function(cfg){
-				return plan_arm(cfg[1]).then(function(valid){
-					return plan_arm(cfg[2]);
+			return util.shm('/Config/arm/init').then(function(cfg){
+				var i = 1; // Lua offsets...
+				var cfgPlan = cfg[i];
+				var prCfgPlan = plan_arm(cfgPlan);
+				while(cfgPlan) {
+					i += 1;
+					cfgPlan = cfg[i];
+					if(cfgPlan){
+						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan))
+					}
+				}
+				return prCfgPlan.then(function(){
+					console.log('All done the plan!');
+				}).catch(function(e){
+					console.log('oops', e);
 				});
 			});
-
 		});
+	}
+
+	function staged(paths){
+		console.log(paths);
+		// Find out joints
+		calculate_state();
+		var next = this;
+		// Actually just grab from the planRobot....
+		if(next.left){
+			next.left.qLArm0 = qLArm;
+		}
+		if(next.right){
+			next.right.qRArm0 = qRArm;
+		}
+		if(!next){return;}
+		console.log(next);
+		return new Promise(function(resolve, reject){
+			if(!paths){
+				reject();
+			} else {
+				resolve();
+			}
+		}).then(plan_arm.bind(next));
 	}
 
 	function setup_buttons(){
