@@ -132,7 +132,7 @@
 				// Set the MIME type and make URL for image tag
 				fr_metadata.data = e.data.slice(0, e.data.size, 'image/' + fr_metadata.c);
 				while (requests.length > 1) {
-					console.log('VideoFeed | Releasing frame requests for img');
+					//console.log('VideoFeed | Releasing frame requests for img');
 					frames.shift();
 					cancelAnimationFrame(requests.shift());
 				}
@@ -142,7 +142,7 @@
 				fr_metadata.data = e.data;
 				//console.log(requests.length);
 				while (requests.length > 0) {
-					console.log('VideoFeed | Releasing frame requests for raw');
+					//console.log('VideoFeed | Releasing frame requests for raw');
 					frames.shift();
 					cancelAnimationFrame(requests.shift());
 				}

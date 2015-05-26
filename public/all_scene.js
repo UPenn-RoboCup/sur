@@ -10,13 +10,70 @@
 		mesh0 = [], mesh1 = [], kinect = [],
 		N_MESH0 = 2, N_MESH1 = 2, N_KINECT = 1,
 		map_peers = [],
-		last_intersection = {t:0}, last_selected_parameters = null;
+		last_intersection = {t:0}, last_selected_parameters = null,
+		pillars = [],
+		resetBtn, goBtn, moveBtn, teleopBtn, stepBtn, ikBtn,
+		jointSel, mesh0Sel, mesh1Sel, allBtns;
+
+	// State variables
+	var qPlan, qNow, qHead, qHead0, sameHead,
+qLArm, qLArm0, sameLArm, qRArm, qRArm0, sameRArm,
+qWaist, qWaist0, sameWaist,
+sameLArmTF, sameRArmTF,
+comWorldPlan, comWorldNow, invComWorldNow, invComWorldPlan;
 
 	function getMode() {
 		for(var i = 0; i<allBtns.length; i+=1){
 			var btn = allBtns.item(i);
 			if(btn.innerHTML==='Done') { return btn.id; }
 		}
+	}
+
+	function resetLabels() {
+		for(var i = 0; i<allBtns.length; i+=1){
+			var btn = allBtns.item(i);
+			btn.innerHTML = btn.name;
+		}
+	}
+
+	function calculate_state(){
+		qPlan = planRobot.meshes.map(function(m, i){
+			var qDinv = this[i].clone().conjugate();
+			var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+			var e = new THREE.Euler().setFromQuaternion(q0);
+			return e.x;
+		}, planRobot.qDefault);
+		qNow = robot.meshes.map(function(m, i){
+			var qDinv = this[i].clone().conjugate();
+			var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+			var e = new THREE.Euler().setFromQuaternion(q0);
+			return e.x;
+		}, robot.qDefault);
+
+		qHead = qPlan.slice(0, 2);
+		qHead0 = qNow.slice(0, 2);
+		sameHead = util.same(qHead, qHead0, 1e-2);
+		//
+		qLArm = qPlan.slice(2, 9);
+		qLArm0 = qNow.slice(2, 9);
+		sameLArm = util.same(qLArm, qLArm0, 1e-2);
+		//
+		qRArm = qPlan.slice(21, 28);
+		qRArm0 = qNow.slice(21, 28);
+		sameRArm = util.same(qRArm, qRArm0, 1e-2);
+		//
+		qWaist = qPlan.slice(28, 30);
+		qWaist0 = qNow.slice(28, 30);
+		sameWaist = util.same(qWaist, qWaist0, 1e-2);
+		//
+		var I16 = new THREE.Matrix4().elements;
+		sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
+		sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
+		//
+		//var comWorldNow = robot.object.matrixWorld;
+		comWorldPlan = planRobot.object.matrixWorld;
+		invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
+		invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
 	}
 
 	function procPlan(plan) {
@@ -96,356 +153,568 @@
 		}
 	}
 
-	function go(){
-		var m = getMode();
-		if(!go){return;}
-		//console.log('go', m);
-		var qPlan = planRobot.meshes.map(function(m, i){
-			var qDinv = this[i].clone().conjugate();
-			var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
-			var e = new THREE.Euler().setFromQuaternion(q0);
-			return e.x;
-		}, planRobot.qDefault);
-		var qNow = robot.meshes.map(function(m, i){
-			var qDinv = this[i].clone().conjugate();
-			var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
-			var e = new THREE.Euler().setFromQuaternion(q0);
-			return e.x;
-		}, robot.qDefault);
+	function select_joint(){
+		if(getMode()!=='teleop'){ return; }
+		var motor = planRobot.object.getObjectByName(jointSel.value);
+		if(!motor){return;}
+		tcontrol.detach();
+		tcontrol.attach(motor);
+		return motor;
+	}
 
-		var qHead = qPlan.slice(0, 2);
-		var qHead0 = qNow.slice(0, 2);
-		var sameHead = util.same(qHead, qHead0, 1e-2);
-		//
-		var qLArm = qPlan.slice(2, 9);
-		var qLArm0 = qNow.slice(2, 9);
-		var sameLArm = util.same(qLArm, qLArm0, 1e-2);
-		//
-		var qRArm = qPlan.slice(21, 28);
-		var qRArm0 = qNow.slice(21, 28);
-		var sameRArm = util.same(qRArm, qRArm0, 1e-2);
-		//
-		var qWaist = qPlan.slice(28, 30);
-		var qWaist0 = qNow.slice(28, 30);
-		var sameWaist = util.same(qWaist, qWaist0, 1e-2);
-		//
-		var I16 = new THREE.Matrix4().elements;
-		var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
-		var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
-		//
-		var lPlan = false, rPlan = false;
-		var h_accept, h_decline, h_done;
-		//var comWorldNow = robot.object.matrixWorld;
-		var comWorldPlan = planRobot.object.matrixWorld;
-		var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
-		var invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
-
-		switch(m){
+	function click_step(){
+		switch(getMode()){
 			case 'move':
-				// Send the Waypoint
-				var Tdiff = new THREE.Matrix4().multiplyMatrices(invComWorldNow, comWorldPlan);
-				var dpL = new THREE.Vector3().setFromMatrixPosition(Tdiff);
-				var daL = new THREE.Euler().setFromRotationMatrix(Tdiff);
-				var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
-				var dpG = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
-				var daG = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
-				var globalPose = [dpG.z/1e3, dpG.x/1e3, daG.y];
-				util.debug([
-					sprintf("Local WP: %0.2f %0.2f %0.2f",
-									relPose[0], relPose[1], relPose[2]),
-					sprintf("Global WP: %0.2f %0.2f %0.2f",
-									globalPose[0], globalPose[1], globalPose[2]),
-				]);
-				//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
-				util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
-				//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', globalPose);
-				break;
-			case 'step':
-				var p = planRobot.foot.position;
-				var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
-				var zpr = [p.y/1e3, e.x, e.z];
-				var relpos = [p.z/1e3, p.x/1e3, e.y];
-				var supportFoot, supportText;
-				if(moveBtn.innerHTML==='Left'){
-					supportText = 'Left';
-					supportFoot = 1;
-				} else {
-					supportText = 'Right';
-					supportFoot = 0;
-				}
-				util.debug([
-					'Support: ' + supportText,
-					sprintf("relpos: %0.2f %0.2f %0.2f",
-									relpos[0], relpos[1], relpos[2]),
-					sprintf("zpr: %0.2f %0.2f %0.2f",
-									zpr[0], zpr[1]*util.RAD_TO_DEG, zpr[2]*util.RAD_TO_DEG),
-				]);
-				Promise.all([
-					util.shm('/shm/hcm/step/relpos', relpos),
-					util.shm('/shm/hcm/step/zpr', zpr),
-					util.shm('/shm/hcm/step/supportLeg', [supportFoot]),
-				]).then(function(){
-					util.shm('/fsm/Body/stepover1', true);
-				});
-				break;
 			case 'ik':
-				if(goBtn.innerHTML !== 'Plan'){
-					return;
-				}
-
-				// Always with respect to our com position.
-				if(sameLArmTF && sameRArmTF){
-					return;
-				}
-
-				//console.log('sameLArmTF', sameLArmTF);
-				//console.log('sameRArmTF', sameRArmTF);
-				// NOTE: Be careful between robots...
-				var rhand_com = new THREE.Matrix4().multiplyMatrices(
-					invComWorldPlan, planRobot.rhand.matrixWorld);
-				var lhand_com = new THREE.Matrix4().multiplyMatrices(
-					invComWorldPlan, planRobot.lhand.matrixWorld);
-				var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
-				var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
-				var rpyL = new THREE.Euler().setFromQuaternion(quatL);
-				var rpyR = new THREE.Euler().setFromQuaternion(quatR);
-				var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
-				var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
-				util.debug([
-					sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
-									pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
-									rpyL.z*RAD_TO_DEG, rpyL.x*RAD_TO_DEG, rpyL.y*RAD_TO_DEG),
-					sprintf("Right: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
-									pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
-									rpyR.z*RAD_TO_DEG, rpyR.x*RAD_TO_DEG, rpyR.y*RAD_TO_DEG),
-				]);
-				var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
-				var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
-
-				// Reset our position
-				planRobot.rhand.position.set(0,0,0);
-				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
-				planRobot.lhand.position.set(0,0,0);
-				planRobot.lhand.quaternion.copy(new THREE.Quaternion());
-
-				if(!sameLArmTF){
-					lPlan = {
-						tr: tfL,
-						timeout: 30,
-						via: 'jacobian_preplan',
-						weights: [0,1,0,1],
-						qLArm0: qLArm0,
-						qWaist0: qWaist0,
-						qArmGuess: sameLArm ? null : qLArm
-					};
-				}
-				if(!sameRArmTF){
-					rPlan = {
-						tr: tfR,
-						timeout: 30,
-						via: 'jacobian_preplan',
-						weights: [0,1,0,1],
-						qRArm0: qRArm0,
-						qWaist0: qWaist0,
-						qArmGuess: sameRArm ? null : qRArm
-					};
-				}
-
-				// Check if the waist moved:
-				if(!sameWaist){
-					//console.log('Not same waist!');
-					// Use the planned waist as the final guess
-					if (lPlan) {lPlan.qWaistGuess = qWaist;}
-					if (rPlan) {rPlan.qWaistGuess = qWaist;}
-					// Check which moved. If both, then the current selection
-					if(lPlan && rPlan){
-						if(ikBtn.getAttribute('data-hand')==='L_TIP'){
-							lPlan.via = 'jacobian_waist_preplan';
-						} else {
-							rPlan.via = 'jacobian_waist_preplan';
-						}
-					} else if (lPlan) {
-						lPlan.via = 'jacobian_waist_preplan';
-					} else {
-						rPlan.via = 'jacobian_waist_preplan';
-					}
-				}
-				//console.log([lPlan, rPlan]);
-				goBtn.innerHTML = 'Planning...';
-				goBtn.classList.add('danger');
-
-				// TODO: Check if the planner failed
-				util.shm('/armplan', [lPlan, rPlan])
-				.then(procPlan)
-				.then(function(plans){
-					goBtn.innerHTML = 'Playing...';
-					stepBtn.innerHTML = 'Decline';
-					return playPlan(plans);
-				}).then(function(valid){
-					goBtn.innerHTML = 'Accept';
-					return new Promise(function(resolve, reject) {
-						if(h_accept || h_decline || h_done){
-							reject();
-						}
-						// Go accepts and sends
-						h_accept = goBtn.addEventListener('click', function(e){
-							e.stopPropagation();
-							goBtn.innerHTML = 'Sending...';
-							stepBtn.innerHTML = 'Wait...';
-							resolve(valid);
-						});
-						// Step rejects
-						h_decline = stepBtn.addEventListener('click', function(e){
-							e.stopPropagation();
-							reject('Declined');
-						});
-						// Done rejects
-						h_done = ikBtn.addEventListener('click', function(e){
-							e.stopPropagation();
-							reject('Done IK Mode');
-						});
-					});
-				}).then(function(valid){
-					console.log('Sending IK');
-					return Promise.all([
-						valid[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
-						valid[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
-						valid[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
-						valid[0] ? util.shm('/shm/hcm/teleop/tflarm', tfL) : false,
-						valid[1] ? util.shm('/shm/hcm/teleop/tfrarm', tfR) : false
-					]);
-				}, function(reason){
-					util.debug([reason]);
-					// Reset the arms
-					planRobot.meshes.forEach(function(m, i){
-						m.quaternion.copy(this[i].cquaternion);
-					}, robot.meshes);
-					console.log('Rejection of plan', reason);
-				}).then(function(){
-					console.log('finishing');
-					// Remove the listeners
-					goBtn.removeEventListener('click', h_accept);
-					stepBtn.removeEventListener('click', h_decline);
-					ikBtn.removeEventListener('click', h_done);
-					h_accept = h_decline = h_done = null;
-					goBtn.classList.remove('danger');
-					goBtn.innerHTML = 'Plan';
-					stepBtn.innerHTML = '_';
-				});
-				break;
 			case 'teleop':
-				if(goBtn.innerHTML !== 'Plan'){
-					return;
-				}
-
-				if(!sameHead){util.shm('/shm/hcm/teleop/head', qHead);}
-
-				if(sameLArm && sameRArm && sameWaist){
-					return;
-				}
-
-				if(!sameLArm){
-					lPlan = {
-						q: qLArm,
-						timeout: 30,
-						via: 'joint_preplan',
-						qLArm0: qLArm0,
-						qWaist0: qWaist0
-					};
-				}
-				if(!sameRArm){
-					rPlan = {
-						q: qRArm,
-						timeout: 30,
-						via: 'joint_preplan',
-						qRArm0: qRArm0,
-						qWaist0: qWaist0
-					};
-				}
-				// Check if the waist moved:
-				if(!sameWaist){
-					//console.log('Not same waist!');
-					// Use the planned waist as the final guess
-					if(lPlan) {lPlan.qWaistGuess = qWaist;}
-					if(rPlan) {rPlan.qWaistGuess = qWaist;}
-					// Check which moved. If both, then the current selection
-					if(lPlan && rPlan){
-						// Does not matter, so use the left
-						lPlan.via = 'joint_waist_preplan';
-					} else if (lPlan) {
-						lPlan.via = 'joint_waist_preplan';
-					} else if (rPlan) {
-						rPlan.via = 'joint_waist_preplan';
-					} else {
-						console.log('Did not implement waist only joint level');
-					}
-				}
-
-				console.log([lPlan, rPlan]);
-				goBtn.innerHTML = 'Planning...';
-				goBtn.classList.add('danger');
-
-				// Send teleop
-				util.shm('/armplan', [lPlan, rPlan])
-				.then(procPlan)
-				.then(function(plans){
-					console.log('plans', plans);
-					return plans.map(function(p){return p.length>0;});
-				})
-				.then(function(valid){
-					return new Promise(function(resolve, reject) {
-						var success = (sameLArm || valid[0]) && (sameRArm || valid[1]);
-						if(!success){reject('Failed!');}
-						goBtn.innerHTML = 'Accept';
-						stepBtn.innerHTML = 'Decline';
-						// Go accepts and sends
-						h_accept = goBtn.addEventListener('click', function(){
-							resolve(valid);
-						});
-						// Step rejects
-						h_decline = stepBtn.addEventListener('click', function(){
-							goBtn.innerHTML = 'Plan';
-							stepBtn.innerHTML = '_';
-							reject(valid);
-						});
-						// Done rejects
-						h_done = ikBtn.addEventListener('click', function(){
-							goBtn.innerHTML = 'Plan';
-							stepBtn.innerHTML = '_';
-							reject(valid);
-						});
-					});
-				})
-				.then(function(){
-					return sameWaist || util.shm('/shm/hcm/teleop/waist', qWaist);
-				})
-				.then(function(){
-					// TODO: Grab a decision, via the promise
-					return Promise.all([
-						sameLArm || util.shm('/shm/hcm/teleop/larm', qLArm),
-						sameRArm || util.shm('/shm/hcm/teleop/rarm', qRArm)
-					]);
-				}).catch(function(reason){
-					util.debug([reason]);
-					// Reset the arms
-					planRobot.meshes.forEach(function(m, i){
-						m.quaternion.copy(this[i].cquaternion);
-					}, robot.meshes);
-					console.log('Rejection of plan', reason);
-				}).then(function(){
-					goBtn.innerHTML = 'Plan';
-					goBtn.classList.remove('danger');
-					// Remove the listeners
-					goBtn.removeEventListener('click', h_accept);
-					stepBtn.removeEventListener('click', h_decline);
-					ikBtn.removeEventListener('click', h_done);
-				});
-				break;
+				return;
+			case 'step':
+				tcontrol.detach();
+				resetLabels();
+				return;
 			default:
-				// Proceed
-				util.shm('/shm/hcm/state/proceed', [1]);
+				stepBtn.innerHTML = 'Done';
+				goBtn.innerHTML = 'Go';
+				teleopBtn.innerHTML = 'Rotate';
 				break;
 		}
+		var gfoot = planRobot.foot;
+		var lfoot = planRobot.object.getObjectByName('L_FOOT');
+		var rfoot = planRobot.object.getObjectByName('R_FOOT');
+		lfoot.remove(gfoot);
+		rfoot.remove(gfoot);
+		if(stepBtn.getAttribute('data-foot')==='L_FOOT'){
+			lfoot.add(gfoot);
+			moveBtn.innerHTML = 'Right';
+		} else {
+			rfoot.add(gfoot);
+			moveBtn.innerHTML = 'Left';
+		}
+		//console.log(rfoot);
+		tcontrol.detach();
+		tcontrol.attach(gfoot);
+		tcontrol.space = 'local';
+		tcontrol.setMode('translate');
+		tcontrol.enableX = true;
+		tcontrol.enableY = true;
+		tcontrol.enableZ = true;
+	}
+
+	function click_teleop(){
+		switch(getMode()){
+			case 'move':
+				if(teleopBtn.innerHTML==='Rotate'){
+					// Set the rotate methods
+					tcontrol.enableX = false;
+					tcontrol.enableY = true;
+					tcontrol.enableZ = false;
+				} else {
+					tcontrol.enableX = true;
+					tcontrol.enableY = false;
+					tcontrol.enableZ = true;
+				}
+				// Continue as before
+			case 'ik':
+			case 'step':
+				// Switches between rotate/translate
+				if(teleopBtn.innerHTML==='Rotate'){
+					teleopBtn.innerHTML = 'Translate';
+					tcontrol.setMode('rotate');
+				} else {
+					teleopBtn.innerHTML = 'Rotate';
+					tcontrol.setMode('translate');
+				}
+				return;
+			case 'teleop':
+				// In our mode, we just reset everything
+				tcontrol.detach();
+				tcontrol.enableY = true;
+				tcontrol.enableZ = true;
+				tcontrol.enableXYZE = true;
+				tcontrol.enableE = true;
+				resetLabels();
+				return;
+			default:
+				// Enter a new control mode
+				teleopBtn.innerHTML = 'Done';
+				stepBtn.innerHTML = 'Decline';
+				goBtn.innerHTML = 'Plan';
+				moveBtn.innerHTML = 'Undo';
+				ikBtn.innerHTML = '_';
+				// Tell the robot to go into teleop
+				//util.shm('/fsm/Head/teleop', true);
+				util.shm('/fsm/Arm/teleopraw', true);
+				break;
+		}
+		if(select_joint()){
+			tcontrol.setMode('rotate');
+			tcontrol.space = 'local';
+			tcontrol.enableY = false;
+			tcontrol.enableZ = false;
+			tcontrol.enableXYZE = false;
+			tcontrol.enableE = false;
+		}
+	}
+
+	function click_ik(){
+		switch(getMode()){
+			case 'move':
+			case 'teleop':
+			case 'teleop':
+			case 'step':
+				return;
+			case 'ik':
+				tcontrol.detach();
+				resetLabels();
+				return;
+			default:
+				ikBtn.innerHTML = 'Done';
+				goBtn.innerHTML = 'Plan';
+				stepBtn.innerHTML = '_';
+				teleopBtn.innerHTML = 'Rotate';
+				util.shm('/fsm/Arm/teleop', true);
+				break;
+		}
+		tcontrol.detach();
+		if(this.getAttribute('data-hand')==='L_TIP'){
+			tcontrol.attach(planRobot.lhand);
+			this.setAttribute('data-hand', 'L_TIP');
+			moveBtn.innerHTML = 'Right';
+		} else {
+			tcontrol.attach(planRobot.rhand);
+			this.setAttribute('data-hand', 'R_TIP');
+			moveBtn.innerHTML = 'Left';
+		}
+		tcontrol.space = 'local';
+		tcontrol.setMode('translate');
+		tcontrol.enableX = true;
+		tcontrol.enableY = true;
+		tcontrol.enableZ = true;
+	}
+
+	function click_reset(){
+		var reset_joints, reset_com, reset_step, reset_ik;
+		switch(getMode()){
+			case 'move':
+				reset_com = true;
+				break;
+			case 'teleop':
+				reset_joints = true;
+				break;
+			case 'step':
+				reset_step = true;
+				break;
+			case 'ik':
+				reset_ik = true;
+				//reset_joints = true;
+				break;
+			default:
+				// Reset All
+				reset_com = true;
+				reset_joints = true;
+				reset_step = true;
+				//reset_ik = true;
+				planRobot.lhand.position.set(0,0,0);
+				planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+				planRobot.rhand.position.set(0,0,0);
+				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+				break;
+		}
+		if(reset_joints){
+			planRobot.meshes.forEach(function(m, i){
+				m.quaternion.copy(this[i].cquaternion);
+			}, robot.meshes);
+		}
+		if(reset_com){
+			planRobot.object.position.copy(robot.object.position);
+			planRobot.object.quaternion.copy(robot.object.quaternion);
+		}
+		if(reset_step){
+			planRobot.foot.position.set(0,0,0);
+			planRobot.foot.quaternion.copy(new THREE.Quaternion());
+		}
+		if(reset_ik){
+			reset_hands();
+		}
+	}
+
+	function click_move(){
+		switch(getMode()){
+			case 'step':
+				var gfoot = planRobot.foot;
+				var lfoot = planRobot.object.getObjectByName('L_FOOT');
+				var rfoot = planRobot.object.getObjectByName('R_FOOT');
+				lfoot.remove(gfoot);
+				rfoot.remove(gfoot);
+				gfoot.position.set(0,0,0);
+				gfoot.quaternion.copy(new THREE.Quaternion());
+				// Change feet
+				if(stepBtn.getAttribute('data-foot')==='L_FOOT'){
+					stepBtn.setAttribute('data-foot', 'R_FOOT');
+					moveBtn.innerHTML = 'Left';
+					rfoot.add(gfoot);
+					gfoot.material.color.setHex(0xff0000);
+				} else {
+					stepBtn.setAttribute('data-foot', 'L_FOOT');
+					moveBtn.innerHTML = 'Right';
+					lfoot.add(gfoot);
+					gfoot.material.color.setHex(0xffff00);
+				}
+				return;
+			case 'ik':
+				// Switch hands
+				tcontrol.detach();
+				if(ikBtn.getAttribute('data-hand')==='L_TIP'){
+					ikBtn.setAttribute('data-hand', 'R_TIP');
+					tcontrol.attach(planRobot.rhand);
+					moveBtn.innerHTML = 'Left';
+				} else {
+					ikBtn.setAttribute('data-hand', 'L_TIP');
+					tcontrol.attach(planRobot.lhand);
+					moveBtn.innerHTML = 'Right';
+				}
+				return;
+			case 'teleop':
+				// Reset just one
+				var motor0 = robot.object.getObjectByName(jointSel.value);
+				var motor = planRobot.object.getObjectByName(jointSel.value);
+				motor.quaternion.copy(motor0.quaternion);
+				return;
+			case 'move':
+				tcontrol.detach();
+				tcontrol.enableY = true;
+				resetLabels();
+				return;
+			default:
+				moveBtn.innerHTML = 'Done';
+				goBtn.innerHTML = 'Go';
+				teleopBtn.innerHTML = 'Rotate';
+				break;
+		}
+
+		//planRobot.object.visible = true;
+		tcontrol.setMode('translate');
+		tcontrol.space = 'local';
+		tcontrol.enableX = true;
+		tcontrol.enableY = false;
+		tcontrol.enableZ = true;
+		tcontrol.attach(planRobot.object);
+	}
+
+	function go_ik(){
+		if(goBtn.innerHTML !== 'Plan'){
+			return;
+		}
+
+		// Always with respect to our com position.
+		if(sameLArmTF && sameRArmTF){
+			return;
+		}
+
+		//console.log('sameLArmTF', sameLArmTF);
+		//console.log('sameRArmTF', sameRArmTF);
+		// NOTE: Be careful between robots...
+		var rhand_com = new THREE.Matrix4().multiplyMatrices(
+			invComWorldPlan, planRobot.rhand.matrixWorld);
+		var lhand_com = new THREE.Matrix4().multiplyMatrices(
+			invComWorldPlan, planRobot.lhand.matrixWorld);
+		var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
+		var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
+		var rpyL = new THREE.Euler().setFromQuaternion(quatL);
+		var rpyR = new THREE.Euler().setFromQuaternion(quatR);
+		var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
+		var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
+		util.debug([
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
+							rpyL.z*RAD_TO_DEG, rpyL.x*RAD_TO_DEG, rpyL.y*RAD_TO_DEG),
+			sprintf("Right: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
+							rpyR.z*RAD_TO_DEG, rpyR.x*RAD_TO_DEG, rpyR.y*RAD_TO_DEG),
+		]);
+		var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
+		var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
+
+		// Reset our position
+		planRobot.rhand.position.set(0,0,0);
+		planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+		planRobot.lhand.position.set(0,0,0);
+		planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+
+		var lPlan, rPlan;
+		if(!sameLArmTF){
+			lPlan = {
+				tr: tfL,
+				timeout: 30,
+				via: 'jacobian_preplan',
+				weights: [0,1,0,1],
+				qLArm0: qLArm0,
+				qWaist0: qWaist0,
+				qArmGuess: sameLArm ? null : qLArm
+			};
+		}
+		if(!sameRArmTF){
+			rPlan = {
+				tr: tfR,
+				timeout: 30,
+				via: 'jacobian_preplan',
+				weights: [0,1,0,1],
+				qRArm0: qRArm0,
+				qWaist0: qWaist0,
+				qArmGuess: sameRArm ? null : qRArm
+			};
+		}
+
+		// Check if the waist moved:
+		if(!sameWaist){
+			//console.log('Not same waist!');
+			// Use the planned waist as the final guess
+			if (lPlan) {lPlan.qWaistGuess = qWaist;}
+			if (rPlan) {rPlan.qWaistGuess = qWaist;}
+			// Check which moved. If both, then the current selection
+			if(lPlan && rPlan){
+				if(ikBtn.getAttribute('data-hand')==='L_TIP'){
+					lPlan.via = 'jacobian_waist_preplan';
+				} else {
+					rPlan.via = 'jacobian_waist_preplan';
+				}
+			} else if (lPlan) {
+				lPlan.via = 'jacobian_waist_preplan';
+			} else {
+				rPlan.via = 'jacobian_waist_preplan';
+			}
+		}
+		//console.log([lPlan, rPlan]);
+		goBtn.innerHTML = 'Planning...';
+		goBtn.classList.add('danger');
+
+		var h_accept, h_decline, h_done;
+		// TODO: Check if the planner failed
+		return util.shm('/armplan', [lPlan, rPlan])
+		.then(procPlan)
+		.then(function(plans){
+			goBtn.innerHTML = 'Playing...';
+			stepBtn.innerHTML = 'Decline';
+			return playPlan(plans);
+		}).then(function(valid){
+			goBtn.innerHTML = 'Accept';
+			return new Promise(function(resolve, reject) {
+				//if(h_accept || h_decline || h_done){ reject(); }
+				// Go accepts and sends
+				h_accept = goBtn.addEventListener('click', function(e){
+					e.stopPropagation();
+					goBtn.innerHTML = 'Sending...';
+					stepBtn.innerHTML = 'Wait...';
+					resolve(valid);
+				});
+				// Step rejects
+				h_decline = stepBtn.addEventListener('click', function(e){
+					e.stopPropagation();
+					reject('Declined');
+				});
+				// Done rejects
+				h_done = ikBtn.addEventListener('click', function(e){
+					e.stopPropagation();
+					reject('Done IK Mode');
+				});
+			});
+		}).then(function(valid){
+			console.log('Sending IK');
+			return Promise.all([
+				valid[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
+				valid[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
+				valid[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
+				valid[0] ? util.shm('/shm/hcm/teleop/tflarm', tfL) : false,
+				valid[1] ? util.shm('/shm/hcm/teleop/tfrarm', tfR) : false
+			]);
+		}, function(reason){
+			util.debug([reason]);
+			// Reset the arms
+			planRobot.meshes.forEach(function(m, i){
+				m.quaternion.copy(this[i].cquaternion);
+			}, robot.meshes);
+			console.log('Rejection of plan', reason);
+		}).then(function(){
+			console.log('finishing');
+			// Remove the listeners
+			goBtn.removeEventListener('click', h_accept);
+			stepBtn.removeEventListener('click', h_decline);
+			ikBtn.removeEventListener('click', h_done);
+			h_accept = h_decline = h_done = null;
+			goBtn.classList.remove('danger');
+			goBtn.innerHTML = 'Plan';
+			stepBtn.innerHTML = '_';
+		});
+	}
+
+	function go_teleop(){
+		if(goBtn.innerHTML !== 'Plan'){
+			return;
+		}
+
+		if(!sameHead){util.shm('/shm/hcm/teleop/head', qHead);}
+
+		if(sameLArm && sameRArm && sameWaist){
+			return;
+		}
+
+		var lPlan = false, rPlan = false;
+		if(!sameLArm){
+			lPlan = {
+				q: qLArm,
+				timeout: 30,
+				via: 'joint_preplan',
+				qLArm0: qLArm0,
+				qWaist0: qWaist0
+			};
+		}
+		if(!sameRArm){
+			rPlan = {
+				q: qRArm,
+				timeout: 30,
+				via: 'joint_preplan',
+				qRArm0: qRArm0,
+				qWaist0: qWaist0
+			};
+		}
+		// Check if the waist moved:
+		if(!sameWaist){
+			//console.log('Not same waist!');
+			// Use the planned waist as the final guess
+			if(lPlan) {lPlan.qWaistGuess = qWaist;}
+			if(rPlan) {rPlan.qWaistGuess = qWaist;}
+			// Check which moved. If both, then the current selection
+			if(lPlan && rPlan){
+				// Does not matter, so use the left
+				lPlan.via = 'joint_waist_preplan';
+			} else if (lPlan) {
+				lPlan.via = 'joint_waist_preplan';
+			} else if (rPlan) {
+				rPlan.via = 'joint_waist_preplan';
+			} else {
+				console.log('Did not implement waist only joint level');
+			}
+		}
+
+		console.log([lPlan, rPlan]);
+		goBtn.innerHTML = 'Planning...';
+		goBtn.classList.add('danger');
+
+		// Send teleop
+		var h_accept, h_decline, h_done;
+		return util.shm('/armplan', [lPlan, rPlan])
+		.then(procPlan)
+		.then(function(plans){
+			console.log('plans', plans);
+			return plans.map(function(p){return p.length>0;});
+		})
+		.then(function(valid){
+			return new Promise(function(resolve, reject) {
+				var success = (sameLArm || valid[0]) && (sameRArm || valid[1]);
+				if(!success){reject('Failed!');}
+				goBtn.innerHTML = 'Accept';
+				stepBtn.innerHTML = 'Decline';
+				// Go accepts and sends
+				h_accept = goBtn.addEventListener('click', function(){
+					resolve(valid);
+				});
+				// Step rejects
+				h_decline = stepBtn.addEventListener('click', function(){
+					goBtn.innerHTML = 'Plan';
+					stepBtn.innerHTML = '_';
+					reject(valid);
+				});
+				// Done rejects
+				h_done = ikBtn.addEventListener('click', function(){
+					goBtn.innerHTML = 'Plan';
+					stepBtn.innerHTML = '_';
+					reject(valid);
+				});
+			});
+		})
+		.then(function(){
+			return sameWaist || util.shm('/shm/hcm/teleop/waist', qWaist);
+		})
+		.then(function(){
+			// TODO: Grab a decision, via the promise
+			return Promise.all([
+				sameLArm || util.shm('/shm/hcm/teleop/larm', qLArm),
+				sameRArm || util.shm('/shm/hcm/teleop/rarm', qRArm)
+			]);
+		}).catch(function(reason){
+			util.debug([reason]);
+			// Reset the arms
+			planRobot.meshes.forEach(function(m, i){
+				m.quaternion.copy(this[i].cquaternion);
+			}, robot.meshes);
+			console.log('Rejection of plan', reason);
+		}).then(function(){
+			goBtn.innerHTML = 'Plan';
+			goBtn.classList.remove('danger');
+			// Remove the listeners
+			goBtn.removeEventListener('click', h_accept);
+			stepBtn.removeEventListener('click', h_decline);
+			ikBtn.removeEventListener('click', h_done);
+		});
+	}
+
+	function go_move(){
+		var Tdiff = new THREE.Matrix4().multiplyMatrices(invComWorldNow, comWorldPlan);//
+		var dpL = new THREE.Vector3().setFromMatrixPosition(Tdiff);
+		var daL = new THREE.Euler().setFromRotationMatrix(Tdiff);
+		//
+		var dpG = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
+		var daG = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
+		//
+		var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
+		var globalPose = [dpG.z/1e3, dpG.x/1e3, daG.y];
+		util.debug([
+			sprintf("Local WP: %0.2f %0.2f %0.2f",
+							relPose[0], relPose[1], relPose[2]),
+			sprintf("Global WP: %0.2f %0.2f %0.2f",
+							globalPose[0], globalPose[1], globalPose[2]),
+		]);
+		//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
+		return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
+	}
+
+	function go_step(){
+		var p = planRobot.foot.position;
+		var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
+		var zpr = [p.y/1e3, e.x, e.z];
+		var relpos = [p.z/1e3, p.x/1e3, e.y];
+		var supportFoot = moveBtn.innerHTML==='Left' ? 1 : 0;
+		util.debug([
+			'Support: ' + moveBtn.innerHTML,
+			sprintf("relpos: %0.2f %0.2f %0.2f",
+							relpos[0], relpos[1], relpos[2]),
+			sprintf("zpr: %0.2f %0.2f %0.2f",
+							zpr[0], zpr[1]*util.RAD_TO_DEG, zpr[2]*util.RAD_TO_DEG),
+		]);
+		return Promise.all([
+			util.shm('/shm/hcm/step/relpos', relpos),
+			util.shm('/shm/hcm/step/zpr', zpr),
+			util.shm('/shm/hcm/step/supportLeg', [supportFoot]),
+		]).then(function(){
+			util.shm('/fsm/Body/stepover1', true);
+		});
+	}
+
+	var go_promises = {
+		move: go_move,
+		step: go_step,
+		ik: go_ik,
+		teleop: go_teleop,
+	};
+
+	function click_go(){
+		var m = getMode();
+		if(!m){return;}
+		var f = go_promises[m];
+		if(!f){return;}
+		calculate_state();
+		return f();
+		//util.shm('/shm/hcm/state/proceed', [1]);
 	}
 
   var describe = {
@@ -558,8 +827,8 @@
 		}
 	}
 
-	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
+		// Adds THREE buffer geometry from triangulated mesh to the scene
 		var geometry = new THREE.BufferGeometry(),
 			//material = new THREE.MeshPhongMaterial({
       material = new THREE.MeshBasicMaterial({
@@ -622,7 +891,7 @@
 			kinect.push(mesh);
 			if(kinect.length > N_KINECT){ scene.remove(kinect.shift()); }
 		}
-	} // process_mesh
+	}
 
 	function setup_clicks(){
 		// Object selection
@@ -789,7 +1058,7 @@
 			menu.addEventListener('click', handleRightClick);
 		}
 
-	} // setup_clicks
+	}
 
 	function delta_walk(){
 		if(getMode()!=='move'){ return; }
@@ -846,11 +1115,13 @@
 			new THREE.Matrix4().makeRotationY(-5*util.DEG_TO_RAD)));
 		listener.simple_combo("k", reset_hands);
 		//
-		listener.simple_combo("space", go);
+		listener.simple_combo("space", click_go);
+		listener.simple_combo("backspace", click_reset);
+		listener.simple_combo("9", click_move);
+		//listener.simple_combo("escape", click_escape);
+
 	}
 
-	var resetBtn, goBtn, moveBtn, teleopBtn, stepBtn, ikBtn,
-			jointSel, mesh0Sel, mesh1Sel, allBtns;
 	function setup_buttons(){
 		resetBtn = document.querySelector('button#reset');
 		goBtn = document.querySelector('button#go');
@@ -864,18 +1135,17 @@
 		allBtns = document.querySelectorAll('#topic button');
 
 		mesh0Sel.addEventListener('change', function(){
-			var is_add = this.checked;
+			var is_add = mesh0Sel.checked;
 			mesh0.forEach(function(m){
 				if(is_add){
 					scene.add(m);
 				} else {
 					scene.remove(m);
 				}
-				//console.log(m);
 			});
 		});
 		mesh1Sel.addEventListener('change', function(){
-			var is_add = this.checked;
+			var is_add = mesh1Sel.checked;
 			mesh1.forEach(function(m){
 				if(is_add){
 					scene.add(m);
@@ -886,285 +1156,16 @@
 			});
 		});
 
-		function resetLabels() {
-			for(var i = 0; i<allBtns.length; i+=1){
-				var btn = allBtns.item(i);
-				btn.innerHTML = btn.name;
-			}
-		}
-
-		jointSel.addEventListener('change', function(){
-			if(getMode()!=='teleop'){ return; }
-			var motor = planRobot.object.getObjectByName(this.value);
-			if(!motor){return;}
-			tcontrol.detach();
-			tcontrol.attach(motor);
-		});
-
-		resetBtn.addEventListener('click', function(){
-			var reset_joints, reset_com, reset_step, reset_ik;
-			switch(getMode()){
-				case 'move':
-					reset_com = true;
-					break;
-				case 'teleop':
-					reset_joints = true;
-					break;
-				case 'step':
-					reset_step = true;
-					break;
-				case 'ik':
-					reset_ik = true;
-					//reset_joints = true;
-					break;
-				default:
-					// Reset All
-					reset_com = true;
-					reset_joints = true;
-					reset_step = true;
-					//reset_ik = true;
-					planRobot.lhand.position.set(0,0,0);
-					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
-					planRobot.rhand.position.set(0,0,0);
-					planRobot.rhand.quaternion.copy(new THREE.Quaternion());
-					break;
-			}
-			if(reset_joints){
-				planRobot.meshes.forEach(function(m, i){
-					m.quaternion.copy(this[i].cquaternion);
-				}, robot.meshes);
-			}
-			if(reset_com){
-				planRobot.object.position.copy(robot.object.position);
-				planRobot.object.quaternion.copy(robot.object.quaternion);
-			}
-			if(reset_step){
-				planRobot.foot.position.set(0,0,0);
-				planRobot.foot.quaternion.copy(new THREE.Quaternion());
-			}
-			if(reset_ik){
-				reset_hands();
-			}
-		});
-		goBtn.addEventListener('click', go);
-
-		moveBtn.addEventListener('click', function(){
-			switch(getMode()){
-				case 'step':
-					var gfoot = planRobot.foot;
-					var lfoot = planRobot.object.getObjectByName('L_FOOT');
-					var rfoot = planRobot.object.getObjectByName('R_FOOT');
-					lfoot.remove(gfoot);
-					rfoot.remove(gfoot);
-					if(this.innerHTML==='Right'){
-						this.innerHTML = 'Left';
-						rfoot.add(gfoot);
-						stepBtn.setAttribute('data-foot', 'R_FOOT');
-						gfoot.material.color.setHex(0xff0000);
-					} else {
-						this.innerHTML = 'Right';
-						lfoot.add(gfoot);
-						stepBtn.setAttribute('data-foot', 'L_FOOT');
-						gfoot.material.color.setHex(0xffff00);
-					}
-					gfoot.position.set(0,0,0);
-					gfoot.quaternion.copy(new THREE.Quaternion());
-					return;
-				case 'ik':
-					// Switch hands
-					tcontrol.detach();
-					if(ikBtn.getAttribute('data-hand')==='L_TIP'){
-						ikBtn.setAttribute('data-hand', 'R_TIP');
-						tcontrol.attach(planRobot.rhand);
-						moveBtn.innerHTML = 'Left';
-					} else {
-						ikBtn.setAttribute('data-hand', 'L_TIP');
-						tcontrol.attach(planRobot.lhand);
-						moveBtn.innerHTML = 'Right';
-					}
-					return;
-				case 'teleop':
-					// Reset just one
-					var motor0 = robot.object.getObjectByName(jointSel.value);
-					var motor = planRobot.object.getObjectByName(jointSel.value);
-					motor.quaternion.copy(motor0.quaternion);
-					return;
-				case 'move':
-					tcontrol.detach();
-					tcontrol.enableY = true;
-					resetLabels();
-					return;
-				default:
-					this.innerHTML = 'Done';
-					goBtn.innerHTML = 'Go';
-					teleopBtn.innerHTML = 'Rotate';
-					break;
-			}
-
-			//planRobot.object.visible = true;
-			tcontrol.setMode('translate');
-			tcontrol.space = 'local';
-			tcontrol.enableX = true;
-			tcontrol.enableY = false;
-			tcontrol.enableZ = true;
-			tcontrol.attach(planRobot.object);
-		});
-
-		stepBtn.addEventListener('click', function(){
-			switch(getMode()){
-				case 'move':
-				case 'ik':
-					if(goBtn.innerHTML === 'Accept'){
-						// We accepted a plan...
-						goBtn.innerHTML = 'Plan';
-						return;
-					}
-					return;
-				case 'teleop':
-					if(goBtn.innerHTML === 'Accept'){
-						// We accepted a plan...
-						goBtn.innerHTML = 'Plan';
-					}
-					return;
-				case 'step':
-					tcontrol.detach();
-					resetLabels();
-					return;
-				default:
-					this.innerHTML = 'Done';
-					goBtn.innerHTML = 'Go';
-					teleopBtn.innerHTML = 'Rotate';
-					break;
-			}
-			var gfoot = planRobot.foot;
-			var lfoot = planRobot.object.getObjectByName('L_FOOT');
-			var rfoot = planRobot.object.getObjectByName('R_FOOT');
-			lfoot.remove(gfoot);
-			rfoot.remove(gfoot);
-			if(this.getAttribute('data-foot')==='L_FOOT'){
-				lfoot.add(gfoot);
-				this.setAttribute('data-foot', 'L_FOOT');
-				moveBtn.innerHTML = 'Right';
-			} else {
-				rfoot.add(gfoot);
-				this.setAttribute('data-foot', 'R_FOOT');
-				moveBtn.innerHTML = 'Left';
-			}
-			//console.log(rfoot);
-			tcontrol.detach();
-			tcontrol.attach(gfoot);
-			tcontrol.space = 'local';
-			tcontrol.setMode('translate');
-			tcontrol.enableX = true;
-			tcontrol.enableY = true;
-			tcontrol.enableZ = true;
-		});
-
-		ikBtn.addEventListener('click', function(){
-			switch(getMode()){
-				case 'move':
-				case 'teleop':
-				case 'teleop':
-				case 'step':
-					// These don't do anything...
-					return;
-				case 'ik':
-					// In our mode, we just reset everything
-					tcontrol.detach();
-					resetLabels();
-					return;
-				default:
-					// Enter a new control mode
-					ikBtn.innerHTML = 'Done';
-					goBtn.innerHTML = 'Plan';
-					stepBtn.innerHTML = '_';
-					teleopBtn.innerHTML = 'Rotate';
-					// Tell the robot to go into teleop mode
-					util.shm('/fsm/Arm/teleop', true);
-					break;
-			}
-			tcontrol.detach();
-			if(this.getAttribute('data-hand')==='L_TIP'){
-				tcontrol.attach(planRobot.lhand);
-				this.setAttribute('data-hand', 'L_TIP');
-				moveBtn.innerHTML = 'Right';
-			} else {
-				tcontrol.attach(planRobot.rhand);
-				this.setAttribute('data-hand', 'R_TIP');
-				moveBtn.innerHTML = 'Left';
-			}
-			tcontrol.space = 'local';
-			tcontrol.setMode('translate');
-			tcontrol.enableX = true;
-			tcontrol.enableY = true;
-			tcontrol.enableZ = true;
-		});
-
-		teleopBtn.addEventListener('click', function(){
-			switch(getMode()){
-				case 'move':
-					// Switches between rotate/translate
-					if(this.innerHTML==='Rotate'){
-						tcontrol.setMode('rotate');
-						tcontrol.enableX = false;
-						tcontrol.enableY = true;
-						tcontrol.enableZ = false;
-						this.innerHTML = 'Translate';
-					} else if(this.innerHTML === 'Translate') {
-						tcontrol.setMode('translate');
-						tcontrol.enableX = true;
-						tcontrol.enableY = false;
-						tcontrol.enableZ = true;
-						this.innerHTML = 'Rotate';
-					}
-					return;
-				case 'ik':
-				case 'step':
-					// Switches between rotate/translate
-					if(this.innerHTML==='Rotate'){
-						tcontrol.setMode('rotate');
-						this.innerHTML = 'Translate';
-					} else if(this.innerHTML==='Translate') {
-						tcontrol.setMode('translate');
-						this.innerHTML = 'Rotate';
-					}
-					return;
-				case 'teleop':
-					// In our mode, we just reset everything
-					tcontrol.detach();
-					tcontrol.enableY = true;
-					tcontrol.enableZ = true;
-					tcontrol.enableXYZE = true;
-					tcontrol.enableE = true;
-					resetLabels();
-					return;
-				default:
-					// Enter a new control mode
-					this.innerHTML = 'Done';
-					stepBtn.innerHTML = 'Decline';
-					goBtn.innerHTML = 'Plan';
-					moveBtn.innerHTML = 'Undo';
-					ikBtn.innerHTML = '_';
-					// Tell the robot to go into teleop
-					//util.shm('/fsm/Head/teleop', true);
-					util.shm('/fsm/Arm/teleopraw', true);
-					break;
-			}
-			var motor = planRobot.object.getObjectByName(jointSel.value);
-			if (motor) {
-				tcontrol.setMode('rotate');
-				tcontrol.space = 'local';
-				tcontrol.enableY = false;
-				tcontrol.enableZ = false;
-				tcontrol.enableXYZE = false;
-				tcontrol.enableE = false;
-				tcontrol.attach(motor);
-			}
-		});
+		jointSel.addEventListener('change', select_joint);
+		resetBtn.addEventListener('click', click_reset);
+		goBtn.addEventListener('click', click_go);
+		moveBtn.addEventListener('click', click_move);
+		stepBtn.addEventListener('click', click_step);
+		ikBtn.addEventListener('click', click_ik);
+		teleopBtn.addEventListener('click', click_teleop);
 
 	}
 
-	// Add the camera view and append
 	function setup3d() {
 		scene = new THREE.Scene();
     raycaster = new THREE.Raycaster();
@@ -1208,7 +1209,7 @@
 			renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
 		}, false);
 		animate();
-	} //done 3d
+	}
 
 	function setup_rtc(){
 		var peer_id = 'all_scene';
@@ -1232,7 +1233,6 @@
 		});
 	}
 
-	var pillars = [];
 	function update_pillars(p){
 		pillars.forEach(function(p0){
 			robot.object.remove(p0);
@@ -1333,7 +1333,6 @@
 		});
 	}
 
-	// Constantly animate the scene
 	function animate() {
 		if (controls) { controls.update(); }
 		if (tcontrol) { tcontrol.update(); }
