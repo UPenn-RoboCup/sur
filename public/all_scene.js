@@ -21,6 +21,17 @@
 	}
 
 	function procPlan(plan) {
+		return new Promise(function(resolve, reject) {
+			if(!plan){reject();}
+			var lplan = plan[0].length ? plan[0] : false;
+			var rplan = plan[1].length ? plan[1] : false;
+			var wplan = plan[2].length ? plan[1] : false;
+			if(!lplan && !rplan && !wplan){reject();}
+			resolve([lplan, rplan, wplan]);
+		});
+	}
+
+	function playPlan(plans) {
 		var true_hz = 120, subsample = 0.5, half_sec = Math.floor(true_hz * subsample),
 				speedup = 4, play_rate = Math.floor(1e3 * subsample / speedup);
 		// Guarantees 2 points
@@ -34,26 +45,56 @@
 			});
 		}
 
-		var lplan = plan[0].length ? plan[0] : [],
-				rplan = plan[1].length ? plan[1] : [],
-				wplan = plan[2].length ? plan[2] : [];
-
-		lplan = lplan.filter(halfsec);
-		rplan = rplan.filter(halfsec);
-		wplan = wplan.filter(halfsec);
-
-		/*
-		console.log('lplan', lplan);
-		console.log('rplan', rplan);
-		console.log('wplan', wplan);
-		*/
+		var promises = [];
+		if(plans[0]){
+			promises.push(
+				util.loop(plans[0].filter(halfsec), updatechain.bind(planRobot.IDS_LARM), play_rate));
+		} else {
+			promises.push(false);
+		}
+		if(plans[1]){
+			promises.push(
+				util.loop(plans[1].filter(halfsec), updatechain.bind(planRobot.IDS_RARM), play_rate));
+		} else {
+			promises.push(false);
+		}
+		if(plans[2]){
+			promises.push(
+				util.loop(plans[2].filter(halfsec), updatechain.bind(planRobot.IDS_WAIST), play_rate));
+		} else {
+			promises.push(false);
+		}
 
 		// TODO: catch on bad plan or user cancel
-		return Promise.all([
-			util.loop(lplan, updatechain.bind(planRobot.IDS_LARM), play_rate),
-			util.loop(rplan, updatechain.bind(planRobot.IDS_RARM), play_rate),
-			util.loop(wplan, updatechain.bind(planRobot.IDS_WAIST), play_rate),
-		]);
+		return Promise.all(promises);
+	}
+
+	function reset_hands(){
+		if(document.querySelector('button#ik').getAttribute('data-hand')==='L_TIP'){
+			var lhandPlan = planRobot.object.getObjectByName('L_TIP');
+			var lhandNow = robot.object.getObjectByName('L_TIP');
+			//var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
+			var invLHandNow = new THREE.Matrix4().getInverse(lhandNow.matrixWorld);
+			var TdiffL1 = new THREE.Matrix4().multiplyMatrices(invLHandNow, lhandPlan.matrixWorld);
+			var TdiffL = new THREE.Matrix4().getInverse(TdiffL1);
+			//var TdiffL = new THREE.Matrix4().multiplyMatrices(lhandNow.matrixWorld, invLHandPlan);
+			var dpL = new THREE.Vector3().setFromMatrixPosition(TdiffL);
+			var daL = new THREE.Quaternion().setFromRotationMatrix(TdiffL);
+			planRobot.lhand.position.copy(dpL);
+			planRobot.lhand.quaternion.copy(daL);
+		} else {
+			var rhandPlan = planRobot.object.getObjectByName('R_TIP');
+			var rhandNow = robot.object.getObjectByName('R_TIP');
+			//var invRHandPlan = new THREE.Matrix4().getInverse(rhandPlan.matrixWorld);
+			var invRHandNow = new THREE.Matrix4().getInverse(rhandNow.matrixWorld);
+			var TdiffR1 = new THREE.Matrix4().multiplyMatrices(invRHandNow, rhandPlan.matrixWorld);
+			var TdiffR = new THREE.Matrix4().getInverse(TdiffR1);
+			//var TdiffL = new THREE.Matrix4().multiplyMatrices(rhandNow.matrixWorld, invRHandPlan);
+			var dpR = new THREE.Vector3().setFromMatrixPosition(TdiffR);
+			var daR = new THREE.Quaternion().setFromRotationMatrix(TdiffR);
+			planRobot.rhand.position.copy(dpR);
+			planRobot.rhand.quaternion.copy(daR);
+		}
 	}
 
   var describe = {
@@ -169,8 +210,8 @@
 	// Adds THREE buffer geometry from triangulated mesh to the scene
 	function process_mesh(mesh_obj) {
 		var geometry = new THREE.BufferGeometry(),
-			material = new THREE.MeshPhongMaterial({
-      //material = new THREE.MeshBasicMaterial({
+			//material = new THREE.MeshPhongMaterial({
+      material = new THREE.MeshBasicMaterial({
 				side: THREE.DoubleSide,
         // Enable all color channels. Super important for vertex colors!
 				color: 0xFFFFFF,
@@ -190,11 +231,11 @@
     }
 		// Dynamic, because we will do raycasting; also need bounding info
 		geometry.dynamic = true;
-		geometry.computeBoundingSphere();
-    geometry.computeBoundingBox();
+		//geometry.computeBoundingSphere();
+    //geometry.computeBoundingBox();
 		// Phong Material requires normals for reflectivity
     // TODO: Perform the normals computation in the Worker thread maybe?
-		geometry.computeVertexNormals();
+		//geometry.computeVertexNormals();
 		var mesh = new THREE.Mesh(geometry, material);
     mesh.name = mesh_obj.id;
     mesh.n_el = mesh_obj.n_el;
@@ -204,12 +245,28 @@
 			var mesh0add = document.querySelector('input#mesh0sel').checked;
 			if(mesh0add){scene.add(mesh);}
 			mesh0.push(mesh);
-			if(mesh0.length > N_MESH0){ scene.remove(mesh0.shift()); }
+			while(mesh0.length > N_MESH0){
+				var old0 = mesh0.shift();
+				scene.remove(old0);
+				old0.geometry.dispose();
+				old0.geometry = null;
+				old0.material.dispose();
+				old0.material = null;
+				old0 = null;
+			}
 		} else if(mesh.name==='mesh1'){
 			var mesh1add = document.querySelector('input#mesh1sel').checked;
 			if(mesh1add){scene.add(mesh);}
 			mesh1.push(mesh);
-			if(mesh1.length > N_MESH1){ scene.remove(mesh1.shift()); }
+			while(mesh1.length > N_MESH1){
+				var old1 = mesh1.shift();
+				scene.remove(old1);
+				old1.geometry.dispose();
+				old1.geometry = null;
+				old1.material.dispose();
+				old1.material = null;
+				old1 = null;
+			}
 		} else if(mesh.name==='kinect'){
 			kinect.push(mesh);
 			if(kinect.length > N_KINECT){ scene.remove(kinect.shift()); }
@@ -378,34 +435,6 @@
 
 	} // setup_clicks
 
-	function reset_hands(){
-		if(document.querySelector('button#ik').getAttribute('data-hand')==='L_TIP'){
-			var lhandPlan = planRobot.object.getObjectByName('L_TIP');
-			var lhandNow = robot.object.getObjectByName('L_TIP');
-			//var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
-			var invLHandNow = new THREE.Matrix4().getInverse(lhandNow.matrixWorld);
-			var TdiffL1 = new THREE.Matrix4().multiplyMatrices(invLHandNow, lhandPlan.matrixWorld);
-			var TdiffL = new THREE.Matrix4().getInverse(TdiffL1);
-			//var TdiffL = new THREE.Matrix4().multiplyMatrices(lhandNow.matrixWorld, invLHandPlan);
-			var dpL = new THREE.Vector3().setFromMatrixPosition(TdiffL);
-			var daL = new THREE.Quaternion().setFromRotationMatrix(TdiffL);
-			planRobot.lhand.position.copy(dpL);
-			planRobot.lhand.quaternion.copy(daL);
-		} else {
-			var rhandPlan = planRobot.object.getObjectByName('R_TIP');
-			var rhandNow = robot.object.getObjectByName('R_TIP');
-			//var invRHandPlan = new THREE.Matrix4().getInverse(rhandPlan.matrixWorld);
-			var invRHandNow = new THREE.Matrix4().getInverse(rhandNow.matrixWorld);
-			var TdiffR1 = new THREE.Matrix4().multiplyMatrices(invRHandNow, rhandPlan.matrixWorld);
-			var TdiffR = new THREE.Matrix4().getInverse(TdiffR1);
-			//var TdiffL = new THREE.Matrix4().multiplyMatrices(rhandNow.matrixWorld, invRHandPlan);
-			var dpR = new THREE.Vector3().setFromMatrixPosition(TdiffR);
-			var daR = new THREE.Quaternion().setFromRotationMatrix(TdiffR);
-			planRobot.rhand.position.copy(dpR);
-			planRobot.rhand.quaternion.copy(daR);
-		}
-	}
-
 	function delta_walk(){
 		if(getMode()!=='move'){ return; }
 		var mat = planRobot.object.matrix.multiply(this);
@@ -444,21 +473,21 @@
 		});
 		//
 		listener.simple_combo("i", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(0,0,100)));
+			new THREE.Matrix4().makeTranslation(0,0,25)));
 		listener.simple_combo(",", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(0,0,-100)));
+			new THREE.Matrix4().makeTranslation(0,0,-25)));
 		listener.simple_combo("h", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(100,0,0)));
+			new THREE.Matrix4().makeTranslation(25,0,0)));
 		listener.simple_combo(";", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(-100,0,0)));
+			new THREE.Matrix4().makeTranslation(-25,0,0)));
 		listener.simple_combo("u", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(0,100,0)));
+			new THREE.Matrix4().makeTranslation(0,25,0)));
 		listener.simple_combo("m", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(0,-100,0)));
+			new THREE.Matrix4().makeTranslation(0,-25,0)));
 		listener.simple_combo("j", delta_hand.bind(
-			new THREE.Matrix4().makeRotationY(10*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(5*util.DEG_TO_RAD)));
 		listener.simple_combo("l", delta_hand.bind(
-			new THREE.Matrix4().makeRotationY(-10*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(-5*util.DEG_TO_RAD)));
 		listener.simple_combo("k", reset_hands);
 	}
 
@@ -729,7 +758,7 @@
 							rPlan.via = 'jacobian_waist_preplan';
 						}
 					}
-					console.log([lPlan, rPlan]);
+					//console.log([lPlan, rPlan]);
 					goBtn.innerHTML = 'Planning...';
 					goBtn.classList.add('danger');
 
@@ -737,42 +766,43 @@
 					util.shm('/armplan', [lPlan, rPlan])
 					.then(procPlan)
 					.then(function(plans){
-						goBtn.innerHTML = 'Accept';
-						return plans.map(function(p){return p.length>0;});
+						goBtn.innerHTML = 'Playing...';
+						stepBtn.innerHTML = 'Decline';
+						return playPlan(plans);
 					}).then(function(valid){
+						goBtn.innerHTML = 'Accept';
 						return new Promise(function(resolve, reject) {
-							var success = (sameLArmTF || valid[0]) && (sameRArmTF || valid[1]);
-							if(!success){reject('Failed!');}
-							goBtn.innerHTML = 'Accept';
-							stepBtn.innerHTML = 'Decline';
+							if(h_accept || h_decline || h_done){
+								reject();
+							}
 							// Go accepts and sends
-							h_accept = goBtn.addEventListener('click', function(){
-								goBtn.innerHTML = 'Plan';
-								stepBtn.innerHTML = '_';
+							h_accept = goBtn.addEventListener('click', function(e){
+								e.stopPropagation();
+								goBtn.innerHTML = 'Sending...';
+								stepBtn.innerHTML = 'Wait...';
 								resolve(valid);
 							});
 							// Step rejects
-							h_decline = stepBtn.addEventListener('click', function(){
-								goBtn.innerHTML = 'Plan';
-								stepBtn.innerHTML = '_';
-								reject(valid);
+							h_decline = stepBtn.addEventListener('click', function(e){
+								e.stopPropagation();
+								reject('Declined');
 							});
 							// Done rejects
-							h_done = ikBtn.addEventListener('click', reject);
+							h_done = ikBtn.addEventListener('click', function(e){
+								e.stopPropagation();
+								reject('Done IK Mode');
+							});
 						});
 					}).then(function(valid){
+						console.log('Sending IK');
 						return Promise.all([
-							valid[0] && util.shm('/shm/hcm/teleop/lweights', [1,1,0]),
-							valid[1] && util.shm('/shm/hcm/teleop/rweights', [1,1,0]),
-							valid[2] && util.shm('/shm/hcm/teleop/waist', qWaist)
+							valid[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
+							valid[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
+							valid[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
+							valid[0] ? util.shm('/shm/hcm/teleop/tflarm', tfL) : false,
+							valid[1] ? util.shm('/shm/hcm/teleop/tfrarm', tfR) : false
 						]);
-					}).then(function(valid){
-						// TODO: Grab a decision, via the promise
-						return Promise.all([
-							valid[0] && util.shm('/shm/hcm/teleop/tflarm', tfL),
-							valid[1] && util.shm('/shm/hcm/teleop/tfrarm', tfR)
-						]);
-					}).catch(function(reason){
+					}, function(reason){
 						util.debug([reason]);
 						// Reset the arms
 						planRobot.meshes.forEach(function(m, i){
@@ -780,12 +810,15 @@
 						}, robot.meshes);
 						console.log('Rejection of plan', reason);
 					}).then(function(){
-						goBtn.innerHTML = 'Plan';
-						goBtn.classList.remove('danger');
+						console.log('finishing');
 						// Remove the listeners
 						goBtn.removeEventListener('click', h_accept);
 						stepBtn.removeEventListener('click', h_decline);
 						ikBtn.removeEventListener('click', h_done);
+						h_accept = h_decline = h_done = null;
+						goBtn.classList.remove('danger');
+						goBtn.innerHTML = 'Plan';
+						stepBtn.innerHTML = '_';
 					});
 					break;
 				case 'teleop':
@@ -1191,6 +1224,11 @@
 	function update_pillars(p){
 		pillars.forEach(function(p0){
 			robot.object.remove(p0);
+			p0.geometry.dispose();
+			p0.geometry = null;
+			p0.material.dispose();
+			p0.material = null;
+			p0 = null;
 		});
 		pillars = [];
 		p.forEach(function(p0){

@@ -29,30 +29,30 @@
 			var npix = width * height;
 
 			var mesh_obj = {
-					id: metadata.id,
-					c: metadata.c,
-					sfov: metadata.sfov,
-					rfov: metadata.rfov,
-					dynrange: metadata.dr,
-					//
-					a: metadata.a,
-					qW: metadata.qW,
-					//
-					tfL6: metadata.tfL6,
-					tfG6: metadata.tfG6,
-					tfL16: metadata.tfL16,
-					tfG16: metadata.tfG16,
-					//
-					width: width,
-					height: height,
-					// Make the max allocations
-					// TODO: Can we reuse these?
-					index: new Uint16Array(npix * 6),
-					positions: new Float32Array(npix * 3),
-					colors: new Float32Array(npix * 3),
-					pixels: pixels,
-					pixdex: new Uint32Array(pixels.buffer),
-				};
+				id: metadata.id,
+				c: metadata.c,
+				sfov: metadata.sfov,
+				rfov: metadata.rfov,
+				dynrange: metadata.dr,
+				//
+				a: metadata.a,
+				qW: metadata.qW,
+				//
+				tfL6: metadata.tfL6,
+				tfG6: metadata.tfG6,
+				tfL16: metadata.tfL16,
+				tfG16: metadata.tfG16,
+				//
+				width: width,
+				height: height,
+				// Make the max allocations
+				// TODO: Can we reuse these?
+				index: new Uint16Array(npix * 6),
+				positions: new Float32Array(npix * 3),
+				colors: new Float32Array(npix * 3),
+				pixels: pixels,
+				pixdex: new Uint32Array(pixels.buffer),
+			};
 
 			// Now process it
 			depth_worker.postMessage(mesh_obj, [

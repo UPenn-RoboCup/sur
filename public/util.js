@@ -81,7 +81,7 @@
 				var nxt = ae.next();
 				if(nxt.done){
 					clearInterval(h);
-					resolve(arr);
+					resolve(true);
 				} else {
 					// value: [idx, val]
 					proc(nxt.value);
