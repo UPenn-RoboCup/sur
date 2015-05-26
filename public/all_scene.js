@@ -10,8 +10,7 @@
 		mesh0 = [], mesh1 = [], kinect = [],
 		N_MESH0 = 2, N_MESH1 = 2, N_KINECT = 1,
 		map_peers = [],
-		last_intersection = {t:0}, last_selected_parameters = null,
-		allBtns;
+		last_intersection = {t:0}, last_selected_parameters = null;
 
 	function getMode() {
 		for(var i = 0; i<allBtns.length; i+=1){
@@ -94,6 +93,358 @@
 			var daR = new THREE.Quaternion().setFromRotationMatrix(TdiffR);
 			planRobot.rhand.position.copy(dpR);
 			planRobot.rhand.quaternion.copy(daR);
+		}
+	}
+
+	function go(){
+		var m = getMode();
+		if(!go){return;}
+		//console.log('go', m);
+		var qPlan = planRobot.meshes.map(function(m, i){
+			var qDinv = this[i].clone().conjugate();
+			var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+			var e = new THREE.Euler().setFromQuaternion(q0);
+			return e.x;
+		}, planRobot.qDefault);
+		var qNow = robot.meshes.map(function(m, i){
+			var qDinv = this[i].clone().conjugate();
+			var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
+			var e = new THREE.Euler().setFromQuaternion(q0);
+			return e.x;
+		}, robot.qDefault);
+
+		var qHead = qPlan.slice(0, 2);
+		var qHead0 = qNow.slice(0, 2);
+		var sameHead = util.same(qHead, qHead0, 1e-2);
+		//
+		var qLArm = qPlan.slice(2, 9);
+		var qLArm0 = qNow.slice(2, 9);
+		var sameLArm = util.same(qLArm, qLArm0, 1e-2);
+		//
+		var qRArm = qPlan.slice(21, 28);
+		var qRArm0 = qNow.slice(21, 28);
+		var sameRArm = util.same(qRArm, qRArm0, 1e-2);
+		//
+		var qWaist = qPlan.slice(28, 30);
+		var qWaist0 = qNow.slice(28, 30);
+		var sameWaist = util.same(qWaist, qWaist0, 1e-2);
+		//
+		var I16 = new THREE.Matrix4().elements;
+		var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
+		var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
+		//
+		var lPlan = false, rPlan = false;
+		var h_accept, h_decline, h_done;
+		//var comWorldNow = robot.object.matrixWorld;
+		var comWorldPlan = planRobot.object.matrixWorld;
+		var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
+		var invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
+
+		switch(m){
+			case 'move':
+				// Send the Waypoint
+				var Tdiff = new THREE.Matrix4().multiplyMatrices(invComWorldNow, comWorldPlan);
+				var dpL = new THREE.Vector3().setFromMatrixPosition(Tdiff);
+				var daL = new THREE.Euler().setFromRotationMatrix(Tdiff);
+				var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
+				var dpG = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
+				var daG = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
+				var globalPose = [dpG.z/1e3, dpG.x/1e3, daG.y];
+				util.debug([
+					sprintf("Local WP: %0.2f %0.2f %0.2f",
+									relPose[0], relPose[1], relPose[2]),
+					sprintf("Global WP: %0.2f %0.2f %0.2f",
+									globalPose[0], globalPose[1], globalPose[2]),
+				]);
+				//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
+				util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
+				//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', globalPose);
+				break;
+			case 'step':
+				var p = planRobot.foot.position;
+				var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
+				var zpr = [p.y/1e3, e.x, e.z];
+				var relpos = [p.z/1e3, p.x/1e3, e.y];
+				var supportFoot, supportText;
+				if(moveBtn.innerHTML==='Left'){
+					supportText = 'Left';
+					supportFoot = 1;
+				} else {
+					supportText = 'Right';
+					supportFoot = 0;
+				}
+				util.debug([
+					'Support: ' + supportText,
+					sprintf("relpos: %0.2f %0.2f %0.2f",
+									relpos[0], relpos[1], relpos[2]),
+					sprintf("zpr: %0.2f %0.2f %0.2f",
+									zpr[0], zpr[1]*util.RAD_TO_DEG, zpr[2]*util.RAD_TO_DEG),
+				]);
+				Promise.all([
+					util.shm('/shm/hcm/step/relpos', relpos),
+					util.shm('/shm/hcm/step/zpr', zpr),
+					util.shm('/shm/hcm/step/supportLeg', [supportFoot]),
+				]).then(function(){
+					util.shm('/fsm/Body/stepover1', true);
+				});
+				break;
+			case 'ik':
+				if(goBtn.innerHTML !== 'Plan'){
+					return;
+				}
+
+				// Always with respect to our com position.
+				if(sameLArmTF && sameRArmTF){
+					return;
+				}
+
+				//console.log('sameLArmTF', sameLArmTF);
+				//console.log('sameRArmTF', sameRArmTF);
+				// NOTE: Be careful between robots...
+				var rhand_com = new THREE.Matrix4().multiplyMatrices(
+					invComWorldPlan, planRobot.rhand.matrixWorld);
+				var lhand_com = new THREE.Matrix4().multiplyMatrices(
+					invComWorldPlan, planRobot.lhand.matrixWorld);
+				var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
+				var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
+				var rpyL = new THREE.Euler().setFromQuaternion(quatL);
+				var rpyR = new THREE.Euler().setFromQuaternion(quatR);
+				var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
+				var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
+				util.debug([
+					sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+									pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
+									rpyL.z*RAD_TO_DEG, rpyL.x*RAD_TO_DEG, rpyL.y*RAD_TO_DEG),
+					sprintf("Right: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+									pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
+									rpyR.z*RAD_TO_DEG, rpyR.x*RAD_TO_DEG, rpyR.y*RAD_TO_DEG),
+				]);
+				var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
+				var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
+
+				// Reset our position
+				planRobot.rhand.position.set(0,0,0);
+				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+				planRobot.lhand.position.set(0,0,0);
+				planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+
+				if(!sameLArmTF){
+					lPlan = {
+						tr: tfL,
+						timeout: 30,
+						via: 'jacobian_preplan',
+						weights: [0,1,0,1],
+						qLArm0: qLArm0,
+						qWaist0: qWaist0,
+						qArmGuess: sameLArm ? null : qLArm
+					};
+				}
+				if(!sameRArmTF){
+					rPlan = {
+						tr: tfR,
+						timeout: 30,
+						via: 'jacobian_preplan',
+						weights: [0,1,0,1],
+						qRArm0: qRArm0,
+						qWaist0: qWaist0,
+						qArmGuess: sameRArm ? null : qRArm
+					};
+				}
+
+				// Check if the waist moved:
+				if(!sameWaist){
+					//console.log('Not same waist!');
+					// Use the planned waist as the final guess
+					if (lPlan) {lPlan.qWaistGuess = qWaist;}
+					if (rPlan) {rPlan.qWaistGuess = qWaist;}
+					// Check which moved. If both, then the current selection
+					if(lPlan && rPlan){
+						if(ikBtn.getAttribute('data-hand')==='L_TIP'){
+							lPlan.via = 'jacobian_waist_preplan';
+						} else {
+							rPlan.via = 'jacobian_waist_preplan';
+						}
+					} else if (lPlan) {
+						lPlan.via = 'jacobian_waist_preplan';
+					} else {
+						rPlan.via = 'jacobian_waist_preplan';
+					}
+				}
+				//console.log([lPlan, rPlan]);
+				goBtn.innerHTML = 'Planning...';
+				goBtn.classList.add('danger');
+
+				// TODO: Check if the planner failed
+				util.shm('/armplan', [lPlan, rPlan])
+				.then(procPlan)
+				.then(function(plans){
+					goBtn.innerHTML = 'Playing...';
+					stepBtn.innerHTML = 'Decline';
+					return playPlan(plans);
+				}).then(function(valid){
+					goBtn.innerHTML = 'Accept';
+					return new Promise(function(resolve, reject) {
+						if(h_accept || h_decline || h_done){
+							reject();
+						}
+						// Go accepts and sends
+						h_accept = goBtn.addEventListener('click', function(e){
+							e.stopPropagation();
+							goBtn.innerHTML = 'Sending...';
+							stepBtn.innerHTML = 'Wait...';
+							resolve(valid);
+						});
+						// Step rejects
+						h_decline = stepBtn.addEventListener('click', function(e){
+							e.stopPropagation();
+							reject('Declined');
+						});
+						// Done rejects
+						h_done = ikBtn.addEventListener('click', function(e){
+							e.stopPropagation();
+							reject('Done IK Mode');
+						});
+					});
+				}).then(function(valid){
+					console.log('Sending IK');
+					return Promise.all([
+						valid[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
+						valid[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
+						valid[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
+						valid[0] ? util.shm('/shm/hcm/teleop/tflarm', tfL) : false,
+						valid[1] ? util.shm('/shm/hcm/teleop/tfrarm', tfR) : false
+					]);
+				}, function(reason){
+					util.debug([reason]);
+					// Reset the arms
+					planRobot.meshes.forEach(function(m, i){
+						m.quaternion.copy(this[i].cquaternion);
+					}, robot.meshes);
+					console.log('Rejection of plan', reason);
+				}).then(function(){
+					console.log('finishing');
+					// Remove the listeners
+					goBtn.removeEventListener('click', h_accept);
+					stepBtn.removeEventListener('click', h_decline);
+					ikBtn.removeEventListener('click', h_done);
+					h_accept = h_decline = h_done = null;
+					goBtn.classList.remove('danger');
+					goBtn.innerHTML = 'Plan';
+					stepBtn.innerHTML = '_';
+				});
+				break;
+			case 'teleop':
+				if(goBtn.innerHTML !== 'Plan'){
+					return;
+				}
+
+				if(!sameHead){util.shm('/shm/hcm/teleop/head', qHead);}
+
+				if(sameLArm && sameRArm && sameWaist){
+					return;
+				}
+
+				if(!sameLArm){
+					lPlan = {
+						q: qLArm,
+						timeout: 30,
+						via: 'joint_preplan',
+						qLArm0: qLArm0,
+						qWaist0: qWaist0
+					};
+				}
+				if(!sameRArm){
+					rPlan = {
+						q: qRArm,
+						timeout: 30,
+						via: 'joint_preplan',
+						qRArm0: qRArm0,
+						qWaist0: qWaist0
+					};
+				}
+				// Check if the waist moved:
+				if(!sameWaist){
+					//console.log('Not same waist!');
+					// Use the planned waist as the final guess
+					if(lPlan) {lPlan.qWaistGuess = qWaist;}
+					if(rPlan) {rPlan.qWaistGuess = qWaist;}
+					// Check which moved. If both, then the current selection
+					if(lPlan && rPlan){
+						// Does not matter, so use the left
+						lPlan.via = 'joint_waist_preplan';
+					} else if (lPlan) {
+						lPlan.via = 'joint_waist_preplan';
+					} else if (rPlan) {
+						rPlan.via = 'joint_waist_preplan';
+					} else {
+						console.log('Did not implement waist only joint level');
+					}
+				}
+
+				console.log([lPlan, rPlan]);
+				goBtn.innerHTML = 'Planning...';
+				goBtn.classList.add('danger');
+
+				// Send teleop
+				util.shm('/armplan', [lPlan, rPlan])
+				.then(procPlan)
+				.then(function(plans){
+					console.log('plans', plans);
+					return plans.map(function(p){return p.length>0;});
+				})
+				.then(function(valid){
+					return new Promise(function(resolve, reject) {
+						var success = (sameLArm || valid[0]) && (sameRArm || valid[1]);
+						if(!success){reject('Failed!');}
+						goBtn.innerHTML = 'Accept';
+						stepBtn.innerHTML = 'Decline';
+						// Go accepts and sends
+						h_accept = goBtn.addEventListener('click', function(){
+							resolve(valid);
+						});
+						// Step rejects
+						h_decline = stepBtn.addEventListener('click', function(){
+							goBtn.innerHTML = 'Plan';
+							stepBtn.innerHTML = '_';
+							reject(valid);
+						});
+						// Done rejects
+						h_done = ikBtn.addEventListener('click', function(){
+							goBtn.innerHTML = 'Plan';
+							stepBtn.innerHTML = '_';
+							reject(valid);
+						});
+					});
+				})
+				.then(function(){
+					return sameWaist || util.shm('/shm/hcm/teleop/waist', qWaist);
+				})
+				.then(function(){
+					// TODO: Grab a decision, via the promise
+					return Promise.all([
+						sameLArm || util.shm('/shm/hcm/teleop/larm', qLArm),
+						sameRArm || util.shm('/shm/hcm/teleop/rarm', qRArm)
+					]);
+				}).catch(function(reason){
+					util.debug([reason]);
+					// Reset the arms
+					planRobot.meshes.forEach(function(m, i){
+						m.quaternion.copy(this[i].cquaternion);
+					}, robot.meshes);
+					console.log('Rejection of plan', reason);
+				}).then(function(){
+					goBtn.innerHTML = 'Plan';
+					goBtn.classList.remove('danger');
+					// Remove the listeners
+					goBtn.removeEventListener('click', h_accept);
+					stepBtn.removeEventListener('click', h_decline);
+					ikBtn.removeEventListener('click', h_done);
+				});
+				break;
+			default:
+				// Proceed
+				util.shm('/shm/hcm/state/proceed', [1]);
+				break;
 		}
 	}
 
@@ -494,18 +845,22 @@
 		listener.simple_combo("l", delta_hand.bind(
 			new THREE.Matrix4().makeRotationY(-5*util.DEG_TO_RAD)));
 		listener.simple_combo("k", reset_hands);
+		//
+		listener.simple_combo("space", go);
 	}
 
+	var resetBtn, goBtn, moveBtn, teleopBtn, stepBtn, ikBtn,
+			jointSel, mesh0Sel, mesh1Sel, allBtns;
 	function setup_buttons(){
-		var resetBtn = document.querySelector('button#reset'),
-			goBtn = document.querySelector('button#go'),
-			moveBtn = document.querySelector('button#move'),
-			teleopBtn = document.querySelector('button#teleop'),
-			stepBtn = document.querySelector('button#step'),
-			ikBtn = document.querySelector('button#ik');
-		var jointSel = document.querySelector('select#joints'),
-			mesh0Sel = document.querySelector('input#mesh0sel'),
-			mesh1Sel = document.querySelector('input#mesh1sel');
+		resetBtn = document.querySelector('button#reset');
+		goBtn = document.querySelector('button#go');
+		moveBtn = document.querySelector('button#move');
+		teleopBtn = document.querySelector('button#teleop');
+		stepBtn = document.querySelector('button#step');
+		ikBtn = document.querySelector('button#ik');
+		jointSel = document.querySelector('select#joints');
+		mesh0Sel = document.querySelector('input#mesh0sel');
+		mesh1Sel = document.querySelector('input#mesh1sel');
 		allBtns = document.querySelectorAll('#topic button');
 
 		mesh0Sel.addEventListener('change', function(){
@@ -591,355 +946,7 @@
 				reset_hands();
 			}
 		});
-		goBtn.addEventListener('click', function(){
-
-			var qPlan = planRobot.meshes.map(function(m, i){
-				var qDinv = this[i].clone().conjugate();
-				var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
-				var e = new THREE.Euler().setFromQuaternion(q0);
-				return e.x;
-			}, planRobot.qDefault);
-			var qNow = robot.meshes.map(function(m, i){
-				var qDinv = this[i].clone().conjugate();
-				var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
-				var e = new THREE.Euler().setFromQuaternion(q0);
-				return e.x;
-			}, robot.qDefault);
-
-			var qHead = qPlan.slice(0, 2);
-			var qHead0 = qNow.slice(0, 2);
-			var sameHead = util.same(qHead, qHead0, 1e-2);
-			//
-			var qLArm = qPlan.slice(2, 9);
-			var qLArm0 = qNow.slice(2, 9);
-			var sameLArm = util.same(qLArm, qLArm0, 1e-2);
-			//
-			var qRArm = qPlan.slice(21, 28);
-			var qRArm0 = qNow.slice(21, 28);
-			var sameRArm = util.same(qRArm, qRArm0, 1e-2);
-			//
-			var qWaist = qPlan.slice(28, 30);
-			var qWaist0 = qNow.slice(28, 30);
-			var sameWaist = util.same(qWaist, qWaist0, 1e-2);
-			//
-			var I16 = new THREE.Matrix4().elements;
-			var sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
-			var sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
-			//
-			var lPlan = false, rPlan = false;
-			var h_accept, h_decline, h_done;
-			//var comWorldNow = robot.object.matrixWorld;
-			var comWorldPlan = planRobot.object.matrixWorld;
-			var invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
-			var invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
-
-			switch(getMode()){
-				case 'move':
-					// Send the Waypoint
-					var Tdiff = new THREE.Matrix4().multiplyMatrices(invComWorldNow, comWorldPlan);
-					var dpL = new THREE.Vector3().setFromMatrixPosition(Tdiff);
-					var daL = new THREE.Euler().setFromRotationMatrix(Tdiff);
-					var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
-					var dpG = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
-					var daG = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
-					var globalPose = [dpG.z/1e3, dpG.x/1e3, daG.y];
-					util.debug([
-						sprintf("Local WP: %0.2f %0.2f %0.2f",
-										relPose[0], relPose[1], relPose[2]),
-						sprintf("Global WP: %0.2f %0.2f %0.2f",
-										globalPose[0], globalPose[1], globalPose[2]),
-					]);
-					//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
-					util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
-					//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', globalPose);
-					break;
-				case 'step':
-					var p = planRobot.foot.position;
-					var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
-					var zpr = [p.y/1e3, e.x, e.z];
-					var relpos = [p.z/1e3, p.x/1e3, e.y];
-					var supportFoot, supportText;
-					if(moveBtn.innerHTML==='Left'){
-						supportText = 'Left';
-						supportFoot = 1;
-					} else {
-						supportText = 'Right';
-						supportFoot = 0;
-					}
-					util.debug([
-						'Support: ' + supportText,
-						sprintf("relpos: %0.2f %0.2f %0.2f",
-										relpos[0], relpos[1], relpos[2]),
-						sprintf("zpr: %0.2f %0.2f %0.2f",
-										zpr[0], zpr[1]*util.RAD_TO_DEG, zpr[2]*util.RAD_TO_DEG),
-					]);
-					Promise.all([
-						util.shm('/shm/hcm/step/relpos', relpos),
-						util.shm('/shm/hcm/step/zpr', zpr),
-						util.shm('/shm/hcm/step/supportLeg', [supportFoot]),
-					]).then(function(){
-						util.shm('/fsm/Body/stepover1', true);
-					});
-					break;
-				case 'ik':
-					if(goBtn.innerHTML !== 'Plan'){
-						return;
-					}
-
-					// Always with respect to our com position.
-					if(sameLArmTF && sameRArmTF){
-						return;
-					}
-
-					//console.log('sameLArmTF', sameLArmTF);
-					//console.log('sameRArmTF', sameRArmTF);
-					// NOTE: Be careful between robots...
-					var rhand_com = new THREE.Matrix4().multiplyMatrices(
-						invComWorldPlan, planRobot.rhand.matrixWorld);
-					var lhand_com = new THREE.Matrix4().multiplyMatrices(
-						invComWorldPlan, planRobot.lhand.matrixWorld);
-					var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
-					var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
-					var rpyL = new THREE.Euler().setFromQuaternion(quatL);
-					var rpyR = new THREE.Euler().setFromQuaternion(quatR);
-					var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
-					var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
-					util.debug([
-						sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
-										pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
-										rpyL.z*RAD_TO_DEG, rpyL.x*RAD_TO_DEG, rpyL.y*RAD_TO_DEG),
-						sprintf("Right: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
-										pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
-										rpyR.z*RAD_TO_DEG, rpyR.x*RAD_TO_DEG, rpyR.y*RAD_TO_DEG),
-					]);
-					var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
-					var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
-
-					// Reset our position
-					planRobot.rhand.position.set(0,0,0);
-					planRobot.rhand.quaternion.copy(new THREE.Quaternion());
-					planRobot.lhand.position.set(0,0,0);
-					planRobot.lhand.quaternion.copy(new THREE.Quaternion());
-
-					if(!sameLArmTF){
-						lPlan = {
-							tr: tfL,
-							timeout: 30,
-							via: 'jacobian_preplan',
-							weights: [0,1,0,1],
-							qLArm0: qLArm0,
-							qWaist0: qWaist0,
-							qArmGuess: sameLArm ? null : qLArm
-						};
-					}
-					if(!sameRArmTF){
-						rPlan = {
-							tr: tfR,
-							timeout: 30,
-							via: 'jacobian_preplan',
-							weights: [0,1,0,1],
-							qRArm0: qRArm0,
-							qWaist0: qWaist0,
-							qArmGuess: sameRArm ? null : qRArm
-						};
-					}
-
-					// Check if the waist moved:
-					if(!sameWaist){
-						//console.log('Not same waist!');
-						// Use the planned waist as the final guess
-						if (lPlan) {lPlan.qWaistGuess = qWaist;}
-						if (rPlan) {rPlan.qWaistGuess = qWaist;}
-						// Check which moved. If both, then the current selection
-						if(lPlan && rPlan){
-							if(ikBtn.getAttribute('data-hand')==='L_TIP'){
-								lPlan.via = 'jacobian_waist_preplan';
-							} else {
-								rPlan.via = 'jacobian_waist_preplan';
-							}
-						} else if (lPlan) {
-							lPlan.via = 'jacobian_waist_preplan';
-						} else {
-							rPlan.via = 'jacobian_waist_preplan';
-						}
-					}
-					//console.log([lPlan, rPlan]);
-					goBtn.innerHTML = 'Planning...';
-					goBtn.classList.add('danger');
-
-					// TODO: Check if the planner failed
-					util.shm('/armplan', [lPlan, rPlan])
-					.then(procPlan)
-					.then(function(plans){
-						goBtn.innerHTML = 'Playing...';
-						stepBtn.innerHTML = 'Decline';
-						return playPlan(plans);
-					}).then(function(valid){
-						goBtn.innerHTML = 'Accept';
-						return new Promise(function(resolve, reject) {
-							if(h_accept || h_decline || h_done){
-								reject();
-							}
-							// Go accepts and sends
-							h_accept = goBtn.addEventListener('click', function(e){
-								e.stopPropagation();
-								goBtn.innerHTML = 'Sending...';
-								stepBtn.innerHTML = 'Wait...';
-								resolve(valid);
-							});
-							// Step rejects
-							h_decline = stepBtn.addEventListener('click', function(e){
-								e.stopPropagation();
-								reject('Declined');
-							});
-							// Done rejects
-							h_done = ikBtn.addEventListener('click', function(e){
-								e.stopPropagation();
-								reject('Done IK Mode');
-							});
-						});
-					}).then(function(valid){
-						console.log('Sending IK');
-						return Promise.all([
-							valid[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
-							valid[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
-							valid[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
-							valid[0] ? util.shm('/shm/hcm/teleop/tflarm', tfL) : false,
-							valid[1] ? util.shm('/shm/hcm/teleop/tfrarm', tfR) : false
-						]);
-					}, function(reason){
-						util.debug([reason]);
-						// Reset the arms
-						planRobot.meshes.forEach(function(m, i){
-							m.quaternion.copy(this[i].cquaternion);
-						}, robot.meshes);
-						console.log('Rejection of plan', reason);
-					}).then(function(){
-						console.log('finishing');
-						// Remove the listeners
-						goBtn.removeEventListener('click', h_accept);
-						stepBtn.removeEventListener('click', h_decline);
-						ikBtn.removeEventListener('click', h_done);
-						h_accept = h_decline = h_done = null;
-						goBtn.classList.remove('danger');
-						goBtn.innerHTML = 'Plan';
-						stepBtn.innerHTML = '_';
-					});
-					break;
-				case 'teleop':
-					if(goBtn.innerHTML !== 'Plan'){
-						return;
-					}
-
-					if(!sameHead){util.shm('/shm/hcm/teleop/head', qHead);}
-
-					if(sameLArm && sameRArm && sameWaist){
-						return;
-					}
-
-					if(!sameLArm){
-						lPlan = {
-							q: qLArm,
-							timeout: 30,
-							via: 'joint_preplan',
-							qLArm0: qLArm0,
-							qWaist0: qWaist0
-						};
-					}
-					if(!sameRArm){
-						rPlan = {
-							q: qRArm,
-							timeout: 30,
-							via: 'joint_preplan',
-							qRArm0: qRArm0,
-							qWaist0: qWaist0
-						};
-					}
-					// Check if the waist moved:
-					if(!sameWaist){
-						//console.log('Not same waist!');
-						// Use the planned waist as the final guess
-						if(lPlan) {lPlan.qWaistGuess = qWaist;}
-						if(rPlan) {rPlan.qWaistGuess = qWaist;}
-						// Check which moved. If both, then the current selection
-						if(lPlan && rPlan){
-							// Does not matter, so use the left
-							lPlan.via = 'joint_waist_preplan';
-						} else if (lPlan) {
-							lPlan.via = 'joint_waist_preplan';
-						} else if (rPlan) {
-							rPlan.via = 'joint_waist_preplan';
-						} else {
-							console.log('Did not implement waist only joint level');
-						}
-					}
-
-					console.log([lPlan, rPlan]);
-					goBtn.innerHTML = 'Planning...';
-					goBtn.classList.add('danger');
-
-					// Send teleop
-					util.shm('/armplan', [lPlan, rPlan])
-					.then(procPlan)
-					.then(function(plans){
-						console.log('plans', plans);
-						return plans.map(function(p){return p.length>0;});
-					})
-					.then(function(valid){
-						return new Promise(function(resolve, reject) {
-							var success = (sameLArm || valid[0]) && (sameRArm || valid[1]);
-							if(!success){reject('Failed!');}
-							goBtn.innerHTML = 'Accept';
-							stepBtn.innerHTML = 'Decline';
-							// Go accepts and sends
-							h_accept = goBtn.addEventListener('click', function(){
-								resolve(valid);
-							});
-							// Step rejects
-							h_decline = stepBtn.addEventListener('click', function(){
-								goBtn.innerHTML = 'Plan';
-								stepBtn.innerHTML = '_';
-								reject(valid);
-							});
-							// Done rejects
-							h_done = ikBtn.addEventListener('click', function(){
-								goBtn.innerHTML = 'Plan';
-								stepBtn.innerHTML = '_';
-								reject(valid);
-							});
-						});
-					})
-					.then(function(){
-						return sameWaist || util.shm('/shm/hcm/teleop/waist', qWaist);
-					})
-					.then(function(){
-						// TODO: Grab a decision, via the promise
-						return Promise.all([
-							sameLArm || util.shm('/shm/hcm/teleop/larm', qLArm),
-							sameRArm || util.shm('/shm/hcm/teleop/rarm', qRArm)
-						]);
-					}).catch(function(reason){
-						util.debug([reason]);
-						// Reset the arms
-						planRobot.meshes.forEach(function(m, i){
-							m.quaternion.copy(this[i].cquaternion);
-						}, robot.meshes);
-						console.log('Rejection of plan', reason);
-					}).then(function(){
-						goBtn.innerHTML = 'Plan';
-						goBtn.classList.remove('danger');
-						// Remove the listeners
-						goBtn.removeEventListener('click', h_accept);
-						stepBtn.removeEventListener('click', h_decline);
-						ikBtn.removeEventListener('click', h_done);
-					});
-					break;
-				default:
-					// Proceed
-					util.shm('/shm/hcm/state/proceed', [1]);
-					break;
-			}
-		});
+		goBtn.addEventListener('click', go);
 
 		moveBtn.addEventListener('click', function(){
 			switch(getMode()){
