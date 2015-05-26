@@ -1091,36 +1091,53 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan))
 					}
 				}
-				return prCfgPlan.then(function(){
-					console.log('All done the plan!');
-				}).catch(function(e){
-					console.log('oops', e);
-				});
+				return prCfgPlan;
+			}).then(function(){
+				util.shm('/fsm/Arm/ready', true);
+			}).catch(function(){
+				console.log('nope');
 			});
 		});
+		listener.simple_combo("3", function(){
+			return util.shm('/Config/arm/door').then(function(cfg){
+				var i = 1; // Lua offsets...
+				var cfgPlan = cfg[i];
+				var prCfgPlan = plan_arm(cfgPlan);
+				while(cfgPlan) {
+					i += 1;
+					cfgPlan = cfg[i];
+					if(cfgPlan){
+						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan))
+					}
+				}
+				return prCfgPlan;
+			}).then(function(){
+
+			}).catch(function(){
+				console.log('nope');
+			});
+		});
+
 	}
 
 	function staged(paths){
-		console.log(paths);
 		// Find out joints
 		calculate_state();
 		var next = this;
-		// Actually just grab from the planRobot....
+		if(!next){return;}
 		if(next.left){
 			next.left.qLArm0 = qLArm;
 		}
 		if(next.right){
 			next.right.qRArm0 = qRArm;
 		}
-		if(!next){return;}
-		console.log(next);
 		return new Promise(function(resolve, reject){
 			if(!paths){
 				reject();
 			} else {
-				resolve();
+				resolve(next);
 			}
-		}).then(plan_arm.bind(next));
+		}).then(plan_arm);
 	}
 
 	function setup_buttons(){
