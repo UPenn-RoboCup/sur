@@ -26,7 +26,8 @@
 			if(!fr){return;}
 			// Still more frames in the buffer?
 			if (frames.length > 0) {
-				console.log('VideoFeed | Still too many frames!');
+				//console.log('VideoFeed | Still too many frames!');
+				frames = [];
 			}
 			fr_img.src = fr_img_src = createObjectURL(fr.data);
 			fr_canvas.metadata = fr;
@@ -40,7 +41,7 @@
 			}
 			// Still more frames in the buffer?
 			if (frames.length > 0) {
-				console.log('VideoFeed | Still too many frames!');
+				//console.log('VideoFeed | Still too many frames!');
 				frames = [];
 			}
 			fr_canvas.metadata = fr;

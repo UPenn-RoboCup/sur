@@ -1,7 +1,11 @@
 (function (ctx) {
 	'use strict';
-	var util = ctx.util, feed;
+	var util = ctx.util, feed, ittybittyfeed;
 
+	function toggle() {
+		feed.canvas.classList.toggle('nodisplay');
+		ittybittyfeed.canvas.classList.toggle('nodisplay');
+	}
 
 	var qHead = [0, 0];
 	function delta_head() {
@@ -44,11 +48,28 @@
 		return util.shm('/streams/camera1');
 	}).then(function(port){
 		feed = new ctx.VideoFeed({
-			port: port
+			port: port,
+			fr_callback: function(){
+//				feed.canvas.classList.remove('nodisplay');
+//				ittybittyfeed.canvas.classList.add('nodisplay');
+			},
+		});
+	}).then(function(){
+		return util.shm('/streams/ittybitty1');
+	}).then(function(port){
+		//console.log('port', port);
+		ittybittyfeed = new ctx.VideoFeed({
+			port: port,
+			fr_callback: function(){
+				console.log('frame');
+			}
 		});
 	}).then(function(){
 		var container = document.getElementById('camera_container');
 		container.appendChild(feed.canvas);
+		container.appendChild(ittybittyfeed.canvas);
+		ittybittyfeed.canvas.classList.toggle('nodisplay');
+		container.addEventListener('dblclick', toggle);
 		setTimeout(setup_keys, 0);
 	});
 
