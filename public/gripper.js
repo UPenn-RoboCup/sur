@@ -15,22 +15,25 @@
 	}
 
 	function update(fb){
+		//console.log(fb);
 		var tqGrip = fb.g;
-		grip.tq_fg.attr("d", arc_tq({endAngle: tq2rad(tqGrip[0])}));
-		trigger.tq_fg.attr("d", arc_tq({endAngle: tq2rad(tqGrip[1])}));
-		extra.tq_fg.attr("d", arc_tq({endAngle: tq2rad(tqGrip[2])}));
+		var tqAng = tqGrip.map(tq2rad);
+		grip.tq_fg.attr("d", arc_tq({endAngle: tqAng[0]}));
+		trigger.tq_fg.attr("d", arc_tq({endAngle: tqAng[1]}));
+		extra.tq_fg.attr("d", arc_tq({endAngle: tqAng[2]}));
 		//
-		var qGrip = fb.pos.slice(33, 36);
-		grip.tq_fg.attr("d", arc_pos({endAngle: qGrip[0]}));
-		trigger.tq_fg.attr("d", arc_pos({endAngle: qGrip[1]}));
-		extra.tq_fg.attr("d", arc_pos({endAngle: qGrip[2]}));
+		var qGrip = fb.p.slice(33, 36);
+		grip.pos_fg.attr("d", arc_pos({endAngle: qGrip[0]}));
+		trigger.pos_fg.attr("d", arc_pos({endAngle: qGrip[1]}));
+		extra.pos_fg.attr("d", arc_pos({endAngle: qGrip[2]}));
 		//
-		var tempGrip = fb.gt;
-		grip.tq_fg.attr("d", arc_temp({endAngle: temp2rad(tempGrip[0])}));
-		trigger.tq_fg.attr("d", arc_temp({endAngle: temp2rad(tempGrip[1])}));
-		extra.tq_fg.attr("d", arc_temp({endAngle: temp2rad(tempGrip[2])}));
+		var tempGrip = fb.gt.map(temp2rad);
+		grip.temp_fg.attr("d", arc_temp({endAngle: tempGrip[0]}));
+		trigger.temp_fg.attr("d", arc_temp({endAngle: tempGrip[1]}));
+		extra.temp_fg.attr("d", arc_temp({endAngle: tempGrip[2]}));
 		//
-		console.log('Updating gripper feedback...', qGrip, tqGrip, tempGrip);
+		//console.log('Updating gripper feedback...', tqGrip, qGrip, tempGrip);
+		//console.log('Updating gripper feedback...', tqAng, qGrip, tempGrip);
 	}
 
 	function gen_finger(group){
@@ -141,7 +144,7 @@
 		ws.onmessage = function (e) {
 			if (typeof e.data !== "string") { return; }
 			feedback = JSON.parse(e.data);
-			update();
+			update(feedback);
 		};
 	}).then(setup_charts).catch(function(e){
 		console.log('Loading error', e);
