@@ -102,6 +102,27 @@ server.post('/armplan', function(req, res, next){
 	return next();
 });
 
+/* Connect to the Arm Plan server - always on localhost :P */
+var config_skt = zmq.socket('req');
+sockets.push(config_skt);
+config_skt.connect('ipc:///tmp/'+'config');
+config_skt.http_responses = [];
+config_skt.on('message', function (msg) {
+	"use strict";
+	var c = mp.unpack(msg);
+	//console.log('plan', plan);
+	this.http_responses.shift().json(200, c);
+});
+// POST will send FSM events
+server.post('/c', function(req, res, next){
+		"use strict";
+	if(req.body === undefined){return next();}
+	console.log(req.body);
+	// Send to the armplan server
+	config_skt.send(mp.pack(JSON.parse(req.body))).http_responses.push(res);
+	return next();
+});
+
 /* Connect to the RPC server */
 var rpc = Config.net.rpc;
 var rpc_skt = zmq.socket('req');

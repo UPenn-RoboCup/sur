@@ -1080,8 +1080,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		//listener.simple_combo("escape", click_escape);
 		//
 		listener.simple_combo("2", function(){
-			return util.shm('/Config/arm/init').then(function(cfg){
-				var i = 1; // Lua offsets...
+			//return util.shm('/Config/arm/init')  // Lua offsets...
+			return util.shm('/c', ['arm', 'init']).then(function(cfg){
+				var i = 0;
 				var cfgPlan = cfg[i];
 				var prCfgPlan = plan_arm(cfgPlan);
 				while(cfgPlan) {
@@ -1094,13 +1095,13 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				return prCfgPlan;
 			}).then(function(){
 				util.shm('/fsm/Arm/ready', true);
-			}).catch(function(){
-				console.log('nope');
+			}).catch(function(e){
+				console.log('nope', e);
 			});
 		});
 		listener.simple_combo("3", function(){
-			return util.shm('/Config/arm/door').then(function(cfg){
-				var i = 1; // Lua offsets...
+			return util.shm('/c', ['arm', 'door']).then(function(cfg){
+				var i = 0;
 				var cfgPlan = cfg[i];
 				var prCfgPlan = plan_arm(cfgPlan);
 				while(cfgPlan) {
