@@ -3,6 +3,7 @@
 	var ws, feedback, svg,
 			arc_tq, arc_pos, arc_temp,
 			DEG_TO_RAD = util.DEG_TO_RAD,
+			RAD_TO_DEG = util.RAD_TO_DEG,
 		grip, trigger, extra;
 
 	var RADIUS0 = 40, RADIUS1 = 80, RADIUS2 = 120, RADIUS3 = 160;
@@ -20,7 +21,7 @@
 		tqGrip[0] *= -1; // direction flipped
 		var tqAng = tqGrip.map(tq2rad);
 		var tqInd = tqAng.map(function(a){
-			return arc_tq({startAngle: a-2.5*DEG_TO_RAD, endAngle: a+2.5*DEG_TO_RAD})
+			return arc_tq({startAngle: a-2.5*DEG_TO_RAD, endAngle: a+2.5*DEG_TO_RAD});
 		});
 		grip.tq_fg.attr("d", tqInd[0]);
 		trigger.tq_fg.attr("d", tqInd[1]);
@@ -31,7 +32,7 @@
 		qGrip[0] += 90*DEG_TO_RAD;
 		var posAng = qGrip;
 		var posInd = posAng.map(function(a){
-			return arc_pos({startAngle: a-2.5*DEG_TO_RAD, endAngle: a+2.5*DEG_TO_RAD})
+			return arc_pos({startAngle: a-2.5*DEG_TO_RAD, endAngle: a+2.5*DEG_TO_RAD});
 		});
 		grip.pos_fg.attr("d", posInd[0]);
 		trigger.pos_fg.attr("d", posInd[1]);
@@ -48,11 +49,19 @@
 		//console.log('Updating gripper feedback...', tqAng, qGrip, tempGrip);
 	}
 
-	function handle_click(){
-		console.log(this);
+	function handle_tq(){
+		var xy = d3.mouse(this.parentNode);
+		var theta = Math.atan2(xy[1], xy[0]);
+		console.log(xy, theta*RAD_TO_DEG);
+	}
+	function handle_pos(){
+		var xy = d3.mouse(this.parentNode);
+		var theta = Math.atan2(xy[1], xy[0]);
+		console.log(xy, theta*RAD_TO_DEG);
 	}
 
 	function gen_finger(group){
+		var o = {};
 		// Add the background arc, from 0 to 100% (τ).
 		var tq_bg = group.append("path")
 				.datum({startAngle: 0, endAngle: 2 * Math.PI})
@@ -92,23 +101,22 @@
 				.datum({startAngle: start+5*DEG_TO_RAD, endAngle: end-5*DEG_TO_RAD})
 				.style("fill", "orange").style('opacity', 0.2)
 				.attr("d", arc_tq)
-				.on('click', handle_click);
+				.on('click', handle_tq);
 			incG.append("path")
 				.datum({startAngle: start+5*DEG_TO_RAD, endAngle: end-5*DEG_TO_RAD})
 				.style("fill", "green").style('opacity', 0.2)
 				.attr("d", arc_pos)
-				.on('click', handle_click);
+				.on('click', handle_pos);
 		}
 
-		return {
-			tq_bg: tq_bg,
-			tq_fg: tq_fg,
-			pos_bg: pos_bg,
-			pos_fg: pos_fg,
-			temp_bg: temp_bg,
-			temp_fg: temp_fg,
-			el: group
-		};
+		o.tq_bg = tq_bg;
+		o.tq_fg = tq_fg;
+		o.pos_bg = pos_bg;
+		o.pos_fg = pos_fg;
+		o.temp_bg = temp_bg;
+		o.temp_fg = temp_fg;
+		o.el = group;
+		return o;
 	}
 
 	function setup_charts(){
