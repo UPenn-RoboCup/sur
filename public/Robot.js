@@ -35,7 +35,7 @@
 				object.position.z = torso[0] * 1e3;
 				object.position.x = torso[1] * 1e3;
 				object.position.y = torso[2] * 1e3;
-				var pillars = feedback.pillars;
+				var pillars = feedback.s;
 				if(pillars && options.update_pillars){
 					options.update_pillars(pillars);
 				}
