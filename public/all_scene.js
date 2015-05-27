@@ -881,16 +881,18 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1e3).toArray();
 			var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1e3).toArray();
 
-			util.debug([
-				mesh.name,
-				sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
-				sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
-				sprintf("%0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], global_msg[1]),
-			]);
+
 
 			// Default gives a text cursor
 			if (e.button === 1) {
 				// Middle click
+
+				util.debug([
+					mesh.name,
+					sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
+					sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
+					sprintf("%0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], global_msg[1]),
+				]);
 
 				switch(getMode()){
 					case 'ik':
@@ -1089,7 +1091,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 					i += 1;
 					cfgPlan = cfg[i];
 					if(cfgPlan){
-						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan))
+						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan));
 					}
 				}
 				return prCfgPlan;
@@ -1108,12 +1110,32 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 					i += 1;
 					cfgPlan = cfg[i];
 					if(cfgPlan){
-						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan))
+						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan));
 					}
 				}
 				return prCfgPlan;
 			}).then(function(){
+				util.shm('/fsm/Arm/door');
+			}).catch(function(){
+				console.log('nope');
+			});
+		});
 
+		listener.simple_combo("4", function(){
+			return util.shm('/c', ['arm', 'drill']).then(function(cfg){
+				var i = 0;
+				var cfgPlan = cfg[i];
+				var prCfgPlan = plan_arm(cfgPlan);
+				while(cfgPlan) {
+					i += 1;
+					cfgPlan = cfg[i];
+					if(cfgPlan){
+						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan));
+					}
+				}
+				return prCfgPlan;
+			}).then(function(){
+				util.shm('/fsm/Arm/drill');
 			}).catch(function(){
 				console.log('nope');
 			});
@@ -1124,6 +1146,13 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function staged(paths){
 		// Find out joints
 		calculate_state();
+		var qlmsg = qLArm.map(function(q){
+			return (q*util.RAD_TO_DEG).toPrecision(4);
+		}).join(', ');
+		var qrmsg = qRArm.map(function(q){
+			return (q*util.RAD_TO_DEG).toPrecision(4);
+		}).join(', ');
+		util.debug([qlmsg,qrlmsg]);
 		var next = this;
 		if(!next){return;}
 		if(next.left){
