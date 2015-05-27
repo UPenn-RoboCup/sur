@@ -7,12 +7,29 @@
 
 	var RADIUS0 = 40, RADIUS1 = 80, RADIUS2 = 120, RADIUS3 = 160;
 
+	function tq2rad(tq){
+		return 2 * Math.PI * tq / 1024;
+	}
+	function temp2rad(temp){
+		return 2 * Math.PI * temp / 150;
+	}
+
 	function update(fb){
-		var atq = arc_tq({endAngle: DEG_TO_RAD * 100});
-		grip.fg3.attr("d", atq);
-		var qGrip = fb.pos.slice(33, 36);
 		var tqGrip = fb.g;
+		grip.tq_fg.attr("d", arc_tq({endAngle: tq2rad(tqGrip[0])}));
+		trigger.tq_fg.attr("d", arc_tq({endAngle: tq2rad(tqGrip[1])}));
+		extra.tq_fg.attr("d", arc_tq({endAngle: tq2rad(tqGrip[2])}));
+		//
+		var qGrip = fb.pos.slice(33, 36);
+		grip.tq_fg.attr("d", arc_pos({endAngle: qGrip[0]}));
+		trigger.tq_fg.attr("d", arc_pos({endAngle: qGrip[1]}));
+		extra.tq_fg.attr("d", arc_pos({endAngle: qGrip[2]}));
+		//
 		var tempGrip = fb.gt;
+		grip.tq_fg.attr("d", arc_temp({endAngle: temp2rad(tempGrip[0])}));
+		trigger.tq_fg.attr("d", arc_temp({endAngle: temp2rad(tempGrip[1])}));
+		extra.tq_fg.attr("d", arc_temp({endAngle: temp2rad(tempGrip[2])}));
+		//
 		console.log('Updating gripper feedback...', qGrip, tqGrip, tempGrip);
 	}
 
