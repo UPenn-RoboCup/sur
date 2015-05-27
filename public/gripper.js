@@ -17,56 +17,88 @@
 	function update(fb){
 		//console.log(fb);
 		var tqGrip = fb.g;
+		tqGrip[0] *= -1; // direction flipped
 		var tqAng = tqGrip.map(tq2rad);
-		grip.tq_fg.attr("d", arc_tq({endAngle: tqAng[0]}));
-		trigger.tq_fg.attr("d", arc_tq({endAngle: tqAng[1]}));
-		extra.tq_fg.attr("d", arc_tq({endAngle: tqAng[2]}));
+		var tqInd = tqAng.map(function(a){
+			return arc_tq({startAngle: a-2.5*DEG_TO_RAD, endAngle: a+2.5*DEG_TO_RAD})
+		});
+		grip.tq_fg.attr("d", tqInd[0]);
+		trigger.tq_fg.attr("d", tqInd[1]);
+		extra.tq_fg.attr("d", tqInd[2]);
 		//
 		var qGrip = fb.p.slice(33, 36);
-		grip.pos_fg.attr("d", arc_pos({endAngle: qGrip[0]}));
-		trigger.pos_fg.attr("d", arc_pos({endAngle: qGrip[1]}));
-		extra.pos_fg.attr("d", arc_pos({endAngle: qGrip[2]}));
+		qGrip[0] *= -1; // direction flipped
+		qGrip[0] += 90*DEG_TO_RAD;
+		var posAng = qGrip;
+		var posInd = posAng.map(function(a){
+			return arc_pos({startAngle: a-2.5*DEG_TO_RAD, endAngle: a+2.5*DEG_TO_RAD})
+		});
+		grip.pos_fg.attr("d", posInd[0]);
+		trigger.pos_fg.attr("d", posInd[1]);
+		extra.pos_fg.attr("d", posInd[2]);
 		//
-		var tempGrip = fb.gt.map(temp2rad);
-		grip.temp_fg.attr("d", arc_temp({endAngle: tempGrip[0]}));
-		trigger.temp_fg.attr("d", arc_temp({endAngle: tempGrip[1]}));
-		extra.temp_fg.attr("d", arc_temp({endAngle: tempGrip[2]}));
+		var tempGrip = fb.gt;
+		tempGrip[0] *= -1; // direction - why not
+		var tempAng = tempGrip.map(temp2rad);
+		grip.temp_fg.attr("d", arc_temp({startAngle:0, endAngle: tempAng[0]}));
+		trigger.temp_fg.attr("d", arc_temp({startAngle:0, endAngle: tempAng[1]}));
+		extra.temp_fg.attr("d", arc_temp({startAngle:0, endAngle: tempAng[2]}));
 		//
 		//console.log('Updating gripper feedback...', tqGrip, qGrip, tempGrip);
 		//console.log('Updating gripper feedback...', tqAng, qGrip, tempGrip);
 	}
 
+	function handle_click(){
+		console.log(this);
+	}
+
 	function gen_finger(group){
 		// Add the background arc, from 0 to 100% (τ).
 		var tq_bg = group.append("path")
-				.datum({endAngle: 2 * Math.PI})
+				.datum({startAngle: 0, endAngle: 2 * Math.PI})
 				.style("fill", "#ddd")
 				.attr("d", arc_tq);
 		// Add the foreground arc in orange, currently showing 12.7%.
 		var tq_fg = group.append("path")
-				.datum({endAngle: 90 * DEG_TO_RAD})
+				.datum({startAngle: 0, endAngle: 90 * DEG_TO_RAD})
 				.style("fill", "orange")
 				.attr("d", arc_tq);
 		// Add the background arc, from 0 to 100% (τ).
 		var pos_bg = group.append("path")
-				.datum({endAngle: 2 * Math.PI})
+				.datum({startAngle: 0, endAngle: 2 * Math.PI})
 				.style("fill", "#eee")
 				.attr("d", arc_pos);
 		// Add the foreground arc in orange, currently showing 12.7%.
 		var pos_fg = group.append("path")
-				.datum({endAngle: 90 * DEG_TO_RAD})
+				.datum({startAngle: 0, endAngle: 90 * DEG_TO_RAD})
 				.style("fill", "green")
 				.attr("d", arc_pos);
 		// Add the background arc, from 0 to 100% (τ).
 		var temp_bg = group.append("path")
-				.datum({endAngle: 2 * Math.PI})
+				.datum({startAngle: 0, endAngle: 2 * Math.PI})
 				.style("fill", "#eee")
 				.attr("d", arc_temp);
 		// Add the foreground arc in orange, currently showing 12.7%.
 		var temp_fg = group.append("path")
-				.datum({endAngle: 90 * DEG_TO_RAD})
+				.datum({startAngle: 0, endAngle: 90 * DEG_TO_RAD})
 				.style("fill", "red")
 				.attr("d", arc_temp);
+
+		var incG = group.append("g").attr('class', 'inc');
+		var nInc = 8, incSz = 2*Math.PI / nInc;
+		for(var i=0; i<nInc; i+=1){
+			var start = incSz * i, end = start + incSz;
+			incG.append("path")
+				.datum({startAngle: start+5*DEG_TO_RAD, endAngle: end-5*DEG_TO_RAD})
+				.style("fill", "orange").style('opacity', 0.2)
+				.attr("d", arc_tq)
+				.on('click', handle_click);
+			incG.append("path")
+				.datum({startAngle: start+5*DEG_TO_RAD, endAngle: end-5*DEG_TO_RAD})
+				.style("fill", "green").style('opacity', 0.2)
+				.attr("d", arc_pos)
+				.on('click', handle_click);
+		}
 
 		return {
 			tq_bg: tq_bg,
@@ -93,37 +125,34 @@
 		// property to the `arc` function, and it will return the corresponding string.
 		arc_temp = d3.svg.arc()
 				.innerRadius(RADIUS0)
-				.outerRadius(RADIUS1)
-				.startAngle(0);
+				.outerRadius(RADIUS1);
 		arc_pos = d3.svg.arc()
 				.innerRadius(RADIUS1)
-				.outerRadius(RADIUS2)
-				.startAngle(0);
+				.outerRadius(RADIUS2);
 		arc_tq = d3.svg.arc()
 				.innerRadius(RADIUS2)
-				.outerRadius(RADIUS3)
-				.startAngle(0);
+				.outerRadius(RADIUS3);
 
 		grip = gen_finger(
 			svg.append("g")
 			.attr("transform", "translate(" + 3*RADIUS3 + "," + 2*RADIUS3 + ")")
 		);
-		grip.el.append('text').text('Grip')
-			.attr("transform", "translate(-15, 0)");
+		grip.el.append('text').text('Grip (1)')
+			.attr("transform", "translate(-25, 5)");
 		//
 		trigger = gen_finger(
 			svg.append("g")
 			.attr("transform", "translate(" + RADIUS3 + "," + RADIUS3 + ")")
 		);
-		trigger.el.append('text').text('Trigger')
-			.attr("transform", "translate(-24, 0)");
+		trigger.el.append('text').text('Trigger (2)')
+			.attr("transform", "translate(-36, 5)");
 		//
 		extra = gen_finger(
 			svg.append("g")
 			.attr("transform", "translate(" + RADIUS3 + "," + 4*RADIUS3 + ")")
 		);
-		extra.el.append('text').text('Extra')
-			.attr("transform", "translate(-18, 0)");
+		extra.el.append('text').text('Extra (3)')
+			.attr("transform", "translate(-28, 5)");
 
 	}
 
