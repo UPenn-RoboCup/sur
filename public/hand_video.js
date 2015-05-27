@@ -50,8 +50,8 @@
 		feed = new ctx.VideoFeed({
 			port: port,
 			fr_callback: function(){
-//				feed.canvas.classList.remove('nodisplay');
-//				ittybittyfeed.canvas.classList.add('nodisplay');
+				feed.canvas.classList.remove('nodisplay');
+				ittybittyfeed.canvas.classList.add('nodisplay');
 			},
 		});
 	}).then(function(){
