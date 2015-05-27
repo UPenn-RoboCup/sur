@@ -34,6 +34,8 @@
 	function shm(url, val){
 		if (val) {
 			return xhr(url, 'POST', JSON.stringify(val));
+		} else if(url.indexOf('fsm')>0){
+			return xhr(url, 'POST', JSON.stringify(val));
 		} else {
 			return xhr(url);
 		}

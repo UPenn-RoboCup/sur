@@ -2,7 +2,7 @@
 	'use strict';
 
 	function sendfsm(){
-		util.shm(this, true);
+		util.shm(this);
 	}
 
 	function sendshm(){
@@ -28,7 +28,6 @@
 				));
 			}
 		}
-
 	}
 	// Load everything
 	Promise.all([

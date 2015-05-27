@@ -248,8 +248,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				moveBtn.innerHTML = 'Undo';
 				ikBtn.innerHTML = '_';
 				// Tell the robot to go into teleop
-				//util.shm('/fsm/Head/teleop', true);
-				util.shm('/fsm/Arm/teleopraw', true);
+				//util.shm('/fsm/Head/teleop');
+				util.shm('/fsm/Arm/teleopraw');
 				break;
 		}
 		if(select_joint()){
@@ -278,7 +278,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				goBtn.innerHTML = 'Plan';
 				stepBtn.innerHTML = '_';
 				teleopBtn.innerHTML = 'Rotate';
-				util.shm('/fsm/Arm/teleop', true);
+				util.shm('/fsm/Arm/teleop');
 				break;
 		}
 		tcontrol.detach();
@@ -655,7 +655,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			util.shm('/shm/hcm/step/zpr', zpr),
 			util.shm('/shm/hcm/step/supportLeg', [supportFoot]),
 		]).then(function(){
-			util.shm('/fsm/Body/stepover1', true);
+			util.shm('/fsm/Body/stepover1');
 		});
 	}
 
@@ -1094,7 +1094,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				}
 				return prCfgPlan;
 			}).then(function(){
-				util.shm('/fsm/Arm/ready', true);
+				util.shm('/fsm/Arm/ready');
 			}).catch(function(e){
 				console.log('nope', e);
 			});

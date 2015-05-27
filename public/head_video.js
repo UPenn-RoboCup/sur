@@ -49,7 +49,7 @@
 		});
 		// Enter the teleop mode
 		listener.simple_combo("enter", function(){
-			return util.shm('/fsm/Head/teleop', true);
+			return util.shm('/fsm/Head/teleop');
 		});
 		listener.simple_combo("space", function(){
 			return util.shm('/shm/hcm/teleop/head', qHead);

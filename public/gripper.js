@@ -1,24 +1,54 @@
 (function () {
 	'use strict';
 	var ws, feedback, svg,
+			rgrip_ids,
 			arc_tq, arc_pos, arc_temp,
 			DEG_TO_RAD = util.DEG_TO_RAD,
 			RAD_TO_DEG = util.RAD_TO_DEG,
-		grip, trigger, extra;
+		grip, trigger, extra,
+			max_rad, min_rad;
+
+	var desired_tq = [0,0,0];
+	var desired_pos = [0,0,0];
+
+	var id2idx = {
+		grip: 0,
+		trigger : 1,
+		extra: 2
+	};
 
 	var RADIUS0 = 40, RADIUS1 = 80, RADIUS2 = 120, RADIUS3 = 160;
 
-	function tq2rad(tq){
-		return 2 * Math.PI * tq / 1024;
+	function sendfsm(){
+		util.shm(this);
+	}
+
+	// go halfway, so direction is preserved
+	function tq2rad(tq, i){
+		var rad = Math.PI * tq / 1024;
+		if(i===0){ rad *= -1; }
+		return rad;
+	}
+	function rad2tq(rad, i){
+		if(i===0){ rad *= -1; }
+		var tq = Math.floor(rad * 1024 / Math.PI);
+		return tq;
 	}
 	function temp2rad(temp){
 		return 2 * Math.PI * temp / 150;
+	}
+	function q2rad(q, i){
+		var rad =  2 * Math.PI * (q - min_rad[i]) / (max_rad[i] - min_rad[i]);
+		if(i===0){
+			rad = 90 * DEG_TO_RAD - rad;
+		}
+		return rad;
 	}
 
 	function update(fb){
 		//console.log(fb);
 		var tqGrip = fb.g;
-		tqGrip[0] *= -1; // direction flipped
+		desired_tq = fb.g.slice();
 		var tqAng = tqGrip.map(tq2rad);
 		var tqInd = tqAng.map(function(a){
 			return arc_tq({startAngle: a-2.5*DEG_TO_RAD, endAngle: a+2.5*DEG_TO_RAD});
@@ -28,9 +58,9 @@
 		extra.tq_fg.attr("d", tqInd[2]);
 		//
 		var qGrip = fb.p.slice(33, 36);
-		qGrip[0] *= -1; // direction flipped
-		qGrip[0] += 90*DEG_TO_RAD;
-		var posAng = qGrip;
+		desired_pos = qGrip.slice();
+		var posAng = qGrip;//.map(q2rad);
+
 		var posInd = posAng.map(function(a){
 			return arc_pos({startAngle: a-2.5*DEG_TO_RAD, endAngle: a+2.5*DEG_TO_RAD});
 		});
@@ -50,14 +80,31 @@
 	}
 
 	function handle_tq(){
-		var xy = d3.mouse(this.parentNode);
-		var theta = Math.atan2(xy[1], xy[0]);
-		console.log(xy, theta*RAD_TO_DEG);
+		var group = this.parentNode;
+		var xy = d3.mouse(group);
+		var rad = Math.atan2(xy[1], xy[0]) + Math.PI/2;
+		if(rad>Math.PI){ rad -= 2*Math.PI; }
+		//console.log(xy, rad*RAD_TO_DEG);
+		var idx = id2idx[group.parentNode.id];
+		// TODO: Maybe not appropriate
+		// Use the last known feedback
+		desired_tq[idx] = rad2tq(rad, idx);
+		console.log(desired_tq, 'torque');
+		util.shm('/shm/hcm/teleop/rgrip_torque', desired_tq);
 	}
 	function handle_pos(){
-		var xy = d3.mouse(this.parentNode);
-		var theta = Math.atan2(xy[1], xy[0]);
-		console.log(xy, theta*RAD_TO_DEG);
+		var group = this.parentNode;
+		var xy = d3.mouse(group);
+		var rad = Math.atan2(xy[1], xy[0]) + Math.PI/2;
+		if(rad>Math.PI){ rad -= 2*Math.PI; }
+		var idx = id2idx[group.parentNode.id];
+		// TODO: Maybe not appropriate
+		// Use the last known feedback
+		desired_pos[idx] = rad;
+		console.log(desired_pos.map(function(v){
+			return v * RAD_TO_DEG;
+		}), 'degrees');
+		util.shm('/shm/hcm/teleop/rgrip_position', desired_pos);
 	}
 
 	function gen_finger(group){
@@ -119,6 +166,18 @@
 		return o;
 	}
 
+	function setup_buttons(fsm){
+		var allBtns = document.querySelectorAll('#'+fsm+' button');
+		for(var i = 0; i<allBtns.length; i+=1){
+			var btn = allBtns.item(i);
+			if(btn.parentNode.classList.contains("fsm")){
+				btn.addEventListener('click', sendfsm.bind(
+					'/fsm/'+fsm+'/'+btn.id
+				));
+			}
+		}
+	}
+
 	function setup_charts(){
 		var width = 5*RADIUS3,
     height = 5*RADIUS3;
@@ -142,21 +201,21 @@
 				.outerRadius(RADIUS3);
 
 		grip = gen_finger(
-			svg.append("g")
+			svg.append("g").attr('id','grip')
 			.attr("transform", "translate(" + 3*RADIUS3 + "," + 2*RADIUS3 + ")")
 		);
 		grip.el.append('text').text('Grip (1)')
 			.attr("transform", "translate(-25, 5)");
 		//
 		trigger = gen_finger(
-			svg.append("g")
+			svg.append("g").attr('id','trigger')
 			.attr("transform", "translate(" + RADIUS3 + "," + RADIUS3 + ")")
 		);
 		trigger.el.append('text').text('Trigger (2)')
 			.attr("transform", "translate(-36, 5)");
 		//
 		extra = gen_finger(
-			svg.append("g")
+			svg.append("g").attr('id','extra')
 			.attr("transform", "translate(" + RADIUS3 + "," + 4*RADIUS3 + ")")
 		);
 		extra.el.append('text').text('Extra (3)')
@@ -166,13 +225,27 @@
 
 	// Load everything
 	Promise.all([
-		//util.lcss('/css/gripper.css'),
+		util.lcss('/css/gripper.css'),
 		util.lcss('/css/gh-buttons.css'),
 		util.ljs('/bc/d3/d3.min.js'),
 	]).then(function(){
 		return util.lhtml('/view/gripper.html');
 	}).then(function(view){
 		document.body = view;
+	})
+	.then(function(){
+		return util.shm('/c',['parts', 'RGrip']);
+	})
+	.then(function(ids){
+		rgrip_ids = ids;
+		return Promise.all([
+			util.shm('/c', ['servo', 'max_rad']).then(function(m){
+				max_rad = m.slice(rgrip_ids[0]-1, rgrip_ids[2]);
+			}),
+			util.shm('/c', ['servo', 'min_rad']).then(function(m){
+				min_rad = m.slice(rgrip_ids[0]-1, rgrip_ids[2]);
+			}),
+		]);
 	})
 	.then(function(){
 		return util.shm('/streams/feedback');
@@ -183,7 +256,15 @@
 			feedback = JSON.parse(e.data);
 			update(feedback);
 		};
-	}).then(setup_charts).catch(function(e){
+	}).then(setup_charts).
+	then(function(){
+		var allFSMs = document.querySelectorAll('.fsm');
+		var i, div;
+		for(i = 0; i<allFSMs.length; i+=1){
+			div = allFSMs.item(i);
+			setup_buttons(div.id);
+		}
+	}).catch(function(e){
 		console.log('Loading error', e);
 	});
 
