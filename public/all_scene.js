@@ -420,6 +420,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			var prPlay = playPlan(paths);
 			prPlay.then(function(){
 				//console.log('Finished playing');
+				// TODO: Add the tconrol here
 			}, function(){
 				//console.log('Interrupted playing');
 			}).then(function(){
@@ -1087,6 +1088,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		listener.simple_combo("2", function(){
 			//return util.shm('/Config/arm/init')  // Lua offsets...
 			return util.shm('/c', ['arm', 'manipulation']).then(function(cfg){
+				console.log('cfg', cfg);
 				var i = 0;
 				var cfgPlan = cfg[i];
 				var prCfgPlan = plan_arm(cfgPlan);
@@ -1099,6 +1101,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				}
 				return prCfgPlan;
 			}).then(function(valid){
+				console.log('valid', valid);
 				if(!valid) {return valid;}
 				return util.shm('/fsm/Arm/ready');
 			}).catch(function(e){
@@ -1106,81 +1109,30 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			});
 		});
 		listener.simple_combo("3", function(){
-			return util.shm('/c', ['arm', 'pushdoor']).then(function(cfg){
-				var i = 0;
-				var cfgPlan = cfg[i];
-				var prCfgPlan = plan_arm(cfgPlan);
-				while(cfgPlan) {
-					i += 1;
-					cfgPlan = cfg[i];
-					if(cfgPlan){
-						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan));
-					}
-				}
-				return prCfgPlan;
-			}).then(function(valid){
-				if(!valid) {return valid;}
-				return util.shm('/fsm/Arm/pushdoor');
-			}).catch(function(){
-				console.log('nope');
-			});
+			return try_arm_fsm('pushdoor');
 		});
 
 		listener.simple_combo("4", function(){
-			return util.shm('/c', ['arm', 'drill']).then(function(cfg){
-				var i = 0;
-				var cfgPlan = cfg[i];
-				var prCfgPlan = plan_arm(cfgPlan);
-				while(cfgPlan) {
-					i += 1;
-					cfgPlan = cfg[i];
-					if(cfgPlan){
-						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan));
-					}
-				}
-				return prCfgPlan;
-			}).then(function(valid){
-				if(!valid) {return valid;}
-				return util.shm('/fsm/Arm/drill');
-			}).catch(function(){
-				console.log('nope');
-			});
+			return try_arm_fsm('drill');
 		});
 
 		listener.simple_combo("5", function(){
-			return util.shm('/c', ['arm', 'shower']).then(function(cfg){
-				var i = 0;
-				var cfgPlan = cfg[i];
-				var prCfgPlan = plan_arm(cfgPlan);
-				while(cfgPlan) {
-					i += 1;
-					cfgPlan = cfg[i];
-					if(cfgPlan){
-						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan));
-					}
-				}
-				return prCfgPlan;
-			}).then(function(valid){
-				if(!valid) {return valid;}
-				return util.shm('/fsm/Arm/shower');
-			}).catch(function(){
-				console.log('nope');
-			}).then(function(){
-				calculate_state();
-				var qlmsg = qLArm.map(function(q){
-					return (q*util.RAD_TO_DEG).toPrecision(4);
-				}).join(', ');
-				var qrmsg = qRArm.map(function(q){
-					return (q*util.RAD_TO_DEG).toPrecision(4);
-				}).join(', ');
-				util.debug([qlmsg, qrmsg]);
-			});
+			return try_arm_fsm('shower');
 		});
 
 	}
 
-	function staged(paths){
-		// Find out joints
+	function try_arm_fsm(name){
+		var evt = '/fsm/Arm/' + name;
+		return util.shm('/c', ['arm', name]).then(preview_sequence).then(function(paths){
+			if(!paths) { return; }
+			return util.shm(evt);
+		}).catch(function(reason){
+			console.log('nope', reason);
+		}).then(show_qarms);
+	}
+
+	function show_qarms(paths){
 		calculate_state();
 		var qlmsg = qLArm.map(function(q){
 			return (q*util.RAD_TO_DEG).toPrecision(4);
@@ -1188,21 +1140,35 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		var qrmsg = qRArm.map(function(q){
 			return (q*util.RAD_TO_DEG).toPrecision(4);
 		}).join(', ');
-		util.debug([qlmsg, qrmsg]);
+		var path_msg = paths ? paths.map(function(p){return p ? 'OK': '(/)';}) : "nope";
+		util.debug([qlmsg, qrmsg, path_msg]);
+		return paths;
+	}
+
+	function preview_sequence(seq){
+		if(!seq){return false;}
+		var i = 0;
+		var cfgPlan = seq[i];
+		var prCfgPlan = plan_arm(cfgPlan).then(show_qarms);
+		while(cfgPlan) {
+			i += 1;
+			cfgPlan = seq[i];
+			if(cfgPlan){
+				prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan)).then(show_qarms);
+			}
+		}
+		return prCfgPlan;
+	}
+
+	function staged(paths){
+		console.log(paths);
+		// Find out joints
 		var next = this;
 		if(!next){return;}
-		if(next.left){
-			next.left.qLArm0 = qLArm;
-		}
-		if(next.right){
-			next.right.qRArm0 = qRArm;
-		}
+		if(next.left){ next.left.qLArm0 = qLArm; }
+		if(next.right){ next.right.qRArm0 = qRArm; }
 		return new Promise(function(resolve, reject){
-			if(!paths){
-				reject();
-			} else {
-				resolve(next);
-			}
+			if(!paths){ reject(); } else { resolve(next); }
 		}).then(plan_arm);
 	}
 

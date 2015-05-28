@@ -96,7 +96,8 @@ armplan_skt.on('message', function (msg) {
 server.post('/armplan', function(req, res, next){
 		"use strict";
 	if(req.body === undefined){return next();}
-	console.log(req.body);
+	console.log('arm plan');
+	//console.log(req.body);
 	// Send to the armplan server
 	armplan_skt.send(mp.pack(JSON.parse(req.body))).http_responses.push(res);
 	return next();
