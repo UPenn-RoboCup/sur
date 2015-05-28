@@ -1080,10 +1080,13 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		listener.simple_combo("backspace", click_reset);
 		listener.simple_combo("9", click_move);
 		//listener.simple_combo("escape", click_escape);
+		listener.simple_combo("1", function(){
+			return util.shm('/fsm/Arm/init');
+		});
 		//
 		listener.simple_combo("2", function(){
 			//return util.shm('/Config/arm/init')  // Lua offsets...
-			return util.shm('/c', ['arm', 'init']).then(function(cfg){
+			return util.shm('/c', ['arm', 'manipulation']).then(function(cfg){
 				var i = 0;
 				var cfgPlan = cfg[i];
 				var prCfgPlan = plan_arm(cfgPlan);
@@ -1095,14 +1098,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 					}
 				}
 				return prCfgPlan;
-			}).then(function(){
-				util.shm('/fsm/Arm/ready');
+			}).then(function(valid){
+				if(!valid) {return valid;}
+				return util.shm('/fsm/Arm/ready');
 			}).catch(function(e){
 				console.log('nope', e);
 			});
 		});
 		listener.simple_combo("3", function(){
-			return util.shm('/c', ['arm', 'door']).then(function(cfg){
+			return util.shm('/c', ['arm', 'pushdoor']).then(function(cfg){
 				var i = 0;
 				var cfgPlan = cfg[i];
 				var prCfgPlan = plan_arm(cfgPlan);
@@ -1114,8 +1118,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 					}
 				}
 				return prCfgPlan;
-			}).then(function(){
-				util.shm('/fsm/Arm/door');
+			}).then(function(valid){
+				if(!valid) {return valid;}
+				return util.shm('/fsm/Arm/pushdoor');
 			}).catch(function(){
 				console.log('nope');
 			});
@@ -1134,10 +1139,41 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 					}
 				}
 				return prCfgPlan;
-			}).then(function(){
-				util.shm('/fsm/Arm/drill');
+			}).then(function(valid){
+				if(!valid) {return valid;}
+				return util.shm('/fsm/Arm/drill');
 			}).catch(function(){
 				console.log('nope');
+			});
+		});
+
+		listener.simple_combo("5", function(){
+			return util.shm('/c', ['arm', 'shower']).then(function(cfg){
+				var i = 0;
+				var cfgPlan = cfg[i];
+				var prCfgPlan = plan_arm(cfgPlan);
+				while(cfgPlan) {
+					i += 1;
+					cfgPlan = cfg[i];
+					if(cfgPlan){
+						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan));
+					}
+				}
+				return prCfgPlan;
+			}).then(function(valid){
+				if(!valid) {return valid;}
+				return util.shm('/fsm/Arm/shower');
+			}).catch(function(){
+				console.log('nope');
+			}).then(function(){
+				calculate_state();
+				var qlmsg = qLArm.map(function(q){
+					return (q*util.RAD_TO_DEG).toPrecision(4);
+				}).join(', ');
+				var qrmsg = qRArm.map(function(q){
+					return (q*util.RAD_TO_DEG).toPrecision(4);
+				}).join(', ');
+				util.debug([qlmsg, qrmsg]);
 			});
 		});
 
@@ -1152,7 +1188,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		var qrmsg = qRArm.map(function(q){
 			return (q*util.RAD_TO_DEG).toPrecision(4);
 		}).join(', ');
-		util.debug([qlmsg,qrlmsg]);
+		util.debug([qlmsg, qrmsg]);
 		var next = this;
 		if(!next){return;}
 		if(next.left){
