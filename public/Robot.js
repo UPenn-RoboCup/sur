@@ -24,10 +24,13 @@
 				var cqQuat = feedback.cp.map(function(q){
 					return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 				});
+				// Use cq or q
+				var quatUsed = cqQuat;
 				meshes.forEach(function(m, i){
 					if(!m){return;}
-					m.quaternion.multiplyQuaternions(qDefault[i], qQuat[i]);
+					m.quaternion.multiplyQuaternions(qDefault[i], quatUsed[i]);
 					m.cquaternion.multiplyQuaternions(qDefault[i], cqQuat[i]);
+					//m.pquaternion.multiplyQuaternions(qDefault[i], qQuat[i]);
 					//m.matrixWorldNeedsUpdate = true;
 				});
 				var torso = feedback.u;
