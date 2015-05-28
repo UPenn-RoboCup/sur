@@ -81,7 +81,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			if(!plan){reject();}
 			var lplan = plan[0].length ? plan[0] : false;
 			var rplan = plan[1].length ? plan[1] : false;
-			var wplan = plan[2].length ? plan[1] : false;
+			var wplan = plan[2].length ? plan[2] : false;
 			if(!lplan && !rplan && !wplan){reject();}
 			resolve([lplan, rplan, wplan]);
 		});
@@ -102,6 +102,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		}
 
 		var promises = [];
+		console.log(paths);
 		if(paths[0]){
 			promises.push(
 				util.loop(paths[0].filter(halfsec), updatechain.bind(planRobot.IDS_LARM), play_rate));
@@ -1084,42 +1085,18 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		listener.simple_combo("1", function(){
 			return util.shm('/fsm/Arm/init');
 		});
-		//
 		listener.simple_combo("2", function(){
-			//return util.shm('/Config/arm/init')  // Lua offsets...
-			return util.shm('/c', ['arm', 'manipulation']).then(function(cfg){
-				console.log('cfg', cfg);
-				var i = 0;
-				var cfgPlan = cfg[i];
-				var prCfgPlan = plan_arm(cfgPlan);
-				while(cfgPlan) {
-					i += 1;
-					cfgPlan = cfg[i];
-					if(cfgPlan){
-						prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan));
-					}
-				}
-				return prCfgPlan;
-			}).then(function(valid){
-				console.log('valid', valid);
-				if(!valid) {return valid;}
-				return util.shm('/fsm/Arm/ready');
-			}).catch(function(e){
-				console.log('nope', e);
-			});
+			return try_arm_fsm('ready');
 		});
 		listener.simple_combo("3", function(){
 			return try_arm_fsm('pushdoor');
 		});
-
 		listener.simple_combo("4", function(){
 			return try_arm_fsm('drill');
 		});
-
 		listener.simple_combo("5", function(){
 			return try_arm_fsm('shower');
 		});
-
 	}
 
 	function try_arm_fsm(name){
@@ -1129,10 +1106,11 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			return util.shm(evt);
 		}).catch(function(reason){
 			console.log('nope', reason);
-		}).then(show_qarms);
+		});
 	}
 
 	function show_qarms(paths){
+		console.log('paths', paths);
 		calculate_state();
 		var qlmsg = qLArm.map(function(q){
 			return (q*util.RAD_TO_DEG).toPrecision(4);
