@@ -1,13 +1,19 @@
 (function (ctx) {
 	'use strict';
 	var util = ctx.util, feed, ittybittyfeed;
+	var ws, feedback;
+	var qHead = [0, 0];
+
+	function update(fb){
+		qHead = fb.p.slice(0,2);
+	}
 
 	function toggle() {
 		feed.canvas.classList.toggle('nodisplay');
 		ittybittyfeed.canvas.classList.toggle('nodisplay');
 	}
 
-	var qHead = [0, 0];
+
 	function delta_head() {
 		qHead[0] += this[0] * util.DEG_TO_RAD;
 		qHead[1] += this[1] * util.DEG_TO_RAD;
@@ -71,6 +77,15 @@
 		ittybittyfeed.canvas.classList.toggle('nodisplay');
 		container.addEventListener('dblclick', toggle);
 		setTimeout(setup_keys, 0);
+	}).then(function(){
+		return util.shm('/streams/feedback');
+	}).then(function(port){
+		ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
+		ws.onmessage = function (e) {
+			if (typeof e.data !== "string") { return; }
+			feedback = JSON.parse(e.data);
+			update(feedback);
+		};
 	});
 
 	// Load the CSS that we need for our app

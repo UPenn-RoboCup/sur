@@ -1,10 +1,11 @@
 (function (ctx) {
 	'use strict';
-	var util = ctx.util, feed, ittybittyfeed;
+	var util = ctx.util, feed, ittybittyfeed, h_timeout;
 
 	function toggle() {
 		feed.canvas.classList.toggle('nodisplay');
 		ittybittyfeed.canvas.classList.toggle('nodisplay');
+		h_timeout = null;
 	}
 
 	var qHead = [0, 0];
@@ -52,6 +53,7 @@
 			fr_callback: function(){
 				feed.canvas.classList.remove('nodisplay');
 				ittybittyfeed.canvas.classList.add('nodisplay');
+				//if(!h_timeout){h_timeout = setTimeout(toggle, 1e3);}
 			},
 		});
 	}).then(function(){
@@ -60,9 +62,7 @@
 		//console.log('port', port);
 		ittybittyfeed = new ctx.VideoFeed({
 			port: port,
-			fr_callback: function(){
-				console.log('frame');
-			}
+			//fr_callback: function(){ console.log('frame'); }
 		});
 	}).then(function(){
 		var container = document.getElementById('camera_container');
