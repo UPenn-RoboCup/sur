@@ -1,6 +1,6 @@
 (function (ctx) {
 	'use strict';
-	var util = ctx.util, feed, ittybittyfeed;
+	var util = ctx.util, feed, ittybittyfeed, h_timeout;
 	var ws, feedback;
 	var qHead = [0, 0];
 
@@ -58,6 +58,7 @@
 			fr_callback: function(){
 				feed.canvas.classList.remove('nodisplay');
 				ittybittyfeed.canvas.classList.add('nodisplay');
+				if(!h_timeout){h_timeout = setTimeout(toggle, 2e3);}
 			},
 		});
 	}).then(function(){

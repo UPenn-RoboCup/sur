@@ -53,7 +53,7 @@
 			fr_callback: function(){
 				feed.canvas.classList.remove('nodisplay');
 				ittybittyfeed.canvas.classList.add('nodisplay');
-				//if(!h_timeout){h_timeout = setTimeout(toggle, 1e3);}
+				if(!h_timeout){h_timeout = setTimeout(toggle, 2e3);}
 			},
 		});
 	}).then(function(){
