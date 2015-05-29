@@ -427,9 +427,9 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			//console.log(r);
 			var datum;
 				// 4 meters max
-			datum = max(0, min(1, r/4));
+			datum = max(0, min(r/2, 1));
 			// JET colormap. Colors range from 0.0 to 1.0
-      var fourValue = 4 - (4 * datum);
+      var fourValue = 4 * datum;
 			destination[0] = min(fourValue - 1.5, 4.5 - fourValue);
 			destination[1] = min(fourValue - 0.5, 3.5 - fourValue);
 			destination[2] = min(fourValue + 0.5, 2.5 - fourValue);

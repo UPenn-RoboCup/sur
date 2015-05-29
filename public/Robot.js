@@ -9,6 +9,16 @@
 	var IDS_RARM = [21, 22, 23, 24, 25, 26, 27];
 	var IDS_WAIST = [28, 29];
 
+	function jet_temp(temp, mesh){
+		if(!mesh.material){return;}
+		var fourValue = 4 * Math.max(0, Math.min((temp - 50) / 80, 1));
+		mesh.material.color.setRGB(
+			Math.min(fourValue - 1.5, 4.5 - fourValue),
+			Math.min(fourValue - 0.5, 3.5 - fourValue),
+			Math.min(fourValue + 0.5, 2.5 - fourValue)
+		);
+	}
+
 	function Robot(options) {
 		var loader = new THREE.ObjectLoader(),
 			object, meshes, qDefault, ws;
@@ -18,9 +28,12 @@
 				if (typeof e.data !== "string") { return; }
 				if(!meshes){return;}
 				var feedback = JSON.parse(e.data);
-				var qQuat = feedback.p.map(function(q){
-					return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
-				});
+				var qQuat;
+				if (feedback.p){
+					qQuat = feedback.p.map(function(q){
+						return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
+					});
+				}
 				var cqQuat = feedback.cp.map(function(q){
 					return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 				});
@@ -32,6 +45,7 @@
 					m.cquaternion.multiplyQuaternions(qDefault[i], cqQuat[i]);
 					//m.pquaternion.multiplyQuaternions(qDefault[i], qQuat[i]);
 					//m.matrixWorldNeedsUpdate = true;
+					jet_temp(feedback.tm[i], m);
 				});
 				var torso = feedback.u;
 				object.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));

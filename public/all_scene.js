@@ -791,15 +791,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function process_mesh(mesh_obj) {
 		// Adds THREE buffer geometry from triangulated mesh to the scene
 		var geometry = new THREE.BufferGeometry(),
-			//material = new THREE.MeshPhongMaterial({
-      material = new THREE.MeshBasicMaterial({
+			material = new THREE.MeshPhongMaterial({
+      //material = new THREE.MeshBasicMaterial({
 				side: THREE.DoubleSide,
         // Enable all color channels. Super important for vertex colors!
 				color: 0xFFFFFF,
         // Fill the color channels with the colors attribute through the vertex shader
         vertexColors: THREE.VertexColors,
         // TODO: Check the extra Phong parameters
-        ambient: 0xffffff, specular: 0x000, shininess: 100,
+        ambient: 0xaaaaaa, specular: 0x000, shininess: 100,
 			});
     // Custom attributes required for rendering the BufferGeometry
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
@@ -816,7 +816,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
     //geometry.computeBoundingBox();
 		// Phong Material requires normals for reflectivity
     // TODO: Perform the normals computation in the Worker thread maybe?
-		//geometry.computeVertexNormals();
+		geometry.computeVertexNormals();
 		var mesh = new THREE.Mesh(geometry, material);
     mesh.name = mesh_obj.id;
     mesh.n_el = mesh_obj.n_el;
@@ -1125,8 +1125,11 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 	function preview_sequence(seq){
 		if(!seq){return false;}
+		calculate_state();
 		var i = 0;
 		var cfgPlan = seq[i];
+		if(cfgPlan.left){ cfgPlan.left.qLArm0 = qLArm; }
+		if(cfgPlan.right){ cfgPlan.right.qRArm0 = qRArm; }
 		var prCfgPlan = plan_arm(cfgPlan).then(show_qarms);
 		while(cfgPlan) {
 			i += 1;
@@ -1272,7 +1275,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			p0 = null;
 		});
 		*/
-
+		if(typeof p.forEach !== 'function'){ return; }
 		p.forEach(function(p0, i){
 			var p_cyl = pillars[i];
 			if(!p_cyl){
