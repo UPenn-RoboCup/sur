@@ -2,17 +2,15 @@
 	'use strict';
 	var util = ctx.util, feed, ittybittyfeed, h_timeout, has_ittybitty;
 
-	function toggle() {
-		feed.canvas.classList.toggle('nodisplay');
-		ittybittyfeed.canvas.classList.toggle('nodisplay');
-		h_timeout = null;
-	}
-
 	var qHead = [0, 0];
 	function delta_head() {
 		qHead[0] += this[0] * util.DEG_TO_RAD;
 		qHead[1] += this[1] * util.DEG_TO_RAD;
 	}
+
+
+
+
 	function setup_keys(){
 		var listener = new keypress.Listener();
 		listener.simple_combo("w", delta_head.bind([0,-10]));
@@ -30,12 +28,6 @@
 		listener.simple_combo("space", function(){
 			return util.shm('/shm/hcm/teleop/head', qHead);
 		});
-		listener.simple_combo("escape", function(){
-			return util.shm('/shm/hcm/teleop/head').then(function(q){
-				qHead[0] = q[0];
-				qHead[1] = q[1];
-			});
-		});
 	}
 
 	// Add the camera view and append
@@ -51,9 +43,7 @@
 		feed = new ctx.VideoFeed({
 			port: port,
 			fr_callback: function(){
-				feed.canvas.classList.remove('nodisplay');
-				ittybittyfeed.canvas.classList.add('nodisplay');
-				if(!h_timeout && has_ittybitty){h_timeout = setTimeout(toggle, 2e3);}
+				// Maybe give timestamp diff? Alert signal red border?
 			},
 		});
 	}).then(function(){
@@ -62,18 +52,25 @@
 		//console.log('port', port);
 		ittybittyfeed = new ctx.VideoFeed({
 			port: port,
-			fr_callback: function(){ has_ittybitty = true; }
+			fr_callback: function(){
+
+			}
 		});
 	}).then(function(){
 		var container = document.getElementById('camera_container');
 		container.appendChild(feed.canvas);
 		container.appendChild(ittybittyfeed.canvas);
-		ittybittyfeed.canvas.classList.toggle('nodisplay');
-		container.addEventListener('dblclick', toggle);
+		// dblclick should set the nework mode
+		ittybittyfeed.canvas.addEventListener('dblclick', function(){
+			return util.shm('/shm/hcm/network/indoors', [3]);
+		});
+		feed.canvas.addEventListener('dblclick', function(){
+			return util.shm('/shm/hcm/network/indoors', [0]);
+		});
 		setTimeout(setup_keys, 0);
 	});
 
 	// Load the CSS that we need for our app
-	util.lcss('/css/video.css');
+	util.lcss('/css/dual_video.css');
 	util.lcss('/css/gh-buttons.css');
 }(this));

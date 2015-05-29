@@ -1,0 +1,9 @@
+#camera_container{
+  height: 100%;
+}
+#camera_container canvas {
+	max-width: 50%;
+  max-height: 100%;
+  width: 50%;
+  height: 100%;
+}

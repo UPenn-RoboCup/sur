@@ -791,15 +791,20 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function process_mesh(mesh_obj) {
 		// Adds THREE buffer geometry from triangulated mesh to the scene
 		var geometry = new THREE.BufferGeometry(),
-			material = new THREE.MeshPhongMaterial({
+			material = new THREE.MeshLambertMaterial({
+			//material = new THREE.MeshPhongMaterial({
       //material = new THREE.MeshBasicMaterial({
 				side: THREE.DoubleSide,
+				// Fill the color channels with the colors attribute through the vertex shader
         // Enable all color channels. Super important for vertex colors!
-				color: 0xFFFFFF,
-        // Fill the color channels with the colors attribute through the vertex shader
+				//color: 0xFFFFFF,
+				color: 0xAAAAAA,
         vertexColors: THREE.VertexColors,
         // TODO: Check the extra Phong parameters
-        ambient: 0xaaaaaa, specular: 0x000, shininess: 100,
+        ambient: 0xaaaaaa, specular: 0x000,
+				transparent: true,
+				opacity: 0.75
+				//shininess: 5,
 			});
     // Custom attributes required for rendering the BufferGeometry
     geometry.addAttribute('index', new THREE.BufferAttribute(mesh_obj.idx, 1));
@@ -1298,10 +1303,17 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			callback: function(){
 				scene.add(this);
 				// Add light from robot
-				var spotLight = new THREE.PointLight(0xffffff, 1, 0);
-				spotLight.position.set(0, 2000, -100);
-				spotLight.castShadow = true;
+				var spotLight = new THREE.PointLight(0xaaaaaa, 1, 0);
+				spotLight.position.set(0, 1000, 0);
+				spotLight.castShadow = false;
 				this.add(spotLight);
+				// Add light from robot
+				/*
+				var groundLight = new THREE.PointLight(0xaaaaaa, 1, 0);
+				spotLight.position.set(0, 2000, -100);
+				spotLight.castShadow = false;
+				this.add(spotLight);
+				*/
 				planRobot = new ctx.Robot({
 					name: 'dale',
 					callback: function(){

@@ -1,19 +1,8 @@
 (function (ctx) {
 	'use strict';
-	var util = ctx.util, feed, ittybittyfeed, h_timeout;
-	var ws, feedback;
+	var util = ctx.util, feed, ittybittyfeed, h_timeout, has_ittybitty;
+
 	var qHead = [0, 0];
-
-	function update(fb){
-		qHead = fb.p.slice(0,2);
-	}
-
-	function toggle() {
-		feed.canvas.classList.toggle('nodisplay');
-		ittybittyfeed.canvas.classList.toggle('nodisplay');
-	}
-
-
 	function delta_head() {
 		qHead[0] += this[0] * util.DEG_TO_RAD;
 		qHead[1] += this[1] * util.DEG_TO_RAD;
@@ -35,12 +24,6 @@
 		listener.simple_combo("space", function(){
 			return util.shm('/shm/hcm/teleop/head', qHead);
 		});
-		listener.simple_combo("escape", function(){
-			return util.shm('/shm/hcm/teleop/head').then(function(q){
-				qHead[0] = q[0];
-				qHead[1] = q[1];
-			});
-		});
 	}
 
 	// Add the camera view and append
@@ -56,9 +39,7 @@
 		feed = new ctx.VideoFeed({
 			port: port,
 			fr_callback: function(){
-				feed.canvas.classList.remove('nodisplay');
-				ittybittyfeed.canvas.classList.add('nodisplay');
-				if(!h_timeout){h_timeout = setTimeout(toggle, 2e3);}
+				// Maybe give timestamp diff? Alert signal red border?
 			},
 		});
 	}).then(function(){
@@ -68,28 +49,24 @@
 		ittybittyfeed = new ctx.VideoFeed({
 			port: port,
 			fr_callback: function(){
-				console.log('frame');
+
 			}
 		});
 	}).then(function(){
 		var container = document.getElementById('camera_container');
 		container.appendChild(feed.canvas);
 		container.appendChild(ittybittyfeed.canvas);
-		ittybittyfeed.canvas.classList.toggle('nodisplay');
-		container.addEventListener('dblclick', toggle);
+		// dblclick should set the nework mode
+		ittybittyfeed.canvas.addEventListener('dblclick', function(){
+			return util.shm('/shm/hcm/network/indoors', [2]);
+		});
+		feed.canvas.addEventListener('dblclick', function(){
+			return util.shm('/shm/hcm/network/indoors', [0]);
+		});
 		setTimeout(setup_keys, 0);
-	}).then(function(){
-		return util.shm('/streams/feedback');
-	}).then(function(port){
-		ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
-		ws.onmessage = function (e) {
-			if (typeof e.data !== "string") { return; }
-			feedback = JSON.parse(e.data);
-			update(feedback);
-		};
 	});
 
 	// Load the CSS that we need for our app
-	util.lcss('/css/video.css');
+	util.lcss('/css/dual_video.css');
 	util.lcss('/css/gh-buttons.css');
 }(this));
