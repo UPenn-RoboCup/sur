@@ -45,7 +45,7 @@
 					m.cquaternion.multiplyQuaternions(qDefault[i], cqQuat[i]);
 					//m.pquaternion.multiplyQuaternions(qDefault[i], qQuat[i]);
 					//m.matrixWorldNeedsUpdate = true;
-					jet_temp(feedback.tm[i], m);
+					if(feedback.tm){jet_temp(feedback.tm[i], m);}
 				});
 				var torso = feedback.u;
 				object.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));
