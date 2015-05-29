@@ -41,11 +41,16 @@
 				var quatUsed = cqQuat;
 				meshes.forEach(function(m, i){
 					if(!m){return;}
-					m.quaternion.multiplyQuaternions(qDefault[i], quatUsed[i]);
-					m.cquaternion.multiplyQuaternions(qDefault[i], cqQuat[i]);
+					if(feedback.tm){jet_temp(feedback.tm[i], m);}
+					if(quatUsed[i]){
+						m.quaternion.multiplyQuaternions(qDefault[i], quatUsed[i]);
+					}
+					if(cqQuat[i]){
+						m.cquaternion.multiplyQuaternions(qDefault[i], cqQuat[i]);
+					}
 					//m.pquaternion.multiplyQuaternions(qDefault[i], qQuat[i]);
 					//m.matrixWorldNeedsUpdate = true;
-					if(feedback.tm){jet_temp(feedback.tm[i], m);}
+
 				});
 				var torso = feedback.u;
 				object.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));
