@@ -292,42 +292,6 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 	function click_move(){
 		switch(getMode()){
-				/*
-			case 'step':
-				var gfoot = planRobot.foot;
-				var lfoot = planRobot.object.getObjectByName('L_FOOT');
-				var rfoot = planRobot.object.getObjectByName('R_FOOT');
-				lfoot.remove(gfoot);
-				rfoot.remove(gfoot);
-				gfoot.position.set(0,0,0);
-				gfoot.quaternion.copy(new THREE.Quaternion());
-				// Change feet
-				if(stepBtn.getAttribute('data-foot')==='L_FOOT'){
-					stepBtn.setAttribute('data-foot', 'R_FOOT');
-					moveBtn.innerHTML = 'Left';
-					rfoot.add(gfoot);
-					gfoot.material.color.setHex(0xff0000);
-				} else {
-					stepBtn.setAttribute('data-foot', 'L_FOOT');
-					moveBtn.innerHTML = 'Right';
-					lfoot.add(gfoot);
-					gfoot.material.color.setHex(0xffff00);
-				}
-				return;
-				*/
-			case 'ik':
-				// Switch hands
-				tcontrol.detach();
-				if(ikBtn.getAttribute('data-hand')==='L_TIP'){
-					ikBtn.setAttribute('data-hand', 'R_TIP');
-					tcontrol.attach(planRobot.rhand);
-					moveBtn.innerHTML = 'Left';
-				} else {
-					ikBtn.setAttribute('data-hand', 'L_TIP');
-					tcontrol.attach(planRobot.lhand);
-					moveBtn.innerHTML = 'Right';
-				}
-				return;
 			case 'teleop':
 				// Reset just one
 				var motor0 = robot.object.getObjectByName(jointSel.value);
