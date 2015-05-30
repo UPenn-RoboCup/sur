@@ -26,9 +26,8 @@
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + options.port);
 			ws.onmessage = function (e) {
 				if (typeof e.data !== "string") { return; }
-				if(feedback.tm){ console.log('Hot!', feedback.tm); }
-
 				var feedback = JSON.parse(e.data);
+				if(feedback.tm){ console.log('Hot!', feedback.tm); }
 				if(!meshes){return;}
 				var qQuat;
 				if (feedback.p){
