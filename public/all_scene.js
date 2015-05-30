@@ -12,7 +12,9 @@
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null,
 		pillars = [],
-		resetBtn, proceedBtn, moveBtn, teleopBtn, ikBtn,
+		resetBtn, proceedBtn,
+			//
+			//teleopBtn, ikBtn, moveBtn,
 			//acceptBtn, declineBtn, stepBtn,
 		jointSel, mesh0Sel, mesh1Sel, allBtns,
 		control_mode;
@@ -23,23 +25,6 @@ qLArm, qLArm0, sameLArm, qRArm, qRArm0, sameRArm,
 qWaist, qWaist0, sameWaist,
 sameLArmTF, sameRArmTF,
 comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
-
-	function getMode() {
-		/*
-		for(var i = 0; i<allBtns.length; i+=1){
-			var btn = allBtns.item(i);
-			if(btn.innerHTML==='Done') { return btn.id; }
-		}
-		*/
-		return control_mode;
-	}
-
-	function resetLabels() {
-		for(var i = 0; i<allBtns.length; i+=1){
-			var btn = allBtns.item(i);
-			btn.innerHTML = btn.name;
-		}
-	}
 
 	function calculate_state(){
 		qPlan = planRobot.meshes.map(function(m, i){
@@ -139,7 +124,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function reset_hands(){
-		if(document.querySelector('button#ik').getAttribute('data-hand')==='L_TIP'){
+		if(tcontrol.object===planRobot.lhand){
 			var lhandPlan = planRobot.object.getObjectByName('L_TIP');
 			var lhandNow = robot.object.getObjectByName('L_TIP');
 			//var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
@@ -167,57 +152,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function select_joint(){
-		if(getMode()!=='teleop'){ return; }
 		var motor = planRobot.object.getObjectByName(jointSel.value);
 		if(!motor){return;}
+		util.shm('/fsm/Arm/teleopraw');
+		control_mode = 'teleopraw';
 		tcontrol.detach();
 		tcontrol.attach(motor);
-		return motor;
-	}
-
-	/* function click_step(){
-		switch(getMode()){
-			case 'move':
-			case 'ik':
-			case 'teleop':
-				return;
-			case 'step':
-				tcontrol.detach();
-				resetLabels();
-				return;
-			default:
-				stepBtn.innerHTML = 'Done';
-				proceedBtn.innerHTML = 'Go';
-				teleopBtn.innerHTML = 'Rotate';
-				break;
-		}
-		var gfoot = planRobot.foot;
-		var lfoot = planRobot.object.getObjectByName('L_FOOT');
-		var rfoot = planRobot.object.getObjectByName('R_FOOT');
-		lfoot.remove(gfoot);
-		rfoot.remove(gfoot);
-		if(stepBtn.getAttribute('data-foot')==='L_FOOT'){
-			lfoot.add(gfoot);
-			moveBtn.innerHTML = 'Right';
-		} else {
-			rfoot.add(gfoot);
-			moveBtn.innerHTML = 'Left';
-		}
-		//console.log(rfoot);
-		tcontrol.detach();
-		tcontrol.attach(gfoot);
-		tcontrol.space = 'local';
-		tcontrol.setMode('translate');
-		tcontrol.enableX = true;
-		tcontrol.enableY = true;
-		tcontrol.enableZ = true;
-	} */
-
-	function click_teleop(){
-		var j = select_joint();
-		if(!j){ return; }
-		util.shm('/fsm/Arm/teleopraw');
-		control_mode = 'teleop';
 		tcontrol.setMode('rotate');
 		tcontrol.space = 'local';
 		tcontrol.enableX = true;
@@ -225,28 +165,36 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		tcontrol.enableZ = false;
 		tcontrol.enableE = false;
 		tcontrol.enableXYZE = false;
+		return motor;
 	}
 
 	function click_ik(){
+		control_mode='ik';
 		util.shm('/fsm/Arm/teleop');
 		tcontrol.detach();
-		tcontrol.attach(planRobot.lhand);
 		tcontrol.space = 'local';
 		tcontrol.setMode('translate');
 		tcontrol.enableX = true;
 		tcontrol.enableY = true;
 		tcontrol.enableZ = true;
 		tcontrol.enableXYZE = false;
+		tcontrol.attach(planRobot.lhand);
 	}
 
 	function click_reset(){
 		var reset_joints, reset_com, reset_step, reset_ik, reset_labels;
-		switch(getMode()){
+		switch(control_mode){
 			case 'move':
 				reset_com = true;
 				break;
 			case 'teleop':
 				reset_joints = true;
+				/*
+				// Reset just one
+				var motor0 = robot.object.getObjectByName(jointSel.value);
+				var motor = planRobot.object.getObjectByName(jointSel.value);
+				motor.quaternion.copy(motor0.quaternion);
+			*/
 				break;
 			case 'step':
 				reset_step = true;
@@ -269,7 +217,6 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				break;
 		}
 		if(reset_labels){
-			resetLabels();
 			tcontrol.detach();
 		}
 		if(reset_joints){
@@ -288,35 +235,22 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		if(reset_ik){
 			reset_hands();
 		}
+		control_mode = '';
 	}
 
 	function click_move(){
-		switch(getMode()){
-			case 'teleop':
-				// Reset just one
-				var motor0 = robot.object.getObjectByName(jointSel.value);
-				var motor = planRobot.object.getObjectByName(jointSel.value);
-				motor.quaternion.copy(motor0.quaternion);
-				return;
-			case 'move':
-				tcontrol.detach();
-				tcontrol.enableY = true;
-				resetLabels();
-				return;
-			default:
-				moveBtn.innerHTML = 'Done';
-				proceedBtn.innerHTML = 'Go';
-				teleopBtn.innerHTML = 'Rotate';
-				break;
-		}
-
-		//planRobot.object.visible = true;
+		control_mode='move';
+		tcontrol.detach();
+		tcontrol.attach(planRobot.object);
+		/*
 		tcontrol.setMode('translate');
 		tcontrol.space = 'local';
 		tcontrol.enableX = true;
 		tcontrol.enableY = false;
 		tcontrol.enableZ = true;
+		tcontrol.detach();
 		tcontrol.attach(planRobot.object);
+		*/
 	}
 
 	function plan_arm(plan){
@@ -432,7 +366,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			if (rPlan) {rPlan.qWaistGuess = qWaist;}
 			// Check which moved. If both, then the current selection
 			if(lPlan && rPlan){
-				if(ikBtn.getAttribute('data-hand')==='L_TIP'){
+				if(tcontrol.object===planRobot.lhand){
 					lPlan.via = 'jacobian_waist_preplan';
 				} else {
 					rPlan.via = 'jacobian_waist_preplan';
@@ -459,7 +393,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		});
 	}
 
-	function go_teleop(){
+	function go_teleopraw(){
 
 		if(!sameHead){util.shm('/shm/hcm/teleop/head', qHead);}
 
@@ -502,7 +436,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				console.log('Did not implement waist only joint level');
 			}
 		}
-
+/*
 		return plan_arm({left: lPlan, right: rPlan}).then(function(paths){
 			console.log('Sending Q', paths);
 			if(!paths){return;}
@@ -512,7 +446,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				sameRArm ? true : util.shm('/shm/hcm/teleop/rarm', qRArm)
 			]);
 		});
-
+*/
+		return Promise.all([
+			sameWaist ? true : util.shm('/shm/hcm/teleop/waist', qWaist),
+			sameLArm ? true : util.shm('/shm/hcm/teleop/larm', qLArm),
+			sameRArm ? true : util.shm('/shm/hcm/teleop/rarm', qRArm)
+		]);
 	}
 
 	function go_move(){
@@ -539,7 +478,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		}
 
 	}
-
+/*
 	function go_step(){
 		var p = planRobot.foot.position;
 		var e = new THREE.Euler().setFromQuaternion(planRobot.foot.quaternion);
@@ -561,22 +500,23 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			util.shm('/fsm/Body/stepover1');
 		});
 	}
-
+*/
 	var go_promises = {
 		move: go_move,
-		step: go_step,
+		//step: go_step,
 		ik: go_ik,
-		teleop: go_teleop,
+		teleopraw: go_teleopraw,
 	};
 
 	function click_proceed(){
-		var m = getMode();
-		if(!m){return;}
-		var f = go_promises[m];
-		if(!f){return;}
+		var f = go_promises[control_mode];
 		calculate_state();
-		return f();
-		//util.shm('/shm/hcm/state/proceed', [1]);
+		if(typeof f==='function'){
+			return f();
+		} else {
+			util.shm('/shm/hcm/state/proceed', [1]);
+		}
+
 	}
 
   var describe = {
@@ -802,11 +742,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 					sprintf("%0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], global_msg[1]),
 				]);
 
-				switch(getMode()){
+				switch(control_mode){
 					case 'ik':
-						var ikBtn = document.getElementById('ik');
-						var cur = ikBtn.getAttribute('data-hand');
-						if(cur==='L_TIP'){
+						if(tcontrol.object===planRobot.lhand){
 							var lhandPlan = planRobot.object.getObjectByName('L_TIP');
 							var invLHandPlan = new THREE.Matrix4().getInverse(lhandPlan.matrixWorld);
 							var TdiffL = new THREE.Matrix4().multiplyMatrices(invLHandPlan, T_point);
@@ -930,15 +868,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function delta_walk(){
-		if(getMode()!=='move'){ return; }
+		if(control_mode!=='move'){ return; }
 		var mat = planRobot.object.matrix.multiply(this);
 		planRobot.object.position.setFromMatrixPosition(mat);
 		planRobot.object.quaternion.setFromRotationMatrix(mat);
 	}
 	function delta_hand(){
-		if(getMode()!=='ik'){ return; }
+		if(control_mode!=='ik'){ return; }
 		var hand;
-		if(document.querySelector('button#ik').getAttribute('data-hand')==='L_TIP'){
+		if(tcontrol.object===planRobot.lhand){
 			hand = planRobot.lhand;
 		} else {
 			hand = planRobot.rhand;
@@ -947,8 +885,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		hand.position.setFromMatrixPosition(mat);
 		hand.quaternion.setFromRotationMatrix(mat);
 	}
+	function delta_head() {
+		qHead[0] += this[0] * util.DEG_TO_RAD;
+		qHead[1] += this[1] * util.DEG_TO_RAD;
+		return util.shm('/shm/hcm/teleop/head', qHead);
+	}
+
 	function setup_keys(){
 		var listener = new keypress.Listener();
+		// Walk keys
 		listener.simple_combo("i", delta_walk.bind(
 			new THREE.Matrix4().makeTranslation(0,0,25)));
 		listener.simple_combo(",", delta_walk.bind(
@@ -965,7 +910,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			planRobot.object.position.copy(robot.object.position);
 			planRobot.object.quaternion.copy(robot.object.quaternion);
 		});
-		//
+		// Control the hand
 		listener.simple_combo("i", delta_hand.bind(
 			new THREE.Matrix4().makeTranslation(0,0,10)));
 		listener.simple_combo(",", delta_hand.bind(
@@ -982,9 +927,25 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			new THREE.Matrix4().makeRotationY(2.5*util.DEG_TO_RAD)));
 		listener.simple_combo("l", delta_hand.bind(
 			new THREE.Matrix4().makeRotationY(-2.5*util.DEG_TO_RAD)));
+		listener.simple_combo("y", delta_hand.bind(
+			new THREE.Matrix4().makeRotationX(2.5*util.DEG_TO_RAD)));
+		listener.simple_combo("n", delta_hand.bind(
+			new THREE.Matrix4().makeRotationX(-2.5*util.DEG_TO_RAD)));
+		listener.simple_combo("/", delta_hand.bind(
+			new THREE.Matrix4().makeRotationZ(2.5*util.DEG_TO_RAD)));
+		listener.simple_combo(".", delta_hand.bind(
+			new THREE.Matrix4().makeRotationZ(-2.5*util.DEG_TO_RAD)));
 		listener.simple_combo("k", reset_hands);
+		// Control the head
+		listener.simple_combo("w", delta_head.bind([0,-10]));
+		listener.simple_combo("a", delta_head.bind([10,0]));
+		listener.simple_combo("s", delta_head.bind([0,10]));
+		listener.simple_combo("d", delta_head.bind([-10,0]));
+		listener.simple_combo("shift k", function(){
+			return util.shm('/shm/fsm/Head/teleop', qHead);
+		});
 		// Switch hands
-		listener.simple_combo("\\", function(){
+		listener.simple_combo("'", function(){
 			// Switch hands
 			if(tcontrol.object===planRobot.rhand){
 				tcontrol.detach();
@@ -994,28 +955,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				tcontrol.attach(planRobot.rhand);
 			}
 		});
-		// Rot/Trans
-		listener.simple_combo("'", function(){
-			if(tcontrol.getMode()==='translate'){
-				tcontrol.setMode('rotate');
-			} else {
-				tcontrol.setMode('translate');
-			}
-		});
-		listener.simple_combo("'", function(){
-			if(tcontrol.space==='local'){
-				tcontrol.space = 'global';
-			} else {
-				tcontrol.space = 'local';
-			}
-		});
-
 		//
 		listener.simple_combo("space", click_proceed);
 		listener.simple_combo("escape", click_reset);
+		listener.simple_combo("0", click_ik);
 		listener.simple_combo("9", click_move);
 		//listener.simple_combo("escape", click_escape);
 		listener.simple_combo("1", function(){
+			control_mode = 'armplan';
 			return util.shm('/fsm/Arm/init');
 		});
 		listener.simple_combo("2", function(){
@@ -1036,6 +983,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function try_arm_fsm(name){
+		control_mode = 'armplan';
 		var evt = '/fsm/Arm/' + name;
 		return util.shm('/c', ['arm', name]).then(preview_sequence).then(function(paths){
 			if(!paths) { return; }
@@ -1093,12 +1041,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		//acceptBtn = document.querySelector('button#accept');
 		//declineBtn = document.querySelector('button#decline');
 		//stepBtn = document.querySelector('button#step');
+		//ikBtn = document.querySelector('button#ik');
+		//moveBtn = document.querySelector('button#move');
+		//teleopBtn = document.querySelector('button#teleop');
 		resetBtn = document.querySelector('button#reset');
 		proceedBtn = document.querySelector('button#proceed');
 		//
-		moveBtn = document.querySelector('button#move');
-		teleopBtn = document.querySelector('button#teleop');
-		ikBtn = document.querySelector('button#ik');
+
+
 		jointSel = document.querySelector('select#joints');
 		mesh0Sel = document.querySelector('input#mesh0sel');
 		mesh1Sel = document.querySelector('input#mesh1sel');
@@ -1129,10 +1079,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		jointSel.addEventListener('change', select_joint);
 		resetBtn.addEventListener('click', click_reset);
 		proceedBtn.addEventListener('click', click_proceed);
-		moveBtn.addEventListener('click', click_move);
+		//moveBtn.addEventListener('click', click_move);
 		//stepBtn.addEventListener('click', click_step);
-		ikBtn.addEventListener('click', click_ik);
-		teleopBtn.addEventListener('click', click_teleop);
+		//ikBtn.addEventListener('click', click_ik);
 
 	}
 
