@@ -26,8 +26,10 @@
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + options.port);
 			ws.onmessage = function (e) {
 				if (typeof e.data !== "string") { return; }
-				if(!meshes){return;}
+				if(feedback.tm){ console.log('Hot!', feedback.tm); }
+
 				var feedback = JSON.parse(e.data);
+				if(!meshes){return;}
 				var qQuat;
 				if (feedback.p){
 					qQuat = feedback.p.map(function(q){
@@ -41,7 +43,9 @@
 				var quatUsed = cqQuat;
 				meshes.forEach(function(m, i){
 					if(!m){return;}
-					if(feedback.tm){jet_temp(feedback.tm[i], m);}
+					if(feedback.tm){
+						jet_temp(feedback.tm[i], m);
+					}
 					if(quatUsed[i]){
 						m.quaternion.multiplyQuaternions(qDefault[i], quatUsed[i]);
 					}
