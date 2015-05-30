@@ -12,9 +12,10 @@
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null,
 		pillars = [],
-		resetBtn, proceedBtn, moveBtn, teleopBtn, stepBtn, ikBtn,
-			//acceptBtn, declineBtn,
-		jointSel, mesh0Sel, mesh1Sel, allBtns;
+		resetBtn, proceedBtn, moveBtn, teleopBtn, ikBtn,
+			//acceptBtn, declineBtn, stepBtn,
+		jointSel, mesh0Sel, mesh1Sel, allBtns,
+		control_mode;
 
 	// State variables
 	var qPlan, qNow, qHead, qHead0, sameHead,
@@ -24,10 +25,13 @@ sameLArmTF, sameRArmTF,
 comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 	function getMode() {
+		/*
 		for(var i = 0; i<allBtns.length; i+=1){
 			var btn = allBtns.item(i);
 			if(btn.innerHTML==='Done') { return btn.id; }
 		}
+		*/
+		return control_mode;
 	}
 
 	function resetLabels() {
@@ -171,7 +175,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		return motor;
 	}
 
-	function click_step(){
+	/* function click_step(){
 		switch(getMode()){
 			case 'move':
 			case 'ik':
@@ -207,106 +211,36 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		tcontrol.enableX = true;
 		tcontrol.enableY = true;
 		tcontrol.enableZ = true;
-	}
+	} */
 
 	function click_teleop(){
-		switch(getMode()){
-			case 'move':
-				if(teleopBtn.innerHTML==='Rotate'){
-					// Set the rotate methods
-					tcontrol.enableX = false;
-					tcontrol.enableY = true;
-					tcontrol.enableZ = false;
-					teleopBtn.innerHTML = 'Translate';
-					tcontrol.setMode('rotate');
-				} else {
-					tcontrol.enableX = true;
-					tcontrol.enableY = false;
-					tcontrol.enableZ = true;
-					teleopBtn.innerHTML = 'Rotate';
-					tcontrol.setMode('translate');
-				}
-				break;
-			case 'ik':
-			case 'step':
-				// Switches between rotate/translate
-				if(teleopBtn.innerHTML==='Rotate'){
-					teleopBtn.innerHTML = 'Translate';
-					tcontrol.setMode('rotate');
-				} else {
-					teleopBtn.innerHTML = 'Rotate';
-					tcontrol.setMode('translate');
-				}
-				return;
-			case 'teleop':
-				// In our mode, we just reset everything
-				tcontrol.detach();
-				tcontrol.enableY = true;
-				tcontrol.enableZ = true;
-				tcontrol.enableXYZE = true;
-				tcontrol.enableE = true;
-				resetLabels();
-				return;
-			default:
-				// Enter a new control mode
-				teleopBtn.innerHTML = 'Done';
-				stepBtn.innerHTML = 'Decline';
-				proceedBtn.innerHTML = 'Plan';
-				moveBtn.innerHTML = 'Undo';
-				ikBtn.innerHTML = '_';
-				// Tell the robot to go into teleop
-				//util.shm('/fsm/Head/teleop');
-				util.shm('/fsm/Arm/teleopraw');
-				break;
-		}
-		if(select_joint()){
-			tcontrol.setMode('rotate');
-			tcontrol.space = 'local';
-			tcontrol.enableY = false;
-			tcontrol.enableZ = false;
-			tcontrol.enableXYZE = false;
-			tcontrol.enableE = false;
-		}
+		var j = select_joint();
+		if(!j){ return; }
+		util.shm('/fsm/Arm/teleopraw');
+		control_mode = 'teleop';
+		tcontrol.setMode('rotate');
+		tcontrol.space = 'local';
+		tcontrol.enableX = true;
+		tcontrol.enableY = false;
+		tcontrol.enableZ = false;
+		tcontrol.enableE = false;
+		tcontrol.enableXYZE = false;
 	}
 
 	function click_ik(){
-		switch(getMode()){
-			case 'move':
-			case 'teleop':
-			case 'teleop':
-			case 'step':
-				return;
-			case 'ik':
-				tcontrol.detach();
-				resetLabels();
-				return;
-			default:
-				ikBtn.innerHTML = 'Done';
-				proceedBtn.innerHTML = 'Plan';
-				stepBtn.innerHTML = '_';
-				teleopBtn.innerHTML = 'Rotate';
-				util.shm('/fsm/Arm/teleop');
-				break;
-		}
+		util.shm('/fsm/Arm/teleop');
 		tcontrol.detach();
-		if(this.getAttribute('data-hand')==='L_TIP'){
-			tcontrol.attach(planRobot.lhand);
-			this.setAttribute('data-hand', 'L_TIP');
-			moveBtn.innerHTML = 'Right';
-		} else {
-			tcontrol.attach(planRobot.rhand);
-			this.setAttribute('data-hand', 'R_TIP');
-			moveBtn.innerHTML = 'Left';
-		}
+		tcontrol.attach(planRobot.lhand);
 		tcontrol.space = 'local';
 		tcontrol.setMode('translate');
 		tcontrol.enableX = true;
 		tcontrol.enableY = true;
 		tcontrol.enableZ = true;
+		tcontrol.enableXYZE = false;
 	}
 
 	function click_reset(){
-		var reset_joints, reset_com, reset_step, reset_ik;
+		var reset_joints, reset_com, reset_step, reset_ik, reset_labels;
 		switch(getMode()){
 			case 'move':
 				reset_com = true;
@@ -323,6 +257,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				break;
 			default:
 				// Reset All
+				reset_labels = true;
 				reset_com = true;
 				reset_joints = true;
 				reset_step = true;
@@ -332,6 +267,10 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				planRobot.rhand.position.set(0,0,0);
 				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
 				break;
+		}
+		if(reset_labels){
+			resetLabels();
+			tcontrol.detach();
 		}
 		if(reset_joints){
 			planRobot.meshes.forEach(function(m, i){
@@ -353,6 +292,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 	function click_move(){
 		switch(getMode()){
+				/*
 			case 'step':
 				var gfoot = planRobot.foot;
 				var lfoot = planRobot.object.getObjectByName('L_FOOT');
@@ -374,6 +314,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 					gfoot.material.color.setHex(0xffff00);
 				}
 				return;
+				*/
 			case 'ik':
 				// Switch hands
 				tcontrol.detach();
@@ -1045,39 +986,66 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function setup_keys(){
 		var listener = new keypress.Listener();
 		listener.simple_combo("i", delta_walk.bind(
-			new THREE.Matrix4().makeTranslation(0,0,100)));
+			new THREE.Matrix4().makeTranslation(0,0,25)));
 		listener.simple_combo(",", delta_walk.bind(
-			new THREE.Matrix4().makeTranslation(0,0,-100)));
+			new THREE.Matrix4().makeTranslation(0,0,-25)));
 		listener.simple_combo("h", delta_walk.bind(
-			new THREE.Matrix4().makeTranslation(100,0,0)));
+			new THREE.Matrix4().makeTranslation(25,0,0)));
 		listener.simple_combo(";", delta_walk.bind(
-			new THREE.Matrix4().makeTranslation(-100,0,0)));
+			new THREE.Matrix4().makeTranslation(-25,0,0)));
 		listener.simple_combo("j", delta_walk.bind(
-			new THREE.Matrix4().makeRotationY(10*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(2.5*util.DEG_TO_RAD)));
 		listener.simple_combo("l", delta_walk.bind(
-			new THREE.Matrix4().makeRotationY(-10*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(-2.5*util.DEG_TO_RAD)));
 		listener.simple_combo("k", function(){
 			planRobot.object.position.copy(robot.object.position);
 			planRobot.object.quaternion.copy(robot.object.quaternion);
 		});
 		//
 		listener.simple_combo("i", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(0,0,25)));
+			new THREE.Matrix4().makeTranslation(0,0,10)));
 		listener.simple_combo(",", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(0,0,-25)));
+			new THREE.Matrix4().makeTranslation(0,0,-10)));
 		listener.simple_combo("h", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(25,0,0)));
+			new THREE.Matrix4().makeTranslation(10,0,0)));
 		listener.simple_combo(";", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(-25,0,0)));
+			new THREE.Matrix4().makeTranslation(-10,0,0)));
 		listener.simple_combo("u", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(0,25,0)));
+			new THREE.Matrix4().makeTranslation(0,10,0)));
 		listener.simple_combo("m", delta_hand.bind(
-			new THREE.Matrix4().makeTranslation(0,-25,0)));
+			new THREE.Matrix4().makeTranslation(0,-10,0)));
 		listener.simple_combo("j", delta_hand.bind(
-			new THREE.Matrix4().makeRotationY(5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(2.5*util.DEG_TO_RAD)));
 		listener.simple_combo("l", delta_hand.bind(
-			new THREE.Matrix4().makeRotationY(-5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(-2.5*util.DEG_TO_RAD)));
 		listener.simple_combo("k", reset_hands);
+		// Switch hands
+		listener.simple_combo("\\", function(){
+			// Switch hands
+			if(tcontrol.object===planRobot.rhand){
+				tcontrol.detach();
+				tcontrol.attach(planRobot.lhand);
+			} else {
+				tcontrol.detach();
+				tcontrol.attach(planRobot.rhand);
+			}
+		});
+		// Rot/Trans
+		listener.simple_combo("'", function(){
+			if(tcontrol.getMode()==='translate'){
+				tcontrol.setMode('rotate');
+			} else {
+				tcontrol.setMode('translate');
+			}
+		});
+		listener.simple_combo("'", function(){
+			if(tcontrol.space==='local'){
+				tcontrol.space = 'global';
+			} else {
+				tcontrol.space = 'local';
+			}
+		});
+
 		//
 		listener.simple_combo("space", click_proceed);
 		listener.simple_combo("escape", click_reset);
@@ -1093,9 +1061,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			return try_arm_fsm('pushdoor');
 		});
 		listener.simple_combo("4", function(){
-			return try_arm_fsm('drill');
+			return try_arm_fsm('valve');
 		});
 		listener.simple_combo("5", function(){
+			return try_arm_fsm('drill');
+		});
+		listener.simple_combo("6", function(){
 			return try_arm_fsm('shower');
 		});
 	}
@@ -1111,7 +1082,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function show_qarms(paths){
-		console.log('paths', paths);
+//		console.log('paths', paths);
 		calculate_state();
 		var qlmsg = qLArm.map(function(q){
 			return (q*util.RAD_TO_DEG).toPrecision(4);
@@ -1157,12 +1128,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function setup_buttons(){
 		//acceptBtn = document.querySelector('button#accept');
 		//declineBtn = document.querySelector('button#decline');
+		//stepBtn = document.querySelector('button#step');
 		resetBtn = document.querySelector('button#reset');
 		proceedBtn = document.querySelector('button#proceed');
 		//
 		moveBtn = document.querySelector('button#move');
 		teleopBtn = document.querySelector('button#teleop');
-		stepBtn = document.querySelector('button#step');
 		ikBtn = document.querySelector('button#ik');
 		jointSel = document.querySelector('select#joints');
 		mesh0Sel = document.querySelector('input#mesh0sel');
@@ -1195,7 +1166,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		resetBtn.addEventListener('click', click_reset);
 		proceedBtn.addEventListener('click', click_proceed);
 		moveBtn.addEventListener('click', click_move);
-		stepBtn.addEventListener('click', click_step);
+		//stepBtn.addEventListener('click', click_step);
 		ikBtn.addEventListener('click', click_ik);
 		teleopBtn.addEventListener('click', click_teleop);
 
@@ -1387,56 +1358,59 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	// Load everything
-	Promise.all([
-		util.lcss('/css/all_scene.css'),
-		util.lcss('/css/gh-buttons.css'),
-		util.ljs('/bc/threejs/build/three.js'),
-		//util.ljs("/bc/peerjs/peer.min.js"),
-		util.ljs("/bc/sprintfjs/sprintf.js"),
-		util.ljs("/bc/Keypress/keypress.js"),
-		util.ljs("/js/numeric-1.2.6.min.js")
-	]).then(function(){
-		return Promise.all([
-			util.ljs("/VideoFeed.js")
-		]);
-	}).then(function(){
-		return Promise.all([
-			util.ljs("/MeshFeed.js"),
-			util.ljs("/KinectFeed.js"),
-			util.ljs('/OrbitControls.js'),
-			util.ljs('/TransformControls.js'),
-			util.ljs('/Robot.js'),
-		]);
-	}).then(function(){
-		return util.lhtml('/view/all_scene.html');
-	}).then(function(view){
-		document.body = view;
-		container = document.getElementById('world_container');
-		return Promise.all([
-			util.shm('/streams/mesh0'),
-			util.shm('/streams/mesh1'),
-			util.shm('/streams/kinect2_color'),
-			util.shm('/streams/kinect2_depth')
-		]);
-	}).then(function(ports){
-		mesh0_feed = new MeshFeed(ports[0], process_mesh);
-		mesh1_feed = new MeshFeed(ports[1], process_mesh);
-		kinect_feed = new ctx.KinectFeed(ports[2], ports[3], process_mesh);
-	})
-	.then(function(){
-		setTimeout(setup3d, 0);
-		setTimeout(setup_rtc, 0);
-		setTimeout(setup_buttons, 0);
-		setTimeout(setup_clicks, 0);
-		setTimeout(setup_keys, 0);
-	}).then(function(){
-		util.ljs('/Estimate.js');
-		util.ljs('/Classify.js');
-	})
-	.then(function(){
-		return util.shm('/streams/feedback');
-	}).then(setup_robot).catch(function(e){
-		console.log('Loading error', e);
-	});
+	function init(){
+		Promise.all([
+			util.lcss('/css/all_scene.css'),
+			util.lcss('/css/gh-buttons.css'),
+			util.ljs('/bc/threejs/build/three.js'),
+			//util.ljs("/bc/peerjs/peer.min.js"),
+			util.ljs("/bc/sprintfjs/sprintf.js"),
+			util.ljs("/bc/Keypress/keypress.js"),
+			util.ljs("/js/numeric-1.2.6.min.js")
+		]).then(function(){
+			return Promise.all([
+				util.ljs("/VideoFeed.js")
+			]);
+		}).then(function(){
+			return Promise.all([
+				util.ljs("/MeshFeed.js"),
+				util.ljs("/KinectFeed.js"),
+				util.ljs('/OrbitControls.js'),
+				util.ljs('/TransformControls.js'),
+				util.ljs('/Robot.js'),
+			]);
+		}).then(function(){
+			return util.lhtml('/view/all_scene.html');
+		}).then(function(view){
+			document.body = view;
+			container = document.getElementById('world_container');
+			return Promise.all([
+				util.shm('/streams/mesh0'),
+				util.shm('/streams/mesh1'),
+				util.shm('/streams/kinect2_color'),
+				util.shm('/streams/kinect2_depth')
+			]);
+		}).then(function(ports){
+			mesh0_feed = new MeshFeed(ports[0], process_mesh);
+			mesh1_feed = new MeshFeed(ports[1], process_mesh);
+			kinect_feed = new ctx.KinectFeed(ports[2], ports[3], process_mesh);
+		})
+		.then(function(){
+			setTimeout(setup3d, 0);
+			setTimeout(setup_rtc, 0);
+			setTimeout(setup_buttons, 0);
+			setTimeout(setup_clicks, 0);
+			setTimeout(setup_keys, 0);
+		}).then(function(){
+			util.ljs('/Estimate.js');
+			util.ljs('/Classify.js');
+		})
+		.then(function(){
+			return util.shm('/streams/feedback');
+		}).then(setup_robot).catch(function(e){
+			console.log('Loading error', e);
+		});
+	}
+	setTimeout(init, 0);
 
 }(this));

@@ -651,6 +651,10 @@
 
 		};
 
+		this.getMode = function ( object ) {
+			return _mode;
+		};
+
 		this.detach = function ( object ) {
 
 			scope.object = undefined;
