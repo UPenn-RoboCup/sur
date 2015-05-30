@@ -7,6 +7,7 @@
 		if (typeof e.data !== "string") { return; }
 		var feedback = JSON.parse(e.data);
 		qHead = feedback.cp.slice(0, 2);
+		//console.log(qHead.map(function(r){ return (r*util.RAD_TO_DEG).toPrecision(4); }));
 	}
 
 	function delta_head() {
