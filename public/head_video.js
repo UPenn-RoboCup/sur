@@ -1,11 +1,18 @@
 (function (ctx) {
 	'use strict';
-	var util = ctx.util, feed, ittybittyfeed, h_timeout, has_ittybitty;
-
+	var util = ctx.util, feed, ittybittyfeed;
 	var qHead = [0, 0];
+
+	function procFB(e){
+		if (typeof e.data !== "string") { return; }
+		var feedback = JSON.parse(e.data);
+		qHead = feedback.cp.slice(0, 2);
+	}
+
 	function delta_head() {
 		qHead[0] += this[0] * util.DEG_TO_RAD;
 		qHead[1] += this[1] * util.DEG_TO_RAD;
+		return util.shm('/shm/hcm/teleop/head', qHead);
 	}
 	function setup_keys(){
 		var listener = new keypress.Listener();
@@ -15,15 +22,14 @@
 		listener.simple_combo("d", delta_head.bind([-10,0]));
 		listener.simple_combo("k", function(){
 			qHead[0] = 0;
-			qHead[1] = 1;
+			qHead[1] = 0;
+			return util.shm('/shm/hcm/teleop/head', qHead);
 		});
 		// Enter the teleop mode
 		listener.simple_combo("enter", function(){
 			return util.shm('/fsm/Head/teleop');
 		});
-		listener.simple_combo("space", function(){
-			return util.shm('/shm/hcm/teleop/head', qHead);
-		});
+
 	}
 
 	// Add the camera view and append
@@ -64,7 +70,15 @@
 			return util.shm('/shm/hcm/network/indoors', [0]);
 		});
 		setTimeout(setup_keys, 0);
+	}).then(function(){
+		return util.shm('/streams/feedback');
+	}).then(function(port){
+		var ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
+		ws.onmessage = procFB;
 	});
+
+
+
 
 	// Load the CSS that we need for our app
 	util.lcss('/css/dual_video.css');
