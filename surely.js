@@ -171,6 +171,23 @@ function rest_req(req, res, next) {
 	return next();
 }
 
+function raw_req(req, res, next) {
+	"use strict";
+	// Ensure we get a val inside the body of a PUT or POST operation
+	// Save the parsed body in the params
+	if (req.method === 'PUT' || req.method === 'POST') {
+		if (req.body !== undefined) {
+			req.params.raw = JSON.parse(req.body);
+			// Send to the RPC server
+			var msg = mp.pack(req.params);
+			sent_usage.push([Date.now(), msg.length]);
+			rpc_skt.send(msg).http_responses.push(res);
+		}
+	}
+	console.log(req.params);
+	return next();
+}
+
 // Save data from the app
 server.post('/log/:name', function(req, res, next){
 	'use strict';
@@ -202,7 +219,7 @@ server.post('/shm/:shm/:seg/:key', rest_req);
 server.get('/body/:body/:comp', rest_req);
 server.put('/body/:body/:comp', rest_req);
 
-server.post('/raw/:raw', rest_req);
+server.post('/raw', raw_req);
 
 // Grab streams
 server.get('/streams/:stream', function (req, res, next) {
