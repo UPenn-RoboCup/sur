@@ -12,7 +12,8 @@
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null,
 		pillars = [],
-		resetBtn, goBtn, moveBtn, teleopBtn, stepBtn, ikBtn,
+		resetBtn, proceedBtn, moveBtn, teleopBtn, stepBtn, ikBtn,
+			//acceptBtn, declineBtn,
 		jointSel, mesh0Sel, mesh1Sel, allBtns;
 
 	// State variables
@@ -102,7 +103,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		}
 
 		var promises = [];
-		console.log(paths);
+		//console.log(paths);
 		if(paths[0]){
 			promises.push(
 				util.loop(paths[0].filter(halfsec), updatechain.bind(planRobot.IDS_LARM), play_rate));
@@ -182,7 +183,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				return;
 			default:
 				stepBtn.innerHTML = 'Done';
-				goBtn.innerHTML = 'Go';
+				proceedBtn.innerHTML = 'Go';
 				teleopBtn.innerHTML = 'Rotate';
 				break;
 		}
@@ -216,11 +217,16 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 					tcontrol.enableX = false;
 					tcontrol.enableY = true;
 					tcontrol.enableZ = false;
+					teleopBtn.innerHTML = 'Translate';
+					tcontrol.setMode('rotate');
 				} else {
 					tcontrol.enableX = true;
 					tcontrol.enableY = false;
 					tcontrol.enableZ = true;
+					teleopBtn.innerHTML = 'Rotate';
+					tcontrol.setMode('translate');
 				}
+				break;
 			case 'ik':
 			case 'step':
 				// Switches between rotate/translate
@@ -245,7 +251,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				// Enter a new control mode
 				teleopBtn.innerHTML = 'Done';
 				stepBtn.innerHTML = 'Decline';
-				goBtn.innerHTML = 'Plan';
+				proceedBtn.innerHTML = 'Plan';
 				moveBtn.innerHTML = 'Undo';
 				ikBtn.innerHTML = '_';
 				// Tell the robot to go into teleop
@@ -276,7 +282,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				return;
 			default:
 				ikBtn.innerHTML = 'Done';
-				goBtn.innerHTML = 'Plan';
+				proceedBtn.innerHTML = 'Plan';
 				stepBtn.innerHTML = '_';
 				teleopBtn.innerHTML = 'Rotate';
 				util.shm('/fsm/Arm/teleop');
@@ -329,8 +335,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		}
 		if(reset_joints){
 			planRobot.meshes.forEach(function(m, i){
-				m.quaternion.copy(this[i].cquaternion);
-			}, robot.meshes);
+				m.quaternion.copy(robot.meshes[i].quaternion);
+			});
 		}
 		if(reset_com){
 			planRobot.object.position.copy(robot.object.position);
@@ -394,7 +400,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				return;
 			default:
 				moveBtn.innerHTML = 'Done';
-				goBtn.innerHTML = 'Go';
+				proceedBtn.innerHTML = 'Go';
 				teleopBtn.innerHTML = 'Rotate';
 				break;
 		}
@@ -411,13 +417,11 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function plan_arm(plan){
 		var success = true;
 		var h_accept, h_decline;
-		goBtn.innerHTML = 'Planning...';
-		goBtn.classList.add('danger');
+		util.debug(['Planning...']);
 		return util.shm('/armplan', plan || this)
 		.then(procPlan)
 		.then(function(paths){
-			goBtn.innerHTML = 'Accept';
-			stepBtn.innerHTML = 'Decline';
+			util.debug(['Done planning.']);
 			var prPlay = playPlan(paths);
 			prPlay.then(function(){
 				//console.log('Finished playing');
@@ -425,33 +429,32 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			}, function(){
 				//console.log('Interrupted playing');
 			}).then(function(){
-				goBtn.classList.remove('danger');
+				//
 			});
 			var prAccept = new Promise(function(resolve) {
-				h_accept = goBtn.addEventListener('click', function(e){
+				h_accept = proceedBtn.addEventListener('click', function(e){
 					e.stopPropagation();
 					resolve();
 				});
 			});
 			var prDecline = new Promise(function(resolve, reject) {
-				h_decline = stepBtn.addEventListener('click', function(e){
+				h_decline = resetBtn.addEventListener('click', function(e){
 					e.stopPropagation();
 					reject();
 				});
 			});
+			// TODO: Add escape listener
 			return Promise.race([prAccept, prDecline]).catch(function(){
 				// Rejection goes here
 				// Reset the arms
 				planRobot.meshes.forEach(function(m, i){
-					m.quaternion.copy(this[i].cquaternion);
-				}, robot.meshes);
+					m.quaternion.copy(robot.meshes[i].quaternion);
+				});
 				success = false;
 			}).then(function(){
 				//console.log('Cleaning up');
-				goBtn.removeEventListener('click', h_accept);
-				goBtn.removeEventListener('click', h_decline);
-				goBtn.innerHTML = 'Plan';
-				stepBtn.innerHTML = '_';
+				proceedBtn.removeEventListener('click', h_accept);
+				proceedBtn.removeEventListener('click', h_decline);
 				//console.log('Canceling playback');
 				var paths = prPlay.stop();
 				return success ? paths : false;
@@ -459,18 +462,11 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		});
 	}
 
-	function go_ik(){
-		if(goBtn.innerHTML !== 'Plan'){
-			return;
-		}
+	function go_ik() {
 
 		// Always with respect to our com position.
-		if(sameLArmTF && sameRArmTF){
-			return;
-		}
+		if(sameLArmTF && sameRArmTF){ return; }
 
-		//console.log('sameLArmTF', sameLArmTF);
-		//console.log('sameRArmTF', sameRArmTF);
 		// NOTE: Be careful between robots...
 		var rhand_com = new THREE.Matrix4().multiplyMatrices(
 			invComWorldPlan, planRobot.rhand.matrixWorld);
@@ -559,15 +555,10 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function go_teleop(){
-		if(goBtn.innerHTML !== 'Plan'){
-			return;
-		}
 
 		if(!sameHead){util.shm('/shm/hcm/teleop/head', qHead);}
 
-		if(sameLArm && sameRArm && sameWaist){
-			return;
-		}
+		if(sameLArm && sameRArm && sameWaist){ return; }
 
 		var lPlan = false, rPlan = false;
 		if(!sameLArm){
@@ -636,7 +627,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 							globalPose[0], globalPose[1], globalPose[2]),
 		]);
 		//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
-		return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
+		if (Math.abs(relPose[0])<=0.1 && Math.abs(relPose[1])<=0.1 && Math.abs(relPose[2])<=10*util.DEG_TO_RAD){
+			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=stepflat', relPose);
+		} else {
+			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
+		}
+
 	}
 
 	function go_step(){
@@ -668,7 +664,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		teleop: go_teleop,
 	};
 
-	function click_go(){
+	function click_proceed(){
 		var m = getMode();
 		if(!m){return;}
 		var f = go_promises[m];
@@ -1083,8 +1079,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			new THREE.Matrix4().makeRotationY(-5*util.DEG_TO_RAD)));
 		listener.simple_combo("k", reset_hands);
 		//
-		listener.simple_combo("space", click_go);
-		listener.simple_combo("backspace", click_reset);
+		listener.simple_combo("space", click_proceed);
+		listener.simple_combo("escape", click_reset);
 		listener.simple_combo("9", click_move);
 		//listener.simple_combo("escape", click_escape);
 		listener.simple_combo("1", function(){
@@ -1159,8 +1155,11 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function setup_buttons(){
+		//acceptBtn = document.querySelector('button#accept');
+		//declineBtn = document.querySelector('button#decline');
 		resetBtn = document.querySelector('button#reset');
-		goBtn = document.querySelector('button#go');
+		proceedBtn = document.querySelector('button#proceed');
+		//
 		moveBtn = document.querySelector('button#move');
 		teleopBtn = document.querySelector('button#teleop');
 		stepBtn = document.querySelector('button#step');
@@ -1194,7 +1193,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 		jointSel.addEventListener('change', select_joint);
 		resetBtn.addEventListener('click', click_reset);
-		goBtn.addEventListener('click', click_go);
+		proceedBtn.addEventListener('click', click_proceed);
 		moveBtn.addEventListener('click', click_move);
 		stepBtn.addEventListener('click', click_step);
 		ikBtn.addEventListener('click', click_ik);
