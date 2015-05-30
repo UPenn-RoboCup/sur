@@ -1,6 +1,6 @@
 (function (ctx) {
 	'use strict';
-	var util = ctx.util, feed, ittybittyfeed, h_timeout, has_ittybitty;
+	var util = ctx.util, feed, ittybittyfeed;
 
 	var qHead = [0, 0];
 	function delta_head() {
@@ -8,8 +8,11 @@
 		qHead[1] += this[1] * util.DEG_TO_RAD;
 	}
 
-
-
+	function procFB(e){
+		if (typeof e.data !== "string") { return; }
+		var feedback = JSON.parse(e.data);
+		return feedback;
+	}
 
 	function setup_keys(){
 		var listener = new keypress.Listener();
@@ -68,6 +71,11 @@
 			return util.shm('/shm/hcm/network/indoors', [0]);
 		});
 		setTimeout(setup_keys, 0);
+	}).then(function(){
+		return util.shm('/streams/feedback');
+	}).then(function(port){
+		var ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
+		ws.onmessage = procFB;
 	});
 
 	// Load the CSS that we need for our app

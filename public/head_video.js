@@ -77,9 +77,6 @@
 		ws.onmessage = procFB;
 	});
 
-
-
-
 	// Load the CSS that we need for our app
 	util.lcss('/css/dual_video.css');
 	util.lcss('/css/gh-buttons.css');
