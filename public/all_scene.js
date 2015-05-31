@@ -1235,12 +1235,20 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		p.forEach(function(p0, i){
 			var p_cyl = pillars[i];
 			if(!p_cyl){
-				var geometry = new THREE.CylinderGeometry(15, 15, 500),
-					material = new THREE.MeshBasicMaterial({color: 0xffff00});
+				var geometry = new THREE.CylinderGeometry(15, 15, 1500),
+					material = new THREE.MeshBasicMaterial({color: 0x00ff00});
 				p_cyl = new THREE.Mesh(geometry, material);
 				pillars.push(p_cyl);
 			}
-      p_cyl.position.set(p0[1]*1e3, 0, p0[0]*1e3);
+			var dx = p0[0], dy = p0[1];
+			if(Math.abs(dx) < 0.35){
+				p_cyl.material.color.setRGB(1,0,0);
+			} else if (Math.abs(dy) < 0.35){
+				p_cyl.material.color.setRGB(1,0.5,0);
+			} else {
+				p_cyl.material.color.setRGB(0,1,0);
+			}
+      p_cyl.position.set(dy*1e3, -250, dx*1e3);
       robot.object.add(p_cyl);
 		});
 	}
