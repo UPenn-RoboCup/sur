@@ -894,10 +894,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		hand.quaternion.setFromRotationMatrix(mat);
 	}
 	function delta_head() {
-		// TODO: Show in the gui as planned...
-		qHead0[0] += this[0] * util.DEG_TO_RAD;
-		qHead0[1] += this[1] * util.DEG_TO_RAD;
-		return util.shm('/shm/hcm/teleop/head', qHead0);
+		var neck = planRobot.object.getObjectByName('Neck');
+		var head = planRobot.object.getObjectByName('Head');
+		var matNeck = neck.matrix.multiply(this[0]);
+		var matHead = head.matrix.multiply(this[1]);
+		head.quaternion.setFromRotationMatrix(matHead);
+		neck.quaternion.setFromRotationMatrix(matNeck);
+		calculate_state();
+		return util.shm('/shm/hcm/teleop/head', qHead);
 	}
 
 	function setup_keys(){
@@ -946,12 +950,24 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			new THREE.Matrix4().makeRotationZ(-2.5*util.DEG_TO_RAD)));
 		listener.simple_combo("k", reset_hands);
 		// Control the head
-		listener.simple_combo("w", delta_head.bind([0,-10]));
-		listener.simple_combo("a", delta_head.bind([10,0]));
-		listener.simple_combo("s", delta_head.bind([0,10]));
-		listener.simple_combo("d", delta_head.bind([-10,0]));
+		listener.simple_combo("w", delta_head.bind([
+			new THREE.Matrix4(),
+			new THREE.Matrix4().makeRotationX(-2.5*util.DEG_TO_RAD)
+		]));
+		listener.simple_combo("a", delta_head.bind([
+			new THREE.Matrix4().makeRotationX(2.5*util.DEG_TO_RAD),
+			new THREE.Matrix4()
+		]));
+		listener.simple_combo("s", delta_head.bind([
+			new THREE.Matrix4(),
+			new THREE.Matrix4().makeRotationX(2.5*util.DEG_TO_RAD)
+		]));
+		listener.simple_combo("d", delta_head.bind([
+			new THREE.Matrix4().makeRotationX(-2.5*util.DEG_TO_RAD),
+			new THREE.Matrix4()
+		]));
 		listener.simple_combo("shift k", function(){
-			return util.shm('/shm/fsm/Head/teleop', qHead);
+			return util.shm('/fsm/Head/teleop', qHead);
 		});
 		// Switch hands
 		listener.simple_combo("'", function(){
