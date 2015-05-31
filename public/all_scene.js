@@ -152,10 +152,10 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function select_joint(){
+		if(control_mode!=='teleopraw'){return;}
 		var motor = planRobot.object.getObjectByName(jointSel.value);
-		if(!motor){return;}
-		util.shm('/fsm/Arm/teleopraw');
-		control_mode = 'teleopraw';
+		var idx = jointSel.selectedIndex;
+		if(!motor || idx===-1){return;}
 		tcontrol.detach();
 		tcontrol.attach(motor);
 		tcontrol.setMode('rotate');
@@ -165,7 +165,20 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		tcontrol.enableZ = false;
 		tcontrol.enableE = false;
 		tcontrol.enableXYZE = false;
+		calculate_state();
+		var q0 = qNow[idx];
+		var q = qPlan[idx];
+		util.debug([
+			((q0*util.RAD_TO_DEG).toPrecision(4)) + ' deg now',
+			((q*util.RAD_TO_DEG).toPrecision(4)) + ' deg planned'
+		]);
 		return motor;
+	}
+
+	function click_joint(){
+		control_mode = 'teleopraw';
+		util.shm('/fsm/Arm/teleopraw');
+		select_joint();
 	}
 
 	function click_ik(){
@@ -969,6 +982,48 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		listener.simple_combo("shift k", function(){
 			return util.shm('/fsm/Head/teleop', qHead);
 		});
+		// +/- the raw joints
+		listener.simple_combo("]", function(){
+			jointSel.selectedIndex += 1;
+			select_joint();
+		});
+		listener.simple_combo("[", function(){
+			jointSel.selectedIndex -= 1;
+			select_joint();
+		});
+		listener.simple_combo("=", function(){
+			if(control_mode!=='teleopraw'){return;}
+			var motor = planRobot.object.getObjectByName(jointSel.value);
+			var idx = jointSel.selectedIndex;
+			if(!motor || idx===-1){return;}
+			var rot = new THREE.Matrix4().makeRotationX(-5*util.DEG_TO_RAD);
+			var mat = motor.matrix.multiply(rot);
+			motor.quaternion.setFromRotationMatrix(mat);
+			calculate_state();
+			var q0 = qNow[idx];
+			var q = qPlan[idx];
+			util.debug([
+				((q0*util.RAD_TO_DEG).toPrecision(4)) + ' deg now',
+				((q*util.RAD_TO_DEG).toPrecision(4)) + ' deg planned'
+			]);
+		});
+		listener.simple_combo("-", function(){
+			if(control_mode!=='teleopraw'){return;}
+			var motor = planRobot.object.getObjectByName(jointSel.value);
+			var idx = jointSel.selectedIndex;
+			if(!motor || idx===-1){return;}
+			var rot = new THREE.Matrix4().makeRotationX(5*util.DEG_TO_RAD);
+			var mat = motor.matrix.multiply(rot);
+			motor.quaternion.setFromRotationMatrix(mat);
+			calculate_state();
+			var q0 = qNow[idx];
+			var q = qPlan[idx];
+			util.debug([
+				((q0*util.RAD_TO_DEG).toPrecision(4)) + ' deg now',
+				((q*util.RAD_TO_DEG).toPrecision(4)) + ' deg planned'
+			]);
+		});
+
 		// Switch hands
 		listener.simple_combo("'", function(){
 			// Switch hands
@@ -992,8 +1047,6 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			console.log('body init');
 			return util.shm('/fsm/Body/init');
 		});
-		listener.simple_combo("0", click_ik);
-		listener.simple_combo("9", click_move);
 		listener.simple_combo("1", function(){
 			control_mode = 'arminit';
 			return util.shm('/fsm/Arm/init');
@@ -1013,6 +1066,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		listener.simple_combo("6", function(){
 			return try_arm_fsm('shower');
 		});
+		listener.simple_combo("0", click_ik);
+		listener.simple_combo("9", click_move);
+		listener.simple_combo("`", click_joint);
 	}
 
 	function try_arm_fsm(name){
