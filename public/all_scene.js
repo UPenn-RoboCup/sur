@@ -194,66 +194,6 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		tcontrol.attach(planRobot.lhand);
 	}
 
-	function click_reset(){
-		var reset_joints, reset_com, reset_step, reset_ik, reset_labels;
-		switch(control_mode){
-			case 'armplan':
-				console.log('planning...');
-				return;
-			case 'move':
-				reset_com = true;
-				break;
-			case 'teleop':
-				reset_joints = true;
-				/*
-				// Reset just one
-				var motor0 = robot.object.getObjectByName(jointSel.value);
-				var motor = planRobot.object.getObjectByName(jointSel.value);
-				motor.quaternion.copy(motor0.quaternion);
-			*/
-				break;
-			case 'step':
-				reset_step = true;
-				break;
-			case 'ik':
-				reset_ik = true;
-				//reset_joints = true;
-				break;
-			default:
-				// Reset All
-				reset_labels = true;
-				reset_com = true;
-				reset_joints = true;
-				reset_step = true;
-				//reset_ik = true;
-				planRobot.lhand.position.set(0,0,0);
-				planRobot.lhand.quaternion.copy(new THREE.Quaternion());
-				planRobot.rhand.position.set(0,0,0);
-				planRobot.rhand.quaternion.copy(new THREE.Quaternion());
-				break;
-		}
-		if(reset_labels){
-			tcontrol.detach();
-		}
-		if(reset_joints){
-			planRobot.meshes.forEach(function(m, i){
-				m.quaternion.copy(robot.meshes[i].quaternion);
-			});
-		}
-		if(reset_com){
-			planRobot.object.position.copy(robot.object.position);
-			planRobot.object.quaternion.copy(robot.object.quaternion);
-		}
-		if(reset_step){
-			planRobot.foot.position.set(0,0,0);
-			planRobot.foot.quaternion.copy(new THREE.Quaternion());
-		}
-		if(reset_ik){
-			reset_hands();
-		}
-		control_mode = '';
-	}
-
 	function click_move(){
 		control_mode='move';
 		tcontrol.detach();
@@ -401,7 +341,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 		return plan_arm({left: lPlan, right: rPlan}).then(function(paths){
 			console.log('Sending IK', paths);
-			control_mode = '';
+			control_mode = 'ik';
 			if(!paths){return;}
 			// TODO: Set the final arm configs
 			return Promise.all([
@@ -1036,8 +976,25 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			}
 		});
 
+		listener.register_combo({
+			sequence_delay: 100
+		});
 		listener.simple_combo("space", click_proceed);
-		listener.simple_combo("escape", click_reset);
+		listener.simple_combo("escape", function(){
+			control_mode = '';
+			tcontrol.detach();
+			planRobot.meshes.forEach(function(m, i){
+				m.quaternion.copy(robot.meshes[i].quaternion);
+			});
+			planRobot.object.position.copy(robot.object.position);
+			planRobot.object.quaternion.copy(robot.object.quaternion);
+			//planRobot.foot.position.set(0,0,0);
+			//planRobot.foot.quaternion.copy(new THREE.Quaternion());
+			planRobot.lhand.position.set(0,0,0);
+			planRobot.lhand.quaternion.copy(new THREE.Quaternion());
+			planRobot.rhand.position.set(0,0,0);
+			planRobot.rhand.quaternion.copy(new THREE.Quaternion());
+		});
 		listener.simple_combo("backspace", function(){
 			console.log('!body stop!');
 			return util.shm('/fsm/Body/stop');
@@ -1169,8 +1126,6 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		});
 
 		jointSel.addEventListener('change', select_joint);
-		//resetBtn.addEventListener('click', click_reset);
-		//proceedBtn.addEventListener('click', click_proceed);
 
 		function sendshm(){
 			util.shm(
@@ -1280,7 +1235,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		p.forEach(function(p0, i){
 			var p_cyl = pillars[i];
 			if(!p_cyl){
-				var geometry = new THREE.CylinderGeometry(15, 15, 10000),
+				var geometry = new THREE.CylinderGeometry(15, 15, 500),
 					material = new THREE.MeshBasicMaterial({color: 0xffff00});
 				p_cyl = new THREE.Mesh(geometry, material);
 				pillars.push(p_cyl);
