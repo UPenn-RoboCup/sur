@@ -35,7 +35,7 @@
 						return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 					});
 				}
-				var cqQuat = feedback.cp.map(function(q){
+				var cqQuat = feedback.p.map(function(q){
 					return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 				});
 				// Use cq or q

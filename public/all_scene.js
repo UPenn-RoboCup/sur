@@ -12,11 +12,11 @@
 		map_peers = [],
 		last_intersection = {t:0}, last_selected_parameters = null,
 		pillars = [],
-		resetBtn, proceedBtn,
-			//
+			listener,
+		//resetBtn, proceedBtn,
 			//teleopBtn, ikBtn, moveBtn,
 			//acceptBtn, declineBtn, stepBtn,
-		jointSel, mesh0Sel, mesh1Sel, allBtns,
+		jointSel, mesh0Sel, mesh1Sel, allBtns, shmBtns,
 		control_mode;
 
 	// State variables
@@ -184,6 +184,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function click_reset(){
 		var reset_joints, reset_com, reset_step, reset_ik, reset_labels;
 		switch(control_mode){
+			case 'armplan':
+				console.log('planning...');
+				return;
 			case 'move':
 				reset_com = true;
 				break;
@@ -255,7 +258,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 	function plan_arm(plan){
 		var success = true;
-		var h_accept, h_decline;
+		//var h_accept, h_decline;
+		var escDecline, spaceAccept;
 		util.debug(['Planning...']);
 		return util.shm('/armplan', plan || this)
 		.then(procPlan)
@@ -271,18 +275,23 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				//
 			});
 			var prAccept = new Promise(function(resolve) {
+				/*
 				h_accept = proceedBtn.addEventListener('click', function(e){
 					e.stopPropagation();
 					resolve();
 				});
+				*/
+				spaceAccept = listener.simple_combo('space', resolve);
 			});
 			var prDecline = new Promise(function(resolve, reject) {
+				/*
 				h_decline = resetBtn.addEventListener('click', function(e){
 					e.stopPropagation();
 					reject();
 				});
+				*/
+				escDecline = listener.simple_combo('escape', reject);
 			});
-			// TODO: Add escape listener
 			return Promise.race([prAccept, prDecline]).catch(function(){
 				// Rejection goes here
 				// Reset the arms
@@ -291,10 +300,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				});
 				success = false;
 			}).then(function(){
-				//console.log('Cleaning up');
-				proceedBtn.removeEventListener('click', h_accept);
-				proceedBtn.removeEventListener('click', h_decline);
-				//console.log('Canceling playback');
+				//proceedBtn.removeEventListener('click', h_accept);
+				//proceedBtn.removeEventListener('click', h_decline);
+				listener.unregister_many([escDecline, spaceAccept]);
 				var paths = prPlay.stop();
 				return success ? paths : false;
 			});
@@ -380,9 +388,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 		return plan_arm({left: lPlan, right: rPlan}).then(function(paths){
 			console.log('Sending IK', paths);
+			control_mode = '';
 			if(!paths){return;}
 			// TODO: Set the final arm configs
-
 			return Promise.all([
 				paths[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
 				paths[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
@@ -886,13 +894,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		hand.quaternion.setFromRotationMatrix(mat);
 	}
 	function delta_head() {
-		qHead[0] += this[0] * util.DEG_TO_RAD;
-		qHead[1] += this[1] * util.DEG_TO_RAD;
-		return util.shm('/shm/hcm/teleop/head', qHead);
+		// TODO: Show in the gui as planned...
+		qHead0[0] += this[0] * util.DEG_TO_RAD;
+		qHead0[1] += this[1] * util.DEG_TO_RAD;
+		return util.shm('/shm/hcm/teleop/head', qHead0);
 	}
 
 	function setup_keys(){
-		var listener = new keypress.Listener();
+		listener = new keypress.Listener();
 		// Walk keys
 		listener.simple_combo("i", delta_walk.bind(
 			new THREE.Matrix4().makeTranslation(0,0,25)));
@@ -955,14 +964,22 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				tcontrol.attach(planRobot.rhand);
 			}
 		});
-		//
+
 		listener.simple_combo("space", click_proceed);
 		listener.simple_combo("escape", click_reset);
+		listener.simple_combo("backspace", function(){
+			console.log('!body stop!');
+			return util.shm('/fsm/Body/stop');
+		});
+		//
+		listener.simple_combo("!", function(){
+			console.log('body init');
+			return util.shm('/fsm/Body/init');
+		});
 		listener.simple_combo("0", click_ik);
 		listener.simple_combo("9", click_move);
-		//listener.simple_combo("escape", click_escape);
 		listener.simple_combo("1", function(){
-			control_mode = 'armplan';
+			control_mode = 'arminit';
 			return util.shm('/fsm/Arm/init');
 		});
 		listener.simple_combo("2", function(){
@@ -990,6 +1007,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			return util.shm(evt);
 		}).catch(function(reason){
 			console.log('nope', reason);
+		}).then(function(){
+			control_mode = '';
 		});
 	}
 
@@ -1044,8 +1063,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		//ikBtn = document.querySelector('button#ik');
 		//moveBtn = document.querySelector('button#move');
 		//teleopBtn = document.querySelector('button#teleop');
-		resetBtn = document.querySelector('button#reset');
-		proceedBtn = document.querySelector('button#proceed');
+		//resetBtn = document.querySelector('button#reset');
+		//proceedBtn = document.querySelector('button#proceed');
 		//
 
 
@@ -1053,6 +1072,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		mesh0Sel = document.querySelector('input#mesh0sel');
 		mesh1Sel = document.querySelector('input#mesh1sel');
 		allBtns = document.querySelectorAll('#topic button');
+		shmBtns = document.querySelectorAll('.shm button');
 
 		mesh0Sel.addEventListener('change', function(){
 			var is_add = mesh0Sel.checked;
@@ -1077,11 +1097,32 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		});
 
 		jointSel.addEventListener('change', select_joint);
-		resetBtn.addEventListener('click', click_reset);
-		proceedBtn.addEventListener('click', click_proceed);
-		//moveBtn.addEventListener('click', click_move);
-		//stepBtn.addEventListener('click', click_step);
-		//ikBtn.addEventListener('click', click_ik);
+		//resetBtn.addEventListener('click', click_reset);
+		//proceedBtn.addEventListener('click', click_proceed);
+
+		function sendshm(){
+			util.shm(
+				'/shm/' + this.getAttribute("data-shm") +
+				'/' + this.getAttribute("data-segment") +
+				'/' + this.getAttribute("data-key"),
+				JSON.parse(this.getAttribute("data-value"))
+			);
+		}
+		function sendfsm(){
+			util.shm(
+				'/fsm/' + this.getAttribute("data-fsm") +
+				'/' + this.getAttribute("data-evt")
+			);
+		}
+
+		for(var i = 0; i<shmBtns.length; i+=1){
+			var btn = shmBtns.item(i);
+			if(btn.parentNode.classList.contains("shm")){
+				btn.addEventListener('click', sendshm);
+			} else if(btn.parentNode.classList.contains("fsm")){
+				btn.addEventListener('click', sendfsm);
+			}
+		}
 
 	}
 

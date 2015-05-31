@@ -7,8 +7,8 @@
 		if (typeof e.data !== "string") { return; }
 		var feedback = JSON.parse(e.data);
 		//qHead = feedback.cp.slice(0, 2);
-		qHead[0] = feedback.cp[0];
-		qHead[1] = feedback.cp[1];
+		qHead[0] = feedback.p[0];
+		qHead[1] = feedback.p[1];
 		//console.log(qHead.map(function(r){ return (r*util.RAD_TO_DEG).toPrecision(4); }));
 	}
 
@@ -29,18 +29,18 @@
 			return util.shm('/shm/hcm/teleop/head', qHead);
 		});
 	}
-
-	function sendfsm(){
-		util.shm(this);
-	}
-
 	function sendshm(){
-		console.log(this);
 		util.shm(
 			'/shm/' + this.getAttribute("data-shm") +
 			'/' + this.getAttribute("data-segment") +
 			'/' + this.getAttribute("data-key"),
 			JSON.parse(this.getAttribute("data-value"))
+		);
+	}
+	function sendfsm(){
+		util.shm(
+			'/fsm/' + this.getAttribute("data-fsm") +
+			'/' + this.getAttribute("data-evt")
 		);
 	}
 
@@ -49,12 +49,9 @@
 		for(var i = 0; i<allBtns.length; i+=1){
 			var btn = allBtns.item(i);
 			if(btn.parentNode.classList.contains("shm")){
-				console.log(btn);
-				btn.addEventListener('click', sendshm.bind(btn));
+				btn.addEventListener('click', sendshm);
 			} else if(btn.parentNode.classList.contains("fsm")){
-				btn.addEventListener('click', sendfsm.bind(
-					'/fsm/'+fsm+'/'+btn.id
-				));
+				btn.addEventListener('click', sendfsm);
 			}
 		}
 	}
