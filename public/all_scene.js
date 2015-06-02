@@ -345,14 +345,24 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			console.log('Sending IK', paths);
 			control_mode = 'ik';
 			if(!paths){return;}
+			var prs = [];
+			if(lPlan && lPlan.qArmGuess){
+				prs.push(util.shm('/shm/hcm/teleop/larm', lPlan.qArmGuess));
+			}
+			if(rPlan && rPlan.qArmGuess){
+				prs.push(util.shm('/shm/hcm/teleop/rarm', rPlan.qArmGuess));
+			}
+			if(paths[2]){
+				prs.push(util.shm('/shm/hcm/teleop/waist', qWaist));
+			}
+			if(paths[0]){
+				prs.push(util.shm('/shm/hcm/teleop/tflarm', lPlan.tr));
+			}
+			if(paths[1]){
+				prs.push(util.shm('/shm/hcm/teleop/tfrarm', rPlan.tr));
+			}
 			// TODO: Set the final arm configs
-			return Promise.all([
-				paths[0] ? util.shm('/shm/hcm/teleop/lweights', [1,1,0]) : false,
-				paths[1] ? util.shm('/shm/hcm/teleop/rweights', [1,1,0]) : false,
-				paths[2] ? util.shm('/shm/hcm/teleop/waist', qWaist) : false,
-				paths[0] ? util.shm('/shm/hcm/teleop/tflarm', lPlan.tr) : false,
-				paths[1] ? util.shm('/shm/hcm/teleop/tfrarm', rPlan.tr) : false
-			]);
+			return Promise.all(prs);
 		});
 	}
 

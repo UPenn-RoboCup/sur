@@ -11,9 +11,6 @@
 	// Put the wrist into a good view
 	function setup_keys(){
 		var listener = new keypress.Listener();
-		listener.simple_combo("space", function(){
-			return util.shm('/raw', 'Body.set_larm_command_position(1.5,7)');
-		});
 	}
 
 	function sendfsm(){
