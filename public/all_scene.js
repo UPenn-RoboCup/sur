@@ -210,7 +210,6 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 
 	function plan_arm(plan){
-		var success = true;
 		//var h_accept, h_decline;
 		var escDecline, spaceAccept;
 		util.debug(['Planning...']);
@@ -245,19 +244,22 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				*/
 				escDecline = listener.simple_combo('escape', reject);
 			});
-			return Promise.race([prAccept, prDecline]).catch(function(){
-				// Rejection goes here
-				// Reset the arms
+			return Promise.race([prAccept, prDecline]).then(
+				function(){
+					listener.unregister_many([escDecline, spaceAccept]);
+					var paths = prPlay.stop();
+					return paths;
+				},
+				function(){
+				/*
 				planRobot.meshes.forEach(function(m, i){
 					m.quaternion.copy(robot.meshes[i].quaternion);
 				});
-				success = false;
-			}).then(function(){
-				//proceedBtn.removeEventListener('click', h_accept);
-				//proceedBtn.removeEventListener('click', h_decline);
+				*/
+					console.log('rejected!');
 				listener.unregister_many([escDecline, spaceAccept]);
-				var paths = prPlay.stop();
-				return success ? paths : false;
+				prPlay.stop();
+				return false;
 			});
 		});
 	}
@@ -975,12 +977,21 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				tcontrol.attach(planRobot.rhand);
 			}
 		});
+		// The g key!
+		listener.simple_combo("g", function(){
+			//var motor = planRobot.object.getObjectByName('LeftWristYaw2');
+			// Automatically move the leftwrist yaw a bunch
+			calculate_state();
 
-		listener.register_combo({
-			sequence_delay: 100
 		});
+
+
 		listener.simple_combo("space", click_proceed);
 		listener.simple_combo("escape", function(){
+			if(control_mode==='armplan'){
+				// In arm plan, don't do this
+				return;
+			}
 			control_mode = '';
 			tcontrol.detach();
 			planRobot.meshes.forEach(function(m, i){
@@ -1031,14 +1042,17 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function try_arm_fsm(name){
 		control_mode = 'armplan';
 		var evt = '/fsm/Arm/' + name;
-		return util.shm('/c', ['arm', name]).then(preview_sequence).then(function(paths){
-			if(!paths) { return; }
-			return util.shm(evt);
-		}).catch(function(reason){
-			console.log('nope', reason);
-		}).then(function(){
-			control_mode = '';
-		});
+		return util.shm('/c', ['arm', name]).then(preview_sequence).then(
+			function(paths){
+				if(!paths) { return; }
+				console.log('yup');
+				return util.shm(evt);
+			},
+			function(reason){
+				console.log('nope', reason);
+			}).then(function(){
+				control_mode = '';
+			});
 	}
 
 	function show_qarms(paths){
@@ -1241,9 +1255,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				pillars.push(p_cyl);
 			}
 			var dx = p0[0], dy = p0[1];
-			if(Math.abs(dx) < 0.35){
+			if(Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4){
 				p_cyl.material.color.setRGB(1,0,0);
-			} else if (Math.abs(dy) < 0.35){
+			} else if(Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5){
 				p_cyl.material.color.setRGB(1,0.5,0);
 			} else {
 				p_cyl.material.color.setRGB(0,1,0);
