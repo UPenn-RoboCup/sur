@@ -1044,9 +1044,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		var evt = '/fsm/Arm/' + name;
 		return util.shm('/c', ['arm', name]).then(preview_sequence).then(
 			function(paths){
-				if(!paths) { return; }
-				console.log('yup');
-				return util.shm(evt);
+				console.log('yup', paths);
+				if(control_mode !== 'armplan'){
+					console.log('You started doing something else :P');
+					return;
+				} else if(!paths) {
+					return;
+				} else {
+					return util.shm(evt);
+				}
 			},
 			function(reason){
 				console.log('nope', reason);
