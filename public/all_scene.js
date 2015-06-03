@@ -486,9 +486,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		calculate_state();
 		if(typeof f==='function'){
 			return f();
-		} else {
-			util.shm('/shm/hcm/state/proceed', [1]);
 		}
+		//else { util.shm('/shm/hcm/state/proceed', [1]); }
 
 	}
 
@@ -1033,7 +1032,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			return try_arm_fsm('ready');
 		});
 		listener.simple_combo("3", function(){
-			return try_arm_fsm('pushdoor');
+			return try_arm_fsm('pushdoordown');
 		});
 		listener.simple_combo("4", function(){
 			return try_arm_fsm('valve');

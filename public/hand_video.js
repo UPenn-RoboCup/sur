@@ -8,11 +8,6 @@
 		return feedback;
 	}
 
-	// Put the wrist into a good view
-	function setup_keys(){
-		var listener = new keypress.Listener();
-	}
-
 	function sendfsm(){
 		util.shm(this);
 	}
@@ -96,7 +91,7 @@
 			div = allSHMs.item(i);
 			setup_buttons(div.id);
 		}
-	}).then(setup_keys);
+	});
 
 	// Load the CSS that we need for our app
 	util.lcss('/css/dual_video.css');
