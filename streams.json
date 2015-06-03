@@ -1,0 +1,11 @@
+{ mesh1: { udp: 17021, tcp: 43301, ws: 9021, sub: 'mesh1' },
+  lidar0: { udp: 17010, tcp: 43310, ws: 9010, sub: 'lidar0' },
+  ittybitty0: { udp: 2030, ws: 9070, sub: 'ittybitty0' },
+  feedback: { udp: 2002, ws: 9002, sub: 'feedback' },
+  kinect2_depth: { udp: 17046, tcp: 43346, ws: 9046, sub: 'kinect2_depth' },
+  kinect2_color: { udp: 17047, tcp: 43347, ws: 9047, sub: 'kinect2_color' },
+  camera1: { udp: 17004, tcp: 43304, ws: 9004, sub: 'camera1' },
+  camera0: { udp: 17003, tcp: 43303, ws: 9003, sub: 'camera0' },
+  mesh0: { udp: 17020, tcp: 43300, ws: 9020, sub: 'mesh0' },
+  ittybitty1: { udp: 2031, ws: 9071, sub: 'ittybitty1' },
+  lidar1: { udp: 17011, tcp: 43311, ws: 9011, sub: 'lidar1' } }

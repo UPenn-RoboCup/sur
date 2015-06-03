@@ -50,15 +50,20 @@ child_process.execSync("../UPennDev/packConfig.lua", function(error, stdout, std
 	Config = mp.unpack(stdout);
 });
 */
-/*
-//var str = require("fs").readFileSync("../UPennDev/include2.lua",{encoding:'utf8'})
-var buf = require("fs").readFileSync("./config.mp");
-var Config = mp.unpack(buf);
-*/
+var Config = JSON.parse(require("fs").readFileSync("./config.json"));
 //console.log(Config);
 
 var streams = Config.net.streams;
+var rpc = Config.net.rpc;
+var robot_ip = Config.net.robot.wired;
 console.log(streams);
+
+/*
+fs.writeFile('config.json', JSON.stringify(Config), function (err) {
+	if (err) { throw err; }
+	console.log('Saved Config');
+});
+*/
 
 // Network detection
 /*
@@ -125,7 +130,6 @@ server.post('/c', function(req, res, next){
 });
 
 /* Connect to the RPC server */
-var rpc = Config.net.rpc;
 var rpc_skt = zmq.socket('req');
 sockets.push(rpc_skt);
 //var robot_ip = Config.net.robot.wireless;
@@ -135,7 +139,6 @@ if(USE_LOCALHOST){
 	// For localhost, use this instead:
 	rpc_skt.connect('ipc:///tmp/'+rpc.uds);
 } else {
-	var robot_ip = Config.net.robot.wired;
 	console.log('robot', robot_ip);
 	rpc_skt.connect('tcp://' + robot_ip + ':' + rpc.tcp_reply);
 }
@@ -233,6 +236,7 @@ server.get('/streams/:stream', function (req, res, next) {
 	return next();
 });
 
+/*
 // Grab Config information
 function findKey(prev, cur){
 	'use strict';
@@ -257,6 +261,7 @@ server.get(/\/Config\/(.+)/, function (req, res, next) {
 	}
 	return next();
 });
+*/
 
 // Serve static items as catch-all
 // TODO: text/html?
