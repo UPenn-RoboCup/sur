@@ -35,10 +35,18 @@ server.use(restify.dateParser());
 //server.use(restify.gzipResponse());
 
 // Load config from Lua
+/*
 var nodelua = require('nodelua');
 var lua = new nodelua.LuaState('config');
 var UPENNDEV_PATH = '../UPennDev';
 var Config = lua.doFileSync(UPENNDEV_PATH + '/include.lua');
+*/
+/*
+fs.writeFile('config.json', JSON.stringify(Config), function (err) {
+	if (err) { throw err; }
+	console.log('Saved Config');
+});
+*/
 
 /*
 var sys = require('sys');
@@ -58,12 +66,7 @@ var rpc = Config.net.rpc;
 var robot_ip = Config.net.robot.wired;
 console.log(streams);
 
-/*
-fs.writeFile('config.json', JSON.stringify(Config), function (err) {
-	if (err) { throw err; }
-	console.log('Saved Config');
-});
-*/
+
 
 // Network detection
 /*
