@@ -446,6 +446,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		return globalPose;
 	}
 */
+
 	function go_move(){
 		//var globalPose = get_global_waypoint();
 		var relPose = get_relative_waypoint();
@@ -1024,6 +1025,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		});
 
 
+		listener.simple_combo("enter", function(){
+			if(control_mode!=='move'){
+				return;
+			}
+			calculate_state();
+			var relPose = get_relative_waypoint();
+			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=stepflat', relPose);
+		});
 		listener.simple_combo("space", click_proceed);
 		listener.simple_combo("escape", function(){
 			if(control_mode==='armplan'){
