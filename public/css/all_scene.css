@@ -26,13 +26,21 @@ select {
 	position: fixed;
 	top: 22pt;
 }
-/*
-.overlay {
+#btm_btn {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+}
+#ur_btn {
   position: absolute;
   top: 0px;
+  right: 0px;
+}
+#r_btn {
+  position: absolute;
+  bottom: 0px;
   left: 0px;
 }
-*/
 #topic2 {
   position: absolute;
   cursor: default;

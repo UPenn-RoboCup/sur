@@ -1,20 +1,44 @@
 <!-- Tweak modes -->
 <div class="button-group" id="topic">
-	<!--
-	<button id="accept" name='Accept' class="button">Accept</button>
-	<button id="decline" name='Decline' class="button">Decline</button>
-	<button id="step" name='Step' class="button" data-foot="L_FOOT">Step</button>
-	<button id="ik" name='IK' class="button" data-hand="L_TIP">IK</button>
-	<button id="teleop" name='Teleop' class="button">Teleop</button>
-	<button id="move" name='Walk' class="button">Walk</button>
-	<button id="reset" name='Reset' class="button">Reset</button>
-	<button id="proceed" name='Proceed' class="button">Proceed</button>
--->
-
 	<select id="joints" name="joints"></select>
-	<input type="checkbox" id="mesh0sel" name="mesh0" checked="yes"/>Mesh0
-	<input type="checkbox" id="mesh1sel" name="mesh1" checked="yes"/>Mesh1
+	<input type="checkbox" id="mesh0sel" name="mesh0" checked="yes"/>Head
+	<input type="checkbox" id="mesh1sel" name="mesh1" checked="yes"/>Chest
 </div>
+
+<div id="ur_btn">
+	<div class="button-group fsm" id="Head">
+		<button data-fsm="Head" data-evt="init" class="button">H Init</button>
+		<button data-fsm="Head" data-evt="mesh" class="button">H Mesh</button>
+		<button data-fsm="Head" data-evt="trackleft" class="button">H Left</button>
+		<button data-fsm="Head" data-evt="trackright" class="button">H Right</button>
+		<button data-fsm="Head" data-evt="teleop" class="button">H Teleop</button>
+	</div>
+</div>
+
+<div id="btm_btn">
+	<div class="button-group fsm" id="Gripper">
+		<button data-fsm="Gripper" data-evt="idle" class="button">G Idle</button>
+		<button data-fsm="Gripper" data-evt="init" class="button">G Init</button>
+		<button data-fsm="Gripper" data-evt="open" class="button">G Open</button>
+		<button data-fsm="Gripper" data-evt="center" class="button">G Center</button>
+		<button data-fsm="Gripper" data-evt="clench" class="button">G Clench</button>
+		<button data-fsm="Gripper" data-evt="teleop" class="button">G Tq</button>
+		<button data-fsm="Gripper" data-evt="teleoppos" class="button">G Pos</button>
+	</div>
+</div>
+
+<div id="r_btn">
+	<div class="button-group shm" id="hcm">
+		<button id="indoor" class="button" data-shm="hcm" data-segment="network" data-key="indoors" data-value="[1]">Indoor</button>
+		<br/>
+		<button id="outdoor" class="button" data-shm="hcm" data-segment="network" data-key="indoors" data-value="[0]">Outdoor</button>
+		<br/>
+		<button id="ittybittyhead" class="button" data-shm="hcm" data-segment="network" data-key="indoors" data-value="[2]">Ittybitty H</button>
+		<br/>
+		<button id="ittybittywrist" class="button" data-shm="hcm" data-segment="network" data-key="indoors" data-value="[3]">Ittybitty W</button>
+	</div>
+</div>
+
 <div id="info">[INFO]</div>
 <!-- 3D scene -->
 <div id="world_container"></div>

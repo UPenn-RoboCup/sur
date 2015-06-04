@@ -16,7 +16,7 @@
 		//resetBtn, proceedBtn,
 			//teleopBtn, ikBtn, moveBtn,
 			//acceptBtn, declineBtn, stepBtn,
-		jointSel, mesh0Sel, mesh1Sel, allBtns, shmBtns,
+		jointSel, mesh0Sel, mesh1Sel, allBtns, shmBtns, fsmBtns,
 		control_mode;
 
 	// State variables
@@ -1162,6 +1162,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		mesh1Sel = document.querySelector('input#mesh1sel');
 		allBtns = document.querySelectorAll('#topic button');
 		shmBtns = document.querySelectorAll('.shm button');
+		fsmBtns = document.querySelectorAll('.fsm button');
 
 		mesh0Sel.addEventListener('change', function(){
 			var is_add = mesh0Sel.checked;
@@ -1202,13 +1203,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			);
 		}
 
-		for(var i = 0; i<shmBtns.length; i+=1){
-			var btn = shmBtns.item(i);
-			if(btn.parentNode.classList.contains("shm")){
-				btn.addEventListener('click', sendshm);
-			} else if(btn.parentNode.classList.contains("fsm")){
-				btn.addEventListener('click', sendfsm);
-			}
+		var i, btn;
+		for(i = 0; i<fsmBtns.length; i+=1){
+			btn = fsmBtns.item(i);
+			btn.addEventListener('click', sendfsm);
+		}
+		for(i = 0; i<shmBtns.length; i+=1){
+			btn = shmBtns.item(i);
+			btn.addEventListener('click', sendshm);
 		}
 
 	}
