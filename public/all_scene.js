@@ -26,7 +26,7 @@ qWaist, qWaist0, sameWaist,
 sameLArmTF, sameRArmTF,
 comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
-	function calculate_state(){
+	function calculate_state(paths){
 		qPlan = planRobot.meshes.map(function(m, i){
 			var qDinv = this[i].clone().conjugate();
 			var q0 = new THREE.Quaternion().multiplyQuaternions(qDinv, m.quaternion);
@@ -64,6 +64,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		comWorldPlan = planRobot.object.matrixWorld;
 		invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
 		invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
+		return paths;
 	}
 
 	function procPlan(plan) {
@@ -198,6 +199,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		control_mode='move';
 		tcontrol.detach();
 		tcontrol.attach(planRobot.object);
+		util.debug([
+			"Walk mode"
+		]);
 		/*
 		tcontrol.setMode('translate');
 		tcontrol.space = 'local';
@@ -212,11 +216,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function plan_arm(plan){
 		//var h_accept, h_decline;
 		var escDecline, spaceAccept;
-		util.debug(['Planning...']);
 		return util.shm('/armplan', plan || this)
 		.then(procPlan)
 		.then(function(paths){
-			util.debug(['Done planning.']);
 			var prPlay = playPlan(paths);
 			prPlay.then(function(){
 				//console.log('Finished playing');
@@ -264,32 +266,32 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		});
 	}
 
+	function get_tfLhand(){
+		var lhand_com = new THREE.Matrix4().multiplyMatrices(
+			invComWorldPlan, planRobot.lhand.matrixWorld);
+		var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
+		var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
+		var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
+		//var rpyL = new THREE.Euler().setFromQuaternion(quatL);
+		return tfL;
+	}
+	function get_tfRhand(){
+		var rhand_com = new THREE.Matrix4().multiplyMatrices(
+			invComWorldPlan, planRobot.rhand.matrixWorld);
+		var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
+		var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
+		var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
+		//var rpyR = new THREE.Euler().setFromQuaternion(quatR);
+		return tfR;
+	}
+
 	function go_ik() {
 
 		// Always with respect to our com position.
 		if(sameLArmTF && sameRArmTF){ return; }
 
-		// NOTE: Be careful between robots...
-		var rhand_com = new THREE.Matrix4().multiplyMatrices(
-			invComWorldPlan, planRobot.rhand.matrixWorld);
-		var lhand_com = new THREE.Matrix4().multiplyMatrices(
-			invComWorldPlan, planRobot.lhand.matrixWorld);
-		var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
-		var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
-		var rpyL = new THREE.Euler().setFromQuaternion(quatL);
-		var rpyR = new THREE.Euler().setFromQuaternion(quatR);
-		var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
-		var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
-		util.debug([
-			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
-							pL.z / 1e3, pL.x / 1e3, pL.y / 1e3,
-							rpyL.z*RAD_TO_DEG, rpyL.x*RAD_TO_DEG, rpyL.y*RAD_TO_DEG),
-			sprintf("Right: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
-							pR.z / 1e3, pR.x / 1e3, pR.y / 1e3,
-							rpyR.z*RAD_TO_DEG, rpyR.x*RAD_TO_DEG, rpyR.y*RAD_TO_DEG),
-		]);
-		var tfL = [quatL.w, quatL.z, quatL.x, quatL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
-		var tfR = [quatR.w, quatR.z, quatR.x, quatR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
+		var tfL = get_tfLhand();
+		var tfR = get_tfRhand();
 
 		// Reset our position
 		planRobot.rhand.position.set(0,0,0);
@@ -427,22 +429,27 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		]);
 	}
 
-	function go_move(){
-		var Tdiff = new THREE.Matrix4().multiplyMatrices(invComWorldNow, comWorldPlan);//
+	function get_relative_waypoint(){
+		calculate_state();
+		var Tdiff = new THREE.Matrix4().multiplyMatrices(invComWorldNow, comWorldPlan);
 		var dpL = new THREE.Vector3().setFromMatrixPosition(Tdiff);
 		var daL = new THREE.Euler().setFromRotationMatrix(Tdiff);
-		//
+		var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
+		return relPose;
+	}
+
+/*
+	function get_global_waypoint(){
 		var dpG = new THREE.Vector3().setFromMatrixPosition(planRobot.object.matrix);
 		var daG = new THREE.Euler().setFromRotationMatrix(planRobot.object.matrix);
-		//
-		var relPose = [dpL.z/1e3, dpL.x/1e3, daL.y];
 		var globalPose = [dpG.z/1e3, dpG.x/1e3, daG.y];
-		util.debug([
-			sprintf("Local WP: %0.2f %0.2f %0.2f",
-							relPose[0], relPose[1], relPose[2]),
-			sprintf("Global WP: %0.2f %0.2f %0.2f",
-							globalPose[0], globalPose[1], globalPose[2]),
-		]);
+		return globalPose;
+	}
+*/
+	function go_move(){
+		//var globalPose = get_global_waypoint();
+		var relPose = get_relative_waypoint();
+
 		//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
 		if (Math.abs(relPose[0])<=0.1 && Math.abs(relPose[1])<=0.1 && Math.abs(relPose[2])<=10*util.DEG_TO_RAD){
 			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=stepflat', relPose);
@@ -844,6 +851,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		var mat = planRobot.object.matrix.multiply(this);
 		planRobot.object.position.setFromMatrixPosition(mat);
 		planRobot.object.quaternion.setFromRotationMatrix(mat);
+
+		var relPose = get_relative_waypoint();
+
+		util.debug([
+			"Walk mode",
+			sprintf("Local WP: %0.2f %0.2f %0.2f deg", relPose[0], relPose[1], relPose[2]*RAD_TO_DEG)
+		]);
+
 	}
 	function delta_hand(){
 		if(control_mode!=='ik'){ return; }
@@ -856,6 +871,18 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		var mat = hand.matrix.multiply(this);
 		hand.position.setFromMatrixPosition(mat);
 		hand.quaternion.setFromRotationMatrix(mat);
+
+		// Maybe?
+		calculate_state();
+
+		var tfL = get_tfLhand();
+		var tfR = get_tfRhand();
+
+		util.debug([
+			sprintf("Left: %0.2f %0.2f %0.2f", tfL[4],tfL[5],tfL[6]),
+			sprintf("Right: %0.2f %0.2f %0.2f", tfR[4],tfR[5],tfR[6]),
+		]);
+
 	}
 	function delta_head() {
 		var neck = planRobot.object.getObjectByName('Neck');
@@ -999,8 +1026,10 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		listener.simple_combo("escape", function(){
 			if(control_mode==='armplan'){
 				// In arm plan, don't do this
+				util.debug(["Canceled plan"]);
 				return;
 			}
+			util.debug(["Back to normal"]);
 			control_mode = '';
 			tcontrol.detach();
 			planRobot.meshes.forEach(function(m, i){
@@ -1016,12 +1045,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			planRobot.rhand.quaternion.copy(new THREE.Quaternion());
 		});
 		listener.simple_combo("backspace", function(){
-			console.log('!body stop!');
+			util.debug(["!! STOPPING !!"]);
 			return util.shm('/fsm/Body/stop');
 		});
 		//
 		listener.simple_combo("!", function(){
-			console.log('body init');
+			util.debug(["!! INIT !!"]);
 			return util.shm('/fsm/Body/init');
 		});
 		listener.simple_combo("1", function(){
@@ -1051,11 +1080,11 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function try_arm_fsm(name){
 		control_mode = 'armplan';
 		var evt = '/fsm/Arm/' + name;
+		util.debug(["Arm FSM: " + name]);
 		return util.shm('/c', ['arm', name]).then(preview_sequence).then(
 			function(paths){
-				console.log('yup', paths);
 				if(control_mode !== 'armplan'){
-					console.log('You started doing something else :P');
+					util.debug(["Arm plan" + name + "canceled."]);
 					return;
 				} else if(!paths) {
 					return;
@@ -1064,12 +1093,13 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				}
 			},
 			function(reason){
-				console.log('nope', reason);
+				util.debug(["Arm plan" + name + "canceled.", reason]);
 			}).then(function(){
 				control_mode = '';
 			});
 	}
 
+	/*
 	function show_qarms(paths){
 //		console.log('paths', paths);
 		calculate_state();
@@ -1083,6 +1113,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		util.debug([qlmsg, qrmsg, path_msg]);
 		return paths;
 	}
+	*/
 
 	function preview_sequence(seq){
 		if(!seq){return false;}
@@ -1091,12 +1122,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		var cfgPlan = seq[i];
 		if(cfgPlan.left){ cfgPlan.left.qLArm0 = qLArm; }
 		if(cfgPlan.right){ cfgPlan.right.qRArm0 = qRArm; }
-		var prCfgPlan = plan_arm(cfgPlan).then(show_qarms);
+		var prCfgPlan = plan_arm(cfgPlan).then(calculate_state);
 		while(cfgPlan) {
 			i += 1;
 			cfgPlan = seq[i];
 			if(cfgPlan){
-				prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan)).then(show_qarms);
+				prCfgPlan = prCfgPlan.then(staged.bind(cfgPlan)).then(calculate_state);
 			}
 		}
 		return prCfgPlan;
