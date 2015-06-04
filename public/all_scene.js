@@ -451,7 +451,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		var relPose = get_relative_waypoint();
 
 		//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
-		if (Math.abs(relPose[0])<=0.1 && Math.abs(relPose[1])<=0.1 && Math.abs(relPose[2])<=10*util.DEG_TO_RAD){
+	//	if (Math.abs(relPose[0])<=0.1 && Math.abs(relPose[1])<=0.1 && Math.abs(relPose[2])<=10*util.DEG_TO_RAD){
+
+		if (Math.abs(relPose[1])>0.05){
 			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=stepflat', relPose);
 		} else {
 			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
