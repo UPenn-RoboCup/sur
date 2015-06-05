@@ -704,6 +704,10 @@
 
 		};
 
+		this.getSpace = function ( space ) {
+			return scope.space;
+		};
+
 		this.update = function () {
 
 			if ( scope.object === undefined ) return;

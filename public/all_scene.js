@@ -870,7 +870,19 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		} else {
 			hand = planRobot.rhand;
 		}
-		var mat = hand.matrix.multiply(this);
+
+		var dmat = this;
+		var mat;
+		var sp = tcontrol.getSpace();
+		if(sp==='local'){
+			//console.log('local');
+			mat = new THREE.Matrix4().multiplyMatrices(hand.matrix, dmat);
+		} else {
+			//console.log('world');
+			//mat = new THREE.Matrix4().multiplyMatrices(dmat, hand.matrix);
+			mat = new THREE.Matrix4().multiplyMatrices(hand.matrix, dmat);
+		}
+
 		hand.position.setFromMatrixPosition(mat);
 		hand.quaternion.setFromRotationMatrix(mat);
 
@@ -1007,6 +1019,16 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				tcontrol.attach(planRobot.rhand);
 			}
 		});
+
+		listener.simple_combo("\\", function(){
+			// Switch hands
+			if(tcontrol.getSpace()==='local'){
+				tcontrol.setSpace('world');
+			} else {
+				tcontrol.setSpace('local');
+			}
+		});
+
 		// The g key!
 		listener.simple_combo("g", function(){
 			//var motor = planRobot.object.getObjectByName('LeftWristYaw2');
