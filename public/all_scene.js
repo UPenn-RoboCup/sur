@@ -1,7 +1,7 @@
 (function (ctx) {
 	'use strict';
 	// Private variables
-	var RAD_TO_DEG = util.RAD_TO_DEG,
+	var RAD_TO_DEG = util.RAD_TO_DEG, DEG_TO_RAD = util.DEG_TO_RAD,
     container, renderer, camera,
 		scene, raycaster, CANVAS_WIDTH, CANVAS_HEIGHT,
 		controls, tcontrol,
@@ -709,7 +709,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				T_offset = new THREE.Matrix4().multiplyMatrices(T_inv, T_point);
 			// Debugging
 			var offset_msg = new THREE.Vector3().setFromMatrixPosition(T_offset).divideScalar(1e3).toArray();
-			var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1e3).toArray();
+			//var global_msg = new THREE.Vector3().setFromMatrixPosition(T_point).divideScalar(1e3).toArray();
 
 
 
@@ -718,10 +718,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 				// Middle click
 
 				util.debug([
-					mesh.name,
+					//mesh.name,
 					sprintf("Offset: %0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], offset_msg[1]),
-					sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
-					sprintf("%0.2f %0.2f %0.2f", offset_msg[2], offset_msg[0], global_msg[1]),
+					//sprintf("Global: %0.2f %0.2f %0.2f", global_msg[2], global_msg[0], global_msg[1]),
 				]);
 
 				switch(control_mode){
@@ -888,14 +887,10 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 	}
 	function delta_head() {
-		var neck = planRobot.object.getObjectByName('Neck');
-		var head = planRobot.object.getObjectByName('Head');
-		var matNeck = neck.matrix.multiply(this[0]);
-		var matHead = head.matrix.multiply(this[1]);
-		head.quaternion.setFromRotationMatrix(matHead);
-		neck.quaternion.setFromRotationMatrix(matNeck);
-		calculate_state();
-		return util.shm('/shm/hcm/teleop/head', qHead);
+		var qH = robot.object.feedback.p.slice(0, 2);
+		qH[0] += this[0];
+		qH[1] += this[1];
+		return util.shm('/shm/hcm/teleop/head', qH);
 	}
 
 	function setup_keys(){
@@ -910,9 +905,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		listener.simple_combo(";", delta_walk.bind(
 			new THREE.Matrix4().makeTranslation(-25,0,0)));
 		listener.simple_combo("j", delta_walk.bind(
-			new THREE.Matrix4().makeRotationY(2.5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(2.5*DEG_TO_RAD)));
 		listener.simple_combo("l", delta_walk.bind(
-			new THREE.Matrix4().makeRotationY(-2.5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(-2.5*DEG_TO_RAD)));
 		listener.simple_combo("k", function(){
 			planRobot.object.position.copy(robot.object.position);
 			planRobot.object.quaternion.copy(robot.object.quaternion);
@@ -931,34 +926,30 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		listener.simple_combo("m", delta_hand.bind(
 			new THREE.Matrix4().makeTranslation(0,-10,0)));
 		listener.simple_combo("j", delta_hand.bind(
-			new THREE.Matrix4().makeRotationY(2.5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(2.5*DEG_TO_RAD)));
 		listener.simple_combo("l", delta_hand.bind(
-			new THREE.Matrix4().makeRotationY(-2.5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationY(-2.5*DEG_TO_RAD)));
 		listener.simple_combo("y", delta_hand.bind(
-			new THREE.Matrix4().makeRotationX(2.5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationX(2.5*DEG_TO_RAD)));
 		listener.simple_combo("n", delta_hand.bind(
-			new THREE.Matrix4().makeRotationX(-2.5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationX(-2.5*DEG_TO_RAD)));
 		listener.simple_combo("/", delta_hand.bind(
-			new THREE.Matrix4().makeRotationZ(2.5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationZ(2.5*DEG_TO_RAD)));
 		listener.simple_combo(".", delta_hand.bind(
-			new THREE.Matrix4().makeRotationZ(-2.5*util.DEG_TO_RAD)));
+			new THREE.Matrix4().makeRotationZ(-2.5*DEG_TO_RAD)));
 		listener.simple_combo("k", reset_hands);
 		// Control the head
 		listener.simple_combo("w", delta_head.bind([
-			new THREE.Matrix4(),
-			new THREE.Matrix4().makeRotationX(-2.5*util.DEG_TO_RAD)
+			0, -2.5*DEG_TO_RAD
 		]));
 		listener.simple_combo("a", delta_head.bind([
-			new THREE.Matrix4().makeRotationX(2.5*util.DEG_TO_RAD),
-			new THREE.Matrix4()
+			2.5*DEG_TO_RAD, 0
 		]));
 		listener.simple_combo("s", delta_head.bind([
-			new THREE.Matrix4(),
-			new THREE.Matrix4().makeRotationX(2.5*util.DEG_TO_RAD)
+			0, 2.5*DEG_TO_RAD
 		]));
 		listener.simple_combo("d", delta_head.bind([
-			new THREE.Matrix4().makeRotationX(-2.5*util.DEG_TO_RAD),
-			new THREE.Matrix4()
+			-2.5*util.DEG_TO_RAD, 0
 		]));
 		listener.simple_combo("shift k", function(){
 			return util.shm('/fsm/Head/teleop', qHead);

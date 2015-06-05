@@ -29,24 +29,18 @@
 				var feedback = JSON.parse(e.data);
 				if(feedback.tm){ console.log('Hot!', feedback.tm); }
 				if(!meshes){return;}
-				var qQuat;
-				if (feedback.p){
-					qQuat = feedback.p.map(function(q){
-						return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
-					});
-				}
 				var cqQuat = feedback.p.map(function(q){
 					return new THREE.Quaternion().setFromAxisAngle(xAxis, q);
 				});
+				object.feedback = feedback;
 				// Use cq or q
-				var quatUsed = cqQuat;
 				meshes.forEach(function(m, i){
 					if(!m){return;}
 					if(feedback.tm){
 						jet_temp(feedback.tm[i], m);
 					}
-					if(quatUsed[i]){
-						m.quaternion.multiplyQuaternions(qDefault[i], quatUsed[i]);
+					if(cqQuat[i]){
+						m.quaternion.multiplyQuaternions(qDefault[i], cqQuat[i]);
 					}
 					if(cqQuat[i]){
 						m.cquaternion.multiplyQuaternions(qDefault[i], cqQuat[i]);
