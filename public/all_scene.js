@@ -24,7 +24,7 @@
 qLArm, qLArm0, sameLArm, qRArm, qRArm0, sameRArm,
 qWaist, qWaist0, sameWaist,
 sameLArmTF, sameRArmTF,
-comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
+comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 
 	function calculate_state(paths){
 		qPlan = planRobot.meshes.map(function(m, i){
@@ -60,7 +60,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		sameLArmTF = util.same(planRobot.lhand.matrix.elements, I16);
 		sameRArmTF = util.same(planRobot.rhand.matrix.elements, I16);
 		//
-		//var comWorldNow = robot.object.matrixWorld;
+		comWorldNow = robot.object.matrixWorld;
 		comWorldPlan = planRobot.object.matrixWorld;
 		invComWorldNow = new THREE.Matrix4().getInverse(robot.object.matrixWorld);
 		invComWorldPlan = new THREE.Matrix4().getInverse(planRobot.object.matrixWorld);
@@ -193,6 +193,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		tcontrol.enableZ = true;
 		tcontrol.enableXYZE = false;
 		tcontrol.attach(planRobot.lhand);
+
+		//
+		calculate_state();
+		var tfL = get_tfLhand();
+		var tfR = get_tfRhand();
+		util.debug([
+			sprintf("Left: %0.2f %0.2f %0.2f", tfL[4],tfL[5],tfL[6]),
+			sprintf("Right: %0.2f %0.2f %0.2f", tfR[4],tfR[5],tfR[6]),
+		]);
 	}
 
 	function click_move(){
@@ -450,16 +459,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	function go_move(){
 		//var globalPose = get_global_waypoint();
 		var relPose = get_relative_waypoint();
-
-		//util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approachbuggy', globalPose);
-	//	if (Math.abs(relPose[0])<=0.1 && Math.abs(relPose[1])<=0.1 && Math.abs(relPose[2])<=10*util.DEG_TO_RAD){
-
-		if (Math.abs(relPose[1])>0.05){
-			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=stepflat', relPose);
-		} else {
-			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
-		}
-
+		return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=approach', relPose);
 	}
 /*
 	function go_step(){
@@ -864,6 +864,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 	}
 	function delta_hand(){
 		if(control_mode!=='ik'){ return; }
+		calculate_state();
+		var tfL = get_tfLhand();
+		var tfR = get_tfRhand();
+		util.debug([
+			sprintf("Left: %0.2f %0.2f %0.2f", tfL[4],tfL[5],tfL[6]),
+			sprintf("Right: %0.2f %0.2f %0.2f", tfR[4],tfR[5],tfR[6]),
+		]);
+
+
 		var hand;
 		if(tcontrol.object===planRobot.lhand){
 			hand = planRobot.lhand;
@@ -878,9 +887,20 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 			//console.log('local');
 			mat = new THREE.Matrix4().multiplyMatrices(hand.matrix, dmat);
 		} else {
-			//console.log('world');
-			//mat = new THREE.Matrix4().multiplyMatrices(dmat, hand.matrix);
-			mat = new THREE.Matrix4().multiplyMatrices(hand.matrix, dmat);
+			// find our com fram rotation
+			var rotNow = new THREE.Matrix4().extractRotation(comWorldNow);
+			// Get the dmat in our com frame
+			var dmatCom = new THREE.Matrix4().multiplyMatrices(dmat, rotNow);
+			// Hand in our com frame
+			var handRel = new THREE.Matrix4().multiplyMatrices(
+				hand.matrixWorld, invComWorldNow);
+			//
+			var handRelInv = new THREE.Matrix4().getInverse(handRel);
+			//
+			var handRelInvRot = new THREE.Matrix4().extractRotation(handRelInv);
+			// dmat in the hand frame
+			var dmatHand = new THREE.Matrix4().multiplyMatrices(dmatCom, handRelInvRot);
+			mat = new THREE.Matrix4().multiplyMatrices(hand.matrix, dmatHand);
 		}
 
 		hand.position.setFromMatrixPosition(mat);
@@ -889,8 +909,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 		// Maybe?
 		calculate_state();
 
-		var tfL = get_tfLhand();
-		var tfR = get_tfRhand();
+		tfL = get_tfLhand();
+		tfR = get_tfRhand();
 
 		util.debug([
 			sprintf("Left: %0.2f %0.2f %0.2f", tfL[4],tfL[5],tfL[6]),
@@ -1039,12 +1059,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan; //comWorldNow
 
 
 		listener.simple_combo("enter", function(){
+			/*
 			if(control_mode!=='move'){
 				return;
 			}
 			calculate_state();
 			var relPose = get_relative_waypoint();
 			return util.shm('/shm/hcm/teleop/waypoint?fsm=Body&evt=stepflat', relPose);
+			*/
 		});
 		listener.simple_combo("space", click_proceed);
 		listener.simple_combo("escape", function(){

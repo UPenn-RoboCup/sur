@@ -51,7 +51,8 @@
 				positions: new Float32Array(npix * 3),
 				colors: new Float32Array(npix * 3),
 				pixels: pixels,
-				pixdex: new Uint32Array(pixels.buffer),
+				//pixdex: new Uint32Array(pixels.buffer),
+				pixdex: new Uint32Array(npix),
 			};
 
 			// Now process it

@@ -143,7 +143,10 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 	K2_HFOV_FACTOR_WBT = tan(70 / 2 * DEG_TO_RAD),
 	K2_VFOV_FACTOR_WBT = tan(58 / 2 * DEG_TO_RAD),
   // points within MIN_CONNECTIVITY of each other are connected
-	MIN_CONNECTIVITY = 60, // 5cm
+	MIN_CONNECTIVITY,
+	MIN_CONNECTIVITY0 = 60,
+	MIN_CONNECTIVITY1 = 100,
+	MIN_CONNECTIVITY2 = 1000,
   // Sensor XYZ should always take in millimeters, going forward
   SENSOR_XYZ = {
     kinectV2: function (u, v, x, width, height, mesh, destination) {
@@ -547,6 +550,8 @@ this.addEventListener('message', function (e) {
 			point_xyz = positions.subarray(position_idx, position_idx + 3);
 			//console.assert(typeof pixel_idx==='number', 'undefined pixel_idx', pixel_idx);
 			var r = pixels[pixel_idx];
+			// move on to the next pixel (RGBA) for next time
+			pixel_idx += inc;
 			//console.assert(typeof r==='number', 'undefined pixels[pixel_idx]', r);
       point_local = get_xyz(
         i, j, r, width, height, mesh, point_xyz
@@ -560,8 +565,6 @@ this.addEventListener('message', function (e) {
 				pixdex[pixdex_idx] = 0;
   			// next float32 in the image. += 4 if RGBA image to get each R of the greyscale, for instance
   			pixdex_idx += 1;
-  			// move on to the next pixel (RGBA) for next time
-  			pixel_idx += inc;
 				continue;
       }
       // Set the color of this pixel
@@ -579,8 +582,6 @@ this.addEventListener('message', function (e) {
 			idx_idx += 1;
 			// next float32 in the image. += 4 if RGBA image to get each R of the greyscale, for instance
 			pixdex_idx += 1;
-			// move on to the next pixel (RGBA) for next time
-			pixel_idx += inc;
 		} // for i in width
 
     // Use a heurstic for splitting into a new chunk
@@ -626,8 +627,11 @@ this.addEventListener('message', function (e) {
     quad_point_count = 0;
 
 	// Do not look at the last row/column
+	var pixel_idx1 = 0;
 	for (j = 0; j < height - 1; j += 1) {
 		for (i = 0; i < width - 1; i += 1) {
+			var r1 = pixels[pixel_idx];
+			pixel_idx1 += inc;
       // Find the four indices of the quad points
       // First row
 			a_position_idx = pixdex[point_pos_idx];
@@ -652,6 +656,14 @@ this.addEventListener('message', function (e) {
 			quad_C = positions.subarray(3 * c_position_idx, 3 * c_position_idx + 3);
 			quad_D = positions.subarray(3 * d_position_idx, 3 * d_position_idx + 3);
 			// Ensure that quads are smoothly connected; restrict the derivatives on the durface here
+			if (r1 < 1) {
+				MIN_CONNECTIVITY = MIN_CONNECTIVITY0;
+			} else if (r1 < 2){
+				MIN_CONNECTIVITY = MIN_CONNECTIVITY1;
+			} else {
+				MIN_CONNECTIVITY = MIN_CONNECTIVITY2;
+			}
+
 			if (
         abs(quad_A[2] - quad_B[2]) > MIN_CONNECTIVITY || abs(quad_A[2] - quad_C[2]) > MIN_CONNECTIVITY || abs(quad_A[2] - quad_D[2]) > MIN_CONNECTIVITY
       ) {
