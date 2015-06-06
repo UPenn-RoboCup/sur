@@ -1113,11 +1113,16 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			return try_arm_fsm('valve');
 		});
 		listener.simple_combo("5", function(){
+			return try_arm_fsm('plug');
+		});
+		/*
+		listener.simple_combo("5", function(){
 			return try_arm_fsm('drill');
 		});
 		listener.simple_combo("6", function(){
 			return try_arm_fsm('shower');
 		});
+		*/
 		listener.simple_combo("0", click_ik);
 		listener.simple_combo("9", click_move);
 		listener.simple_combo("`", click_joint);
