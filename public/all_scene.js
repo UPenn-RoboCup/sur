@@ -196,12 +196,18 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 
 		//
 		calculate_state();
-		var tfL = get_tfLhand();
-		var tfR = get_tfRhand();
+		//var tfL = get_tfLhand();
+		//var tfR = get_tfRhand();
+
+		var rpyL = get_rpyLhand();
+		var rpyR = get_rpyRhand();
 		util.debug([
-			sprintf("Left: %0.2f %0.2f %0.2f", tfL[4],tfL[5],tfL[6]),
-			sprintf("Right: %0.2f %0.2f %0.2f", tfR[4],tfR[5],tfR[6]),
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							rpyL[4],rpyL[5],rpyL[6], rpyL[0]*RAD_TO_DEG,rpyL[1]*RAD_TO_DEG,rpyL[2]*RAD_TO_DEG),
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							rpyR[4],rpyR[5],rpyR[6], rpyR[0]*RAD_TO_DEG,rpyR[1]*RAD_TO_DEG,rpyR[2]*RAD_TO_DEG),
 		]);
+
 	}
 
 	function click_move(){
@@ -294,7 +300,36 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		return tfR;
 	}
 
+	function get_rpyLhand(){
+		var lhand_com = new THREE.Matrix4().multiplyMatrices(
+			invComWorldPlan, planRobot.lhand.matrixWorld);
+		var quatL = new THREE.Quaternion().setFromRotationMatrix(lhand_com);
+		var pL = new THREE.Vector3().setFromMatrixPosition(lhand_com);
+		var rpyL = new THREE.Euler().setFromQuaternion(quatL);
+		return [rpyL.z, rpyL.x, rpyL.y, pL.z / 1e3, pL.x / 1e3, pL.y / 1e3];
+	}
+
+	function get_rpyRhand(){
+		var rhand_com = new THREE.Matrix4().multiplyMatrices(
+			invComWorldPlan, planRobot.rhand.matrixWorld);
+		var quatR = new THREE.Quaternion().setFromRotationMatrix(rhand_com);
+		var pR = new THREE.Vector3().setFromMatrixPosition(rhand_com);
+		var rpyR = new THREE.Euler().setFromQuaternion(quatR);
+		return [rpyR.z, rpyR.x, rpyR.y, pR.z / 1e3, pR.x / 1e3, pR.y / 1e3];
+	}
+
+
+
 	function go_ik() {
+
+		var rpyL = get_rpyLhand();
+		var rpyR = get_rpyRhand();
+		util.debug([
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							rpyL[4],rpyL[5],rpyL[6], rpyL[0]*RAD_TO_DEG,rpyL[1]*RAD_TO_DEG,rpyL[2]*RAD_TO_DEG),
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							rpyR[4],rpyR[5],rpyR[6], rpyR[0]*RAD_TO_DEG,rpyR[1]*RAD_TO_DEG,rpyR[2]*RAD_TO_DEG),
+		]);
 
 		// Always with respect to our com position.
 		if(sameLArmTF && sameRArmTF){ return; }
@@ -867,9 +902,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		calculate_state();
 		var tfL = get_tfLhand();
 		var tfR = get_tfRhand();
+		var rpyL = get_rpyLhand();
+		var rpyR = get_rpyRhand();
+		console.log('rpyL', rpyL);
 		util.debug([
-			sprintf("Left: %0.2f %0.2f %0.2f", tfL[4],tfL[5],tfL[6]),
-			sprintf("Right: %0.2f %0.2f %0.2f", tfR[4],tfR[5],tfR[6]),
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							rpyL[4],rpyL[5],rpyL[6], rpyL[0]*RAD_TO_DEG,rpyL[1]*RAD_TO_DEG,rpyL[2]*RAD_TO_DEG),
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							rpyR[4],rpyR[5],rpyR[6], rpyR[0]*RAD_TO_DEG,rpyR[1]*RAD_TO_DEG,rpyR[2]*RAD_TO_DEG),
 		]);
 
 
@@ -912,10 +952,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		tfL = get_tfLhand();
 		tfR = get_tfRhand();
 
+		rpyL = get_rpyLhand();
+		rpyR = get_rpyRhand();
 		util.debug([
-			sprintf("Left: %0.2f %0.2f %0.2f", tfL[4],tfL[5],tfL[6]),
-			sprintf("Right: %0.2f %0.2f %0.2f", tfR[4],tfR[5],tfR[6]),
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							rpyL[4],rpyL[5],rpyL[6], rpyL[0]*RAD_TO_DEG,rpyL[1]*RAD_TO_DEG,rpyL[2]*RAD_TO_DEG),
+			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
+							rpyR[4],rpyR[5],rpyR[6], rpyR[0]*RAD_TO_DEG,rpyR[1]*RAD_TO_DEG,rpyR[2]*RAD_TO_DEG),
 		]);
+
 
 	}
 	function delta_head() {
