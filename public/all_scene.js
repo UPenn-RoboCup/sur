@@ -79,8 +79,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 	}
 
 	function playPlan(paths) {
-		var true_hz = 120, subsample = 0.5, half_sec = Math.floor(true_hz * subsample),
-				speedup = 4, play_rate = Math.floor(1e3 * subsample / speedup);
+		var true_hz = 100, subsample = 10, half_sec = Math.floor(true_hz / subsample),
+				speedup = 4, play_rate = Math.floor(1e3 / subsample / speedup);
 		// Guarantees 2 points
 		function halfsec(v, i, arr) {
 			return (i % half_sec)===0 || i===arr.length;
@@ -93,7 +93,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		}
 
 		var promises = [];
-		//console.log(paths);
+		console.log(paths);
 		if(paths[0]){
 			promises.push(
 				util.loop(paths[0].filter(halfsec), updatechain.bind(planRobot.IDS_LARM), play_rate));
@@ -347,7 +347,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		if(!sameLArmTF){
 			lPlan = {
 				tr: tfL,
-				timeout: 30,
+				timeout: 40,
 				via: 'jacobian_preplan',
 				weights: [0,1,0,1],
 				qLArm0: qLArm0,
@@ -358,7 +358,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		if(!sameRArmTF){
 			rPlan = {
 				tr: tfR,
-				timeout: 30,
+				timeout: 40,
 				via: 'jacobian_preplan',
 				weights: [0,1,0,1],
 				qRArm0: qRArm0,
@@ -904,7 +904,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		var tfR = get_tfRhand();
 		var rpyL = get_rpyLhand();
 		var rpyR = get_rpyRhand();
-		console.log('rpyL', rpyL);
+		//console.log('rpyL', rpyL);
 		util.debug([
 			sprintf("Left: %0.2f %0.2f %0.2f | %0.2f %0.2f %0.2f",
 							rpyL[4],rpyL[5],rpyL[6], rpyL[0]*RAD_TO_DEG,rpyL[1]*RAD_TO_DEG,rpyL[2]*RAD_TO_DEG),
@@ -1086,7 +1086,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		});
 
 		listener.simple_combo("\\", function(){
-			// Switch hands
+			// Local or global
 			if(tcontrol.getSpace()==='local'){
 				tcontrol.setSpace('world');
 			} else {
@@ -1379,6 +1379,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 	}
 
 	function update_pillars(p){
+		//if(true){return;}
 		/*
 		pillars.forEach(function(p0){
 			robot.object.remove(p0);
