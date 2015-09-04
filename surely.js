@@ -63,7 +63,8 @@ var Config = JSON.parse(require("fs").readFileSync("./config.json"));
 
 var streams = Config.net.streams;
 var rpc = Config.net.rpc;
-var robot_ip = '10.8.3.145';
+//var robot_ip = '10.8.3.145';
+var robot_ip = '192.168.123.145';
 console.log(streams);
 
 // Network detection

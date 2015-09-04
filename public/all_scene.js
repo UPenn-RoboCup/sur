@@ -79,7 +79,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 	}
 
 	function playPlan(paths) {
-		var true_hz = 100, subsample = 10, half_sec = Math.floor(true_hz / subsample),
+		var true_hz = 10, subsample = 10, half_sec = Math.floor(true_hz / subsample),
 				speedup = 4, play_rate = Math.floor(1e3 / subsample / speedup);
 		// Guarantees 2 points
 		function halfsec(v, i, arr) {
@@ -347,7 +347,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		if(!sameLArmTF){
 			lPlan = {
 				tr: tfL,
-				timeout: 40,
+				timeout: 15,
 				via: 'jacobian_preplan',
 				weights: [0,1,0,1],
 				qLArm0: qLArm0,
@@ -358,7 +358,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		if(!sameRArmTF){
 			rPlan = {
 				tr: tfR,
-				timeout: 40,
+				timeout: 15,
 				via: 'jacobian_preplan',
 				weights: [0,1,0,1],
 				qRArm0: qRArm0,
@@ -376,14 +376,18 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			// Check which moved. If both, then the current selection
 			if(lPlan && rPlan){
 				if(tcontrol.object===planRobot.lhand){
-					lPlan.via = 'jacobian_waist_preplan';
+					lPlan.qWaistGuess = qWaist;
+					//lPlan.via = 'jacobian_waist_preplan';
 				} else {
-					rPlan.via = 'jacobian_waist_preplan';
+					rPlan.qWaistGuess = qWaist;
+					//rPlan.via = 'jacobian_waist_preplan';
 				}
 			} else if (lPlan) {
-				lPlan.via = 'jacobian_waist_preplan';
+				//lPlan.via = 'jacobian_waist_preplan';
+				lPlan.qWaistGuess = qWaist;
 			} else {
-				rPlan.via = 'jacobian_waist_preplan';
+				//rPlan.via = 'jacobian_waist_preplan';
+				rPlan.qWaistGuess = qWaist;
 			}
 		}
 
@@ -446,11 +450,14 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			// Check which moved. If both, then the current selection
 			if(lPlan && rPlan){
 				// Does not matter, so use the left
-				lPlan.via = 'joint_waist_preplan';
+				//lPlan.via = 'joint_waist_preplan';
+				lPlan.qWaistGuess = qWaist;
 			} else if (lPlan) {
-				lPlan.via = 'joint_waist_preplan';
+				//lPlan.via = 'joint_waist_preplan';
+				lPlan.qWaistGuess = qWaist;
 			} else if (rPlan) {
-				rPlan.via = 'joint_waist_preplan';
+				//rPlan.via = 'joint_waist_preplan';
+				rPlan.qWaistGuess = qWaist;
 			} else {
 				console.log('Did not implement waist only joint level');
 			}
