@@ -1,7 +1,6 @@
 (function (ctx) {
 	'use strict';
-	var d3 = ctx.d3,
-		util = ctx.util,
+	var util = ctx.util,
 		RAD_TO_DEG = util.RAD_TO_DEG,
 		ws,
 		position_container_el,
@@ -14,13 +13,12 @@
 
 
 	function ws_update(e) {
-		var feedback = JSON.parse(e.data),
-			t = feedback.t,
-			i;
-		plot_p.update(t, feedback.p[joint_id] * RAD_TO_DEG);
-		plot_cp.update(t, feedback.cp[joint_id] * RAD_TO_DEG);
+		var feedback = JSON.parse(e.data), i;
+		//window.console.log(feedback);
+		plot_p.update(feedback.t, feedback.p[joint_id] * RAD_TO_DEG);
+		plot_cp.update(feedback.t, feedback.cp[joint_id] * RAD_TO_DEG);
 		for (i = 0; i < 7; i += 1) {
-			plot_i[i].update(t, feedback.i[joint_id + i]);
+			plot_i[i].update(feedback.t, feedback.i[joint_id + i]);
 		}
 
 	}
@@ -37,13 +35,18 @@
 	// Handle resizing
 	window.addEventListener('resize', resize, false);
 
-	d3.html('/view/body_graph.html', function (error, view) {
-		d3.select("div#landing").remove();
-		document.body.appendChild(view);
-		d3.json('/streams/feedback', function (error, port) {
+	util.lhtml('/view/body_graph.html').then(function(view) {
+		document.body = view;
+		return Promise.all([
+			util.ljs("/bc/d3/d3.js"),
+			util.ljs("/bc/sprintfjs/sprintf.js"),
+			util.ljs("/Plot.js")
+		]);
+	}).then(function(){
+		return util.shm('/streams/feedback');
+	}).then(function(port){
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
 			ws.onmessage = ws_update;
-		});
 		var position_container = d3.select('#position'),
 			current_container = d3.select('#current'),
 			i;

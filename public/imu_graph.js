@@ -1,7 +1,6 @@
 (function (ctx) {
 	'use strict';
-	var d3 = ctx.d3,
-		util = ctx.util,
+	var util = ctx.util,
 		ws,
 		gyro_container_el,
 		rpy_container_el,
@@ -12,13 +11,13 @@
 		var feedback = JSON.parse(e.data);
 		//window.console.log(feedback);
 		// TODO: Request animation frame?
-		plot_gyro[0].update(feedback.gyro[0] * 180 / Math.PI);
-		plot_gyro[1].update(feedback.gyro[1] * 180 / Math.PI);
-		plot_gyro[2].update(feedback.gyro[2] * 180 / Math.PI);
+		plot_gyro[0].update(feedback.t, feedback.gyro[0] * util.RAD_TO_DEG);
+		plot_gyro[1].update(feedback.t, feedback.gyro[1] * util.RAD_TO_DEG);
+		plot_gyro[2].update(feedback.t, feedback.gyro[2] * util.RAD_TO_DEG);
 		//
-		plot_rpy[0].update(feedback.rpy[0] * 180 / Math.PI);
-		plot_rpy[1].update(feedback.rpy[1] * 180 / Math.PI);
-		plot_rpy[2].update(feedback.rpy[2] * 180 / Math.PI);
+		plot_rpy[0].update(feedback.t, feedback.rpy[0] * util.RAD_TO_DEG);
+		plot_rpy[1].update(feedback.t, feedback.rpy[1] * util.RAD_TO_DEG);
+		plot_rpy[2].update(feedback.t, feedback.rpy[2] * util.RAD_TO_DEG);
 	}
 
 	function resize() {
@@ -34,13 +33,19 @@
 	// Handle resizing
 	window.addEventListener('resize', resize, false);
 
-	d3.html('/view/body_graph.html', function (error, view) {
-		d3.select("div#landing").remove();
-		document.body.appendChild(view);
-		d3.json('/streams/feedback', function (error, port) {
+	util.lhtml('/view/imu_graph.html').then(function(view) {
+		document.body = view;
+		return Promise.all([
+			util.ljs("/bc/d3/d3.js"),
+			util.ljs("/bc/sprintfjs/sprintf.js"),
+			util.ljs("/Plot.js")
+		]);
+	}).then(function(){
+		return util.shm('/streams/feedback');
+	}).then(function(port){
+		console.log('Feedback port:', port);
 			ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port);
 			ws.onmessage = ws_update;
-		});
 		var gyro_container = d3.select('#gyro'),
 			rpy_container = d3.select('#rpy');
 		// Gyro Stream
@@ -77,5 +82,5 @@
 	// Load the CSS that we need for our app
 	util.lcss('/css/gh-buttons.css');
 	util.lcss('/css/graph.css');
-	util.lcss('/css/body_graph.css');
+	util.lcss('/css/imu_graph.css');
 }(this));

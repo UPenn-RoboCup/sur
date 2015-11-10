@@ -1,8 +1,6 @@
 (function (ctx) {
 	'use strict';
-	var d3 = ctx.d3,
-		util = ctx.util,
-		sprintf = ctx.sprintf;
+	var util = ctx.util;
 
 	function Plot(options) {
 		options = options || {};
@@ -67,7 +65,7 @@
 				});
 				//}).on("mouseout", function (d, i) {focus.attr("class", "nodisplay");
 				//window.console.log(t, val);
-				
+
 			});
 		}
 		focus = focus_group.append("g").attr("class", "nodisplay").datum(data);
@@ -88,10 +86,12 @@
 
 		this.show = function () {
 			path.attr("d", line);
+			//console.log(path);
 			needs_show = true;
 		};
 
 		this.update = function (t, datapoint) {
+			//console.log('datapoint', datapoint);
 			// https://gist.github.com/mbostock/1642874
 			// push a new data point onto the back
 			data.push(datapoint);

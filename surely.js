@@ -12,7 +12,14 @@ var restify = require('restify'),
 	}),
 	WebSocketServer = require('ws').Server,
 	zmq = require('zmq'),
+	/*
 	mp = require('msgpack'),
+	mpack = mpack,
+	mupack = munpack,
+	*/
+	msgpack = require('msgpack5')(),
+	mpack = msgpack.encode,
+	munpack = msgpack.decode,
   PeerServer = require('peer').PeerServer,
 	fs = require('fs');
 
@@ -55,7 +62,7 @@ console.log(child_process);
 //function puts {sys.puts(stdout)}
 child_process.execSync("../UPennDev/packConfig.lua", function(error, stdout, stderr){
 	//console.log(error,stdout);
-	Config = mp.unpack(stdout);
+	Config = munpack(stdout);
 });
 */
 var Config = JSON.parse(require("fs").readFileSync("./config.json"));
@@ -95,7 +102,7 @@ armplan_skt.connect('ipc:///tmp/'+'armplan');
 armplan_skt.http_responses = [];
 armplan_skt.on('message', function (msg) {
 	"use strict";
-	var plan = mp.unpack(msg);
+	var plan = munpack(msg);
 	//console.log('plan', plan);
 	this.http_responses.shift().json(200, plan);
 });
@@ -106,7 +113,7 @@ server.post('/armplan', function(req, res, next){
 	console.log('arm plan');
 	//console.log(req.body);
 	// Send to the armplan server
-	armplan_skt.send(mp.pack(JSON.parse(req.body))).http_responses.push(res);
+	armplan_skt.send(mpack(JSON.parse(req.body))).http_responses.push(res);
 	return next();
 });
 
@@ -117,7 +124,7 @@ config_skt.connect('ipc:///tmp/'+'config');
 config_skt.http_responses = [];
 config_skt.on('message', function (msg) {
 	"use strict";
-	var c = mp.unpack(msg);
+	var c = munpack(msg);
 	//console.log('plan', plan);
 	this.http_responses.shift().json(200, c);
 });
@@ -127,7 +134,7 @@ server.post('/c', function(req, res, next){
 	if(req.body === undefined){return next();}
 	console.log(req.body);
 	// Send to the armplan server
-	config_skt.send(mp.pack(JSON.parse(req.body))).http_responses.push(res);
+	config_skt.send(mpack(JSON.parse(req.body))).http_responses.push(res);
 	return next();
 });
 
@@ -153,7 +160,7 @@ var recv_usage = [];
 rpc_skt.on('message', function (msg) {
 	"use strict";
 	recv_usage.push([Date.now(), msg.length]);
-	this.http_responses.shift().json(200, mp.unpack(msg));
+	this.http_responses.shift().json(200, munpack(msg));
 });
 
 /* Standard forwarding pattern to rpc */
@@ -170,7 +177,7 @@ function rest_req(req, res, next) {
 	}
 	console.log(req.params);
 	// Send to the RPC server
-	var msg = mp.pack(req.params);
+	var msg = mpack(req.params);
 	sent_usage.push([Date.now(), msg.length]);
 	rpc_skt.send(msg).http_responses.push(res);
 	return next();
@@ -184,7 +191,7 @@ function raw_req(req, res, next) {
 		if (req.body !== undefined) {
 			req.params.raw = JSON.parse(req.body);
 			// Send to the RPC server
-			var msg = mp.pack(req.params);
+			var msg = mpack(req.params);
 			sent_usage.push([Date.now(), msg.length]);
 			rpc_skt.send(msg).http_responses.push(res);
 		}
@@ -307,8 +314,8 @@ function bridge_send_ws(sur_stream, meta, payload) {
 function udp_message(msg, rinfo) {
 	"use strict";
   //console.log('got udp', rinfo);
-  var meta = mp.unpack(msg),
-		payload_len = mp.unpack.bytes_remaining,
+  var meta = munpack(msg),
+		payload_len = munpack.bytes_remaining,
 		payload = msg.slice(msg.length - payload_len); // offset
   // Add the payload sz parameter to the metadata
   meta.sz = 0;
@@ -324,7 +331,7 @@ function udp_message(msg, rinfo) {
 */
 function zmq_message(metadata, payload) {
 	"use strict";
-  var meta = mp.unpack(metadata);
+  var meta = munpack(metadata);
   //console.log('ZMQ!',meta)
   // Add the payload sz parameter to the metadata
   meta.sz = 0;
@@ -414,8 +421,8 @@ pserver.on('disconnect', function(id) {
 
 process.on('SIGINT', function() {
 	"use strict";
-	var log1 = mp.pack(recv_usage);
-	var log2 = mp.pack(sent_usage);
+	var log1 = mpack(recv_usage);
+	var log2 = mpack(sent_usage);
 	fs.writeFileSync('node_recv.log', log1);
 	fs.writeFileSync('node_sent.log', log2);
 	sockets.forEach(function(s){
