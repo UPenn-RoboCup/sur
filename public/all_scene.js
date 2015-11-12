@@ -641,7 +641,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 	function estimate_selection(){
 		// Run the descriptor
 		var cyl, pl;
-		//cyl = describe.cylinder(last_intersection.mesh, last_intersection.p);
+		cyl = describe.cylinder(last_intersection.mesh, last_intersection.p);
 		if(cyl){
 			last_selected_parameters = cyl;
 			return;

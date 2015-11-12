@@ -323,7 +323,7 @@
   }
 
 	function get_cyl_rates(it, params){
-		var p, n_tot=0, n_in=0, n_on = 0, err_r, dx, dz, ang, angles = [], nA = 10, r_close = params.r/10;
+		var p, n_tot=0, n_in=0, n_on = 0, err_r, dx, dz, idx, angles = [], nA = 10, r_close = params.r/10;
 		for(var i = 0; i<nA; i+=1){angles[i]=0;}
 		for (var a of it){
 			p = a[1];
@@ -332,11 +332,13 @@
 			err_r = params.r - sqrt(pow(dx, 2) +  pow(dz, 2));
 			if (err_r > r_close) { n_in += 1; }
 			if (abs(err_r)<=r_close){ n_on += 1; }
-			ang = mf.iangle.call(nA, atan2(dz, dx));
-			angles[ang] = 1;
+			//idx = mf.iangle.call(nA, atan2(dz, dx));
+			idx = mf.iangle_valid.call(nA, atan2(dz, dx));
+			angles[idx] = 1;
 			n_tot += 1;
 		}
 		//console.log(n_in, n_tot, n_in / n_tot, angle_ratio, angles);
+		console.log(angles, nA);
 		return {
 			fill_rate: n_in / n_tot,
 			angle_rate: angles.reduce(function(prev, now){return prev+now;}) / nA,
@@ -419,7 +421,7 @@
         });
       var params = estimate_cylinder(it, root);
 			if (params.r > 500 || params.r < 40) {
-				//console.log('Bad Cyl Radius Rate', params);
+				console.log('Bad Cyl Radius Rate', params);
 				return false;
 			}
 			// Check the fill - an estimate of the error.
@@ -428,10 +430,10 @@
 			}), params);
 
 			if (rates.fill_rate > 0.20) {
-				//console.log('Bad Cyl Fill Rate', rates);
+				console.log('Bad Cyl Fill Rate', rates);
 				return false;
 			} else if (rates.angle_rate <= 0.3) {
-				//console.log('Bad Cyl Angle Rate', rates);
+				console.log('Bad Cyl Angle Rate', rates);
 				return false;
 			}
 
