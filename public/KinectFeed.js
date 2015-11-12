@@ -13,11 +13,10 @@
 			// Allocations
 			// TODO: Maintain a fixed set of allocations to avoid penalty on each new data
 			var npix = metadata.height * metadata.width;
-
 			var mesh_obj = {
 				id: 'kinect',
-				tfL16: metadata.tfL16,
-				tfG16: metadata.tfG16,
+				tfL16: metadata.tfL16 || metadata.tr,
+				tfG16: metadata.tfG16 || metadata.tr,
 				width: metadata.width,
 				height: metadata.height,
 				rgb: metadata.rgb,

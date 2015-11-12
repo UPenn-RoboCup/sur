@@ -719,8 +719,19 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 				old1 = null;
 			}
 		} else if(mesh.name==='kinect'){
+			scene.add(mesh);
 			kinect.push(mesh);
-			if(kinect.length > N_KINECT){ scene.remove(kinect.shift()); }
+			while(kinect.length > N_KINECT){
+				var old1 = scene.remove(kinect.shift());
+				scene.remove(old1);
+				if(old1){
+					old1.geometry.dispose();
+					old1.geometry = null;
+					old1.material.dispose();
+					old1.material = null;
+					old1 = null;
+				}
+			}
 		}
 	}
 

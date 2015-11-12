@@ -513,7 +513,7 @@ this.addEventListener('message', function (e) {
     point_xyz, point_local,
 		// Plot points depending on the sensor
 		get_xyz, get_color;
-	
+
 	//console.log('Initial Mesh', mesh);
 
 	switch(mesh.id){
