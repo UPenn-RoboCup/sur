@@ -1,7 +1,6 @@
 (function (ctx) {
 	'use strict';
-	var d3 = ctx.d3,
-		util = ctx.util,
+	var util = ctx.util,
 		depth_canvas = document.createElement('canvas'),
 		depth_ctx = depth_canvas.getContext('2d'),
 		depth_img_data,
@@ -101,59 +100,63 @@
 	}
 
 	// Add the camera view and append
-	d3.html('/view/kinect2_video.html', function (error, view) {
-		// Remove landing page elements and add new content
-		d3.select("div#landing").remove();
-		document.body.appendChild(view);
+
+	util.lhtml('/view/kinect2_video.html').then(function(view) {
+		document.body = view;
+		return Promise.all([
+			util.ljs("/bc/d3/d3.js"),
+			util.ljs("/VideoFeed.js")
+		]);
+	}).then(function(){
 		// Depth
 		depth_worker = new window.Worker("/depth_worker.js");
 		depth_worker.onmessage = recv_depth;
 		// LabelA WebWorker
 		label_worker = new window.Worker("/label_worker.js");
 		label_worker.onmessage = recv_labelA;
+		// Grab the color port
+		return util.shm('/streams/kinect2_color');
+	}).then(function(port){
 		// Add the video rgb_feed
-		d3.json('/streams/kinect2_color', function (error, port) {
-			util.ljs("/VideoFeed.js",function(){
-				rgb_feed = new ctx.VideoFeed({
-					id: 'kinect2_color',
-					port: port,
-					extra_cb: function (obj) {
-						if (obj.id === 'labelA') {
-							ask_labelA(obj);
-						} else if (obj.id === 'detect') {
+		rgb_feed = new ctx.VideoFeed({
+			id: 'kinect2_color',
+			port: port,
+			extra_cb: function (obj) {
+				if (obj.id === 'labelA') {
+					ask_labelA(obj);
+				} else if (obj.id === 'detect') {
 
-						}
-					}
-				});
-				rgb_canvas = rgb_feed.canvas;
-				// Show the images on the page
-				document.getElementById('camera_container').appendChild(rgb_canvas);
-				document.getElementById('camera_container').appendChild(lA_canvas);
-				depth_canvas.classList.add('nodisplay');
-				lA_canvas.classList.add('nodisplay');
-			});
+				}
+			}
 		});
-		// Add the depth rgb_feed
-		d3.json('/streams/kinect2_depth', function (error, port) {
-			var depth_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
-				fr_metadata;
-			depth_ws.binaryType = 'arraybuffer';
-			depth_ws.onmessage = procDepth;
-			document.getElementById('camera_container').appendChild(depth_canvas);
-		});
+		rgb_canvas = rgb_feed.canvas;
+		// Show the images on the page
+		document.getElementById('camera_container').appendChild(rgb_canvas);
+		document.getElementById('camera_container').appendChild(lA_canvas);
+		depth_canvas.classList.add('nodisplay');
+		lA_canvas.classList.add('nodisplay');
+
+		// Grab the color port
+		return util.shm('/streams/kinect2_depth');
+	}).then(function(port){
+		// Add the depth_feed
+		var depth_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + port),
+			fr_metadata;
+		depth_ws.binaryType = 'arraybuffer';
+		depth_ws.onmessage = procDepth;
+		document.getElementById('camera_container').appendChild(depth_canvas);
+	}).then(function(){
 		// Add the overlay
 		overlay = d3.select("#camera_container").append("svg").attr('class', 'overlay')
 			.attr('viewBox', "0 0 256 212").attr('preserveAspectRatio', "none")
 			.attr('width', depth_canvas.width).attr('height', depth_canvas.height);
 		overlay.append('g').attr('id', 'valves');
-
 		// Animate the buttons
 		d3.select('#camera_container').on('click', function () {
 			// 'this' variable is the button node
 			//console.log('clicked', this);
 			toggle();
 		});
-
 	});
 	// Load the CSS that we need for our app
 	util.lcss('/css/fullvideo.css');
