@@ -23,7 +23,7 @@
     "leapjs": "latest",
     "pako": "latest",
     "sprintfjs": "latest",
-    "threejs": "latest",
+    "threejs": "f73593b00e3b2c927bb1a3236240cea5597166ec",
     "peerjs": "latest",
     "numericjs": "latest"
   }

@@ -50,10 +50,12 @@
 
 				});
 				var torso = feedback.u;
-				object.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));
-				object.position.z = torso[0] * 1e3;
-				object.position.x = torso[1] * 1e3;
-				object.position.y = torso[2] * 1e3;
+				if (torso) {
+					object.quaternion.setFromEuler(new THREE.Euler(torso[4], torso[5], torso[3], 'ZXY'));
+					object.position.z = torso[0] * 1e3;
+					object.position.x = torso[1] * 1e3;
+					object.position.y = torso[2] * 1e3;
+				}
 				var pillars = feedback.s;
 				if(pillars && options.update_pillars){
 					options.update_pillars(pillars);
