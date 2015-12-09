@@ -4,7 +4,6 @@
 	var createObjectURL = window.URL.createObjectURL,
 			revokeObjectURL = window.URL.revokeObjectURL;
 
-
 	function KinectFeed(rgb_port, depth_port, callback) {
 
 		var depth_worker, depth_feed, rgb_feed, metadata;
@@ -39,7 +38,7 @@
 
 		function process_color(){
 			if(!metadata){
-				//console.log('Color first', rgb_feed.canvas.metadata);
+				console.log('Color first', rgb_feed.canvas.metadata);
 				return;
 				//metadata = rgb_feed.canvas.metadata;
 			}
@@ -49,7 +48,7 @@
 		}
 		function process_depth() {
 			if(!metadata){
-				//console.log('Depth first', depth_feed.canvas.metadata);
+				console.log('Depth first', depth_feed.canvas.metadata);
 				//return;
 				metadata = depth_feed.canvas.metadata;
 			}

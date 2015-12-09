@@ -69,6 +69,7 @@ var Config = JSON.parse(require("fs").readFileSync("./config.json"));
 //console.log(Config);
 
 var streams = Config.net.streams;
+//var streams = JSON.parse(require("fs").readFileSync("./streams.json"));
 var rpc = Config.net.rpc;
 //var robot_ip = '10.8.3.145';
 var robot_ip = '192.168.123.145';

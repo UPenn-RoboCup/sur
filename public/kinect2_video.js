@@ -21,8 +21,11 @@
 	//depth_canvas.width = 512;
 	//depth_canvas.height = 424;
 	// Webots
-	depth_canvas.width = 256;
-	depth_canvas.height = 212;
+	//depth_canvas.width = 256;
+	//depth_canvas.height = 212;
+	// Kinect v1
+	depth_canvas.width = 320;
+	depth_canvas.height = 240;
 	depth_img_data = depth_ctx.getImageData(0, 0, depth_canvas.width, depth_canvas.height);
 
 	function toggle() {
@@ -83,7 +86,12 @@
 				fr_metadata.latency = (e.timeStamp / 1e3) - fr_metadata.t;
 			}
 		} else if (!processing) {
-			fr_metadata.data = new window.Float32Array(e.data);
+			//console.log(fr_metadata);
+			if(fr_metadata.id==='k_depth'){
+				fr_metadata.data = new window.Uint16Array(e.data);
+			} else {
+				fr_metadata.data = new window.Float32Array(e.data);
+			}
 			fr_metadata.depth_data = depth_img_data;
 			processing = true;
 			depth_worker.postMessage(fr_metadata, [fr_metadata.data.buffer, fr_metadata.depth_data.data.buffer]);

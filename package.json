@@ -5,10 +5,7 @@
   "main": "surest.js",
   "dependencies": {
 		"restify": "^2.8.1",
-    "msgpack": "^0.2.3",
-		"nodelua": "^0.3.3",
 		"peer": "^0.2.6",
-		"zmq": "^2.10.0",
 		"ws": "^0.4.32"
   },
   "devDependencies": {
