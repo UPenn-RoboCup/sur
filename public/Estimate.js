@@ -173,7 +173,7 @@
       points.push(p);
     }
 
-		if(nClose<=5){
+		if(nClose <= 5){
 			console.log('Not enough points');
 			return;
 		}
@@ -192,9 +192,9 @@
     // TODO: Add the standard deviation
     // diagonal entries
     var d = numeric.div([
-      xxSum - pow(xSum,2)/nClose,
-      zzSum - pow(zSum,2)/nClose,
-      yySum - pow(ySum,2)/nClose
+      xxSum - pow(xSum,2) / nClose,
+      zzSum - pow(zSum,2) / nClose,
+      yySum - pow(ySum,2) / nClose
     ], nClose + 1);
     // off diagonals: xz, xy, zy
     var of = 1 / nClose,//2 / nClose + nClose,
@@ -237,7 +237,8 @@
       n = params.normal,
       plane_points = [],
       c_inv_cov = numeric.inv(c_cov),
-      surf_thresh = 40,
+      SURF_THRESH = 40,
+			CLOSE_RADIUS = 250,//120,
       p,
 			diff, dist;
     var c_pr, err_r, cc = [0,0,0];
@@ -245,10 +246,10 @@
       p = a[1];
 			diff = [p[0] - p0[0], p[1] - p0[1], p[2] - p0[2]];
 			dist = sqrt(pow(diff[0], 2)+pow(diff[1], 2)+pow(diff[2], 2));
-			// TODO: Play with this groth rate
-			if (dist<120){
+			// TODO: Play with this growth rate
+			if (dist < CLOSE_RADIUS){
 				err_r = abs( n[0]*diff[0] + n[1]*diff[1] + n[2]*diff[2] );
-				if (err_r < surf_thresh) {
+				if (err_r < SURF_THRESH) {
 					cc[0] = 255 * p[3] - c_u[0];
 					cc[1] = 255 * p[4] - c_u[1];
 					cc[2] = 255 * p[5] - c_u[2];
@@ -452,12 +453,13 @@
         root = [px,py,pz];
 			var dRoot = numeric.norm2(root) / 1e3;
 			var scale = Math.max(1, dRoot/2);
+			var radius = 60;
 			//console.log('dRoot', dRoot, 'scale', scale);
       var horizontal_it = new Point_cloud_entries(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < 60*scale && abs(vertex[2] - pz) < 60*scale;
+          return abs(vertex[1] - py) < 10 && abs(vertex[0] - px) < radius*scale && abs(vertex[2] - pz) < radius*scale;
         }),
         vertical_it = new Point_cloud_entries(mesh0, function(vertex) {
-          return abs(vertex[1] - py) < 120 && abs(vertex[0] - px) < 60*scale && abs(vertex[2] - pz) < 60*scale;
+          return abs(vertex[1] - py) < 120 && abs(vertex[0] - px) < radius*scale && abs(vertex[2] - pz) < radius*scale;
         });
 
 			var e_v, e_h, params;
