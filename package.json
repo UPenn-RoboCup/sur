@@ -4,7 +4,6 @@
   "description": "SUR ===",
   "main": "surest.js",
   "dependencies": {
-		"restify": "^2.8.1",
 		"peer": "^0.2.6",
 		"ws": "^0.4.32"
   },

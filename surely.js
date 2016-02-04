@@ -72,7 +72,8 @@ var streams = Config.net.streams;
 //var streams = JSON.parse(require("fs").readFileSync("./streams.json"));
 var rpc = Config.net.rpc;
 //var robot_ip = '10.8.3.145';
-var robot_ip = '192.168.123.145';
+var robot_ip = '192.168.123.146'; // dale
+var robot_ip = '192.168.123.200'; //asus
 console.log(streams);
 
 // Network detection
@@ -276,8 +277,9 @@ server.get(/\/Config\/(.+)/, function (req, res, next) {
 // Serve static items as catch-all
 // TODO: text/html?
 server.get(/^\/.*/, restify.serveStatic({
-  directory: './public',
-  "default": 'index.html'
+  "directory": './public',
+  "default": 'index.html',
+  "maxAge": 0
 }));
 
 /* WebSocket Handling */
@@ -401,6 +403,35 @@ for (var w in streams) {
 		zmq_recv_skt.sur_stream = b;
 	}
 	*/
+}
+
+// Receive client data stream
+var wss = new WebSocketServer({port: 8999});
+wss.on('connection', function(ws){
+  /* Web Browser Message */
+  ws.on('message', function (msg) {
+    console.log('MESSAGE', msg);
+  });
+  /* On close, remove this client */
+  ws.on('close', function () {
+    //console.log('CLOSE', this);
+  });
+});
+//wss.on('error', wss_error);
+
+/* WebSocket Server */
+function wss_connection(ws) {
+	"use strict";
+	ws.sur_stream = this.sur_stream;
+	//console.log(this.clients);
+  /* Web Browser Message */
+  ws.on('message', function (msg) {
+		console.log('MESSAGE', msg);
+	});
+  /* On close, remove this client */
+  ws.on('close', function () {
+		//console.log('CLOSE', this);
+	});
 }
 
 /* Listen for HTTP on port 8080 */

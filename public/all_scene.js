@@ -260,10 +260,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 				});
 				*/
 				escDecline = listener.simple_combo('escape', reject);
+        // For the iPad keyboard:
+        bkspDecline = listener.simple_combo('backspace', reject);
 			});
 			return Promise.race([prAccept, prDecline]).then(
 				function(){
-					listener.unregister_many([escDecline, spaceAccept]);
+					listener.unregister_many([escDecline, spaceAccept, bkspDecline]);
 					var paths = prPlay.stop();
 					return paths;
 				},
@@ -274,7 +276,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 				});
 				*/
 					console.log('rejected!');
-				listener.unregister_many([escDecline, spaceAccept]);
+				listener.unregister_many([escDecline, spaceAccept, bkspDecline]);
 				prPlay.stop();
 				return false;
 			});
@@ -1132,7 +1134,8 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			*/
 		});
 		listener.simple_combo("space", click_proceed);
-		listener.simple_combo("escape", function(){
+    
+    function reset_arm(){
 			if(control_mode==='armplan'){
 				// In arm plan, don't do this
 				util.debug(["Canceled plan"]);
@@ -1152,9 +1155,20 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			planRobot.lhand.quaternion.copy(new THREE.Quaternion());
 			planRobot.rhand.position.set(0,0,0);
 			planRobot.rhand.quaternion.copy(new THREE.Quaternion());
-		});
+		}
+    
+		listener.simple_combo("escape", reset_arm);
 		listener.simple_combo("backspace", function(){
+			if(control_mode==='armplan'){
+				// In arm plan, don't do this
+				util.debug(["Canceled plan"]);
+				return;
+			}
 			util.debug(["!! STOPPING !!"]);
+      
+      // Also reset the arm... (iPad issue...)
+      reset_arm();
+      
 			return util.shm('/fsm/Body/stop');
 		});
 		//
@@ -1178,14 +1192,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		listener.simple_combo("5", function(){
 			return try_arm_fsm('plug');
 		});
-		/*
-		listener.simple_combo("5", function(){
+		listener.simple_combo("6", function(){
 			return try_arm_fsm('drill');
 		});
-		listener.simple_combo("6", function(){
+		listener.simple_combo("7", function(){
 			return try_arm_fsm('shower');
 		});
-		*/
 		listener.simple_combo("0", click_ik);
 		listener.simple_combo("9", click_move);
 		listener.simple_combo("`", click_joint);

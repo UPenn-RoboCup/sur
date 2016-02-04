@@ -15,8 +15,10 @@
 			var req = new XMLHttpRequest();
 			req.open(method || 'GET', url, true);
 			req.responseType = responseType || 'json';
-			req.setRequestHeader("Content-Type",
-													 contentType || "text/plain;charset=UTF-8");
+			req.setRequestHeader("Content-Type", contentType || "text/plain;charset=UTF-8");
+			
+			req.setRequestHeader("Content-Type", contentType || "text/plain;charset=UTF-8");
+			
 			req.setRequestHeader('accept', mime || 'application/json');
 			req.onload = function() {
 				if (req.status === 200) {
@@ -44,13 +46,29 @@
 	function ljs(src){
 		// Return a new promise.
 		return new Promise(function(resolve, reject) {
+
 			var s = document.createElement('script');
-			s.src = src;
+			s.src = src+'?t='+Date.now(); // CACHE HACK!!
 			s.async = true;
 			s.type = "application/javascript";
 			s.onload = resolve;
 			s.onerror = reject;
 			document.getElementsByTagName('head')[0].appendChild(s);
+			return s;
+
+/*
+			return xhr(src+'?t='+Date.now(), 'GET', 'application/javascript', 'application/javascript', 'text').then(function(text){
+				var s = document.createElement('script');
+				s.type = "application/javascript";
+				s.innerHTML = text;
+				s.onload = resolve;
+				s.onerror = reject;
+				document.getElementsByTagName('head')[0].appendChild(s);
+				return s;
+			}).catch(function(error) {
+				console.log("Failed!", error);
+			});
+*/
 		});
 	}
 	function lcss(src) {
@@ -58,14 +76,15 @@
 			var link = document.createElement('link');
 			link.type = 'text/css';
 			link.rel = 'stylesheet';
-			link.href = src;
+			link.href = src+'?t='+Date.now(); // CACHE HACK!!
 			link.onload = resolve;
 			link.onerror = reject;
 			document.getElementsByTagName('head')[0].appendChild(link);
+			return link;
 		});
 	}
 	function lhtml(url) {
-		return xhr(url, 'GET', null, 'text/plain', 'document').then(function(doc){
+		return xhr(url+'?t='+Date.now(), 'GET', null, 'text/plain', 'document').then(function(doc){
 			return doc.body;
 		}).catch(function(error) {
 			console.log("Failed!", error);
