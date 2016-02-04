@@ -1467,12 +1467,25 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
       document.getElementById('orientation').innerHTML = 'a: ' + alpha + '<br/>b: ' + beta + '<br/>g: ' + gamma;
       o_last = e.timeStamp;
       //console.log(e);
-      // There is also webkitCompassHeading and webkitCompassAccuracy
-      imu_ws.send(JSON.stringify({
+      
+      // Grab the arm configuration
+      calculate_state();
+      var tfL = get_tfLhand();
+			var lPlan = {
+				'tr': tfL,
+				'timeout': 15,
+				'via': 'jacobian_preplan',
+				'weights': [0,1,0,1],
+				'qLArm0': qLArm0,
+				'qWaist0': qWaist0,
+				'qArmGuess': sameLArm ? null : qLArm,
         'alpha': alpha,
         'beta': beta,
         'gamma': gamma
-      }));
+			};
+      
+      // There is also webkitCompassHeading and webkitCompassAccuracy
+      imu_ws.send( JSON.stringify(lPlan) );
     }
 	}
   var m_last = 0;
