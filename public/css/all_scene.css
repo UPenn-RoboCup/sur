@@ -41,6 +41,13 @@ select {
   bottom: 0px;
   left: 0px;
 }
+
+#imu {
+  position: absolute;
+  bottom: 0px;
+  left: 200px;
+}
+
 #topic2 {
   position: absolute;
   cursor: default;

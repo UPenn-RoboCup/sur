@@ -1451,7 +1451,49 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
       robot.object.add(p_cyl);
 		});
 	}
+  
+  /************
+   ** Device rotation
+   */
+  var imu_ws;
+  var o_last = 0;
+	var hOrientation = function(e) {
+		var absolute = e.absolute;
+		var alpha = e.alpha;
+		var beta = e.beta;
+		var gamma = e.gamma; // in the keyboard position, this is the best
+    if (e.timeStamp - o_last > 1e3){
+      // Process once a second...
+      document.getElementById('orientation').innerHTML = 'a: ' + alpha + '<br/>b: ' + beta + '<br/>g: ' + gamma;
+      o_last = e.timeStamp;
+      //console.log(e);
+      // There is also webkitCompassHeading and webkitCompassAccuracy
+      imu_ws.send(JSON.stringify({
+        'alpha': alpha,
+        'beta': beta,
+        'gamma': gamma
+      }));
+    }
+	}
+  var m_last = 0;
+	var hMotion = function(e) {
+		// 100 Hz
+		var accel = e.acceleration;
+		var accel0 = e.accelerationIncludingGravity;
+		var gyro = e.rotationRate;
+		var dt = e.interval;
 
+    if (e.timeStamp - m_last > 1e3){
+      document.getElementById('motion').innerHTML = 'acc: ' + [accel.x, accel.y, accel.z].join(',') + '<br/>gyr: ' + [gyro.alpha, gyro.beta, gyro.gamma].join(',') + '<br/>dt: ' + dt;
+      m_last = e.timeStamp;
+      //console.log(e);
+      // There is also webkitCompassHeading and webkitCompassAccuracy
+    }
+		
+		//imu_ws.send(force);
+	}
+
+  // Robot setup
 	function setup_robot(port){
 		// Load the robot
 		robot = new ctx.Robot({
@@ -1597,6 +1639,12 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			return util.shm('/streams/feedback');
 		}).then(setup_robot).catch(function(e){
 			console.log('Loading error', e);
+		}).then(function(e){
+  		// Capture the data from the IMU
+  		window.addEventListener('deviceorientation', hOrientation);
+  		window.addEventListener("devicemotion", hMotion, true);
+  		// Send IMU data to the forwarder
+  		imu_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + 8999);
 		});
 	}
 	setTimeout(init, 0);

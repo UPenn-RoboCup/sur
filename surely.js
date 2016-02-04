@@ -119,7 +119,7 @@ server.post('/armplan', function(req, res, next){
 	return next();
 });
 
-/* Connect to the Arm Plan server - always on localhost :P */
+/* Connect to the Arm Plan config server - always on localhost :P */
 var config_skt = zmq.socket('req');
 sockets.push(config_skt);
 config_skt.connect('ipc:///tmp/'+'config');
@@ -139,6 +139,9 @@ server.post('/c', function(req, res, next){
 	config_skt.send(mpack(JSON.parse(req.body))).http_responses.push(res);
 	return next();
 });
+
+
+
 
 /* Connect to the RPC server */
 var rpc_skt = zmq.socket('req');
@@ -405,12 +408,28 @@ for (var w in streams) {
 	*/
 }
 
+
+
 // Receive client data stream
 var wss = new WebSocketServer({port: 8999});
 wss.on('connection', function(ws){
+  // LOL: new one for each connection...???
+  /* Connect to the Arm Plan server - always on localhost :P */
+  var armplan_skt = zmq.socket('req');
+  sockets.push(armplan_skt);
+  armplan_skt.connect('ipc:///tmp/'+'adlib');
+  armplan_skt.http_responses = [];
+  armplan_skt.on('message', function (msg) {
+  	"use strict";
+  	var adlib = munpack(msg);
+  	console.log('adlib msg', adlib);
+    ws.send(JSON.stringify(adlib));
+  });
+  
   /* Web Browser Message */
   ws.on('message', function (msg) {
-    console.log('MESSAGE', msg);
+    console.log('IMU MESSAGE', msg);
+    armplan_skt.send(mpack(JSON.parse(msg)));
   });
   /* On close, remove this client */
   ws.on('close', function () {
@@ -418,6 +437,9 @@ wss.on('connection', function(ws){
   });
 });
 //wss.on('error', wss_error);
+
+
+
 
 /* WebSocket Server */
 function wss_connection(ws) {

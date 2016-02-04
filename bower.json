@@ -5,6 +5,7 @@
   "authors": [
     "Stephen G. McGill <smcgill3@seas.upenn.edu>"
   ],
+  "goodTHREEjs": "f73593b00e3b2c927bb1a3236240cea5597166ec",
   "moduleType": [
     "globals"
   ],
@@ -20,10 +21,10 @@
   "dependencies": {
     "Keypress": "latest",
     "d3": "latest",
+    "threejs": "latest",
     "leapjs": "latest",
     "pako": "latest",
     "sprintfjs": "latest",
-    "threejs": "f73593b00e3b2c927bb1a3236240cea5597166ec",
     "peerjs": "latest",
     "numericjs": "latest"
   }
