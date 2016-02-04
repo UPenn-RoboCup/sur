@@ -116,8 +116,11 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		// TODO: catch on bad plan or user cancel
 		var prAll = Promise.all(promises);
 		prAll.stop = function(){
-			promises.forEach(function(pr){
-				if(pr && pr.h){pr.stop();}
+			promises.forEach(function(pr, i){
+				if(pr && pr.h){
+          console.log('[[stopping prAll]]',i);
+          pr.stop();
+        }
 			});
 			return paths;
 		};
@@ -229,15 +232,17 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 	}
 
 	function plan_arm(plan){
+    control_mode = 'armplan';
 		//var h_accept, h_decline;
-		var escDecline, spaceAccept;
+		var escDecline, spaceAccept, bkspDecline;
+    var prPlay;
 		return util.shm('/armplan', plan || this)
 		.then(procPlan)
 		.then(function(paths){
-			var prPlay = playPlan(paths);
+			prPlay = playPlan(paths);
 			prPlay.then(function(){
 				//console.log('Finished playing');
-				// TODO: Add the tconrol here
+				// TODO: Add the tcontrol here
 			}, function(){
 				//console.log('Interrupted playing');
 			}).then(function(){
@@ -267,6 +272,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 				function(){
 					listener.unregister_many([escDecline, spaceAccept, bkspDecline]);
 					var paths = prPlay.stop();
+          control_mode = '';
 					return paths;
 				},
 				function(){
@@ -278,6 +284,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 					console.log('rejected!');
 				listener.unregister_many([escDecline, spaceAccept, bkspDecline]);
 				prPlay.stop();
+        control_mode = '';
 				return false;
 			});
 		});
@@ -1141,6 +1148,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 				util.debug(["Canceled plan"]);
 				return;
 			}
+      
+      console.log('Resetting arm...', control_mode);
+      
 			util.debug(["Back to normal"]);
 			control_mode = '';
 			tcontrol.detach();

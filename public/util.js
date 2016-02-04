@@ -92,7 +92,6 @@
 	}
 
 	// Promise to loop over an array and process each element at an interval
-
 	function loop(arr, proc, interval){
 		var stop, h;
 		var pr = new Promise(function(resolve, reject) {
