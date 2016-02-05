@@ -17,7 +17,7 @@
 			//teleopBtn, ikBtn, moveBtn,
 			//acceptBtn, declineBtn, stepBtn,
 		jointSel, mesh0Sel, mesh1Sel, allBtns, shmBtns, fsmBtns,
-		control_mode;
+		control_mode, curPlan;
 
 	// State variables
 	var qPlan, qNow, qHead, qHead0, sameHead,
@@ -400,9 +400,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			}
 		}
 
-		return plan_arm({left: lPlan, right: rPlan}).then(function(paths){
+    curPlan = {left: lPlan, right: rPlan};
+		return plan_arm(curPlan).then(function(paths){
 			console.log('Sending IK', paths);
-			//control_mode = 'ik';
 			if(!paths){return;}
 			var prs = [];
 			if(lPlan && lPlan.qArmGuess){
@@ -535,11 +535,27 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		});
 	}
 */
+  
+  function go_replan(){
+    console.log('Current Plan', curPlan);
+    // Assume we have the left for now...
+    calculate_state();
+    // Use the current green...
+    curPlan.left.qLArm0 = qLArm;
+    // Must shift our guess, as well
+    curPlan.left.qArmGuess = qLArm;
+    
+		return plan_arm(curPlan).then(function(paths){
+		  console.log('Re-plan Paths', paths);
+		});
+  }
+  
 	var go_promises = {
 		move: go_move,
 		//step: go_step,
 		ik: go_ik,
 		teleopraw: go_teleopraw,
+    adlib: go_replan,
 	};
 
 	function click_proceed(){
@@ -1490,7 +1506,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			adlib.latency = (e.timeStamp / 1e3) - adlib.t;
 		}
     // Debug
-    console.log(adlib);
+    //console.log(adlib);
     // Play the plan... just the left
     //return playPlan([adlib, null, null]);
     
@@ -1522,9 +1538,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
     document.getElementById('orientation').innerHTML = 'a: ' + alpha + '<br/>b: ' + beta + '<br/>g: ' + gamma;
     // Grab the arm configuration
     calculate_state();
-    var tfL = get_tfLhand();
 		var lPlan = {
-			'tr': tfL,
 			'timeout': 15,
 			'via': 'jacobian_preplan',
 			'weights': [0,1,0,1],
