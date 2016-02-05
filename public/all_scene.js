@@ -87,6 +87,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		}
 		function updatechain(frame){
 			var chain_ids = this;
+      console.log('frame',frame);
 			frame[1].forEach(function(v, i){
 				planRobot.setJoints(v, chain_ids[i]);
 			});
@@ -272,7 +273,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 				function(){
 					listener.unregister_many([escDecline, spaceAccept, bkspDecline]);
 					var paths = prPlay.stop();
-          control_mode = '';
+          control_mode = 'adlib';
 					return paths;
 				},
 				function(){
@@ -284,7 +285,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 					console.log('rejected!');
 				listener.unregister_many([escDecline, spaceAccept, bkspDecline]);
 				prPlay.stop();
-        control_mode = '';
+        control_mode = 'adlib';
 				return false;
 			});
 		});
@@ -402,7 +403,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 
 		return plan_arm({left: lPlan, right: rPlan}).then(function(paths){
 			console.log('Sending IK', paths);
-			control_mode = 'ik';
+			//control_mode = 'ik';
 			if(!paths){return;}
 			var prs = [];
 			if(lPlan && lPlan.qArmGuess){
@@ -1146,6 +1147,27 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			if(control_mode==='armplan'){
 				// In arm plan, don't do this
 				util.debug(["Canceled plan"]);
+        
+        
+        // Grab the arm configuration
+        calculate_state();
+        var tfL = get_tfLhand();
+    		var lPlan = {
+    			'tr': tfL,
+    			'timeout': 15,
+    			'via': 'jacobian_preplan',
+    			'weights': [0,1,0,1],
+    			'qLArm0': qLArm, // Not 0, because we update the planner
+    			'qWaist0': qWaist,
+    			'qArmGuess': sameLArm ? null : qLArm,
+          'alpha': 0,
+          'beta': 0,
+          'gamma': 5
+    		};
+        // Send for replanning
+        imu_ws.send( JSON.stringify({left: lPlan, right: false}) );
+        
+        
 				return;
 			}
       
@@ -1171,7 +1193,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		listener.simple_combo("backspace", function(){
 			if(control_mode==='armplan'){
 				// In arm plan, don't do this
-				util.debug(["Canceled plan"]);
+				util.debug(["Canceled plan"]);        
 				return;
 			}
 			util.debug(["!! STOPPING !!"]);
@@ -1455,38 +1477,60 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
   /************
    ** Device rotation
    */
-  var imu_ws;
+	// Send IMU data to the forwarder
+	var imu_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + 8999);
+	imu_ws.onmessage = function (e) {
+		if (typeof e.data !== "string") {
+      return;
+    }
+		// Process metadata
+		var adlib = JSON.parse(e.data);
+		if (adlib.t !== undefined) {
+			// Add latency measure if possible
+			adlib.latency = (e.timeStamp / 1e3) - adlib.t;
+		}
+    // Debug
+    console.log(adlib);
+    // Play the plan... just the left
+    return playPlan([adlib, null, null]);
+  }
   var o_last = 0;
 	var hOrientation = function(e) {
+    // There is also webkitCompassHeading and webkitCompassAccuracy
 		var absolute = e.absolute;
 		var alpha = e.alpha;
 		var beta = e.beta;
 		var gamma = e.gamma; // in the keyboard position, this is the best
-    if (e.timeStamp - o_last > 1e3){
-      // Process once a second...
-      document.getElementById('orientation').innerHTML = 'a: ' + alpha + '<br/>b: ' + beta + '<br/>g: ' + gamma;
-      o_last = e.timeStamp;
-      //console.log(e);
-      
-      // Grab the arm configuration
-      calculate_state();
-      var tfL = get_tfLhand();
-			var lPlan = {
-				'tr': tfL,
-				'timeout': 15,
-				'via': 'jacobian_preplan',
-				'weights': [0,1,0,1],
-				'qLArm0': qLArm0,
-				'qWaist0': qWaist0,
-				'qArmGuess': sameLArm ? null : qLArm,
-        'alpha': alpha,
-        'beta': beta,
-        'gamma': gamma
-			};
-      
-      // There is also webkitCompassHeading and webkitCompassAccuracy
-      imu_ws.send( JSON.stringify(lPlan) );
+    
+    // Not too frequently
+    if (e.timeStamp - o_last < 1e3){
+      return;
     }
+    o_last = e.timeStamp;
+    // Only in adlib mode
+    if (control_mode !== 'adlib'){
+      return;
+    }
+    
+    // Give debug information
+    document.getElementById('orientation').innerHTML = 'a: ' + alpha + '<br/>b: ' + beta + '<br/>g: ' + gamma;
+    // Grab the arm configuration
+    calculate_state();
+    var tfL = get_tfLhand();
+		var lPlan = {
+			'tr': tfL,
+			'timeout': 15,
+			'via': 'jacobian_preplan',
+			'weights': [0,1,0,1],
+			'qLArm0': qLArm, // Not 0, because we update the planner
+			'qWaist0': qWaist,
+			'qArmGuess': sameLArm ? null : qLArm,
+      'alpha': alpha,
+      'beta': beta,
+      'gamma': gamma
+		};
+    // Send for replanning
+    imu_ws.send( JSON.stringify({left: lPlan, right: false}) );
 	}
   var m_last = 0;
 	var hMotion = function(e) {
@@ -1495,13 +1539,16 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		var accel0 = e.accelerationIncludingGravity;
 		var gyro = e.rotationRate;
 		var dt = e.interval;
-
-    if (e.timeStamp - m_last > 1e3){
-      document.getElementById('motion').innerHTML = 'acc: ' + [accel.x, accel.y, accel.z].join(',') + '<br/>gyr: ' + [gyro.alpha, gyro.beta, gyro.gamma].join(',') + '<br/>dt: ' + dt;
-      m_last = e.timeStamp;
-      //console.log(e);
-      // There is also webkitCompassHeading and webkitCompassAccuracy
+    // Not too frequently
+    if (e.timeStamp - m_last < 1e3){
+      return;
     }
+    m_last = e.timeStamp;
+    // Only in adlib mode
+    if (control_mode !== 'adlib'){
+      return;
+    }
+    document.getElementById('motion').innerHTML = 'acc: ' + [accel.x, accel.y, accel.z].join(',') + '<br/>gyr: ' + [gyro.alpha, gyro.beta, gyro.gamma].join(',') + '<br/>dt: ' + dt;
 		
 		//imu_ws.send(force);
 	}
@@ -1656,8 +1703,6 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
   		// Capture the data from the IMU
   		window.addEventListener('deviceorientation', hOrientation);
   		window.addEventListener("devicemotion", hMotion, true);
-  		// Send IMU data to the forwarder
-  		imu_ws = new window.WebSocket('ws://' + window.location.hostname + ':' + 8999);
 		});
 	}
 	setTimeout(init, 0);
