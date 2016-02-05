@@ -87,7 +87,6 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		}
 		function updatechain(frame){
 			var chain_ids = this;
-      console.log('frame',frame);
 			frame[1].forEach(function(v, i){
 				planRobot.setJoints(v, chain_ids[i]);
 			});
@@ -1148,7 +1147,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 				// In arm plan, don't do this
 				util.debug(["Canceled plan"]);
         
-        
+        /*
         // Grab the arm configuration
         calculate_state();
         var tfL = get_tfLhand();
@@ -1166,6 +1165,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
     		};
         // Send for replanning
         imu_ws.send( JSON.stringify({left: lPlan, right: false}) );
+        */
         
         
 				return;
@@ -1492,7 +1492,13 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
     // Debug
     console.log(adlib);
     // Play the plan... just the left
-    return playPlan([adlib, null, null]);
+    //return playPlan([adlib, null, null]);
+    
+    // Immediate set! from left arm only
+		adlib[0].forEach(function(v, i){
+			planRobot.setJoints(v, planRobot.IDS_LARM[i]);
+		});
+    
   }
   var o_last = 0;
 	var hOrientation = function(e) {
@@ -1529,6 +1535,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
       'beta': beta,
       'gamma': gamma
 		};
+    console.log('Sending', lPlan)
     // Send for replanning
     imu_ws.send( JSON.stringify({left: lPlan, right: false}) );
 	}
