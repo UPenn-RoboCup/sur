@@ -5,7 +5,8 @@
   "main": "surest.js",
   "dependencies": {
 		"peer": "^0.2.6",
-		"ws": "^0.4.32"
+		"ws": "^0.4.32",
+    "msgpack": "*"
   },
   "devDependencies": {
     "bower": "^1.4.1"

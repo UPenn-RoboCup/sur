@@ -101,21 +101,39 @@ if (!USE_LOCALHOST && Config.net.ping) {
 var armplan_skt = zmq.socket('req');
 sockets.push(armplan_skt);
 armplan_skt.connect('ipc:///tmp/'+'armplan');
+armplan_skt.send("HELLO!");
 armplan_skt.http_responses = [];
 armplan_skt.on('message', function (msg) {
 	"use strict";
+  //console.log(typeof msg, msg)
 	var plan = munpack(msg);
 	//console.log('plan', plan);
-	this.http_responses.shift().json(200, plan);
+  // Grab the original request
+	var req = this.http_responses.shift()
+  //console.log("Req", req)
+  if(req !== undefined){
+    // respond to the request
+    var ret = req.json(200, plan);
+    //console.log('ret arm', ret);
+  }
 });
 // POST will send FSM events
 server.post('/armplan', function(req, res, next){
-		"use strict";
+	"use strict";
 	if(req.body === undefined){return next();}
-	console.log('arm plan');
+	//console.log('arm plan');
 	//console.log(req.body);
 	// Send to the armplan server
-	armplan_skt.send(mpack(JSON.parse(req.body))).http_responses.push(res);
+  var msg = JSON.parse(req.body);
+  //console.log("msg", msg);
+  //console.log(armplan_skt);
+  //console.log("Packing...");
+  var packed = mpack(msg);
+  //console.log("PACKED:", packed);
+	var ret = armplan_skt.send(packed);
+  //var ret = armplan_skt.send("HELLO");
+  //console.log("ret", ret);
+  armplan_skt.http_responses.push(res);
 	return next();
 });
 
