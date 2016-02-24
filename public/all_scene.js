@@ -927,6 +927,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 	}
 
 	function delta_walk(){
+    console.log('control_mode', control_mode)
 		if(control_mode!=='move'){ return; }
 		var mat = planRobot.object.matrix.multiply(this);
 		planRobot.object.position.setFromMatrixPosition(mat);
@@ -1015,6 +1016,17 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 
 	function setup_keys(){
 		listener = new keypress.Listener();
+    // Adlib keys
+    
+		listener.simple_combo("i", function(){
+      if(control_mode!=='adlib'){ return; }
+		  send_adlib(0, 0, 5);
+		});
+		listener.simple_combo(",", function(){
+      if(control_mode!=='adlib'){ return; }
+		  send_adlib(0, 0, -5);
+		});
+    
 		// Walk keys
 		listener.simple_combo("i", delta_walk.bind(
 			new THREE.Matrix4().makeTranslation(0,0,25)));
@@ -1246,6 +1258,10 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		listener.simple_combo("7", function(){
 			return try_arm_fsm('shower');
 		});
+		listener.simple_combo("8", function(){
+			tcontrol.detach();
+		});
+    
 		listener.simple_combo("0", click_ik);
 		listener.simple_combo("9", click_move);
 		listener.simple_combo("`", click_joint);
@@ -1516,6 +1532,26 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		});
     
   }
+  
+  var send_adlib = function(alpha, beta, gamma){
+    // Grab the arm configuration
+    calculate_state();
+		var lPlan = {
+			'timeout': 15,
+			'via': 'jacobian_preplan',
+			'weights': [0,1,0,1],
+			'qLArm0': qLArm, // Not 0, because we update the planner
+			'qWaist0': qWaist,
+			'qArmGuess': sameLArm ? null : qLArm,
+      'alpha': alpha,
+      'beta': beta,
+      'gamma': gamma
+		};
+    console.log('Sending', lPlan)
+    // Send for replanning
+    imu_ws.send( JSON.stringify({left: lPlan, right: false}) );
+  }
+  
   var o_last = 0;
 	var hOrientation = function(e) {
     // There is also webkitCompassHeading and webkitCompassAccuracy
@@ -1536,22 +1572,9 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
     
     // Give debug information
     document.getElementById('orientation').innerHTML = 'a: ' + alpha + '<br/>b: ' + beta + '<br/>g: ' + gamma;
-    // Grab the arm configuration
-    calculate_state();
-		var lPlan = {
-			'timeout': 15,
-			'via': 'jacobian_preplan',
-			'weights': [0,1,0,1],
-			'qLArm0': qLArm, // Not 0, because we update the planner
-			'qWaist0': qWaist,
-			'qArmGuess': sameLArm ? null : qLArm,
-      'alpha': alpha,
-      'beta': beta,
-      'gamma': gamma
-		};
-    console.log('Sending', lPlan)
-    // Send for replanning
-    imu_ws.send( JSON.stringify({left: lPlan, right: false}) );
+
+    send_adlib(alpha, beta, gamma+53); //ipad at keyboard is -53
+
 	}
   var m_last = 0;
 	var hMotion = function(e) {
