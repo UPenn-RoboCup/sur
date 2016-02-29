@@ -330,7 +330,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 
 
 	function go_ik() {
-
+console.log('control', control_mode)
 		var rpyL = get_rpyLhand();
 		var rpyR = get_rpyRhand();
 		util.debug([
@@ -538,12 +538,15 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
   
   function go_replan(){
     console.log('Current Plan', curPlan);
+    console.log('Before curPlan.left.qLArm0', curPlan.left.qLArm0);
     // Assume we have the left for now...
     calculate_state();
     // Use the current green...
     curPlan.left.qLArm0 = qLArm;
     // Must shift our guess, as well
-    curPlan.left.qArmGuess = qLArm;
+    //curPlan.left.qArmGuess = qLArm;
+    curPlan.left.qArmGuess = null;
+    console.log('After curPlan.left.qLArm0', curPlan.left.qLArm0);
     
 		return plan_arm(curPlan).then(function(paths){
 		  console.log('Re-plan Paths', paths);
@@ -1236,14 +1239,33 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 			util.debug(["!! INIT !!"]);
 			return util.shm('/fsm/Body/init');
 		});
+    // SIMPLE_PLAN
 		listener.simple_combo("1", function(){
+      if(control_mode=='ik'){
+  			var lPlan = {
+  				tr: [0.4, 0.2, 0.3, 0,0,0],
+  				timeout: 15,
+  				via: 'jacobian_preplan',
+  				weights: [0,1,0,1],
+  				qLArm0: qLArm0,
+  				qWaist0: qWaist0,
+  				qArmGuess: null
+  			};
+    		return plan_arm({left: lPlan, right: null})
+      }
 			control_mode = 'arminit';
 			return util.shm('/fsm/Arm/init');
 		});
 		listener.simple_combo("2", function(){
+      if(control_mode=='ik'){
+        return;
+      }
 			return try_arm_fsm('ready');
 		});
 		listener.simple_combo("3", function(){
+      if(control_mode=='ik'){
+        return;
+      }
 			return try_arm_fsm('pushdoordown');
 		});
 		listener.simple_combo("4", function(){
@@ -1473,7 +1495,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 	}
 
 	function update_pillars(p){
-		//if(true){return;}
+		if(true){return;}
 		/*
 		pillars.forEach(function(p0){
 			robot.object.remove(p0);

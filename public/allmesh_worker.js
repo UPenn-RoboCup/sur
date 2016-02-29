@@ -154,6 +154,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       // The range value is directly our x coordinate
     	'use strict';
       // 4.5 meters away is too far to render
+      // 20 cm is too close 
       if(x > 6000 || x < 200){ return; }
       x /= 1e3;
       var vCam = [
@@ -199,7 +200,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       // Saturation
 			var r = w || 0;
 			if (mesh.c==='raw'){
-				if (w < 0.05 || w > 10) {return;}
+				if (w < 0.05 || w > 10) {return;} // 5 cm is too close...
 				//console.assert(r===r, 'nan w');
 			} else {
 				if (w === 0 || w === 255) {return;}
@@ -244,6 +245,9 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			*/
 			var v_global = mat_times_vec(TcomG, v_waist);
 			var v_local = mat_times_vec(TcomL, v_waist);
+      if(v_local[0] < 0.25){
+        return;
+      }
 
 			// Set into the THREE buffer, in its coordinate frame
     	destination[0] = v_global[1] * 1e3;
@@ -265,7 +269,8 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
       // Saturation
 			var r;
 			if (mesh.c==='raw'){
-				if (w === 0 || w > 10) {return;}
+				//if (w === 0 || w > 10) {return;}
+        if (w <= 0.1 || w > 10) {return;}
 				r = w;
 			} else {
 				if (w === 0 || w === 255) {return;}
