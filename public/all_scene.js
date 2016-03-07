@@ -18,6 +18,23 @@
 			//acceptBtn, declineBtn, stepBtn,
 		jointSel, mesh0Sel, mesh1Sel, allBtns, shmBtns, fsmBtns,
 		control_mode, curPlan;
+    var curLHand;
+      /*
+>  =math.randomseed(23)
+>  =math.random()
+[1] 0.71845317348027
+>  return math.random()
+[1] 0.83987326251975
+>  return math.random()
+[1] 0.6391725089693
+>  return math.random()
+[1] 0.15345568680628
+>
+    var ctight = 0.71845317348027, cusage = 0.83987326251975, csimilar = 0.6391725089693,
+      cextension = 0.15345568680628;
+      */
+
+    var ctight = 0, cusage = 0, csimilar = 0, cextension = 0;
 
 	// State variables
 	var qPlan, qNow, qHead, qHead0, sameHead,
@@ -273,6 +290,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 					listener.unregister_many([escDecline, spaceAccept, bkspDecline]);
 					var paths = prPlay.stop();
           control_mode = 'adlib';
+          curLHand = get_tfLhand();
 					return paths;
 				},
 				function(){
@@ -284,6 +302,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 					console.log('rejected!');
 				listener.unregister_many([escDecline, spaceAccept, bkspDecline]);
 				prPlay.stop();
+        curLHand = get_tfLhand();
         control_mode = 'adlib';
 				return false;
 			});
@@ -1242,29 +1261,102 @@ console.log('control', control_mode)
     // SIMPLE_PLAN
 		listener.simple_combo("1", function(){
       if(control_mode=='ik'){
+        var wh = [ctight,cusage,csimilar];
+        //wh = numeric.div(wh, numeric.norm2(wh));
+        var tr0 = [0.4, 0.2, 0.3, 0,0,0];
+        var dtr = [
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0*DEG_TO_RAD,
+          (Math.random()-0.5)*0*DEG_TO_RAD,
+          (Math.random()-0.5)*0*DEG_TO_RAD
+        ]
+        console.log('Random config 1', numeric.add(tr0, dtr));
   			var lPlan = {
-  				tr: [0.4, 0.2, 0.3, 0,0,0],
+  				tr: numeric.add(tr0, dtr),
   				timeout: 15,
   				via: 'jacobian_preplan',
-  				weights: [0,1,0,1],
+          // Weights: cusage, cdiff, ctight, cshoulder, cwrist
+  				weights: [cusage,1,ctight,1],
+          // wh: tucked, range, similar, extension
+          wh: wh,
   				qLArm0: qLArm0,
   				qWaist0: qWaist0,
-  				qArmGuess: null
+  				qArmGuess: null,
+          key: 1
   			};
-    		return plan_arm({left: lPlan, right: null})
+        curPlan = {left: lPlan, right: null};
+        return plan_arm(curPlan);
       }
 			control_mode = 'arminit';
 			return util.shm('/fsm/Arm/init');
 		});
 		listener.simple_combo("2", function(){
       if(control_mode=='ik'){
-        return;
+        var wh = [ctight,cusage,csimilar];
+        //wh = numeric.div(wh, numeric.norm2(wh));
+        
+        var tr0 = [0.3, 0.1, 0.3, 0,0,-90*DEG_TO_RAD];
+        var dtr = [
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0*DEG_TO_RAD,
+          (Math.random()-0.5)*0*DEG_TO_RAD,
+          (Math.random()-0.5)*0*DEG_TO_RAD
+        ]
+        console.log('Random config 2', numeric.add(tr0, dtr));
+        
+  			var lPlan = {
+  				tr: numeric.add(tr0, dtr),
+  				timeout: 15,
+  				via: 'jacobian_preplan',
+          // Weights: cusage, cdiff, ctight, cshoulder, cwrist
+  				weights: [0,1,0,1],
+          // wh: tucked, range, similar, extension
+          wh: wh,
+  				qLArm0: qLArm0,
+  				qWaist0: qWaist0,
+  				qArmGuess: null,
+          key: 2
+  			};
+        curPlan = {left: lPlan, right: null};
+        return plan_arm(curPlan);
       }
 			return try_arm_fsm('ready');
 		});
 		listener.simple_combo("3", function(){
       if(control_mode=='ik'){
-        return;
+        var wh = [ctight,cusage,csimilar];
+        //wh = numeric.div(wh, numeric.norm2(wh));
+        
+        var tr0 = [0.5, 0.3, 0.3, 90*DEG_TO_RAD,0*DEG_TO_RAD,0*DEG_TO_RAD];
+        var dtr = [
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0.2,
+          (Math.random()-0.5)*0*DEG_TO_RAD,
+          (Math.random()-0.5)*0*DEG_TO_RAD,
+          (Math.random()-0.5)*0*DEG_TO_RAD
+        ]
+        console.log('Random config 3', numeric.add(tr0, dtr));
+        
+  			var lPlan = {
+  				tr: numeric.add(tr0, dtr),
+  				timeout: 15,
+  				via: 'jacobian_preplan',
+          // Weights: cusage, cdiff, ctight, cshoulder, cwrist
+  				weights: [0,1,0,1],
+          // wh: tucked, range, similar, extension
+          wh: wh,
+  				qLArm0: qLArm0,
+  				qWaist0: qWaist0,
+  				qArmGuess: null,
+          key: 3
+  			};
+        curPlan = {left: lPlan, right: null};
+        return plan_arm(curPlan);
       }
 			return try_arm_fsm('pushdoordown');
 		});
@@ -1559,6 +1651,7 @@ console.log('control', control_mode)
     // Grab the arm configuration
     calculate_state();
 		var lPlan = {
+      'tr': curLHand,//curPlan.left.tr,
 			'timeout': 15,
 			'via': 'jacobian_preplan',
 			'weights': [0,1,0,1],
