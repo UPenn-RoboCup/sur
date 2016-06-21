@@ -87,9 +87,11 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 		}
 		function updatechain(frame){
 			var chain_ids = this;
-			frame[1].forEach(function(v, i){
-				planRobot.setJoints(v, chain_ids[i]);
-			});
+      if(frame[1] && typeof frame[1].forEach==='function'){
+  			frame[1].forEach(function(v, i){
+  				planRobot.setJoints(v, chain_ids[i]);
+  			});
+      }
 		}
 
 		var promises = [];
@@ -230,7 +232,7 @@ comWorldPlan, invComWorldNow, invComWorldPlan, comWorldNow;
 
 	function plan_arm(plan){
 		//var h_accept, h_decline;
-		var escDecline, spaceAccept;
+		var escDecline, spaceAccept, bkspDecline;
 		return util.shm('/armplan', plan || this)
 		.then(procPlan)
 		.then(function(paths){
