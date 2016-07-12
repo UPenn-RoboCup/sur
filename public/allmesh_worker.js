@@ -279,7 +279,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			var TcomL = flat2mat(mesh.tfL16[v]);
 			var Tactuate = rotY(mesh.a[v][1]);
 
-			var v_actuate = mat_times_vec(Tactuate, [r*cos(theta), r*sin(theta), 0.1]);
+			var v_actuate = mat_times_vec(Tactuate, [r*cos(theta)  + 0.02, r*sin(theta), 0.145]);
 
 			var Tactuate1 = rotZ(mesh.a[v][0]);
 			var v_actuate1 = mat_times_vec(Tactuate1, v_actuate);
@@ -297,7 +297,7 @@ var K2_HFOV_FACTOR = tan(70.6 / 2 * DEG_TO_RAD),
 			//console.log(v_local);
 
 			// Set into the THREE buffer, in its coordinate frame
-    	destination[0] = v_global[1] * 1e3;
+    		destination[0] = v_global[1] * 1e3;
 			destination[1] = v_global[2] * 1e3;
 			destination[2] = v_global[0] * 1e3;
 

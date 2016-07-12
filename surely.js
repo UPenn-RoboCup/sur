@@ -73,7 +73,7 @@ var streams = Config.net.streams;
 var rpc = Config.net.rpc;
 //var robot_ip = '10.8.3.145';
 var robot_ip = '192.168.123.146'; // dale
-var robot_ip = '192.168.123.200'; //asus
+//var robot_ip = '192.168.123.200'; //asus
 console.log(streams);
 
 // Network detection
